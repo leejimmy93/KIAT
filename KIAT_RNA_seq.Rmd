@@ -1,0 +1,84 @@
+---
+title: "KIAT_RNA_seq"
+author: "Ruijuan Li"
+date: "August 1, 2016"
+output: html_document
+---
+
+# download data, QC, and mapping 
+```{r}
+# 1) download file from ftp using ftp_file_transfer.sh
+# 2) get first 1000 sequences for each file extract_1000_reads.sh, actually worked with all data instead of the 1st 1000 seqs
+# 3) QC file using fastQC: fastqc *.fq -o /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/fastqc_result
+# 4) download Brassica_napus.annotation_v5.cds.fa to whitney 
+# 5) collapse fastqc summary result into one file using ./make_summary_report.sh 
+
+# 6) reformat summary.all.txt file 
+setwd("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/fastQC_result")
+fastQC_summary <- read.delim("summary_all.txt", header = F)
+dim(fastQC_summary)
+head(fastQC_summary)
+tail(fastQC_summary)
+
+fastQC_summary_wide <- reshape(fastQC_summary, timevar="V2",idvar="V3",direction="wide")
+colnames(fastQC_summary_wide) <- gsub("(V1)(.)([[:print:]]+)","\\3",colnames(fastQC_summary_wide))
+dim(fastQC_summary_wide)
+
+write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
+
+# 7) over represented sequences 
+# Ask Zhongxu for help
+
+# 8) using kallisto to build the reference cds index 
+# kallisto index -k 19 -i Brassica_napus.annotation_v5.cds.19.kai /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa
+
+# 9) map to reference cds index and get read count file using bunchrun_kallisto.sh (using est_counts from Kallisto)
+```
+
+# Expression analysis 
+```{r}
+parent.read.count <- read.table("read_count/read.count.tsv", header = T, check.names = F)
+rownames(parent.read.count) <- parent.read.count[,1]
+parent.read.count <- parent.read.count[,-1]
+
+head(parent.read.count)
+dim(parent.read.count) # 101040     54 
+summary(parent.read.count)
+
+library(edgeR)
+library(ggplot2)
+
+# filter based on read count, assign group, normalize, design matrix, calculate dispersion   
+# filter based on read count 
+parent.read.count.small <- parent.read.count[rowSums(parent.read.count > 10) >= 3,] 
+dim(parent.read.count.small) # 66937    54 
+# 
+
+
+
+
+
+
+
+
+```
+
+# GO enrichment analysis 
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
