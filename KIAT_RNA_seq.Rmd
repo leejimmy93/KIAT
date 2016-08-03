@@ -41,9 +41,11 @@ parent.read.count <- read.table("read_count/read.count.tsv", header = T, check.n
 rownames(parent.read.count) <- parent.read.count[,1]
 parent.read.count <- parent.read.count[,-1]
 
+# format data 
 head(parent.read.count)
 dim(parent.read.count) # 101040     54 
 summary(parent.read.count)
+colnames(parent.read.count) <- ("Da_ae_early_silique") 
 
 library(edgeR)
 library(ggplot2)
@@ -51,7 +53,7 @@ library(ggplot2)
 # filter based on read count, assign group, normalize, design matrix, calculate dispersion   
 # filter based on read count 
 parent.read.count.small <- parent.read.count[rowSums(parent.read.count > 10) >= 3,] 
-dim(parent.read.count.small) # 66937    54 
+dim(parent.read.count.small) # 66937    54  
 # 
 
 
