@@ -14,8 +14,8 @@ output: html_document
 # 5) collapse fastqc summary result into one file using ./make_summary_report.sh 
 
 # 6) reformat summary.all.txt file 
-setwd("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/fastQC_result")
-fastQC_summary <- read.delim("summary_all.txt", header = F)
+setwd("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq")
+fastQC_summary <- read.delim("./fastQC_result/summary_all.txt", header = F)
 dim(fastQC_summary)
 head(fastQC_summary)
 tail(fastQC_summary)
@@ -35,33 +35,140 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # 9) map to reference cds index and get read count file using bunchrun_kallisto.sh (using est_counts from Kallisto)
 ```
 
-# Expression analysis 
+# Expression analysis 1) formatting data   
 ```{r}
-parent.read.count <- read.table("read_count/read.count.tsv", header = T, check.names = F)
+parent.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.tsv", header = T, check.names = F)
 rownames(parent.read.count) <- parent.read.count[,1]
 parent.read.count <- parent.read.count[,-1]
 
 # format data 
 head(parent.read.count)
 dim(parent.read.count) # 101040     54 
-summary(parent.read.count)
-colnames(parent.read.count) <- ("Da_ae_early_silique") 
+colnames(parent.read.count)
+even_indexes<-seq(2,length(colnames(parent.read.count)),2)
+parent.read.count.one <- parent.read.count[,even_indexes]
+dim(parent.read.count.one) # 101040     27 
+colnames(parent.read.count.one)
 
+# sample description  
+sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/parent_summary.csv")
+sample_des
+dim(sample_des)
+sorted_sample_des <- sample_des[order(sample_des$SampleID),]
+
+sorted_sample_des[,4:7]
+new_sample_ID <- paste(sorted_sample_des$Cultivar, sorted_sample_des$Stage, sorted_sample_des$rep, sep = "_")
+new_sample_ID
+
+# replace sample ID 
+colnames(parent.read.count.one) <- new_sample_ID
+head(parent.read.count.one)
+save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
+```
+
+# expression analysis 2) set up sample description 
+```{r}
+# load necessary libs & functions 
 library(edgeR)
 library(ggplot2)
 
 # filter based on read count, assign group, normalize, design matrix, calculate dispersion   
+# set up group 
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
+parent.read.count.one <- parent.read.count.one[,colSums(parent.read.count.one) > 1000000]  
+dim(parent.read.count.one) # 101040     27 
+parent.read.count.one.sample<-data.frame(file=colnames(parent.read.count.one),
+                             batch=factor(gsub("(Da-ae|Da-al-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\5",colnames(parent.read.count.one))),  
+                             genotype=factor(gsub("(Da-ae|Da-al-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1",colnames(parent.read.count.one))),	
+                             stage=factor(gsub("(Da-ae|Da-al-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\3",colnames(parent.read.count.one))),	
+                             group=factor(gsub("(Da-ae|Da-al-1)(_)([[:print:]]+)(_)(1|2|3)","\\1\\3",colnames(parent.read.count.one)))
+)
+
+parent.read.count.one.sample
+ftable(parent.read.count.one.sample,row.vars="stage",col.vars=c("batch","genotype"))
+
 # filter based on read count 
-parent.read.count.small <- parent.read.count[rowSums(parent.read.count > 10) >= 3,] 
-dim(parent.read.count.small) # 66937    54  
-# 
+parent.read.count.one.small <- parent.read.count.one[rowSums(parent.read.count.one > 10) >= 3,]
+dim(parent.read.count.one.small) # 60975    27 
+save(parent.read.count.one.small, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.small.Rdata")
+```
 
+# expression analysis 3) voom transformation 
+```{r}
+# voom transformation 
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("DESeq2")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.small.Rdata")
+library("DESeq2")
 
+dds.parent <- DESeqDataSetFromMatrix(countData = round(parent.read.count.one.small), colData = parent.read.count.one.sample, design = ~ batch + genotype*stage)
 
+vsd.parent <- varianceStabilizingTransformation(dds.parent)
+vstMat.parent <- assay(vsd.parent)
+colnames(vstMat.parent) <- colnames(parent.read.count.one)
+save(vstMat.parent, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.Rdata")
+```
 
+# expression analysis 4) MDS, clustering, and expression analysis 
+```{r}
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.Rdata")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.small.Rdata")
 
+# normalize 
+dge.data.parent <- DGEList(counts=parent.read.count.one.small, group=parent.read.count.one.sample$group)
+dge.data.parent <- calcNormFactors(dge.data.parent, method = "TMM") 
+dge.data.parent$sample
+hist(dge.data.parent$samples$norm.factors)
 
+# MDS to check sample seperation, also using dengrogram... how? use all genes? 
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png")
+plotMDS(dge.data.parent, method = "bcv")
+dev.off() 
 
+# clustering to check sample seperation 
+vstMat.parent <- as.data.frame(vstMat.parent)
+head(vstMat.parent)
+# making dengrogram
+hc.parent <- hclust(dist(t(vstMat.parent)))
+
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/clustering.png")
+plot(hc.parent)
+dev.off() 
+
+# pairwise comparison using GLM model 
+# design matrix
+design.parent <- model.matrix(~0+group, data = dge.data.parent$samples) # how to consider batch effect??? 
+colnames(design.parent) <- levels(dge.data.parent$samples$group)
+colnames(design.parent)
+
+# estimate dispersion
+dge.data.parent <- estimateGLMCommonDisp(dge.data.parent, design.parent,verbose = TRUE) # DDisp = 0.48381 , BCV = 0.6956 
+dge.data.parent <- estimateGLMTrendedDisp(dge.data.parent,design.parent)  
+dge.data.parent <- estimateGLMTagwiseDisp(dge.data.parent,design.parent)
+plotBCV(dge.data.parent) 
+
+# fit GLM model & test for differential expression 
+fit.parent <- glmFit(dge.data.parent, design)
+
+lrt.young <- glmLRT(fit.parent, contrast = c(0,0,0,0,1,0,0,0,0,-1))
+topTags(lrt.young)
+summary(de.young <- decideTestsDGE(lrt.young, p=0.05))
+
+lrt.flowering <- glmLRT(fit.parent, contrast = c(0,0,1,0,0,0,0,-1,0,0))
+topTags(lrt.flowering)
+summary(de.flowering <- decideTestsDGE(lrt.flowering, p=0.05))
+
+lrt.early.silique <- glmLRT(fit.parent, contrast = c(0,1,0,0,0,0,-1,0,0,0))
+topTags(lrt.early.silique)
+summary(de.early.silique <- decideTestsDGE(lrt.early.silique, p=0.05))
+
+lrt.late.silique <- glmLRT(fit.parent, contrast = c(0,0,0,1,0,0,0,0,-1,0))
+topTags(lrt.late.silique)
+summary(de.late.silique <- decideTestsDGE(lrt.late.silique, p=0.05))
+
+lrt.bolting <- glmLRT(fit.parent, contrast = c(1,0,0,0,0,-1,0,0,0,0))
+topTags(lrt.bolting)
+summary(de.bolting <- decideTestsDGE(lrt.bolting, p=0.05))
 
 ```
 
@@ -69,16 +176,6 @@ dim(parent.read.count.small) # 66937    54
 ```{r}
 
 ```
-
-
-
-
-
-
-
-
-
-
 
 
 
