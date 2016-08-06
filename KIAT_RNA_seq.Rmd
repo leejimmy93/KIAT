@@ -8,13 +8,14 @@ output: html_document
 # download data, QC, and mapping 
 ```{r}
 # 1) download file from ftp using ftp_file_transfer.sh
+# 1.1) unzip files using gunzip *  
 # 2) get first 1000 sequences for each file extract_1000_reads.sh, actually worked with all data instead of the 1st 1000 seqs
 # 3) QC file using fastQC: fastqc *.fq -o /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/fastqc_result
 # 4) download Brassica_napus.annotation_v5.cds.fa to whitney 
-# 5) collapse fastqc summary result into one file using ./make_summary_report.sh 
+# 5) collapse fastqc summary result into one file & get overrepresented sequences using ./make_summary_report.sh 
 
 # 6) reformat summary.all.txt file 
-setwd("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq")
+setwd("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/")
 fastQC_summary <- read.delim("./fastQC_result/summary_all.txt", header = F)
 dim(fastQC_summary)
 head(fastQC_summary)
@@ -26,8 +27,12 @@ dim(fastQC_summary_wide)
 
 write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
-# 7) over represented sequences 
-# Ask Zhongxu for help
+# 7) checked the source of overrepresented sequences using web nucleotide blast tool, found that most of them are from 
+# cholorplast, mitochondra, rRNA, tansposon, etc. Some are illumina or TruSeq adapters 
+
+# blast sequences against Trimmomatic adapters suggest that TruSeq3-PE-2.fa should be used to trimm the data. (Q: how to deal with the others? will they affect the final result? search... )
+
+# Qs on plstids seqs contamination: 1) why are there these sequences? check the lib making step 2) will they affect downstream analysis if kept? CDS mapping VS genome mapping 3) If yes, how to remove them? (I need to figure these Qs out.)
 
 # 8) using kallisto to build the reference cds index 
 # kallisto index -k 19 -i Brassica_napus.annotation_v5.cds.19.kai /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa
@@ -120,7 +125,7 @@ dge.data.parent <- calcNormFactors(dge.data.parent, method = "TMM")
 dge.data.parent$sample
 hist(dge.data.parent$samples$norm.factors)
 
-# MDS to check sample seperation, also using dengrogram... how? use all genes? 
+# MDS to check sample seperation, also using dengrogram.  
 png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png")
 plotMDS(dge.data.parent, method = "bcv")
 dev.off() 
@@ -137,43 +142,108 @@ dev.off()
 
 # pairwise comparison using GLM model 
 # design matrix
-design.parent <- model.matrix(~0+group, data = dge.data.parent$samples) # how to consider batch effect??? 
-colnames(design.parent) <- levels(dge.data.parent$samples$group)
-colnames(design.parent)
+design.parent.batch <- model.matrix(~batch+group, data = parent.read.count.one.sample) 
+design.parent <- model.matrix(~0+group, data = parent.read.count.one.sample) 
 
 # estimate dispersion
-dge.data.parent <- estimateGLMCommonDisp(dge.data.parent, design.parent,verbose = TRUE) # DDisp = 0.48381 , BCV = 0.6956 
+# w/ batch effect 
+dge.data.parent.batch <- estimateGLMCommonDisp(dge.data.parent, design.parent.batch,verbose = TRUE) # Disp = 0.49779 , BCV = 0.7055 
+dge.data.parent.batch <- estimateGLMTrendedDisp(dge.data.parent,design.parent.batch)  
+dge.data.parent.batch <- estimateGLMTagwiseDisp(dge.data.parent,design.parent.batch)
+plotBCV(dge.data.parent.batch)
+
+# w/o batch effect 
+dge.data.parent <- estimateGLMCommonDisp(dge.data.parent, design.parent,verbose = TRUE) # Disp = 0.48381 , BCV = 0.6956 
 dge.data.parent <- estimateGLMTrendedDisp(dge.data.parent,design.parent)  
 dge.data.parent <- estimateGLMTagwiseDisp(dge.data.parent,design.parent)
-plotBCV(dge.data.parent) 
+plotBCV(dge.data.parent)
 
-# fit GLM model & test for differential expression 
-fit.parent <- glmFit(dge.data.parent, design)
+# fit GLM model & test for differential expression
+## w/ batch effect  
+fit.parent.batch <- glmFit(dge.data.parent.batch, design.parent.batch)
+
+lrt.young.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,0,0,1,0,0,0,0,-1))
+topTags(lrt.young.batch)
+summary(de.young.batch <- decideTestsDGE(lrt.young.batch, p=0.05))
+# -1     5
+# 0  60969
+# 1      1
+
+lrt.flowering.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,1,0,0,0,0,-1,0,0))
+topTags(lrt.flowering.batch)
+summary(de.flowering.batch <- decideTestsDGE(lrt.flowering.batch, p=0.05))
+# -1     0
+# 0  60975
+# 1      0
+
+lrt.early.silique.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,1,0,0,0,0,-1,0,0,0))
+topTags(lrt.early.silique.batch)
+summary(de.early.silique.batch <- decideTestsDGE(lrt.early.silique.batch, p=0.05))
+# -1     1
+# 0  60973
+# 1      1
+
+lrt.late.silique.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,0,1,0,0,0,0,-1,0))
+topTags(lrt.late.silique.batch)
+summary(de.late.silique.batch <- decideTestsDGE(lrt.late.silique.batch, p=0.05))
+# -1   125
+# 0  60377
+# 1    473
+
+lrt.bolting.batch <- glmLRT(fit.parent.batch, coef = 8)
+topTags(lrt.bolting.batch)
+summary(de.bolting.batch <- decideTestsDGE(lrt.bolting.batch, p=0.05))
+# -1     0
+# 0  60975
+# 1      0
+
+## w/o batch effect 
+fit.parent <- glmFit(dge.data.parent, design.parent)
 
 lrt.young <- glmLRT(fit.parent, contrast = c(0,0,0,0,1,0,0,0,0,-1))
 topTags(lrt.young)
 summary(de.young <- decideTestsDGE(lrt.young, p=0.05))
+# -1     5
+# 0  60967
+# 1      3
 
 lrt.flowering <- glmLRT(fit.parent, contrast = c(0,0,1,0,0,0,0,-1,0,0))
 topTags(lrt.flowering)
 summary(de.flowering <- decideTestsDGE(lrt.flowering, p=0.05))
+# -1     0
+# 0  60975
+# 1      0
 
 lrt.early.silique <- glmLRT(fit.parent, contrast = c(0,1,0,0,0,0,-1,0,0,0))
 topTags(lrt.early.silique)
 summary(de.early.silique <- decideTestsDGE(lrt.early.silique, p=0.05))
+# -1     7
+# 0  60950
+# 1     18
 
 lrt.late.silique <- glmLRT(fit.parent, contrast = c(0,0,0,1,0,0,0,0,-1,0))
 topTags(lrt.late.silique)
 summary(de.late.silique <- decideTestsDGE(lrt.late.silique, p=0.05))
+DEgene.late.silique <- topTags(lrt.late.silique,n = Inf)$table[topTags(lrt.late.silique,n = Inf)$table$FDR<0.05,]
+# -1   396
+# 0  59963
+# 1    616
 
 lrt.bolting <- glmLRT(fit.parent, contrast = c(1,0,0,0,0,-1,0,0,0,0))
 topTags(lrt.bolting)
 summary(de.bolting <- decideTestsDGE(lrt.bolting, p=0.05))
+# -1     0
+# 0  60975
+# 1      0
 
 ```
 
 # GO enrichment analysis 
 ```{r}
+# load all necessary functions 
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+GOseq.Bn.ORA(rownames(DEgene.late.silique))
+
 
 ```
 
