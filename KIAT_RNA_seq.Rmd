@@ -127,6 +127,7 @@ hist(dge.data.parent$samples$norm.factors)
 
 # MDS to check sample seperation, also using dengrogram.  
 png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png")
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width=480,height=480)
 plotMDS(dge.data.parent, method = "bcv")
 dev.off() 
 
@@ -203,6 +204,7 @@ fit.parent <- glmFit(dge.data.parent, design.parent)
 lrt.young <- glmLRT(fit.parent, contrast = c(0,0,0,0,1,0,0,0,0,-1))
 topTags(lrt.young)
 summary(de.young <- decideTestsDGE(lrt.young, p=0.05))
+DEgene.young <- topTags(lrt.young,n = Inf)$table[topTags(lrt.young,n = Inf)$table$FDR<0.05,]
 # -1     5
 # 0  60967
 # 1      3
@@ -217,6 +219,7 @@ summary(de.flowering <- decideTestsDGE(lrt.flowering, p=0.05))
 lrt.early.silique <- glmLRT(fit.parent, contrast = c(0,1,0,0,0,0,-1,0,0,0))
 topTags(lrt.early.silique)
 summary(de.early.silique <- decideTestsDGE(lrt.early.silique, p=0.05))
+DEgene.early.silique <- topTags(lrt.early.silique,n = Inf)$table[topTags(lrt.early.silique,n = Inf)$table$FDR<0.05,]
 # -1     7
 # 0  60950
 # 1     18
@@ -242,9 +245,13 @@ summary(de.bolting <- decideTestsDGE(lrt.bolting, p=0.05))
 ```{r}
 # load all necessary functions 
 source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
-GOseq.Bn.ORA(rownames(DEgene.late.silique))
+DEgene.young.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young))
 
+DEgene.early.silique.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.silique))
+DEgene.early.silique.GO.ORA
 
+DEgene.late.silique.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.late.silique))
+DEgene.late.silique.GO.ORA
 ```
 
 
