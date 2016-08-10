@@ -5,7 +5,7 @@ date: "August 1, 2016"
 output: html_document
 ---
 
-# download data, QC, and mapping 
+# download data, QC, and mapping (using kallisto)
 ```{r}
 # 1) download file from ftp using ftp_file_transfer.sh
 # 1.1) unzip files using gunzip *  
@@ -40,6 +40,25 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # 9) map to reference cds index and get read count file using bunchrun_kallisto.sh (using est_counts from Kallisto)
 ```
 
+# using STAR 
+```{r}
+# 1) get B.napus reference genome: Brassica_napus_v4.1.chromosomes.fa 
+# make STAR reference index: STAR --runMode genomeGenerate --genomeDir star_nome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --runThreadN 2 
+# mapping, only map the 2nd end using run_star.sh 
+
+
+
+
+```
+
+# SNP calling from all individuals & check sample seperation 
+```{r}
+
+
+
+
+```
+
 # Expression analysis 1) formatting data   
 ```{r}
 parent.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.tsv", header = T, check.names = F)
@@ -54,9 +73,10 @@ even_indexes<-seq(2,length(colnames(parent.read.count)),2)
 parent.read.count.one <- parent.read.count[,even_indexes]
 dim(parent.read.count.one) # 101040     27 
 colnames(parent.read.count.one)
+colnames(parent.read.count.one) <- sub("_2.fq","",colnames(parent.read.count.one),fixed = TRUE) # remove _2.fq 
 
 # sample description  
-sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/parent_summary.csv")
+sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/parent_summary_corrected.csv")
 sample_des
 dim(sample_des)
 sorted_sample_des <- sample_des[order(sample_des$SampleID),]
@@ -64,6 +84,7 @@ sorted_sample_des <- sample_des[order(sample_des$SampleID),]
 sorted_sample_des[,4:7]
 new_sample_ID <- paste(sorted_sample_des$Cultivar, sorted_sample_des$Stage, sorted_sample_des$rep, sep = "_")
 new_sample_ID
+
 
 # replace sample ID 
 colnames(parent.read.count.one) <- new_sample_ID
@@ -125,11 +146,10 @@ dge.data.parent <- calcNormFactors(dge.data.parent, method = "TMM")
 dge.data.parent$sample
 hist(dge.data.parent$samples$norm.factors)
 
-# MDS to check sample seperation, also using dengrogram.  
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png")
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width=480,height=480)
-plotMDS(dge.data.parent, method = "bcv")
-dev.off() 
+# MDS to check sample seperation, also using dengrogram. (too long names to show)  
+# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png")
+# plotMDS(dge.data.parent, method = "bcv")
+# dev.off() 
 
 # clustering to check sample seperation 
 vstMat.parent <- as.data.frame(vstMat.parent)
@@ -141,14 +161,19 @@ png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/clusterin
 plot(hc.parent)
 dev.off() 
 
+# check correlation among samples 
+cor.test(parent.read.count.one.small$`Da-ae_Young_1`, parent.read.count.one.small$`Da-ae_Young_2`)
+cor.test(parent.read.count.one.small$`Da-al-1_Young_2`, parent.read.count.one.small$`Da-al-1_Young_1`)
+cor.test(parent.read.count.one.small$`Da-al-1_Young_1`, parent.read.count.one.small$`Da-ae_early-silique_3`)
+
 # pairwise comparison using GLM model 
 # design matrix
 design.parent.batch <- model.matrix(~batch+group, data = parent.read.count.one.sample) 
-design.parent <- model.matrix(~0+group, data = parent.read.count.one.sample) 
+# design.parent <- model.matrix(~0+group, data = parent.read.count.one.sample) 
 
 # estimate dispersion
 # w/ batch effect 
-dge.data.parent.batch <- estimateGLMCommonDisp(dge.data.parent, design.parent.batch,verbose = TRUE) # Disp = 0.49779 , BCV = 0.7055 
+dge.data.parent.batch <- estimateGLMCommonDisp(dge.data.parent, design.parent.batch,verbose = TRUE) # Disp = 0.22238 , BCV = 0.4716
 dge.data.parent.batch <- estimateGLMTrendedDisp(dge.data.parent,design.parent.batch)  
 dge.data.parent.batch <- estimateGLMTagwiseDisp(dge.data.parent,design.parent.batch)
 plotBCV(dge.data.parent.batch)
@@ -249,9 +274,11 @@ DEgene.young.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young))
 
 DEgene.early.silique.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.silique))
 DEgene.early.silique.GO.ORA
+write.csv(DEgene.early.silique.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.early.silique.GO.ORA.csv")
 
 DEgene.late.silique.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.late.silique))
 DEgene.late.silique.GO.ORA
+write.csv(DEgene.late.silique.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.late.silique.GO.ORA.csv")
 ```
 
 
