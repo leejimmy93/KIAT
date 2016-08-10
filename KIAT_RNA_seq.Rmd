@@ -161,108 +161,176 @@ png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/clusterin
 plot(hc.parent)
 dev.off() 
 
-# check correlation among samples 
-cor.test(parent.read.count.one.small$`Da-ae_Young_1`, parent.read.count.one.small$`Da-ae_Young_2`)
-cor.test(parent.read.count.one.small$`Da-al-1_Young_2`, parent.read.count.one.small$`Da-al-1_Young_1`)
-cor.test(parent.read.count.one.small$`Da-al-1_Young_1`, parent.read.count.one.small$`Da-ae_early-silique_3`)
+# # check correlation among samples 
+# cor.test(parent.read.count.one.small$`Da-ae_Young_1`, parent.read.count.one.small$`Da-ae_Young_2`)
+# cor.test(parent.read.count.one.small$`Da-al-1_Young_2`, parent.read.count.one.small$`Da-al-1_Young_1`)
+# cor.test(parent.read.count.one.small$`Da-al-1_Young_1`, parent.read.count.one.small$`Da-ae_early-silique_3`)
 
 # pairwise comparison using GLM model 
 # design matrix
-design.parent.batch <- model.matrix(~batch+group, data = parent.read.count.one.sample) 
-# design.parent <- model.matrix(~0+group, data = parent.read.count.one.sample) 
+# design.parent.batch <- model.matrix(~batch+group, data = parent.read.count.one.sample) 
+design.parent <- model.matrix(~0+group, data = parent.read.count.one.sample)
 
-# estimate dispersion
-# w/ batch effect 
-dge.data.parent.batch <- estimateGLMCommonDisp(dge.data.parent, design.parent.batch,verbose = TRUE) # Disp = 0.22238 , BCV = 0.4716
-dge.data.parent.batch <- estimateGLMTrendedDisp(dge.data.parent,design.parent.batch)  
-dge.data.parent.batch <- estimateGLMTagwiseDisp(dge.data.parent,design.parent.batch)
-plotBCV(dge.data.parent.batch)
+# # estimate dispersion
+# # w/ batch effect
+# dge.data.parent.batch <- estimateGLMCommonDisp(dge.data.parent.batch, design.parent.batch,verbose = TRUE) # Disp = 0.22238 , BCV = 0.4716
+# dge.data.parent.batch <- estimateGLMTrendedDisp(dge.data.parent.batch,design.parent.batch)
+# dge.data.parent.batch <- estimateGLMTagwiseDisp(dge.data.parent.batch,design.parent.batch)
+# plotBCV(dge.data.parent.batch)
 
-# w/o batch effect 
-dge.data.parent <- estimateGLMCommonDisp(dge.data.parent, design.parent,verbose = TRUE) # Disp = 0.48381 , BCV = 0.6956 
-dge.data.parent <- estimateGLMTrendedDisp(dge.data.parent,design.parent)  
+# w/o batch effect
+dge.data.parent <- estimateGLMCommonDisp(dge.data.parent, design.parent,verbose = TRUE) # Disp = 0.48381 , BCV = 0.6956
+dge.data.parent <- estimateGLMTrendedDisp(dge.data.parent,design.parent)
 dge.data.parent <- estimateGLMTagwiseDisp(dge.data.parent,design.parent)
 plotBCV(dge.data.parent)
 
 # fit GLM model & test for differential expression
-## w/ batch effect  
-fit.parent.batch <- glmFit(dge.data.parent.batch, design.parent.batch)
+# w/ batch effect
+# fit.parent.batch <- glmFit(dge.data.parent.batch, design.parent.batch)
+# lrt.young.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,0,0,1,0,0,0,0,-1))
+# topTags(lrt.young.batch)
+# DEgene.young.batch <- topTags(lrt.young.batch,n = Inf)$table[topTags(lrt.young.batch,n = Inf)$table$FDR<0.05,]
+# summary(de.young.batch <- decideTestsDGE(lrt.young.batch, p=0.05))
+# # summary(de.young.batch <- decideTestsDGE(lrt.young.batch, p=0.05, lfc = 2))
+# # -1  5072
+# # 0  51131
+# # 1   4772
+# 
+# detags.young <- rownames(lrt.young.batch)[as.logical(de.young.batch)]
+# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.young.png")
+# plotSmear(lrt.young.batch, de.tags=detags.young, main="young")
+# abline(h = c(-2, 2), col = "blue")
+# dev.off()
+# 
+# lrt.flowering.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,1,0,0,0,0,-1,0,0))
+# topTags(lrt.flowering.batch)
+# summary(de.flowering.batch <- decideTestsDGE(lrt.flowering.batch, p=0.05))
+# DEgene.flowering.batch <- topTags(lrt.flowering.batch,n = Inf)$table[topTags(lrt.flowering.batch,n = Inf)$table$FDR<0.05,]
+# # -1  3150
+# # 0  54342
+# # 1   3483
+# detags.flowering <- rownames(lrt.flowering.batch)[as.logical(de.flowering.batch)]
+# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.flowering.png")
+# plotSmear(lrt.flowering.batch, de.tags=detags.flowering, main="flowering")
+# abline(h = c(-2, 2), col = "blue")
+# dev.off()
+# 
+# lrt.early.silique.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,1,0,0,0,0,-1,0,0,0))
+# topTags(lrt.early.silique.batch)
+# summary(de.early.silique.batch <- decideTestsDGE(lrt.early.silique.batch, p=0.05))
+# DEgene.early.silique.batch <- topTags(lrt.early.silique.batch,n = Inf)$table[topTags(lrt.early.silique.batch,n = Inf)$table$FDR<0.05,]
+# # -1  3542
+# # 0  53647
+# # 1   3786
+# detags.early.silique <- rownames(lrt.early.silique.batch)[as.logical(de.early.silique.batch)]
+# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.early.silique.png")
+# plotSmear(lrt.early.silique.batch, de.tags=detags.early.silique, main="early silique")
+# abline(h = c(-2, 2), col = "blue")
+# dev.off()
+# 
+# 
+# lrt.late.silique.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,0,1,0,0,0,0,-1,0))
+# topTags(lrt.late.silique.batch)
+# summary(de.late.silique.batch <- decideTestsDGE(lrt.late.silique.batch, p=0.05))
+# # -1  4064
+# # 0  52880
+# # 1   4031
+# detags.late.silique <- rownames(lrt.late.silique.batch)[as.logical(de.late.silique.batch)]
+# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.late.silique.png")
+# plotSmear(lrt.late.silique.batch, de.tags=detags.late.silique, main="late silique")
+# abline(h = c(-2, 2), col = "blue")
+# dev.off()
+# 
+# lrt.bolting.batch <- glmLRT(fit.parent.batch, coef = "groupDa-al-1bolting")
+# topTags(lrt.bolting.batch)
+# summary(de.bolting.batch <- decideTestsDGE(lrt.bolting.batch, p=0.05, lfc = 1))
+# # -1  1949
+# # 0  55971
+# # 1   3055
+# detags.bolting <- rownames(lrt.bolting.batch)[as.logical(de.bolting.batch)]
+# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.bolting.png")
+# plotSmear(lrt.bolting.batch, de.tags=detags.bolting, main="bolting")
+# abline(h = c(-2, 2), col = "blue")
+# dev.off()
 
-lrt.young.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,0,0,1,0,0,0,0,-1))
-topTags(lrt.young.batch)
-summary(de.young.batch <- decideTestsDGE(lrt.young.batch, p=0.05))
-# -1     5
-# 0  60969
-# 1      1
-
-lrt.flowering.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,1,0,0,0,0,-1,0,0))
-topTags(lrt.flowering.batch)
-summary(de.flowering.batch <- decideTestsDGE(lrt.flowering.batch, p=0.05))
-# -1     0
-# 0  60975
-# 1      0
-
-lrt.early.silique.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,1,0,0,0,0,-1,0,0,0))
-topTags(lrt.early.silique.batch)
-summary(de.early.silique.batch <- decideTestsDGE(lrt.early.silique.batch, p=0.05))
-# -1     1
-# 0  60973
-# 1      1
-
-lrt.late.silique.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,0,1,0,0,0,0,-1,0))
-topTags(lrt.late.silique.batch)
-summary(de.late.silique.batch <- decideTestsDGE(lrt.late.silique.batch, p=0.05))
-# -1   125
-# 0  60377
-# 1    473
-
-lrt.bolting.batch <- glmLRT(fit.parent.batch, coef = 8)
-topTags(lrt.bolting.batch)
-summary(de.bolting.batch <- decideTestsDGE(lrt.bolting.batch, p=0.05))
-# -1     0
-# 0  60975
-# 1      0
-
-## w/o batch effect 
+## w/o batch effect
 fit.parent <- glmFit(dge.data.parent, design.parent)
 
 lrt.young <- glmLRT(fit.parent, contrast = c(0,0,0,0,1,0,0,0,0,-1))
 topTags(lrt.young)
 summary(de.young <- decideTestsDGE(lrt.young, p=0.05))
 DEgene.young <- topTags(lrt.young,n = Inf)$table[topTags(lrt.young,n = Inf)$table$FDR<0.05,]
-# -1     5
-# 0  60967
-# 1      3
+# -1  4553
+# 0  51999
+# 1   4423
 
 lrt.flowering <- glmLRT(fit.parent, contrast = c(0,0,1,0,0,0,0,-1,0,0))
 topTags(lrt.flowering)
 summary(de.flowering <- decideTestsDGE(lrt.flowering, p=0.05))
-# -1     0
-# 0  60975
-# 1      0
+DEgene.flowering <- topTags(lrt.flowering,n = Inf)$table[topTags(lrt.flowering,n = Inf)$table$FDR<0.05,]
+# -1  2877
+# 0  54894
+# 1   3204
 
 lrt.early.silique <- glmLRT(fit.parent, contrast = c(0,1,0,0,0,0,-1,0,0,0))
 topTags(lrt.early.silique)
 summary(de.early.silique <- decideTestsDGE(lrt.early.silique, p=0.05))
 DEgene.early.silique <- topTags(lrt.early.silique,n = Inf)$table[topTags(lrt.early.silique,n = Inf)$table$FDR<0.05,]
-# -1     7
-# 0  60950
-# 1     18
+# -1  3200
+# 0  54280
+# 1   3495
 
 lrt.late.silique <- glmLRT(fit.parent, contrast = c(0,0,0,1,0,0,0,0,-1,0))
 topTags(lrt.late.silique)
 summary(de.late.silique <- decideTestsDGE(lrt.late.silique, p=0.05))
 DEgene.late.silique <- topTags(lrt.late.silique,n = Inf)$table[topTags(lrt.late.silique,n = Inf)$table$FDR<0.05,]
-# -1   396
-# 0  59963
-# 1    616
+# -1  3745
+# 0  53562
+# 1   3668
 
 lrt.bolting <- glmLRT(fit.parent, contrast = c(1,0,0,0,0,-1,0,0,0,0))
 topTags(lrt.bolting)
 summary(de.bolting <- decideTestsDGE(lrt.bolting, p=0.05))
-# -1     0
-# 0  60975
-# 1      0
+DEgene.bolting <- topTags(lrt.bolting,n = Inf)$table[topTags(lrt.bolting,n = Inf)$table$FDR<0.05,]
+# -1  2794
+# 0  56327
+# 1   1854
+
+### plot smear 
+# young
+detags.young.1 <- rownames(lrt.young)[as.logical(de.young)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.young.1.png")
+plotSmear(lrt.young, de.tags=detags.young.1, main="young")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
+
+# bolting 
+detags.bolting.1 <- rownames(lrt.bolting)[as.logical(de.bolting)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.bolting.1.png")
+plotSmear(lrt.bolting, de.tags=detags.bolting.1, main="bolting")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
+
+# early silique 
+detags.early.silique.1 <- rownames(lrt.early.silique)[as.logical(de.early.silique)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.early.silique.1.png")
+plotSmear(lrt.early.silique, de.tags=detags.early.silique.1, main="early silique")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
+
+# late silique 
+detags.late.silique.1 <- rownames(lrt.late.silique)[as.logical(de.late.silique)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.late.silique.1.png")
+plotSmear(lrt.late.silique, de.tags=detags.late.silique.1, main="late silique")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
+
+# flowering 
+detags.flowering.1 <- rownames(lrt.flowering)[as.logical(de.flowering)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.flowering.1.png")
+plotSmear(lrt.flowering, de.tags=detags.flowering.1, main="flowering")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
 
 ```
 
@@ -270,8 +338,23 @@ summary(de.bolting <- decideTestsDGE(lrt.bolting, p=0.05))
 ```{r}
 # load all necessary functions 
 source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
-DEgene.young.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young))
 
+# young 
+DEgene.young.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young))
+DEgene.young.GO.ORA
+write.csv(DEgene.young.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.young.GO.ORA.csv")
+
+# bolting 
+DEgene.bolting.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.bolting))
+DEgene.bolting.GO.ORA
+write.csv(DEgene.bolting.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.bolting.GO.ORA.csv")
+
+# flowering 
+DEgene.flowering.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.flowering))
+DEgene.flowering.GO.ORA
+write.csv(DEgene.flowering.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.flowering.GO.ORA.csv")
+
+# early silique 
 DEgene.early.silique.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.silique))
 DEgene.early.silique.GO.ORA
 write.csv(DEgene.early.silique.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.early.silique.GO.ORA.csv")
@@ -280,8 +363,5 @@ DEgene.late.silique.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.late.silique))
 DEgene.late.silique.GO.ORA
 write.csv(DEgene.late.silique.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.late.silique.GO.ORA.csv")
 ```
-
-
-
 
 
