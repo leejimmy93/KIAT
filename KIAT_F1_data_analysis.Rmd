@@ -1,0 +1,91 @@
+---
+title: "KIAT_F1_data_analysis"
+author: "Ruijuan Li"
+date: "August 12, 2016"
+output: html_document
+---
+
+```{r}
+# 1) download file from ftp using ftp_file_transfer.sh
+# 1.1) unzip files using gunzip *  
+# 2) get first 1000 sequences for each file extract_1000_reads.sh, actually worked with all data instead of the 1st 1000 seqs
+# 3) QC file using fastQC: fastqc *.fq -o /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/fastqc_result
+# 4) download Brassica_napus.annotation_v5.cds.fa to whitney 
+# 5) collapse fastqc summary result into one file & get overrepresented sequences using ./make_summary_report.sh 
+
+# 6) reformat summary.all.txt file 
+setwd("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/")
+fastQC_summary <- read.delim("./fastQC_result/summary_all.txt", header = F)
+dim(fastQC_summary)
+head(fastQC_summary)
+tail(fastQC_summary)
+
+fastQC_summary_wide <- reshape(fastQC_summary, timevar="V2",idvar="V3",direction="wide")
+colnames(fastQC_summary_wide) <- gsub("(V1)(.)([[:print:]]+)","\\3",colnames(fastQC_summary_wide))
+dim(fastQC_summary_wide)
+
+write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
+
+# 7) checked the source of overrepresented sequences using web nucleotide blast tool, found that most of them are from 
+# cholorplast, mitochondra, rRNA, tansposon, etc. Some are illumina or TruSeq adapters 
+
+# blast sequences against Trimmomatic adapters suggest that TruSeq3-PE-2.fa should be used to trimm the data. (Q: how to deal with the others? will they affect the final result? search... )
+
+# Qs on plstids seqs contamination: 1) why are there these sequences? check the lib making step 2) will they affect downstream analysis if kept? CDS mapping VS genome mapping 3) If yes, how to remove them? (I need to figure these Qs out.)
+
+# 8) using kallisto to build the reference cds index 
+# kallisto index -k 19 -i Brassica_napus.annotation_v5.cds.19.kai /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa
+
+# 9) map to reference cds index and get read count file using bunchrun_kallisto.sh (using est_counts from Kallisto)
+```
+```
+# Expression analysis 1) formatting data   
+```{r}
+parent.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.tsv", header = T, check.names = F)
+rownames(parent.read.count) <- parent.read.count[,1]
+parent.read.count <- parent.read.count[,-1]
+
+# format data 
+head(parent.read.count)
+dim(parent.read.count) # 101040     54 
+colnames(parent.read.count)
+even_indexes<-seq(2,length(colnames(parent.read.count)),2)
+parent.read.count.one <- parent.read.count[,even_indexes]
+dim(parent.read.count.one) # 101040     27 
+colnames(parent.read.count.one)
+colnames(parent.read.count.one) <- sub("_2.fq","",colnames(parent.read.count.one),fixed = TRUE) # remove _2.fq 
+
+# sample description  
+sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/parent_summary_corrected.csv")
+dim(sample_des)
+sorted_sample_des <- sample_des[order(sample_des$SampleID),]
+
+sorted_sample_des[,4:7]
+new_sample_ID <- paste(sorted_sample_des$Cultivar, sorted_sample_des$Stage, sorted_sample_des$rep, sep = "_")
+new_sample_ID
+
+# calculate GB size of libs 
+mean(as.numeric(sub("Gb","",sample_des$TotalBases.Gb.))) 
+min(as.numeric(sub("Gb","",sample_des$TotalBases.Gb.))) 
+max(as.numeric(sub("Gb","",sample_des$TotalBases.Gb.))) 
+
+# replace sample ID 
+colnames(parent.read.count.one) <- new_sample_ID
+head(parent.read.count.one)
+save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
