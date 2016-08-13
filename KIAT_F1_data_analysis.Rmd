@@ -38,49 +38,289 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # 9) map to reference cds index and get read count file using bunchrun_kallisto.sh (using est_counts from Kallisto)
 ```
-```
+
 # Expression analysis 1) formatting data   
 ```{r}
-parent.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.tsv", header = T, check.names = F)
-rownames(parent.read.count) <- parent.read.count[,1]
-parent.read.count <- parent.read.count[,-1]
+F1.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/read.count.tsv", header = T, check.names = F)
+
+rownames(F1.read.count) <- F1.read.count[,1]
+F1.read.count <- F1.read.count[,-1]
 
 # format data 
-head(parent.read.count)
-dim(parent.read.count) # 101040     54 
-colnames(parent.read.count)
-even_indexes<-seq(2,length(colnames(parent.read.count)),2)
-parent.read.count.one <- parent.read.count[,even_indexes]
-dim(parent.read.count.one) # 101040     27 
-colnames(parent.read.count.one)
-colnames(parent.read.count.one) <- sub("_2.fq","",colnames(parent.read.count.one),fixed = TRUE) # remove _2.fq 
+head(F1.read.count)
+dim(F1.read.count) # 101040     24 
+colnames(F1.read.count)
+colnames(F1.read.count) <- sub("_2.fq","",colnames(F1.read.count),fixed = TRUE) # remove _2.fq 
 
 # sample description  
-sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/parent_summary_corrected.csv")
-dim(sample_des)
-sorted_sample_des <- sample_des[order(sample_des$SampleID),]
+sample_des.F1 <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F1_summary.csv")
+dim(sample_des.F1)
+sorted_sample_des.F1 <- sample_des.F1[order(sample_des.F1$Sample.ID),]
 
-sorted_sample_des[,4:7]
-new_sample_ID <- paste(sorted_sample_des$Cultivar, sorted_sample_des$Stage, sorted_sample_des$rep, sep = "_")
-new_sample_ID
+sorted_sample_des.F1[,5:8]
+new_sample_ID.F1 <- paste(sorted_sample_des.F1$cultivar, sorted_sample_des.F1$Stage, sorted_sample_des.F1$rep, sep = "_")
+new_sample_ID.F1
 
 # calculate GB size of libs 
-mean(as.numeric(sub("Gb","",sample_des$TotalBases.Gb.))) 
-min(as.numeric(sub("Gb","",sample_des$TotalBases.Gb.))) 
-max(as.numeric(sub("Gb","",sample_des$TotalBases.Gb.))) 
+mean(as.numeric(sub("Gb","",sample_des.F1$TotalBases.Gb.))) 
+min(as.numeric(sub("Gb","",sample_des.F1$TotalBases.Gb.))) 
+max(as.numeric(sub("Gb","",sample_des.F1$TotalBases.Gb.))) 
 
 # replace sample ID 
-colnames(parent.read.count.one) <- new_sample_ID
-head(parent.read.count.one)
-save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
+colnames(F1.read.count)
+colnames(F1.read.count) <- new_sample_ID.F1
+head(F1.read.count)
+save(F1.read.count,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/F1.read.count.Rdata")
 ```
 
-
-
-
+# expression analysis 2) set up sample description 
 ```{r}
+# load necessary libs & functions 
+library(edgeR)
+library(ggplot2)
+
+# filter based on read count, assign group, normalize, design matrix, calculate dispersion   
+# set up group 
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/F1.read.count.Rdata")
+F1.read.count <- F1.read.count[,colSums(F1.read.count) > 1000000]  
+dim(F1.read.count) # 101040     24 
+colnames(F1.read.count)
+
+F1.read.count.sample<-data.frame(file=colnames(F1.read.count),
+                                         batch=factor(gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\5",colnames(F1.read.count))),  
+                                         genotype=factor(gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1",colnames(F1.read.count))),	
+                                         tissue=factor(gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\3",colnames(F1.read.count))),	
+                                         group=factor(gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1\\3",colnames(F1.read.count)))
+)
+
+F1.read.count.sample
+ftable(F1.read.count.sample,row.vars="tissue",col.vars=c("batch","genotype"))
+
+# filter based on read count 
+F1.read.count.small <- F1.read.count[rowSums(F1.read.count > 10) >= 3,]
+dim(F1.read.count.small) # 60176  24 
+save(F1.read.count.small, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/F1.read.count.small.Rdata")
+
+# check number of genes with reads number > 10 in each lib # make summary table 
+expressed_gene_number.F1 <- 
+  sapply(colnames(F1.read.count), function(RNAlib){
+    sum(F1.read.count[,RNAlib]>10)
+  }
+  )
+expressed_gene_number.F1 <- as.data.frame(expressed_gene_number.F1)
+expressed_gene_number.F1
+
+# top 10 highly expressed genes in each lib 
+most_highly_expressed_genes.F1 <- 
+sapply(colnames((F1.read.count.small)), function(RNAlib){
+  rownames(head(F1.read.count.small[order(F1.read.count.small[,RNAlib],decreasing = TRUE),], 10))
+}
+)
+write.csv(t(most_highly_expressed_genes.F1), file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/most_highly_expressed_genes.F1.csv")
+
+temp <- sample_des.F1[,c(5,6,7,12)]
+rownames(temp) <- paste(sample_des.F1[,5], sample_des.F1[,6], sample_des.F1[,7], sep = "_")
+sample_statistics.F1 <- merge(temp, expressed_gene_number.F1, by=0) 
+colnames(sample_statistics.F1) <- c("sample_ID", "Cultivar", "Tissue", "rep", "Total_Bases_Gb", "expressed_gene_number")
+head(sample_statistics.F1)
+colnames(sample_statistics.F1)
+write.csv(sample_statistics.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/sample_statisitcs.F1.csv")
 
 ```
+
+# expression analysis 3) voom transformation # think more about the design in voom transformation... 
+```{r}
+# voom transformation 
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("DESeq2")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/F1.read.count.small.Rdata")
+library("DESeq2")
+
+dds.F1 <- DESeqDataSetFromMatrix(countData = round(F1.read.count.small), colData = F1.read.count.sample, design = ~ batch + genotype*tissue)
+
+vsd.F1 <- varianceStabilizingTransformation(dds.F1)
+vstMat.F1 <- assay(vsd.F1)
+colnames(vstMat.F1) <- colnames(F1.read.count.small)
+save(vstMat.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/vstMat.F1.Rdata")
+```
+
+# MDS, clustering 
+```{r}
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/vstMat.F1.Rdata")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/F1.read.count.small.Rdata")
+
+# normalize 
+dge.data.F1 <- DGEList(counts=F1.read.count.small, group=F1.read.count.sample$group)
+dge.data.F1 <- calcNormFactors(dge.data.F1, method = "TMM") 
+dge.data.F1$sample
+hist(dge.data.F1$samples$norm.factors)
+
+# MDS to check sample seperation, also using dengrogram.  
+mds.F1 <- plotMDS(dge.data.F1, method = "bcv",labels = dge.data.F1$samples$group)
+
+x.F1 <- as.data.frame(mds.F1$x)
+y.F1 <- as.data.frame(mds.F1$y)
+distance_matrix.F1 <- merge(x.F1, y.F1, by="row.names")
+distance_matrix.F1$group <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1\\3",distance_matrix.F1$Row.names)
+distance_matrix.F1$gt <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1",distance_matrix.F1$Row.names)
+distance_matrix.F1$tissue <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\3",distance_matrix.F1$Row.names)
+
+colnames(distance_matrix.F1) <- c("lib","x","y","group","gt","tissue")
+head(distance_matrix.F1)
+
+# making color MDS figure 
+p <- ggplot(data = distance_matrix.F1)
+p <- p + geom_point(aes(x, y, color=factor(tissue)), size=3) 
+p <- p + labs(y = "BCV distance 2", x="BCV distance 1")
+# p <- p + facet_grid(~gt)
+p
+
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/MDS_2.png", width = 11, height = 8)
+
+# clustering to check sample seperation 
+# install.packages("ggdendro")
+library(ggdendro)
+library(pvclust)
+
+hc.F1 <- hclust(dist(t(vstMat.F1[1:1000,])))
+# test <- ggdendrogram(hc.F1, theme_dendro = F, rotate = T)
+
+ggdata <- dendro_data(as.dendrogram(hc.F1))
+ggdata$labels$gt <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1",ggdata$labels$label) 
+ggdata$labels$tissue <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\3",ggdata$labels$label)
+ggdata$labels$group <- paste(ggdata$labels$gt, ggdata$labels$tissue, sep = "_")
+ggdata$labels
+
+# start ggplot here 
+p2 <- ggplot(data = segment(ggdata))
+p2 <- p2 + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
+p2 <- p2 + geom_text(data = label(ggdata), aes(x = x, y = y, label = label, hjust=0, color=group)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
+p2
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/clustering.png", width = 13, height = 8)
+```
+
+# expression analysis 
+```{r}
+# pairwise comparison using GLM model 
+# design matrix
+design.F1 <- model.matrix(~0+group, data = F1.read.count.sample)
+
+# w/o batch effect
+dge.data.F1 <- estimateGLMCommonDisp(dge.data.F1, design.F1,verbose = TRUE) # Disp = 0.08264 , BCV = 0.2875 
+dge.data.F1 <- estimateGLMTrendedDisp(dge.data.F1,design.F1)
+dge.data.F1 <- estimateGLMTagwiseDisp(dge.data.F1,design.F1)
+plotBCV(dge.data.F1)
+
+## w/o batch effect
+fit.F1 <- glmFit(dge.data.F1, design.F1)
+colnames(fit.F1$design)
+
+# between genotypes, 414 as reference level  
+lrt.young.F1 <- glmLRT(fit.F1, contrast = c(0,0,0,-1,0,0,0,1))
+topTags(lrt.young.F1) 
+summary(de.young.F1 <- decideTestsDGE(lrt.young.F1, p=0.05))
+DEgene.young.F1 <- topTags(lrt.young.F1,n = Inf)$table[topTags(lrt.young.F1,n = Inf)$table$FDR<0.05,]
+# -1  1640
+# 0  56152
+# 1   2384
+
+lrt.flowering.F1 <- glmLRT(fit.F1, contrast = c(0,-1,0,0,0,1,0,0))
+topTags(lrt.flowering.F1)
+summary(de.flowering.F1 <- decideTestsDGE(lrt.flowering.F1, p=0.05))
+DEgene.flowering.F1 <- topTags(lrt.flowering.F1,n = Inf)$table[topTags(lrt.flowering.F1,n = Inf)$table$FDR<0.05,]
+# -1   961
+# 0  58526
+# 1    689
+
+lrt.early.silique.F1 <- glmLRT(fit.F1, contrast = c(-1,0,0,0,1,0,0,0))
+topTags(lrt.early.silique.F1)
+summary(de.early.silique.F1 <- decideTestsDGE(lrt.early.silique.F1, p=0.05))
+DEgene.early.silique.F1 <- topTags(lrt.early.silique.F1,n = Inf)$table[topTags(lrt.early.silique.F1,n = Inf)$table$FDR<0.05,]
+# -1    69
+# 0  60061
+# 1     46
+
+lrt.late.silique.F1 <- glmLRT(fit.F1, contrast = c(0,0,-1,0,0,0,1,0))
+topTags(lrt.late.silique.F1)
+summary(de.late.silique.F1 <- decideTestsDGE(lrt.late.silique.F1, p=0.05))
+DEgene.late.silique.F1 <- topTags(lrt.late.silique.F1,n = Inf)$table[topTags(lrt.late.silique.F1,n = Inf)$table$FDR<0.05,]
+# -1   170
+# 0  59840
+# 1    166
+
+# between early & late silique 
+lrt.early.vs.late.silique.414 <- glmLRT(fit.F1, contrast = c(-1,0,1,0,0,0,0,0))
+topTags(lrt.early.vs.late.silique.414)
+summary(de.early.vs.late.silique.414 <- decideTestsDGE(lrt.early.vs.late.silique.414, p=0.05))
+DEgene.early.vs.late.silique.414 <- topTags(lrt.early.vs.late.silique.414,n = Inf)$table[topTags(lrt.early.vs.late.silique.414,n = Inf)$table$FDR<0.05,]
+# -1  3049
+# 0  53803
+# 1   3324
+
+lrt.early.vs.late.silique.415 <- glmLRT(fit.F1, contrast = c(0,0,0,0,-1,0,1,0))
+topTags(lrt.early.vs.late.silique.415)
+summary(de.early.vs.late.silique.415 <- decideTestsDGE(lrt.early.vs.late.silique.415, p=0.05))
+DEgene.early.vs.late.silique.415 <- topTags(lrt.early.vs.late.silique.415,n = Inf)$table[topTags(lrt.early.vs.late.silique.415,n = Inf)$table$FDR<0.05,]
+# -1  3074
+# 0  53197
+# 1   3905
+
+# plot histogram 
+### 
+
+```
+
+# GO enrichment analysis 
+```{r}
+# GO enrichment analysis 
+# load all necessary functions 
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+
+# young 
+DEgene.young.GO.ORA.F1 <- GOseq.Bn.ORA(rownames(DEgene.young.F1))
+DEgene.young.GO.ORA.F1
+write.csv(DEgene.young.GO.ORA.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.young.GO.ORA.F1.csv")
+
+# flowering 
+DEgene.flowering.GO.ORA.F1 <- GOseq.Bn.ORA(rownames(DEgene.flowering.F1))
+DEgene.flowering.GO.ORA.F1
+write.csv(DEgene.flowering.GO.ORA.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.flowering.GO.ORA.F1.csv")
+
+# early silique 
+DEgene.early.silique.GO.ORA.F1 <- GOseq.Bn.ORA(rownames(DEgene.early.silique.F1))
+DEgene.early.silique.GO.ORA.F1
+write.csv(DEgene.early.silique.GO.ORA.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.early.silique.GO.ORA.F1.csv")
+
+DEgene.late.silique.GO.ORA.F1 <- GOseq.Bn.ORA(rownames(DEgene.late.silique.F1))
+DEgene.late.silique.GO.ORA.F1
+write.csv(DEgene.late.silique.GO.ORA.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.late.silique.GO.ORA.F1.csv")
+
+DEgene.silique.414.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.414))
+DEgene.silique.414.GO.ORA
+write.csv(DEgene.silique.414.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.silique.414.GO.ORA.csv")
+
+DEgene.silique.415.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.415))
+DEgene.silique.415.GO.ORA
+write.csv(DEgene.silique.415.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.silique.415.GO.ORA.csv")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

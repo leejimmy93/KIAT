@@ -71,21 +71,23 @@ head(tmp)
 rownames(tmp) <- tmp$Row.names
 tmp <- tmp[,-1]
 dim(tmp) # 207 27 
+tmp$total <- rowSums(tmp)
+
 # get only the top 5 highly expressed fatty acid genes 
-nrow(tmp[rowSums(tmp > 3000),])
-five.fatty.acid.genes <- head(tmp[order(rowSums(tmp > 3000), decreasing = T),], 5)
+five.fatty.acid.genes <- head(tmp[order(tmp$total, decreasing = T), ], 5)
 five.fatty.acid.genes
-write.csv(t(five.fatty.acid.genes), file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/five.fatty.acid.gene.csv")
+write.csv(t(five.fatty.acid.genes), file =  "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/five.fatty.acid.gene.csv")
 
-# draw plot 
-tmp3 <- read.csv("/Users/ruijuanli/Desktop/5_fatty_acid_genes.csv")
-gene1 <- tmp3[1:5,]
-gene2 <- tmp3[11:20,]
-gene3 <- tmp3[21:30,]
-gene4 <- tmp3[31:40,]
-gene5 <- tmp3[41:50,]
+# reformat for ggplot 
+five.fatty.acid.genes
 
-ggplot(gene1, aes(x=tt, y=mean), geom_line())
+
+
+
+
+
+
+
 ```
 
 
@@ -108,7 +110,7 @@ colnames(parent.read.count.one) <- sub("_2.fq","",colnames(parent.read.count.one
 
 # sample description  
 sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/parent_summary_corrected.csv")
-dim(sample_des)
+dim(sample_des) # 27 22
 sorted_sample_des <- sample_des[order(sample_des$SampleID),]
 
 sorted_sample_des[,4:7]
@@ -206,7 +208,6 @@ dge.data.parent$sample
 hist(dge.data.parent$samples$norm.factors)
 
 # MDS to check sample seperation, also using dengrogram.  
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png")
 mds <- plotMDS(dge.data.parent, method = "bcv",labels = dge.data.parent$samples$group)
 
 x <- as.data.frame(mds$x)
@@ -229,22 +230,22 @@ p
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width = 11, height = 8)
 
 # clustering to check sample seperation 
-vstMat.parent <- as.data.frame(vstMat.parent)
-head(vstMat.parent)
-# making dengrogram
-library(pvclust)
+library(ggdendro)
 
-set.seed(123)
-fit <- pvclust(vstMat.parent, method.hclust = "ward.D", method.dist = "euclidean", nboot = 1000) # to generate the report
+hc.parent <- hclust(dist(t(vstMat.parent)))
 
-class(fit)
+ggdata.parent <- dendro_data(as.dendrogram(hc.parent))
+ggdata.parent$labels$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1",ggdata.parent$labels$label) 
+ggdata.parent$labels$tissue <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\3",ggdata.parent$labels$label)
+ggdata.parent$labels$group <- paste(ggdata.parent$labels$gt, ggdata.parent$labels$tissue, sep = "_")
+ggdata.parent$labels
 
-
-
-
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/clustering.png")
-plot(fit)
-dev.off() 
+# start ggplot here 
+p3 <- ggplot(data = segment(ggdata.parent))
+p3 <- p3 + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
+p3 <- p3 + geom_text(data = label(ggdata.parent), aes(x = x, y = y, label = label, hjust=0, color=group)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
+p3
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/clustering_new.png", width = 15, height = 8) 
 
 # # check correlation among samples 
 # cor.test(parent.read.count.one.small$`Da-ae_Young_1`, parent.read.count.one.small$`Da-ae_Young_2`)
