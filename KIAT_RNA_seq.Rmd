@@ -107,16 +107,15 @@ five.fatty.acid.genes.melt.reshape
 
 p.fatty.acid <- ggplot(data = five.fatty.acid.genes.melt.reshape)
 p.fatty.acid <- p.fatty.acid + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
-p.fatty.acid <- p.fatty.acid + facet_grid(gt~geneID)
-# p.fatty.acid <- p.fatty.acid + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max))
+p.fatty.acid <- p.fatty.acid + facet_grid(~geneID~gt)
+p.fatty.acid <- p.fatty.acid + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
 p.fatty.acid <- p.fatty.acid + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
 p.fatty.acid <- p.fatty.acid + labs(y = "mean expression value", x="tissue")
 
 p.fatty.acid   
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width = 11, height = 8)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.png", width = 8, height = 11)
 ```
-
 
 # Expression analysis 1) formatting data   
 ```{r}
