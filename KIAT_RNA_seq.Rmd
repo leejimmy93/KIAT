@@ -246,11 +246,11 @@ colnames(distance_matrix) <- c("lib","x","y","group","gt","tissue")
 head(distance_matrix)
 
 # making color MDS figure 
-p <- ggplot(data = distance_matrix)
-p <- p + geom_point(aes(x, y, color=factor(tissue)), size=3) 
-p <- p + labs(y = "BCV distance 2", x="BCV distance 1")
-p <- p + facet_grid(~gt)
-p
+p.mds <- ggplot(data = distance_matrix)
+p.mds <- p.mds + geom_point(aes(x, y, color=factor(tissue)), size=3) 
+p.mds <- p.mds + labs(y = "BCV distance 2", x="BCV distance 1")
+p.mds <- p.mds + facet_grid(~gt)
+p.mds
 
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width = 11, height = 8)
 
@@ -266,10 +266,10 @@ ggdata.parent$labels$group <- paste(ggdata.parent$labels$gt, ggdata.parent$label
 ggdata.parent$labels
 
 # start ggplot here 
-p3 <- ggplot(data = segment(ggdata.parent))
-p3 <- p3 + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
-p3 <- p3 + geom_text(data = label(ggdata.parent), aes(x = x, y = y, label = label, hjust=0, color=group)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
-p3
+p.dengro <- ggplot(data = segment(ggdata.parent))
+p.dendro <- p.dengro + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
+p.dendro <- p.dendro + geom_text(data = label(ggdata.parent), aes(x = x, y = y, label = label, hjust=0, color=group)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
+p.dendro
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/clustering_new.png", width = 15, height = 8) 
 
 # # check correlation among samples 
@@ -290,7 +290,7 @@ design.parent <- model.matrix(~0+group, data = parent.read.count.one.sample)
 # plotBCV(dge.data.parent.batch)
 
 # w/o batch effect
-dge.data.parent <- estimateGLMCommonDisp(dge.data.parent, design.parent,verbose = TRUE) # Disp = 0.48381 , BCV = 0.6956
+dge.data.parent <- estimateGLMCommonDisp(dge.data.parent, design.parent,verbose = TRUE) # Disp = 0.25572 , BCV = 0.5057
 dge.data.parent <- estimateGLMTrendedDisp(dge.data.parent,design.parent)
 dge.data.parent <- estimateGLMTagwiseDisp(dge.data.parent,design.parent)
 plotBCV(dge.data.parent)
@@ -407,6 +407,32 @@ DEgene.bolting <- topTags(lrt.bolting,n = Inf)$table[topTags(lrt.bolting,n = Inf
 # 0  56327
 # 1   1854
 
+## between developmental stages 
+# Da-Ae 
+lrt.young.vs.bolting.ae <- glmLRT(fit.parent, contrast = c(1,0,0,0,-1,0,0,0,0,0))
+topTags(lrt.young.vs.bolting.ae)
+summary(de.young.vs.bolting.ae <- decideTestsDGE(lrt.young.vs.bolting.ae, p=0.05))
+DEgene.young.vs.bolting.ae <- topTags(lrt.young.vs.bolting.ae,n = Inf)$table[topTags(lrt.young.vs.bolting.ae,n = Inf)$table$FDR<0.05,]
+# -1   442
+# 0  59872
+# 1    661
+
+lrt.bolting.vs.flowering.ae <- glmLRT(fit.parent, contrast = c(-1,0,1,0,0,0,0,0,0,0))
+topTags(lrt.bolting.vs.flowering.ae)
+summary(de.bolting.vs.flowering.ae <- decideTestsDGE(lrt.bolting.vs.flowering.ae, p=0.05))
+DEgene.bolting.vs.flowering.ae <- topTags(lrt.bolting.vs.flowering.ae,n = Inf)$table[topTags(lrt.bolting.vs.flowering.ae,n = Inf)$table$FDR<0.05,]
+# -1   736
+# 0  57389
+# 1   2850
+
+lrt.flowering.vs.early.silique.ae <- glmLRT(fit.parent, contrast = c(0,1,-1,0,0,0,0,0,0,0))
+topTags(lrt.flowering.vs.early.silique.ae)
+summary(de.flowering.vs.early.silique <- decideTestsDGE(lrt.flowering.vs.early.silique.ae, p=0.05))
+DEgene.flowering.vs.early.silique.ae <- topTags(lrt.flowering.vs.early.silique.ae,n = Inf)$table[topTags(lrt.flowering.vs.early.silique.ae,n = Inf)$table$FDR<0.05,]
+# -1  3811
+# 0  56054
+# 1   1110
+
 lrt.early.vs.late.silique.ae <- glmLRT(fit.parent, contrast = c(0,-1,0,1,0,0,0,0,0,0))
 topTags(lrt.early.vs.late.silique.ae)
 summary(de.early.vs.late.silique.ae <- decideTestsDGE(lrt.early.vs.late.silique.ae, p=0.05))
@@ -414,6 +440,31 @@ DEgene.early.vs.late.silique.ae <- topTags(lrt.early.vs.late.silique.ae,n = Inf)
 # -1   285
 # 0  60430
 # 1    260
+
+### Da-Ol-1 
+lrt.young.vs.bolting.ol <- glmLRT(fit.parent, contrast = c(0,0,0,0,0,1,0,0,0,-1))
+topTags(lrt.young.vs.bolting.ol)
+summary(de.young.vs.bolting.ol <- decideTestsDGE(lrt.young.vs.bolting.ol, p=0.05))
+DEgene.young.vs.bolting.ol <- topTags(lrt.young.vs.bolting.ol,n = Inf)$table[topTags(lrt.young.vs.bolting.ol,n = Inf)$table$FDR<0.05,]
+# -1  2683
+# 0  54969
+# 1   3323
+
+lrt.bolting.vs.flowering.ol <- glmLRT(fit.parent, contrast = c(0,0,0,0,0,-1,0,1,0,0))
+topTags(lrt.bolting.vs.flowering.ol)
+summary(de.bolting.vs.flowering.ol <- decideTestsDGE(lrt.bolting.vs.flowering.ol, p=0.05))
+DEgene.bolting.vs.flowering.ol <- topTags(lrt.bolting.vs.flowering.ol,n = Inf)$table[topTags(lrt.bolting.vs.flowering.ol,n = Inf)$table$FDR<0.05,]
+# -1   914
+# 0  58313
+# 1   1748
+
+lrt.flowering.vs.early.silique.ol <- glmLRT(fit.parent, contrast = c(0,0,0,0,0,0,1,-1,0,0))
+topTags(lrt.flowering.vs.early.silique.ol)
+summary(de.flowering.vs.early.silique.ol <- decideTestsDGE(lrt.flowering.vs.early.silique.ol, p=0.05))
+DEgene.flowering.vs.early.silique.ol <- topTags(lrt.flowering.vs.early.silique.ol,n = Inf)$table[topTags(lrt.flowering.vs.early.silique.ol,n = Inf)$table$FDR<0.05,]
+# -1  4845
+# 0  54087
+# 1   2043
 
 lrt.early.vs.late.silique.ol <- glmLRT(fit.parent, contrast = c(0,0,0,0,0,0,-1,0,1,0))
 topTags(lrt.early.vs.late.silique.ol)
@@ -461,6 +512,117 @@ dev.off()
 
 # plot histogram 
 ### 
+
+```
+
+# explore the silique problem, much fewer genes were differentially expressed between early & late silique in Da-Ae than in Da-Ol-1, why? (actually De-Ae has fewer DEGs between all stages, need to find out why later) 
+```{r}
+# calcuate overlaps & unique genes 
+dim(DEgene.young.vs.bolting.ol) # 6006    5 
+dim(DEgene.young.vs.bolting.ae) # 1103    5
+summary(rownames(DEgene.young.vs.bolting.ol) %in% rownames(DEgene.young.vs.bolting.ae)) 
+# Mode   FALSE    TRUE    NA's 
+# logical    5556     450       0 
+dim(DEgene.bolting.vs.flowering.ol) # 2662    5 
+dim(DEgene.bolting.vs.flowering.ae) # 3586    5 
+summary(rownames(DEgene.bolting.vs.flowering.ol) %in% rownames(DEgene.bolting.vs.flowering.ae)) 
+#    Mode   FALSE    TRUE    NA's 
+# logical    1528    1134       0
+dim(DEgene.flowering.vs.early.silique.ol) # 6888    5 
+dim(DEgene.flowering.vs.early.silique.ae) # 4921    5 
+summary(rownames(DEgene.flowering.vs.early.silique.ol) %in% rownames(DEgene.flowering.vs.early.silique.ae)) 
+#   Mode   FALSE    TRUE    NA's 
+# logical    3200    3688       0 
+dim(DEgene.early.vs.late.silique.ol) # 2776 5 
+dim(DEgene.early.vs.late.silique.ae) # 545 5 
+summary(rownames(DEgene.early.vs.late.silique.ol) %in% rownames(DEgene.early.vs.late.silique.ae)) 
+#    Mode   FALSE    TRUE    NA's 
+# logical    2436     340       0 
+
+# draw venn diagram 
+# install.packages("VennDiagram")
+require(VennDiagram)
+
+# young vs bolting
+grid.newpage()
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/young.vs.bolting.png")
+venn.plot <- draw.pairwise.venn(6006, 1103, 450, # 1st number for group A, 2nd for group B, 3rd for overlaps 
+                                c("Da-Ol-1", "Da-Ae"),
+                                fill = c("lightblue","pink"),
+                                lty          = "blank",
+                                cex = 2,
+                                cat.cex = 1.5,
+                                cat.pos = 9)
+grid.draw(venn.plot)
+dev.off()
+
+# bolting vs flowering 
+grid.newpage()
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/bolting.vs.flowering.png")
+venn.plot <- draw.pairwise.venn(2662, 3586, 1134, # 1st number for group A, 2nd for group B, 3rd for overlaps 
+                                c("Da-Ol-1", "Da-Ae"),
+                                fill = c("lightblue","pink"),
+                                lty          = "blank",
+                                cex = 2,
+                                cat.cex = 1.5,
+                                cat.pos = 9)
+grid.draw(venn.plot)
+dev.off()
+
+# flowering vs early silique 
+grid.newpage()
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/flowering.vs.early.silique.png")
+venn.plot <- draw.pairwise.venn(6888, 4921, 3688, # 1st number for group A, 2nd for group B, 3rd for overlaps 
+                                c("Da-Ol-1", "Da-Ae"),
+                                fill = c("lightblue","pink"),
+                                lty          = "blank",
+                                cex = 2,
+                                cat.cex = 1.5,
+                                cat.pos = 9)
+grid.draw(venn.plot)
+dev.off()
+
+# early vs late silique 
+grid.newpage()
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/early.vs.late.silique.png")
+venn.plot <- draw.pairwise.venn(2776, 545, 340, # 1st number for group A, 2nd for group B, 3rd for overlaps 
+                                c("Da-Ol-1", "Da-Ae"),
+                                fill = c("lightblue","pink"),
+                                lty          = "blank",
+                                cex = 2,
+                                cat.cex = 1.5,
+                                cat.pos = 9)
+grid.draw(venn.plot)
+dev.off()
+
+# explore the uniquely differentially expressed genes in Da-Ol-1, what are their expression patterns in Da-Ae? 
+# 1) find genes that are only differentially expressed in Da-Ol-1 
+index <- which(!(rownames(DEgene.early.vs.late.silique.ol) %in% rownames(DEgene.early.vs.late.silique.ae)))
+
+# 2) extract the expression values of these genes from early, late silique of Da-Ae & Da-Ol-1 
+uniq.gene.ol <- parent.read.count.one.small[index,]
+uniq.gene.ol <- uniq.gene.ol[,c("Da-Ae_early-silique_3", "Da-Ol-1_early-silique_3", "Da-Ol-1_late-silique_3", "Da-Ae_late-silique_3", "Da-Ae_early-silique_1", "Da-Ae_early-silique_2", "Da-Ae_late-silique_1", "Da-Ae_late-silique_2", "Da-Ol-1_early-silique_1", "Da-Ol-1_early-silique_2", "Da-Ol-1_late-silique_1", "Da-Ol-1_late-silique_2")]
+
+dim(uniq.gene.ol) # 2436   12 
+
+# 3) draw heatmap of their expression values... I don't think this can explain the result 
+library(gplots)
+hr <- hclust(dist(uniq.gene.ol))
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/heatmap.png")
+heatmap.2(as.matrix(uniq.gene.ol), Rowv = as.dendrogram(hr), scale = "row", density.info="none", trace="none", keysize = 0.5)
+dev.off()
+
+# 4) make figure of their mean expression values 
+DEgene.early.vs.late.silique.ae.all <- topTags(lrt.early.vs.late.silique.ae,n = Inf)$table[topTags(lrt.early.vs.late.silique.ae,n = Inf)$table$FDR<=1,]
+
+uniq.gene.ol.ae <- (cbind((DEgene.early.vs.late.silique.ae.all[index,]), (DEgene.early.vs.late.silique.ol[index,])))[,c(1,5,6,10)]
+colnames(uniq.gene.ol.ae) <- c("logFC_ae","FDR_ae","logFC_ol","FDR_ol")
+colnames(uniq.gene.ol.ae)
+
+hist(uniq.gene.ol.ae$logFC_ae)
+hist(uniq.gene.ol.ae$logFC_ol)
+hist(uniq.gene.ol.ae$FDR_ae)
+hist(uniq.gene.ol.ae$FDR_ol)
 
 ```
 
