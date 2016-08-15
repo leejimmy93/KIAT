@@ -72,6 +72,7 @@ rownames(tmp) <- tmp$Row.names
 tmp <- tmp[,-1]
 dim(tmp) # 207 27 
 tmp$total <- rowSums(tmp)
+dim(tmp)
 
 # get only the top 5 highly expressed fatty acid genes 
 five.fatty.acid.genes <- head(tmp[order(tmp$total, decreasing = T), ], 5)
@@ -79,17 +80,42 @@ five.fatty.acid.genes
 write.csv(t(five.fatty.acid.genes), file =  "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/five.fatty.acid.gene.csv")
 
 # reformat for ggplot 
-five.fatty.acid.genes
+five.fatty.acid.genes <- five.fatty.acid.genes[,-28]
+# colnames(five.fatty.acid.genes) <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1_\\3",colnames(five.fatty.acid.genes))
+five.fatty.acid.genes$geneID <- rownames(five.fatty.acid.genes)
+five.fatty.acid.genes.melt <- melt(five.fatty.acid.genes)
+five.fatty.acid.genes.melt$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1",five.fatty.acid.genes.melt$variable)
+five.fatty.acid.genes.melt$tissue <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\3",five.fatty.acid.genes.melt$variable)
+five.fatty.acid.genes.melt$rep <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\5",five.fatty.acid.genes.melt$variable)
+five.fatty.acid.genes.melt$group <- paste(five.fatty.acid.genes.melt$gt, five.fatty.acid.genes.melt$tissue, five.fatty.acid.genes.melt$geneID, sep = "_")
+head(five.fatty.acid.genes.melt)
+tail(five.fatty.acid.genes.melt)
 
+# to do: reshape, calculate & make ggplot ... 
+five.fatty.acid.genes.melt.reshape <- reshape(five.fatty.acid.genes.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(five.fatty.acid.genes.melt.reshape)
+five.fatty.acid.genes.melt.reshape
 
+five.fatty.acid.genes.melt.reshape$mean <- apply(five.fatty.acid.genes.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+five.fatty.acid.genes.melt.reshape$min <- apply(five.fatty.acid.genes.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+five.fatty.acid.genes.melt.reshape$max <- apply(five.fatty.acid.genes.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+five.fatty.acid.genes.melt.reshape
+five.fatty.acid.genes.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",five.fatty.acid.genes.melt.reshape$group)
+five.fatty.acid.genes.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",five.fatty.acid.genes.melt.reshape$group)
+five.fatty.acid.genes.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",five.fatty.acid.genes.melt.reshape$group)
+five.fatty.acid.genes.melt.reshape 
 
+p.fatty.acid <- ggplot(data = five.fatty.acid.genes.melt.reshape)
+p.fatty.acid <- p.fatty.acid + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.fatty.acid <- p.fatty.acid + facet_grid(gt~geneID)
+# p.fatty.acid <- p.fatty.acid + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max))
+p.fatty.acid <- p.fatty.acid + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.fatty.acid <- p.fatty.acid + labs(y = "mean expression value", x="tissue")
 
+p.fatty.acid   
 
-
-
-
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width = 11, height = 8)
 ```
-
 
 
 # Expression analysis 1) formatting data   
