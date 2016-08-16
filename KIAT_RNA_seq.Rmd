@@ -612,7 +612,7 @@ png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/he
 heatmap.2(as.matrix(uniq.gene.ol), Rowv = as.dendrogram(hr), scale = "row", density.info="none", trace="none", keysize = 0.5)
 dev.off()
 
-# 4) make figure of their mean expression values 
+# 4) make figure of their mean expression values, may not be useful 
 DEgene.early.vs.late.silique.ae.all <- topTags(lrt.early.vs.late.silique.ae,n = Inf)$table[topTags(lrt.early.vs.late.silique.ae,n = Inf)$table$FDR<=1,]
 
 uniq.gene.ol.ae <- (cbind((DEgene.early.vs.late.silique.ae.all[index,]), (DEgene.early.vs.late.silique.ol[index,])))[,c(1,5,6,10)]
@@ -623,6 +623,92 @@ hist(uniq.gene.ol.ae$logFC_ae)
 hist(uniq.gene.ol.ae$logFC_ol)
 hist(uniq.gene.ol.ae$FDR_ae)
 hist(uniq.gene.ol.ae$FDR_ol)
+
+# how many are with the same direction and how many with diff directions? 
+sum(uniq.gene.ol.ae$logFC_ae>0 & uniq.gene.ol.ae$logFC_ol>0) 
+sum(uniq.gene.ol.ae$logFC_ae<0 & uniq.gene.ol.ae$logFC_ol<0)
+dim(uniq.gene.ol.ae)
+
+# 687+506 are with same directions while 2436-687-506 are with diff directions. 
+```
+
+# new design to see how many fatty acid genes' expression are differentially expressed between genotypes and during developmental stages  
+```{r}
+# assign group 
+ftable(parent.read.count.one.sample,row.vars=c("stage"),col.vars=c("batch","genotype"))
+
+# normalize 
+dge.new <- DGEList(counts=parent.read.count.one.small, group=parent.read.count.one.sample$group)
+dim(dge.new) # [1] 30876    28 
+dge.new <- calcNormFactors(dge.new, method = "TMM") 
+dge.new$sample
+# design matrix 
+parent.read.count.one.sample$genotype <- as.factor(parent.read.count.one.sample$genotype)
+parent.read.count.one.sample$tissue <- as.factor(parent.read.count.one.sample$stage)
+parent.read.count.one.sample$genotype <- relevel(parent.read.count.one.sample$genotype,ref="Da-Ol-1")
+parent.read.count.one.sample$tissue <- relevel(parent.read.count.one.sample$tissue,ref="Young")
+
+design.new <- model.matrix(~tissue*genotype,data = parent.read.count.one.sample) 
+colnames(design.new)
+
+# calculate dispersion
+dge.new <- estimateGLMCommonDisp(dge.new, design.new,verbose = TRUE) # Disp = 0.25646 , BCV = 0.5064 
+dge.new <- estimateGLMTrendedDisp(dge.new,design.new)
+dge.new <- estimateGLMTagwiseDisp(dge.new,design.new)
+# plotBCV(dge.new)
+
+# use interaction as coefficient and see how many fatty acid genes are important for interaction term... 
+lrt.new.interaction <- glmLRT(fit.new,coef = c("tissuebolting:genotypeDa-Ae", "tissueearly-silique:genotypeDa-Ae", "tissueflowering:genotypeDa-Ae", "tissuelate-silique:genotypeDa-Ae"))
+topTags(lrt.new.interaction)
+DEgene.new.interaction <- topTags(lrt.new.interaction,n = Inf)$table[topTags(lrt.new.interaction,n = Inf)$table$FDR<0.05,]
+nrow(DEgene.new.interaction) # number of genes with interaction effect in any tissue types 
+
+dim(fatty.acid.genes) # 207 fatty acid genes expressed in my data 
+
+index_2 <- which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.interaction)) 
+rownames(fatty.acid.genes[index_2,])
+
+# get expression plot for these several fatty acid genes 
+fatty.acid.genes.interaction <- fatty.acid.genes[c("BnaA03g41660D","BnaA05g06830D","BnaC07g32730D"),]
+
+# reformat for ggplot 
+fatty.acid.genes.interaction <- fatty.acid.genes.interaction[,-28]
+fatty.acid.genes.interaction$geneID <- rownames(fatty.acid.genes.interaction)
+fatty.acid.genes.interaction.melt <- melt(fatty.acid.genes.interaction)
+fatty.acid.genes.interaction.melt$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1",fatty.acid.genes.interaction.melt$variable)
+fatty.acid.genes.interaction.melt$tissue <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\3",fatty.acid.genes.interaction.melt$variable)
+fatty.acid.genes.interaction.melt$rep <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\5",fatty.acid.genes.interaction.melt$variable)
+fatty.acid.genes.interaction.melt$group <- paste(fatty.acid.genes.interaction.melt$gt, fatty.acid.genes.interaction.melt$tissue, fatty.acid.genes.interaction.melt$geneID, sep = "_")
+head(fatty.acid.genes.interaction.melt)
+tail(fatty.acid.genes.interaction.melt)
+dim(fatty.acid.genes.interaction.melt)
+
+# to do: reshape, calculate & make ggplot ... 
+fatty.acid.genes.interaction.melt.reshape <- reshape(fatty.acid.genes.interaction.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(fatty.acid.genes.interaction.melt.reshape)
+fatty.acid.genes.interaction.melt.reshape
+
+fatty.acid.genes.interaction.melt.reshape$mean <- apply(fatty.acid.genes.interaction.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+fatty.acid.genes.interaction.melt.reshape$min <- apply(fatty.acid.genes.interaction.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+fatty.acid.genes.interaction.melt.reshape$max <- apply(fatty.acid.genes.interaction.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+fatty.acid.genes.interaction.melt.reshape
+fatty.acid.genes.interaction.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",fatty.acid.genes.interaction.melt.reshape$group)
+fatty.acid.genes.interaction.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",fatty.acid.genes.interaction.melt.reshape$group)
+fatty.acid.genes.interaction.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",fatty.acid.genes.interaction.melt.reshape$group)
+fatty.acid.genes.interaction.melt.reshape 
+
+p.fatty.acid.interaction <- ggplot(data = fatty.acid.genes.interaction.melt.reshape)
+p.fatty.acid.interaction <- p.fatty.acid.interaction + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.fatty.acid.interaction <- p.fatty.acid.interaction + facet_grid(~geneID~gt)
+p.fatty.acid.interaction <- p.fatty.acid.interaction + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+p.fatty.acid.interaction <- p.fatty.acid.interaction + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.fatty.acid.interaction <- p.fatty.acid.interaction + labs(y = "mean expression value", x="tissue")
+
+p.fatty.acid.interaction
+
+# based on the figure, three genes were identified to have huge interaction effect, extract these three genes and make figure only for them --> modify the code  
+
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.interaction.png", width = 8, height = 4)
 
 ```
 
@@ -662,6 +748,24 @@ write.csv(DEgene.late.silique.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_
 DEgene.silique.ol.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.ol))
 DEgene.silique.ol.GO.ORA
 write.csv(DEgene.silique.ol.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.silique.ol.GO.ORA.csv")
+
+DEgene.young.vs.bolting.ol.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young.vs.bolting.ol))
+DEgene.young.vs.bolting.ol.GO.ORA
+
+DEgene.young.vs.bolting.ae.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young.vs.bolting.ae))
+DEgene.young.vs.bolting.ae.GO.ORA
+
+DEgene.bolting.vs.flowering.ol.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.bolting.vs.flowering.ol))
+DEgene.bolting.vs.flowering.ol.GO.ORA
+
+DEgene.bolting.vs.flowering.ae.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.bolting.vs.flowering.ae))
+DEgene.bolting.vs.flowering.ae.GO.ORA
+
+DEgene.flowering.vs.early.silique.ol.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.flowering.vs.early.silique.ol))
+DEgene.bolting.vs.flowering.ol.GO.ORA
+
+DEgene.flowering.vs.early.silique.ae.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.flowering.vs.early.silique.ae))
+DEgene.bolting.vs.flowering.ae.GO.ORA
 ```
 
 

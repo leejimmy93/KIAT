@@ -248,7 +248,25 @@ DEgene.late.silique.F1 <- topTags(lrt.late.silique.F1,n = Inf)$table[topTags(lrt
 # 0  59840
 # 1    166
 
-# between early & late silique 
+colnames(fit.F1$design)
+# between developmental stages 
+### 414 
+lrt.young.vs.flowering.414 <- glmLRT(fit.F1, contrast = c(0,1,0,-1,0,0,0,0))
+topTags(lrt.young.vs.flowering.414)
+summary(de.young.vs.flowering.414 <- decideTestsDGE(lrt.young.vs.flowering.414, p=0.05))
+DEgene.young.vs.flowering.414 <- topTags(lrt.young.vs.flowering.414,n = Inf)$table[topTags(lrt.young.vs.flowering.414,n = Inf)$table$FDR<0.05,]
+# -1 12706
+# 0  30576
+# 1  16894
+
+lrt.flowering.vs.early.silique.414 <- glmLRT(fit.F1, contrast = c(1,-1,0,0,0,0,0,0))
+topTags(lrt.flowering.vs.early.silique.414)
+summary(de.flowering.vs.early.silique.414 <- decideTestsDGE(lrt.flowering.vs.early.silique.414, p=0.05))
+DEgene.flowering.vs.early.silique.414 <- topTags(lrt.flowering.vs.early.silique.414,n = Inf)$table[topTags(lrt.flowering.vs.early.silique.414,n = Inf)$table$FDR<0.05,]
+# -1  8920
+# 0  44337
+# 1   6919
+
 lrt.early.vs.late.silique.414 <- glmLRT(fit.F1, contrast = c(-1,0,1,0,0,0,0,0))
 topTags(lrt.early.vs.late.silique.414)
 summary(de.early.vs.late.silique.414 <- decideTestsDGE(lrt.early.vs.late.silique.414, p=0.05))
@@ -256,6 +274,23 @@ DEgene.early.vs.late.silique.414 <- topTags(lrt.early.vs.late.silique.414,n = In
 # -1  3049
 # 0  53803
 # 1   3324
+
+### 415 
+lrt.young.vs.flowering.415 <- glmLRT(fit.F1, contrast = c(0,0,0,0,0,1,0,-1))
+topTags(lrt.young.vs.flowering.415)
+summary(de.young.vs.flowering.415 <- decideTestsDGE(lrt.young.vs.flowering.415, p=0.05))
+DEgene.young.vs.flowering.415 <- topTags(lrt.young.vs.flowering.415,n = Inf)$table[topTags(lrt.young.vs.flowering.415,n = Inf)$table$FDR<0.05,]
+# -1 12450
+# 0  32614
+# 1  15112
+
+lrt.flowering.vs.early.silique.415 <- glmLRT(fit.F1, contrast = c(0,0,0,0,1,-1,0,0))
+topTags(lrt.flowering.vs.early.silique.415)
+summary(de.flowering.vs.early.silique.415 <- decideTestsDGE(lrt.flowering.vs.early.silique.415, p=0.05))
+DEgene.flowering.vs.early.silique.415 <- topTags(lrt.flowering.vs.early.silique.415,n = Inf)$table[topTags(lrt.flowering.vs.early.silique.415,n = Inf)$table$FDR<0.05,]
+# -1  7666
+# 0  47946
+# 1   4564
 
 lrt.early.vs.late.silique.415 <- glmLRT(fit.F1, contrast = c(0,0,0,0,-1,0,1,0))
 topTags(lrt.early.vs.late.silique.415)
@@ -268,6 +303,71 @@ DEgene.early.vs.late.silique.415 <- topTags(lrt.early.vs.late.silique.415,n = In
 # plot histogram 
 ### 
 
+```
+
+# venn diagram between different stages of 414 & 415  
+```{r}
+# calcuate overlaps & unique genes 
+dim(DEgene.young.vs.flowering.414) # 29600     5 
+dim(DEgene.young.vs.flowering.415) # 27562     5
+summary(rownames(DEgene.young.vs.flowering.414) %in% rownames(DEgene.young.vs.flowering.415)) 
+#    Mode   FALSE    TRUE    NA's 
+# logical    8561   21039       0
+
+require(VennDiagram)
+
+# young vs flowering
+grid.newpage()
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/young.vs.bolting.png")
+venn.plot <- draw.pairwise.venn(29600, 27562, 21039, # 1st number for group A, 2nd for group B, 3rd for overlaps 
+                                c("414", "415"),
+                                fill = c("lightblue","pink"),
+                                lty          = "blank",
+                                cex = 2,
+                                cat.cex = 1.5,
+                                cat.pos = 9)
+grid.draw(venn.plot)
+dev.off()
+
+# flowering vs early silique 
+dim(DEgene.flowering.vs.early.silique.414) # 15839     5 
+dim(DEgene.flowering.vs.early.silique.415) # 12230     5
+summary(rownames(DEgene.flowering.vs.early.silique.414) %in% rownames(DEgene.flowering.vs.early.silique.415)) 
+#    Mode   FALSE    TRUE    NA's 
+# logical    6584    9255       0 
+
+# young vs bolting
+grid.newpage()
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/flowering.vs.early.silique.png")
+venn.plot <- draw.pairwise.venn(15839, 12230, 9255, # 1st number for group A, 2nd for group B, 3rd for overlaps 
+                                c("414", "415"),
+                                fill = c("lightblue","pink"),
+                                lty          = "blank",
+                                cex = 2,
+                                cat.cex = 1.5,
+                                cat.pos = 9)
+grid.draw(venn.plot)
+dev.off()
+
+# early silique vs late silique 
+dim(DEgene.early.vs.late.silique.414) # 6373    5 
+dim(DEgene.early.vs.late.silique.415) # 6979    5
+summary(rownames(DEgene.early.vs.late.silique.414) %in% rownames(DEgene.early.vs.late.silique.415)) 
+#    Mode   FALSE    TRUE    NA's 
+# logical    2652    3721       0
+
+# young vs bolting
+grid.newpage()
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/early.vs.late.silique.png")
+venn.plot <- draw.pairwise.venn(6373, 6979, 3721, # 1st number for group A, 2nd for group B, 3rd for overlaps 
+                                c("414", "415"),
+                                fill = c("lightblue","pink"),
+                                lty          = "blank",
+                                cex = 2,
+                                cat.cex = 1.5,
+                                cat.pos = 9)
+grid.draw(venn.plot)
+dev.off()
 ```
 
 # GO enrichment analysis 
@@ -291,14 +391,40 @@ DEgene.early.silique.GO.ORA.F1 <- GOseq.Bn.ORA(rownames(DEgene.early.silique.F1)
 DEgene.early.silique.GO.ORA.F1
 write.csv(DEgene.early.silique.GO.ORA.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.early.silique.GO.ORA.F1.csv")
 
+# late silique 
 DEgene.late.silique.GO.ORA.F1 <- GOseq.Bn.ORA(rownames(DEgene.late.silique.F1))
 DEgene.late.silique.GO.ORA.F1
 write.csv(DEgene.late.silique.GO.ORA.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.late.silique.GO.ORA.F1.csv")
 
+### between stages 
+### 414 
+# young vs flowering 
+DEgene.young.vs.flowering.414.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young.vs.flowering.414))
+DEgene.young.vs.flowering.414.GO.ORA
+write.csv(DEgene.young.vs.flowering.414.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.young.vs.flowering.414.GO.ORA.csv")
+
+# flowering vs early silique 
+DEgene.flowering.vs.early.silique.414.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.flowering.vs.early.silique.414))
+DEgene.flowering.vs.early.silique.414.GO.ORA
+write.csv(DEgene.flowering.vs.early.silique.414.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.flowering.vs.early.silique.GO.ORA.csv")
+
+# early vs late silique 
 DEgene.silique.414.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.414))
 DEgene.silique.414.GO.ORA
 write.csv(DEgene.silique.414.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.silique.414.GO.ORA.csv")
 
+### 415 
+# young vs flowering 
+DEgene.young.vs.flowering.415.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young.vs.flowering.415))
+DEgene.young.vs.flowering.415.GO.ORA
+write.csv(DEgene.young.vs.flowering.415.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.young.vs.flowering.415.GO.ORA.csv")
+
+# flowering vs early silique 
+DEgene.flowering.vs.early.silique.415.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.flowering.vs.early.silique.415))
+DEgene.flowering.vs.early.silique.415.GO.ORA
+write.csv(DEgene.flowering.vs.early.silique.415.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.flowering.vs.early.silique.415.GO.ORA.csv")
+
+# early vs late silique 
 DEgene.silique.415.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.415))
 DEgene.silique.415.GO.ORA
 write.csv(DEgene.silique.415.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.silique.415.GO.ORA.csv")
