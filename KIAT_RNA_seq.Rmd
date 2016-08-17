@@ -63,6 +63,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 ```{r}
 fatty_acid_gene_index <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_biosynthesis_genes_ID.txt", header = F)
 head(fatty_acid_gene_index)
+nrow(fatty_acid_gene_index)
 rownames(fatty_acid_gene_index) <- fatty_acid_gene_index$V1
 
 # extract only fatty acid genes from dataset 
@@ -117,6 +118,57 @@ p.fatty.acid
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.png", width = 8, height = 11)
 ```
 
+# data summary statisitics read count number & expressed genes 
+```{r}
+parent.read.count.normalized <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/read.count.normalized.tsv", header = T, check.names = F)
+rownames(parent.read.count.normalized) <- parent.read.count.normalized[,1]
+parent.read.count.normalized <- parent.read.count.normalized[,-1]
+
+# format data 
+head(parent.read.count.normalized)
+dim(parent.read.count.normalized) # 101040     54 
+colnames(parent.read.count.normalized)
+even_indexes<-seq(2,length(colnames(parent.read.count.normalized)),2)
+parent.read.count.one.normalized <- parent.read.count.normalized[,even_indexes]
+dim(parent.read.count.one.normalized) # 101040     27 
+colnames(parent.read.count.one.normalized)
+colnames(parent.read.count.one.normalized) <- sub("_2.fq","",colnames(parent.read.count.one.normalized),fixed = TRUE) # remove _2.fq 
+
+# sample description  
+new_sample_ID
+
+# replace sample ID 
+colnames(parent.read.count.one.normalized) <- new_sample_ID
+head(parent.read.count.one.normalized)
+save(parent.read.count.one.normalized,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.normalized.Rdata")
+
+# check number of genes with reads number > 10 in each lib # make summary table 
+expressed_gene_number <- 
+sapply(colnames(parent.read.count.one.normalized), function(RNAlib){
+  sum(parent.read.count.one.normalized[,RNAlib]>3)
+}
+)
+expressed_gene_number <- as.data.frame(expressed_gene_number)
+expressed_gene_number
+
+# top 10 highly expressed genes in each lib 
+most_highly_expressed_genes <- 
+sapply(colnames((parent.read.count.one.normalized)), function(RNAlib){
+  rownames(head(parent.read.count.one.normalized[order(parent.read.count.one.normalized[,RNAlib],decreasing = TRUE),], 10))
+}
+)
+write.csv(t(most_highly_expressed_genes), file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/most_highly_expressed_genes.csv")
+
+temp <- sample_des[,c(4,5,6,8)]
+rownames(temp) <- paste(sample_des[,4], sample_des[,5], sample_des[,6], sep = "_")
+sample_statistics <- merge(temp, expressed_gene_number, by=0) 
+colnames(sample_statistics) <- c("sample_ID", "Cultivar", "Tissue", "rep", "total_reads", "expressed_gene_number")
+head(sample_statistics)
+colnames(sample_statistics)
+write.csv(sample_statistics, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/sample_statisitcs.csv")
+
+```
+
 # Expression analysis 1) formatting data   
 ```{r}
 parent.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.tsv", header = T, check.names = F)
@@ -141,11 +193,6 @@ sorted_sample_des <- sample_des[order(sample_des$SampleID),]
 sorted_sample_des[,4:7]
 new_sample_ID <- paste(sorted_sample_des$Cultivar, sorted_sample_des$Stage, sorted_sample_des$rep, sep = "_")
 new_sample_ID
-
-# calculate GB size of libs 
-mean(as.numeric(sub("Gb","",sample_des$TotalBases.Gb.))) 
-min(as.numeric(sub("Gb","",sample_des$TotalBases.Gb.))) 
-max(as.numeric(sub("Gb","",sample_des$TotalBases.Gb.))) 
 
 # replace sample ID 
 colnames(parent.read.count.one) <- new_sample_ID
@@ -178,31 +225,6 @@ ftable(parent.read.count.one.sample,row.vars="stage",col.vars=c("batch","genotyp
 parent.read.count.one.small <- parent.read.count.one[rowSums(parent.read.count.one > 10) >= 3,]
 dim(parent.read.count.one.small) # 60975    27 
 save(parent.read.count.one.small, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.small.Rdata")
-
-# check number of genes with reads number > 10 in each lib # make summary table 
-expressed_gene_number <- 
-sapply(colnames(parent.read.count.one.small), function(RNAlib){
-  sum(parent.read.count.one.small[,RNAlib]>10)
-}
-)
-expressed_gene_number <- as.data.frame(expressed_gene_number)
-expressed_gene_number
-
-# top 10 highly expressed genes in each lib 
-most_highly_expressed_genes <- 
-sapply(colnames((parent.read.count.one.small)), function(RNAlib){
-  rownames(head(parent.read.count.one.small[order(parent.read.count.one.small[,RNAlib],decreasing = TRUE),], 10))
-}
-)
-write.csv(t(most_highly_expressed_genes), file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/most_highly_expressed_genes.csv")
-
-temp <- sample_des[,c(4,5,6,10)]
-rownames(temp) <- paste(sample_des[,4], sample_des[,5], sample_des[,6], sep = "_")
-sample_statistics <- merge(temp, expressed_gene_number, by=0) 
-colnames(sample_statistics) <- c("sample_ID", "Cultivar", "Tissue", "rep", "Total_Bases_Gb", "expressed_gene_number")
-head(sample_statistics)
-colnames(sample_statistics)
-write.csv(sample_statistics, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/sample_statisitcs.csv")
 ```
 
 # expression analysis 3) voom transformation 
@@ -668,8 +690,12 @@ dim(fatty.acid.genes) # 207 fatty acid genes expressed in my data
 index_2 <- which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.interaction)) 
 rownames(fatty.acid.genes[index_2,])
 
+
 # get expression plot for these several fatty acid genes 
-fatty.acid.genes.interaction <- fatty.acid.genes[c("BnaA03g41660D","BnaA05g06830D","BnaC07g32730D"),]
+# fatty.acid.genes.interaction <- as.data.frame(vstMat.parent[c("BnaA03g41660D","BnaA05g06830D","BnaC07g32730D"),])
+
+fatty.acid.genes.interaction <- as.data.frame(vstMat.parent[c(rownames(fatty.acid.genes[index_2,])),])
+fatty.acid.genes.interaction
 
 # reformat for ggplot 
 fatty.acid.genes.interaction <- fatty.acid.genes.interaction[,-28]
@@ -708,7 +734,7 @@ p.fatty.acid.interaction
 
 # based on the figure, three genes were identified to have huge interaction effect, extract these three genes and make figure only for them --> modify the code  
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.interaction.png", width = 8, height = 4)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/fatty.acid.interaction.png", width = 8, height = 20)
 
 ```
 

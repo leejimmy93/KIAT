@@ -39,6 +39,52 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # 9) map to reference cds index and get read count file using bunchrun_kallisto.sh (using est_counts from Kallisto)
 ```
 
+# data summary statisitics read count number & expressed genes 
+```{r}
+F1.read.count.normalized <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/read.count.normalized.tsv", header = T, check.names = F)
+rownames(F1.read.count.normalized) <- F1.read.count.normalized[,1]
+F1.read.count.normalized <- F1.read.count.normalized[,-1]
+
+# format data 
+head(F1.read.count.normalized)
+dim(F1.read.count.normalized) # 101040     24 
+colnames(F1.read.count.normalized)
+colnames(F1.read.count.normalized) <- sub("_2.fq","",colnames(F1.read.count.normalized),fixed = TRUE) # remove _2.fq 
+
+# sample description  
+new_sample_ID.F1
+
+# replace sample ID 
+colnames(F1.read.count.normalized) <- new_sample_ID.F1
+head(F1.read.count.normalized)
+save(F1.read.count.normalized,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/F1.read.count.normalized.Rdata")
+
+# check number of genes with reads number > 10 in each lib # make summary table 
+expressed_gene_number.F1 <- 
+sapply(colnames(F1.read.count.normalized), function(RNAlib){
+  sum(F1.read.count.normalized[,RNAlib]>3)
+}
+)
+expressed_gene_number.F1 <- as.data.frame(expressed_gene_number.F1)
+expressed_gene_number.F1
+
+# top 10 highly expressed genes in each lib 
+most_highly_expressed_genes.F1 <- 
+sapply(colnames((F1.read.count.normalized)), function(RNAlib){
+  rownames(head(F1.read.count.normalized[order(F1.read.count.normalized[,RNAlib],decreasing = TRUE),], 10))
+}
+)
+write.csv(t(most_highly_expressed_genes.F1), file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/most_highly_expressed_genes.F1.csv")
+
+temp <- sample_des.F1[,c(5,6,7,10)]
+rownames(temp) <- paste(sample_des.F1[,5], sample_des.F1[,6], sample_des.F1[,7], sep = "_")
+sample_statistics.F1 <- merge(temp, expressed_gene_number.F1, by=0) 
+colnames(sample_statistics.F1) <- c("sample_ID", "Cultivar", "Tissue", "rep", "total_reads", "expressed_gene_number")
+head(sample_statistics.F1)
+colnames(sample_statistics.F1)
+write.csv(sample_statistics.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/sample_statisitcs.F1.csv")
+```
+
 # Expression analysis 1) formatting data   
 ```{r}
 F1.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/read.count.tsv", header = T, check.names = F)
@@ -100,32 +146,6 @@ ftable(F1.read.count.sample,row.vars="tissue",col.vars=c("batch","genotype"))
 F1.read.count.small <- F1.read.count[rowSums(F1.read.count > 10) >= 3,]
 dim(F1.read.count.small) # 60176  24 
 save(F1.read.count.small, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/F1.read.count.small.Rdata")
-
-# check number of genes with reads number > 10 in each lib # make summary table 
-expressed_gene_number.F1 <- 
-  sapply(colnames(F1.read.count), function(RNAlib){
-    sum(F1.read.count[,RNAlib]>10)
-  }
-  )
-expressed_gene_number.F1 <- as.data.frame(expressed_gene_number.F1)
-expressed_gene_number.F1
-
-# top 10 highly expressed genes in each lib 
-most_highly_expressed_genes.F1 <- 
-sapply(colnames((F1.read.count.small)), function(RNAlib){
-  rownames(head(F1.read.count.small[order(F1.read.count.small[,RNAlib],decreasing = TRUE),], 10))
-}
-)
-write.csv(t(most_highly_expressed_genes.F1), file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/most_highly_expressed_genes.F1.csv")
-
-temp <- sample_des.F1[,c(5,6,7,12)]
-rownames(temp) <- paste(sample_des.F1[,5], sample_des.F1[,6], sample_des.F1[,7], sep = "_")
-sample_statistics.F1 <- merge(temp, expressed_gene_number.F1, by=0) 
-colnames(sample_statistics.F1) <- c("sample_ID", "Cultivar", "Tissue", "rep", "Total_Bases_Gb", "expressed_gene_number")
-head(sample_statistics.F1)
-colnames(sample_statistics.F1)
-write.csv(sample_statistics.F1, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/sample_statisitcs.F1.csv")
-
 ```
 
 # expression analysis 3) voom transformation # think more about the design in voom transformation... 
@@ -401,17 +421,20 @@ write.csv(DEgene.late.silique.GO.ORA.F1, file = "/Users/ruijuanli/Desktop/Brassi
 # young vs flowering 
 DEgene.young.vs.flowering.414.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young.vs.flowering.414))
 DEgene.young.vs.flowering.414.GO.ORA
+nrow(DEgene.young.vs.flowering.414.GO.ORA)
 write.csv(DEgene.young.vs.flowering.414.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.young.vs.flowering.414.GO.ORA.csv")
 
 # flowering vs early silique 
 DEgene.flowering.vs.early.silique.414.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.flowering.vs.early.silique.414))
 DEgene.flowering.vs.early.silique.414.GO.ORA
+nrow(DEgene.flowering.vs.early.silique.414.GO.ORA)
 write.csv(DEgene.flowering.vs.early.silique.414.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.flowering.vs.early.silique.GO.ORA.csv")
 
 # early vs late silique 
 DEgene.silique.414.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.414))
 DEgene.silique.414.GO.ORA
-write.csv(DEgene.silique.414.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.silique.414.GO.ORA.csv")
+nrow(DEgene.silique.414.GO.ORA)
+write.csv(DEgene.silique.414.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.silique.414.GO.ORA.csv")
 
 ### 415 
 # young vs flowering 
@@ -431,7 +454,48 @@ write.csv(DEgene.silique.415.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_p
 
 ```
 
+# draw figure for fatty acid genes expression over time for 414 & 415 
+```{r}
+fatty.acid.genes.interaction.F1 <- as.data.frame( vstMat.F1[c("BnaA03g41660D","BnaA05g06830D","BnaC07g32730D"),])
+fatty.acid.genes.interaction.F1
+dim(fatty.acid.genes.interaction.F1)
+fatty.acid.genes.interaction.F1$geneID <- rownames(fatty.acid.genes.interaction.F1)
+fatty.acid.genes.interaction.melt.F1 <- melt(fatty.acid.genes.interaction.F1)
+fatty.acid.genes.interaction.melt.F1$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",fatty.acid.genes.interaction.melt.F1$variable)
+fatty.acid.genes.interaction.melt.F1$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",fatty.acid.genes.interaction.melt.F1$variable)
+fatty.acid.genes.interaction.melt.F1$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",fatty.acid.genes.interaction.melt.F1$variable)
+fatty.acid.genes.interaction.melt.F1$group <- paste(fatty.acid.genes.interaction.melt.F1$gt, fatty.acid.genes.interaction.melt.F1$tissue, fatty.acid.genes.interaction.melt.F1$geneID, sep = "_")
+head(fatty.acid.genes.interaction.melt.F1)
+tail(fatty.acid.genes.interaction.melt.F1)
+dim(fatty.acid.genes.interaction.melt.F1)
 
+# to do: reshape, calculate & make ggplot ... 
+fatty.acid.genes.interaction.melt.reshape.F1 <- reshape(fatty.acid.genes.interaction.melt.F1[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(fatty.acid.genes.interaction.melt.reshape.F1)
+fatty.acid.genes.interaction.melt.reshape.F1
+
+fatty.acid.genes.interaction.melt.reshape.F1$mean <- apply(fatty.acid.genes.interaction.melt.reshape.F1[,c(2:4)], 1, mean, na.rm=TRUE)
+fatty.acid.genes.interaction.melt.reshape.F1$min <- apply(fatty.acid.genes.interaction.melt.reshape.F1[,c(2:4)], 1, max, na.rm=T)
+fatty.acid.genes.interaction.melt.reshape.F1$max <- apply(fatty.acid.genes.interaction.melt.reshape.F1[,c(2:4)], 1, min, na.rm=T)
+fatty.acid.genes.interaction.melt.reshape.F1
+fatty.acid.genes.interaction.melt.reshape.F1$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",fatty.acid.genes.interaction.melt.reshape.F1$group)
+fatty.acid.genes.interaction.melt.reshape.F1$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",fatty.acid.genes.interaction.melt.reshape.F1$group)
+fatty.acid.genes.interaction.melt.reshape.F1$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",fatty.acid.genes.interaction.melt.reshape.F1$group)
+fatty.acid.genes.interaction.melt.reshape.F1
+
+p.fatty.acid.interaction.F1 <- ggplot(data = fatty.acid.genes.interaction.melt.reshape.F1)
+p.fatty.acid.interaction.F1 <- p.fatty.acid.interaction.F1 + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.fatty.acid.interaction.F1 <- p.fatty.acid.interaction.F1 + facet_grid(~geneID~gt)
+p.fatty.acid.interaction.F1 <- p.fatty.acid.interaction.F1 + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+p.fatty.acid.interaction.F1 <- p.fatty.acid.interaction.F1 + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.fatty.acid.interaction.F1 <- p.fatty.acid.interaction.F1 + labs(y = "mean expression value", x="tissue")
+
+p.fatty.acid.interaction.F1
+
+# based on the figure, three genes were identified to have huge interaction effect, extract these three genes and make figure only for them --> modify the code  
+
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.interaction.F1.png", width = 8, height = 4)
+```
 
 
 
