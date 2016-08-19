@@ -46,6 +46,21 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # make STAR reference index: STAR --runMode genomeGenerate --genomeDir star_nome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --runThreadN 2 
 # mapping, only map the 2nd end using run_star.sh 
 
+# play with SAM/BAM file 
+# 1) convert SAM/BAM file 
+# samtools view -h file.bam > file.sam
+# samtools view -b -S file.sam > file.bam  
+
+# 2) sort BAM file 
+# samtools sort -m 1000000000 test.bam -T test_sorted (running)
+
+# --> to do: 
+
+
+
+
+
+
 
 
 
