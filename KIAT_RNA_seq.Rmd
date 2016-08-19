@@ -711,6 +711,8 @@ fatty.acid.genes.interaction
 dim(fatty.acid.genes.interaction)
 
 ## add gene annotation to ID 
+### annotation was obtained by blast sequences against Arabidopsis transcript database and the top one was used for annotation. 
+
 fatty.acid.genes.annotation <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty_acid_gene_name.csv", header = F)
 
 fatty.acid.genes.annotation
@@ -751,6 +753,12 @@ fatty.acid.genes.interaction.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print
 fatty.acid.genes.interaction.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",fatty.acid.genes.interaction.melt.reshape$group)
 fatty.acid.genes.interaction.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",fatty.acid.genes.interaction.melt.reshape$group)
 fatty.acid.genes.interaction.melt.reshape 
+
+# order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+fatty.acid.genes.interaction.melt.reshape$tissue <- factor(fatty.acid.genes.interaction.melt.reshape$tissue, levels = c("Young","bolting","flowering","early-silique","late-silique"))
+
+fatty.acid.genes.interaction.melt.reshape <- fatty.acid.genes.interaction.melt.reshape[order(fatty.acid.genes.interaction.melt.reshape$tissue),]
+fatty.acid.genes.interaction.melt.reshape
 
 p.fatty.acid.interaction <- ggplot(data = fatty.acid.genes.interaction.melt.reshape)
 p.fatty.acid.interaction <- p.fatty.acid.interaction + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
