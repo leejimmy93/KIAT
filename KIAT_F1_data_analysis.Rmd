@@ -450,15 +450,36 @@ write.csv(DEgene.flowering.vs.early.silique.415.GO.ORA, file = "/Users/ruijuanli
 # early vs late silique 
 DEgene.silique.415.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.415))
 DEgene.silique.415.GO.ORA
-write.csv(DEgene.silique.415.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/DEgene.silique.415.GO.ORA.csv")
+write.csv(DEgene.silique.415.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/DEgene.silique.415.GO.ORA.csv")
 
 ```
 
 # draw figure for fatty acid genes expression over time for 414 & 415 
 ```{r}
-fatty.acid.genes.interaction.F1 <- as.data.frame( vstMat.F1[c("BnaA03g41660D","BnaA05g06830D","BnaC07g32730D"),])
+fatty.acid.genes.annotation <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty_acid_gene_name.csv", header = F)
+
+fatty.acid.genes.annotation
+rownames(fatty.acid.genes.annotation) <- fatty.acid.genes.annotation$V1
+
+fatty.acid.genes.interaction.F1.ID <- rownames(fatty.acid.genes.annotation) 
+
+# fatty.acid.genes.interaction <- merge(fatty.acid.genes.interaction, fatty.acid.genes.annotation, by="row.names")
+# dim(fatty.acid.genes.interaction)
+# fatty.acid.genes.interaction
+
+fatty.acid.genes.interaction.F1 <- as.data.frame( vstMat.F1[c(fatty.acid.genes.interaction.F1.ID),])
 fatty.acid.genes.interaction.F1
+
+# reformat for ggplot 
+fatty.acid.genes.interaction.F1 <- merge(fatty.acid.genes.interaction.F1, fatty.acid.genes.annotation, by="row.names")
 dim(fatty.acid.genes.interaction.F1)
+rownames(fatty.acid.genes.interaction.F1) <- paste(fatty.acid.genes.interaction.F1$Row.names, fatty.acid.genes.interaction.F1$V2, sep = "-")
+head(fatty.acid.genes.interaction.F1)
+fatty.acid.genes.interaction.F1 <- fatty.acid.genes.interaction.F1[,-c(1,26:28)]
+dim(fatty.acid.genes.interaction.F1)
+head(fatty.acid.genes.interaction.F1)
+
+
 fatty.acid.genes.interaction.F1$geneID <- rownames(fatty.acid.genes.interaction.F1)
 fatty.acid.genes.interaction.melt.F1 <- melt(fatty.acid.genes.interaction.F1)
 fatty.acid.genes.interaction.melt.F1$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",fatty.acid.genes.interaction.melt.F1$variable)
@@ -483,6 +504,12 @@ fatty.acid.genes.interaction.melt.reshape.F1$tissue <- gsub("([[:print:]]+)(_)([
 fatty.acid.genes.interaction.melt.reshape.F1$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",fatty.acid.genes.interaction.melt.reshape.F1$group)
 fatty.acid.genes.interaction.melt.reshape.F1
 
+# order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+fatty.acid.genes.interaction.melt.reshape.F1$tissue <- factor(fatty.acid.genes.interaction.melt.reshape.F1$tissue, levels = c("Young","flowering","early-silique","late-silique"))
+
+fatty.acid.genes.interaction.melt.reshape.F1 <- fatty.acid.genes.interaction.melt.reshape.F1[order(fatty.acid.genes.interaction.melt.reshape.F1$tissue),]
+fatty.acid.genes.interaction.melt.reshape.F1
+
 p.fatty.acid.interaction.F1 <- ggplot(data = fatty.acid.genes.interaction.melt.reshape.F1)
 p.fatty.acid.interaction.F1 <- p.fatty.acid.interaction.F1 + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
 p.fatty.acid.interaction.F1 <- p.fatty.acid.interaction.F1 + facet_grid(~geneID~gt)
@@ -494,7 +521,7 @@ p.fatty.acid.interaction.F1
 
 # based on the figure, three genes were identified to have huge interaction effect, extract these three genes and make figure only for them --> modify the code  
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.interaction.F1.png", width = 8, height = 4)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.interaction.F1.png", width = 8, height = 20)
 ```
 
 
