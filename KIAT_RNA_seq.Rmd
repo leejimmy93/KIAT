@@ -54,9 +54,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # 2) sort BAM file 
 # samtools sort -m 1000000000 test.bam -T test_sorted (running)
 
-# --> to do: 
-
-
+# --> to do: use cufflinks for 
 
 
 
@@ -705,15 +703,31 @@ dim(fatty.acid.genes) # 207 fatty acid genes expressed in my data
 index_2 <- which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.interaction)) 
 rownames(fatty.acid.genes[index_2,])
 
-
 # get expression plot for these several fatty acid genes 
 # fatty.acid.genes.interaction <- as.data.frame(vstMat.parent[c("BnaA03g41660D","BnaA05g06830D","BnaC07g32730D"),])
 
 fatty.acid.genes.interaction <- as.data.frame(vstMat.parent[c(rownames(fatty.acid.genes[index_2,])),])
 fatty.acid.genes.interaction
+dim(fatty.acid.genes.interaction)
+
+## add gene annotation to ID 
+fatty.acid.genes.annotation <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty_acid_gene_name.csv", header = F)
+
+fatty.acid.genes.annotation
+rownames(fatty.acid.genes.annotation) <- fatty.acid.genes.annotation$V1
+fatty.acid.genes.interaction <- merge(fatty.acid.genes.interaction, fatty.acid.genes.annotation, by="row.names")
+dim(fatty.acid.genes.interaction)
+fatty.acid.genes.interaction
+
+write.csv(fatty.acid.genes.interaction.ID, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty.acid.genes.interaction.ID.txt")
 
 # reformat for ggplot 
-fatty.acid.genes.interaction <- fatty.acid.genes.interaction[,-28]
+rownames(fatty.acid.genes.interaction) <- paste(fatty.acid.genes.interaction$Row.names, fatty.acid.genes.interaction$V2, sep = "-")
+head(fatty.acid.genes.interaction)
+fatty.acid.genes.interaction <- fatty.acid.genes.interaction[,-c(1,29:31)]
+dim(fatty.acid.genes.interaction)
+head(fatty.acid.genes.interaction)
+
 fatty.acid.genes.interaction$geneID <- rownames(fatty.acid.genes.interaction)
 fatty.acid.genes.interaction.melt <- melt(fatty.acid.genes.interaction)
 fatty.acid.genes.interaction.melt$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1",fatty.acid.genes.interaction.melt$variable)
