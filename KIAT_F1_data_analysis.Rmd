@@ -268,6 +268,36 @@ DEgene.late.silique.F1 <- topTags(lrt.late.silique.F1,n = Inf)$table[topTags(lrt
 # 0  59840
 # 1    166
 
+### reformat for ggplot barplot 
+DEGs_number_between_gt <- data.frame(young = as.data.frame(summary(de.young.F1 <- decideTestsDGE(lrt.young.F1, p=0.05)))$Freq,
+                                     flowering = as.data.frame(summary(de.flowering.F1 <- decideTestsDGE(lrt.flowering.F1, p=0.05)))$Freq, 
+                                     early.silique = as.data.frame(summary(de.early.silique.F1 <- decideTestsDGE(lrt.early.silique.F1, p=0.05)))$Freq,
+                                     late.silique = as.data.frame(summary(de.late.silique.F1 <- decideTestsDGE(lrt.late.silique.F1, p=0.05)))$Freq)
+
+rownames(DEGs_number_between_gt) <- c("down", "no", "up")
+DEGs_number_between_gt <- DEGs_number_between_gt[c("down", "up"),]
+DEGs_number_between_gt
+
+DEGs_number_between_gt.melt <- melt(DEGs_number_between_gt)
+DEGs_number_between_gt.melt$DE <- rep(c("down", "up"), 4)
+colnames(DEGs_number_between_gt.melt) <- c("tissue", "number", "DE")
+DEGs_number_between_gt.melt
+
+# reorder: up 1st down 2nd 
+DEGs_number_between_gt.melt$DE <- factor(DEGs_number_between_gt.melt$DE, levels = c("up", "down"))
+
+DEGs_number_between_gt.melt <- DEGs_number_between_gt.melt[order(DEGs_number_between_gt.melt$DE),]
+DEGs_number_between_gt.melt
+
+### making ggplot for DEGs 
+p.DEGs_number_between_gt <- ggplot(data = DEGs_number_between_gt.melt)
+p.DEGs_number_between_gt <- p.DEGs_number_between_gt + geom_bar(mapping = aes(fill=DE, x = factor(DE), y = number), stat = "identity")
+p.DEGs_number_between_gt <- p.DEGs_number_between_gt + facet_grid(~tissue)
+p.DEGs_number_between_gt <- p.DEGs_number_between_gt + labs(y = "number of differentially expressed genes", x = "")
+
+p.DEGs_number_between_gt
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/DEGs_number_between_gt.png", width = 11, height = 8)
+
 colnames(fit.F1$design)
 # between developmental stages 
 ### 414 
@@ -295,6 +325,36 @@ DEgene.early.vs.late.silique.414 <- topTags(lrt.early.vs.late.silique.414,n = In
 # 0  53803
 # 1   3324
 
+### ggplot 
+### reformat for ggplot barplot 
+DEGs_number_between_tissue.414 <- data.frame("flowering-vs-young" = as.data.frame(summary(de.young.vs.flowering.414 <- decideTestsDGE(lrt.young.vs.flowering.414, p=0.05)))$Freq, 
+                                     "early.slique-vs-flowering"= as.data.frame(summary(de.flowering.vs.early.silique.414 <- decideTestsDGE(lrt.flowering.vs.early.silique.414, p=0.05)))$Freq, 
+                                     "late.silique-vs-early.silique" = as.data.frame(summary(de.early.vs.late.silique.414 <- decideTestsDGE(lrt.early.vs.late.silique.414, p=0.05)))$Freq)
+
+rownames(DEGs_number_between_tissue.414) <- c("down", "no", "up")
+DEGs_number_between_tissue.414 <- DEGs_number_between_tissue.414[c("down", "up"),]
+DEGs_number_between_tissue.414
+
+DEGs_number_between_tissue.414.melt <- melt(DEGs_number_between_tissue.414)
+DEGs_number_between_tissue.414.melt$DE <- rep(c("down", "up"), 3)
+colnames(DEGs_number_between_tissue.414.melt) <- c("tissue", "number", "DE")
+DEGs_number_between_tissue.414.melt
+
+# reorder: up 1st down 2nd 
+DEGs_number_between_tissue.414.melt$DE <- factor(DEGs_number_between_tissue.414.melt$DE, levels = c("up", "down"))
+
+DEGs_number_between_tissue.414.melt <- DEGs_number_between_tissue.414.melt[order(DEGs_number_between_tissue.414.melt$DE),]
+DEGs_number_between_tissue.414.melt
+
+### making ggplot for DEGs 
+p.DEGs_number_between_tissue.414 <- ggplot(data = DEGs_number_between_tissue.414.melt)
+p.DEGs_number_between_tissue.414 <- p.DEGs_number_between_tissue.414 + geom_bar(mapping = aes(fill=DE, x = factor(DE), y = number), stat = "identity")
+p.DEGs_number_between_tissue.414 <- p.DEGs_number_between_tissue.414 + facet_grid(~tissue)
+p.DEGs_number_between_tissue.414 <- p.DEGs_number_between_tissue.414 + labs(y = "number of differentially expressed genes", x = "")
+
+p.DEGs_number_between_tissue.414
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/DEGs_number_between_tissue.414.png", width = 11, height = 8)  
+
 ### 415 
 lrt.young.vs.flowering.415 <- glmLRT(fit.F1, contrast = c(0,0,0,0,0,1,0,-1))
 topTags(lrt.young.vs.flowering.415)
@@ -320,7 +380,35 @@ DEgene.early.vs.late.silique.415 <- topTags(lrt.early.vs.late.silique.415,n = In
 # 0  53197
 # 1   3905
 
-# plot histogram 
+### ggplot 
+### reformat for ggplot barplot 
+DEGs_number_between_tissue.415 <- data.frame("flowering-vs-young" = as.data.frame(summary(de.young.vs.flowering.415 <- decideTestsDGE(lrt.young.vs.flowering.415, p=0.05)))$Freq, 
+                                     "early.slique-vs-flowering"= as.data.frame(summary(de.flowering.vs.early.silique.415 <- decideTestsDGE(lrt.flowering.vs.early.silique.415, p=0.05)))$Freq, 
+                                     "late.silique-vs-early.silique" = as.data.frame(summary(de.early.vs.late.silique.415 <- decideTestsDGE(lrt.early.vs.late.silique.415, p=0.05)))$Freq)
+
+rownames(DEGs_number_between_tissue.415) <- c("down", "no", "up")
+DEGs_number_between_tissue.415 <- DEGs_number_between_tissue.415[c("down", "up"),]
+DEGs_number_between_tissue.415
+
+DEGs_number_between_tissue.415.melt <- melt(DEGs_number_between_tissue.415)
+DEGs_number_between_tissue.415.melt$DE <- rep(c("down", "up"), 3)
+colnames(DEGs_number_between_tissue.415.melt) <- c("tissue", "number", "DE")
+DEGs_number_between_tissue.415.melt
+
+# reorder: up 1st down 2nd 
+DEGs_number_between_tissue.415.melt$DE <- factor(DEGs_number_between_tissue.415.melt$DE, levels = c("up", "down"))
+
+DEGs_number_between_tissue.415.melt <- DEGs_number_between_tissue.415.melt[order(DEGs_number_between_tissue.415.melt$DE),]
+DEGs_number_between_tissue.415.melt
+
+### making ggplot for DEGs 
+p.DEGs_number_between_tissue.415 <- ggplot(data = DEGs_number_between_tissue.415.melt)
+p.DEGs_number_between_tissue.415 <- p.DEGs_number_between_tissue.415 + geom_bar(mapping = aes(fill=DE, x = factor(DE), y = number), stat = "identity")
+p.DEGs_number_between_tissue.415 <- p.DEGs_number_between_tissue.415 + facet_grid(~tissue)
+p.DEGs_number_between_tissue.415 <- p.DEGs_number_between_tissue.415 + labs(y = "number of differentially expressed genes", x = "")
+
+p.DEGs_number_between_tissue.415
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/DEGs_number_between_tissue.415.png", width = 11, height = 8)  
 ### 
 
 ```
@@ -463,10 +551,6 @@ rownames(fatty.acid.genes.annotation) <- fatty.acid.genes.annotation$V1
 
 fatty.acid.genes.interaction.F1.ID <- rownames(fatty.acid.genes.annotation) 
 
-# fatty.acid.genes.interaction <- merge(fatty.acid.genes.interaction, fatty.acid.genes.annotation, by="row.names")
-# dim(fatty.acid.genes.interaction)
-# fatty.acid.genes.interaction
-
 fatty.acid.genes.interaction.F1 <- as.data.frame( vstMat.F1[c(fatty.acid.genes.interaction.F1.ID),])
 fatty.acid.genes.interaction.F1
 
@@ -524,6 +608,275 @@ p.fatty.acid.interaction.F1
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.interaction.F1.png", width = 8, height = 20)
 ```
 
+### other important genes 
+# Acetyl-CoA-ACP-transacetylase: GO:0004313 none 
+# B-Ketoacyl-ACP-synthase: IPR014030 --> A 
+# Malonyl-CoA-ACP-transacetylase: IPR016036 --> B  
+# B-ketoacyl-ACP-reductase: GO:0004316 --> C 
+# Enoyl-ACP-hydrase: IPR018376 --> D
+# Enoyl-ACP-reductase: GO:0016631 & GO:0004319 none 
+# Palmitoyl-thioesterase: IPR002472 --> E 
+```{r}
+# B-Ketoacyl-ACP-synthase 
+A.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/B-Ketoacyl-ACP-synthase", header = F)
+A.ID
+
+A <- as.data.frame(vstMat.F1[c(A.ID$V1),])
+A
+dim(A)
+
+# reformat for ggplot 
+head(A)
+
+A$geneID <- rownames(A)
+A.melt <- melt(A)
+A.melt$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",A.melt$variable)
+A.melt$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",A.melt$variable)
+A.melt$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",A.melt$variable)
+A.melt$group <- paste(A.melt$gt, A.melt$tissue, A.melt$geneID, sep = "_")
+head(A.melt)
+tail(A.melt)
+dim(A.melt)
+
+# to do: reshape, calculate & make ggplot ... 
+A.melt.reshape <- reshape(A.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(A.melt.reshape)
+A.melt.reshape
+
+A.melt.reshape$mean <- apply(A.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+A.melt.reshape$min <- apply(A.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+A.melt.reshape$max <- apply(A.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+A.melt.reshape
+A.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",A.melt.reshape$group)
+A.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",A.melt.reshape$group)
+A.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",A.melt.reshape$group)
+A.melt.reshape 
+
+# order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+A.melt.reshape$tissue <- factor(A.melt.reshape$tissue, levels = c("Young","flowering","early-silique","late-silique"))
+
+A.melt.reshape <- A.melt.reshape[order(A.melt.reshape$tissue),]
+A.melt.reshape
+
+p.A <- ggplot(data = A.melt.reshape)
+p.A <- p.A + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.A <- p.A + facet_grid(~geneID~gt)
+p.A <- p.A + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+p.A <- p.A + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.A <- p.A + labs(y = "mean expression value", x="tissue", title ="B-Ketoacyl-ACP synthase")
+
+p.A
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/A.png", width = 8, height = 20)
+
+# Malonyl-CoA-ACP-transacetylase  
+B.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Malonyl-CoA-ACP-transacetylase", header = F)
+B.ID
+
+B <- as.data.frame(vstMat.F1[c(B.ID$V1),])
+B
+dim(B)
+
+# reformat for ggplot 
+head(B)
+
+B$geneID <- rownames(B)
+B.melt <- melt(B)
+B.melt$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",B.melt$variable)
+B.melt$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",B.melt$variable)
+B.melt$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",B.melt$variable)
+B.melt$group <- paste(B.melt$gt, B.melt$tissue, B.melt$geneID, sep = "_")
+head(B.melt)
+tail(B.melt)
+dim(B.melt)
+
+# to do: reshape, calculate & make ggplot ... 
+B.melt.reshape <- reshape(B.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(B.melt.reshape)
+B.melt.reshape
+
+B.melt.reshape$mean <- apply(B.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+B.melt.reshape$min <- apply(B.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+B.melt.reshape$max <- apply(B.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+B.melt.reshape
+B.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",B.melt.reshape$group)
+B.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",B.melt.reshape$group)
+B.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",B.melt.reshape$group)
+B.melt.reshape 
+
+# order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+B.melt.reshape$tissue <- factor(B.melt.reshape$tissue, levels = c("Young","flowering","early-silique","late-silique"))
+
+B.melt.reshape <- B.melt.reshape[order(B.melt.reshape$tissue),]
+B.melt.reshape
+
+p.B <- ggplot(data = B.melt.reshape)
+p.B <- p.B + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.B <- p.B + facet_grid(~geneID~gt)
+p.B <- p.B + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+p.B <- p.B + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.B <- p.B + labs(y = "mean expression value", x="tissue", title ="Malonyl-CoA-ACP transacetylase")
+
+p.B
+
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/B.png", width = 8, height = 10)
+
+# B-ketoacyl-ACP-reductase: GO:0004316 --> C 
+C.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/B-ketoacyl-ACP-reductase", header = F)
+C.ID
+
+C <- as.data.frame(vstMat.F1[c(C.ID$V1),])
+C
+dim(C)
+
+# reformat for ggplot 
+head(C)
+
+C$geneID <- rownames(C)
+C.melt <- melt(C)
+C.melt$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",C.melt$variable)
+C.melt$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",C.melt$variable)
+C.melt$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",C.melt$variable)
+C.melt$group <- paste(C.melt$gt, C.melt$tissue, C.melt$geneID, sep = "_")
+head(C.melt)
+tail(C.melt)
+dim(C.melt)
+
+# to do: reshape, calculate & make ggplot ... 
+C.melt.reshape <- reshape(C.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(C.melt.reshape)
+C.melt.reshape
+
+C.melt.reshape$mean <- apply(C.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+C.melt.reshape$min <- apply(C.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+C.melt.reshape$max <- apply(C.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+C.melt.reshape
+C.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",C.melt.reshape$group)
+C.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",C.melt.reshape$group)
+C.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",C.melt.reshape$group)
+C.melt.reshape 
+
+# order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+C.melt.reshape$tissue <- factor(C.melt.reshape$tissue, levels = c("Young","flowering","early-silique","late-silique"))
+
+C.melt.reshape <- C.melt.reshape[order(C.melt.reshape$tissue),]
+C.melt.reshape
+
+p.C <- ggplot(data = C.melt.reshape)
+p.C <- p.C + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.C <- p.C + facet_grid(~geneID~gt)
+p.C <- p.C + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+p.C <- p.C + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.C <- p.C + labs(y = "mean expression value", x="tissue", title="B-ketoacyl-ACP-reductase")
+
+p.C
+
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/C.png", width = 8, height = 8)
+
+# Enoyl-ACP-hydrase: IPR018376 --> D
+D.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Enoyl-ACP-hydrase", header = F)
+D.ID
+
+D <- as.data.frame(vstMat.F1[c(D.ID$V1),])
+D
+dim(D)
+
+# reformat for ggplot 
+head(D)
+
+D$geneID <- rownames(D)
+D.melt <- melt(D)
+D.melt$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",D.melt$variable)
+D.melt$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",D.melt$variable)
+D.melt$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",D.melt$variable)
+D.melt$group <- paste(D.melt$gt, D.melt$tissue, D.melt$geneID, sep = "_")
+head(D.melt)
+tail(D.melt)
+dim(D.melt)
+
+# to do: reshape, calculate & make ggplot ... 
+D.melt.reshape <- reshape(D.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(D.melt.reshape)
+D.melt.reshape
+
+D.melt.reshape$mean <- apply(D.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+D.melt.reshape$min <- apply(D.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+D.melt.reshape$max <- apply(D.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+D.melt.reshape
+D.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",D.melt.reshape$group)
+D.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",D.melt.reshape$group)
+D.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",D.melt.reshape$group)
+D.melt.reshape 
+
+# order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+D.melt.reshape$tissue <- factor(D.melt.reshape$tissue, levels = c("Young","flowering","early-silique","late-silique"))
+
+D.melt.reshape <- D.melt.reshape[order(D.melt.reshape$tissue),]
+D.melt.reshape
+
+p.D <- ggplot(data = D.melt.reshape)
+p.D <- p.D + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.D <- p.D + facet_grid(~geneID~gt)
+p.D <- p.D + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+p.D <- p.D + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.D <- p.D + labs(y = "mean expression value", x="tissue", title="Enoyl-ACP hydrase")
+
+p.D
+
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/D.png", width = 8, height = 20)
+
+# Palmitoyl-thioesterase: IPR002472 --> E 
+E.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Palmitoyl-thioesterase", header = F)
+E.ID
+
+E <- as.data.frame(vstMat.F1[c(E.ID$V1),])
+E
+dim(E)
+
+# reformat for ggplot 
+head(E)
+
+E$geneID <- rownames(E)
+E.melt <- melt(E)
+E.melt$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",E.melt$variable)
+E.melt$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",E.melt$variable)
+E.melt$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",E.melt$variable)
+E.melt$group <- paste(E.melt$gt, E.melt$tissue, E.melt$geneID, sep = "_")
+head(E.melt)
+tail(E.melt)
+dim(E.melt)
+
+# to do: reshape, calculate & make ggplot ... 
+E.melt.reshape <- reshape(E.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(E.melt.reshape)
+E.melt.reshape
+
+E.melt.reshape$mean <- apply(E.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+E.melt.reshape$min <- apply(E.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+E.melt.reshape$max <- apply(E.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+E.melt.reshape
+E.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",E.melt.reshape$group)
+E.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",E.melt.reshape$group)
+E.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",E.melt.reshape$group)
+E.melt.reshape 
+
+# order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+E.melt.reshape$tissue <- factor(E.melt.reshape$tissue, levels = c("Young","flowering","early-silique","late-silique"))
+
+E.melt.reshape <- E.melt.reshape[order(E.melt.reshape$tissue),]
+E.melt.reshape
+
+p.E <- ggplot(data = E.melt.reshape)
+p.E <- p.E + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.E <- p.E + facet_grid(~geneID~gt)
+p.E <- p.E + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+p.E <- p.E + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.E <- p.E + labs(y = "mean expression value", x="tissue", title="Palmitoyl thioesterase")
+
+p.E
+
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/E.png", width = 8, height = 20) 
+
+```
 
 
 
