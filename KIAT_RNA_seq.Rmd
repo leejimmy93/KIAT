@@ -72,6 +72,37 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 ```
 
+# Expression analysis 1) formatting data   
+```{r}
+parent.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.tsv", header = T, check.names = F)
+rownames(parent.read.count) <- parent.read.count[,1]
+parent.read.count <- parent.read.count[,-1]
+
+# format data 
+head(parent.read.count)
+dim(parent.read.count) # 101040     54 
+colnames(parent.read.count)
+even_indexes<-seq(2,length(colnames(parent.read.count)),2)
+parent.read.count.one <- parent.read.count[,even_indexes]
+dim(parent.read.count.one) # 101040     27 
+colnames(parent.read.count.one)
+colnames(parent.read.count.one) <- sub("_2.fq","",colnames(parent.read.count.one),fixed = TRUE) # remove _2.fq 
+
+# sample description  
+sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/parent_summary_corrected.csv")
+dim(sample_des) # 27 22
+sorted_sample_des <- sample_des[order(sample_des$SampleID),]
+
+sorted_sample_des[,4:7]
+new_sample_ID <- paste(sorted_sample_des$Cultivar, sorted_sample_des$Stage, sorted_sample_des$rep, sep = "_")
+new_sample_ID
+
+# replace sample ID 
+colnames(parent.read.count.one) <- new_sample_ID
+head(parent.read.count.one)
+save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
+```
+
 # fatty acid biosynthesis pathways genes (GO:0006633)
 ```{r}
 fatty_acid_gene_index <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_biosynthesis_genes_ID.txt", header = F)
@@ -80,55 +111,55 @@ nrow(fatty_acid_gene_index)
 rownames(fatty_acid_gene_index) <- fatty_acid_gene_index$V1
 
 # extract only fatty acid genes from dataset 
-tmp <- (merge(parent.read.count.one.small, fatty_acid_gene_index, by="row.names"))[,1:28]
-head(tmp)
-rownames(tmp) <- tmp$Row.names
-tmp <- tmp[,-1]
-dim(tmp) # 207 27 
-tmp$total <- rowSums(tmp)
-dim(tmp)
+fatty.acid.genes <- (merge(parent.read.count.one.small, fatty_acid_gene_index, by="row.names"))[,1:28]
+head(fatty.acid.genes)
+rownames(fatty.acid.genes) <- fatty.acid.genes$Row.names
+fatty.acid.genes <- fatty.acid.genes[,-1]
+dim(fatty.acid.genes) # 207 27 
+fatty.acid.genes$total <- rowSums(fatty.acid.genes)
+dim(fatty.acid.genes)
 
-# get only the top 5 highly expressed fatty acid genes 
-five.fatty.acid.genes <- head(tmp[order(tmp$total, decreasing = T), ], 5)
-five.fatty.acid.genes
-write.csv(t(five.fatty.acid.genes), file =  "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/five.fatty.acid.gene.csv")
-
-# reformat for ggplot 
-five.fatty.acid.genes <- five.fatty.acid.genes[,-28]
-# colnames(five.fatty.acid.genes) <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1_\\3",colnames(five.fatty.acid.genes))
-five.fatty.acid.genes$geneID <- rownames(five.fatty.acid.genes)
-five.fatty.acid.genes.melt <- melt(five.fatty.acid.genes)
-five.fatty.acid.genes.melt$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1",five.fatty.acid.genes.melt$variable)
-five.fatty.acid.genes.melt$tissue <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\3",five.fatty.acid.genes.melt$variable)
-five.fatty.acid.genes.melt$rep <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\5",five.fatty.acid.genes.melt$variable)
-five.fatty.acid.genes.melt$group <- paste(five.fatty.acid.genes.melt$gt, five.fatty.acid.genes.melt$tissue, five.fatty.acid.genes.melt$geneID, sep = "_")
-head(five.fatty.acid.genes.melt)
-tail(five.fatty.acid.genes.melt)
-
-# to do: reshape, calculate & make ggplot ... 
-five.fatty.acid.genes.melt.reshape <- reshape(five.fatty.acid.genes.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
-dim(five.fatty.acid.genes.melt.reshape)
-five.fatty.acid.genes.melt.reshape
-
-five.fatty.acid.genes.melt.reshape$mean <- apply(five.fatty.acid.genes.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
-five.fatty.acid.genes.melt.reshape$min <- apply(five.fatty.acid.genes.melt.reshape[,c(2:4)], 1, max, na.rm=T)
-five.fatty.acid.genes.melt.reshape$max <- apply(five.fatty.acid.genes.melt.reshape[,c(2:4)], 1, min, na.rm=T)
-five.fatty.acid.genes.melt.reshape
-five.fatty.acid.genes.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",five.fatty.acid.genes.melt.reshape$group)
-five.fatty.acid.genes.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",five.fatty.acid.genes.melt.reshape$group)
-five.fatty.acid.genes.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",five.fatty.acid.genes.melt.reshape$group)
-five.fatty.acid.genes.melt.reshape 
-
-p.fatty.acid <- ggplot(data = five.fatty.acid.genes.melt.reshape)
-p.fatty.acid <- p.fatty.acid + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
-p.fatty.acid <- p.fatty.acid + facet_grid(~geneID~gt)
-p.fatty.acid <- p.fatty.acid + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
-p.fatty.acid <- p.fatty.acid + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
-p.fatty.acid <- p.fatty.acid + labs(y = "mean expression value", x="tissue")
-
-p.fatty.acid   
-
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.png", width = 8, height = 11)
+# # get only the top 5 highly expressed fatty acid genes 
+# five.fatty.acid.genes <- head(tmp[order(tmp$total, decreasing = T), ], 5)
+# five.fatty.acid.genes
+# write.csv(t(five.fatty.acid.genes), file =  "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/five.fatty.acid.gene.csv")
+# 
+# # reformat for ggplot 
+# five.fatty.acid.genes <- five.fatty.acid.genes[,-28]
+# # colnames(five.fatty.acid.genes) <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1_\\3",colnames(five.fatty.acid.genes))
+# five.fatty.acid.genes$geneID <- rownames(five.fatty.acid.genes)
+# five.fatty.acid.genes.melt <- melt(five.fatty.acid.genes)
+# five.fatty.acid.genes.melt$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1",five.fatty.acid.genes.melt$variable)
+# five.fatty.acid.genes.melt$tissue <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\3",five.fatty.acid.genes.melt$variable)
+# five.fatty.acid.genes.melt$rep <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\5",five.fatty.acid.genes.melt$variable)
+# five.fatty.acid.genes.melt$group <- paste(five.fatty.acid.genes.melt$gt, five.fatty.acid.genes.melt$tissue, five.fatty.acid.genes.melt$geneID, sep = "_")
+# head(five.fatty.acid.genes.melt)
+# tail(five.fatty.acid.genes.melt)
+# 
+# # to do: reshape, calculate & make ggplot ... 
+# five.fatty.acid.genes.melt.reshape <- reshape(five.fatty.acid.genes.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+# dim(five.fatty.acid.genes.melt.reshape)
+# five.fatty.acid.genes.melt.reshape
+# 
+# five.fatty.acid.genes.melt.reshape$mean <- apply(five.fatty.acid.genes.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+# five.fatty.acid.genes.melt.reshape$min <- apply(five.fatty.acid.genes.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+# five.fatty.acid.genes.melt.reshape$max <- apply(five.fatty.acid.genes.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+# five.fatty.acid.genes.melt.reshape
+# five.fatty.acid.genes.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",five.fatty.acid.genes.melt.reshape$group)
+# five.fatty.acid.genes.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",five.fatty.acid.genes.melt.reshape$group)
+# five.fatty.acid.genes.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",five.fatty.acid.genes.melt.reshape$group)
+# five.fatty.acid.genes.melt.reshape 
+# 
+# p.fatty.acid <- ggplot(data = five.fatty.acid.genes.melt.reshape)
+# p.fatty.acid <- p.fatty.acid + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+# p.fatty.acid <- p.fatty.acid + facet_grid(~geneID~gt)
+# p.fatty.acid <- p.fatty.acid + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+# p.fatty.acid <- p.fatty.acid + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+# p.fatty.acid <- p.fatty.acid + labs(y = "mean expression value", x="tissue")
+# 
+# p.fatty.acid   
+# 
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.png", width = 8, height = 11)
 ```
 
 # data summary statisitics read count number & expressed genes 
@@ -182,36 +213,6 @@ write.csv(sample_statistics, file = "/Users/ruijuanli/Desktop/Brassica_project/K
 
 ```
 
-# Expression analysis 1) formatting data   
-```{r}
-parent.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.tsv", header = T, check.names = F)
-rownames(parent.read.count) <- parent.read.count[,1]
-parent.read.count <- parent.read.count[,-1]
-
-# format data 
-head(parent.read.count)
-dim(parent.read.count) # 101040     54 
-colnames(parent.read.count)
-even_indexes<-seq(2,length(colnames(parent.read.count)),2)
-parent.read.count.one <- parent.read.count[,even_indexes]
-dim(parent.read.count.one) # 101040     27 
-colnames(parent.read.count.one)
-colnames(parent.read.count.one) <- sub("_2.fq","",colnames(parent.read.count.one),fixed = TRUE) # remove _2.fq 
-
-# sample description  
-sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/parent_summary_corrected.csv")
-dim(sample_des) # 27 22
-sorted_sample_des <- sample_des[order(sample_des$SampleID),]
-
-sorted_sample_des[,4:7]
-new_sample_ID <- paste(sorted_sample_des$Cultivar, sorted_sample_des$Stage, sorted_sample_des$rep, sep = "_")
-new_sample_ID
-
-# replace sample ID 
-colnames(parent.read.count.one) <- new_sample_ID
-head(parent.read.count.one)
-save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
-```
 
 # expression analysis 2) set up sample description 
 ```{r}
@@ -454,6 +455,7 @@ rownames(DEGs_number_between_gt.parent) <- c("down", "no", "up")
 DEGs_number_between_gt.parent <- DEGs_number_between_gt.parent[c("down", "up"),]
 DEGs_number_between_gt.parent
 
+library(reshape2)
 DEGs_number_between_gt.melt.parent <- melt(DEGs_number_between_gt.parent)
 DEGs_number_between_gt.melt.parent$DE <- rep(c("down", "up"), 5)
 colnames(DEGs_number_between_gt.melt.parent) <- c("tissue", "number", "DE")
@@ -736,28 +738,28 @@ uniq.gene.ol <- uniq.gene.ol[,c("Da-Ae_early-silique_3", "Da-Ol-1_early-silique_
 dim(uniq.gene.ol) # 2436   12 
 
 # 3) draw heatmap of their expression values... I don't think this can explain the result 
-library(gplots)
-hr <- hclust(dist(uniq.gene.ol))
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/heatmap.png")
-heatmap.2(as.matrix(uniq.gene.ol), Rowv = as.dendrogram(hr), scale = "row", density.info="none", trace="none", keysize = 0.5)
-dev.off()
-
-# 4) make figure of their mean expression values, may not be useful 
-DEgene.early.vs.late.silique.ae.all <- topTags(lrt.early.vs.late.silique.ae,n = Inf)$table[topTags(lrt.early.vs.late.silique.ae,n = Inf)$table$FDR<=1,]
-
-uniq.gene.ol.ae <- (cbind((DEgene.early.vs.late.silique.ae.all[index,]), (DEgene.early.vs.late.silique.ol[index,])))[,c(1,5,6,10)]
-colnames(uniq.gene.ol.ae) <- c("logFC_ae","FDR_ae","logFC_ol","FDR_ol")
-colnames(uniq.gene.ol.ae)
-
-hist(uniq.gene.ol.ae$logFC_ae)
-hist(uniq.gene.ol.ae$logFC_ol)
-hist(uniq.gene.ol.ae$FDR_ae)
-hist(uniq.gene.ol.ae$FDR_ol)
-
-# how many are with the same direction and how many with diff directions? 
-sum(uniq.gene.ol.ae$logFC_ae>0 & uniq.gene.ol.ae$logFC_ol>0) 
-sum(uniq.gene.ol.ae$logFC_ae<0 & uniq.gene.ol.ae$logFC_ol<0)
-dim(uniq.gene.ol.ae)
+# library(gplots)
+# hr <- hclust(dist(uniq.gene.ol))
+# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/heatmap.png")
+# heatmap.2(as.matrix(uniq.gene.ol), Rowv = as.dendrogram(hr), scale = "row", density.info="none", trace="none", keysize = 0.5)
+# dev.off()
+# 
+# # 4) make figure of their mean expression values, may not be useful 
+# DEgene.early.vs.late.silique.ae.all <- topTags(lrt.early.vs.late.silique.ae,n = Inf)$table[topTags(lrt.early.vs.late.silique.ae,n = Inf)$table$FDR<=1,]
+# 
+# uniq.gene.ol.ae <- (cbind((DEgene.early.vs.late.silique.ae.all[index,]), (DEgene.early.vs.late.silique.ol[index,])))[,c(1,5,6,10)]
+# colnames(uniq.gene.ol.ae) <- c("logFC_ae","FDR_ae","logFC_ol","FDR_ol")
+# colnames(uniq.gene.ol.ae)
+# 
+# hist(uniq.gene.ol.ae$logFC_ae)
+# hist(uniq.gene.ol.ae$logFC_ol)
+# hist(uniq.gene.ol.ae$FDR_ae)
+# hist(uniq.gene.ol.ae$FDR_ol)
+# 
+# # how many are with the same direction and how many with diff directions? 
+# sum(uniq.gene.ol.ae$logFC_ae>0 & uniq.gene.ol.ae$logFC_ol>0) 
+# sum(uniq.gene.ol.ae$logFC_ae<0 & uniq.gene.ol.ae$logFC_ol<0)
+# dim(uniq.gene.ol.ae)
 
 # 687+506 are with same directions while 2436-687-506 are with diff directions. 
 ```
@@ -788,6 +790,7 @@ dge.new <- estimateGLMTagwiseDisp(dge.new,design.new)
 # plotBCV(dge.new)
 
 # use interaction as coefficient and see how many fatty acid genes are important for interaction term... 
+fit.new <- glmFit(dge.new, design.new)
 lrt.new.interaction <- glmLRT(fit.new,coef = c("tissuebolting:genotypeDa-Ae", "tissueearly-silique:genotypeDa-Ae", "tissueflowering:genotypeDa-Ae", "tissuelate-silique:genotypeDa-Ae"))
 topTags(lrt.new.interaction)
 DEgene.new.interaction <- topTags(lrt.new.interaction,n = Inf)$table[topTags(lrt.new.interaction,n = Inf)$table$FDR<0.05,]
@@ -869,6 +872,78 @@ p.fatty.acid.interaction
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/fatty.acid.interaction.png", width = 8, height = 20)
 
 ```
+
+# get only 3 genes 
+```{r}
+
+fatty.acid.genes.three <- as.data.frame(vstMat.parent[c("BnaA05g06830D","BnaA10g09300D",  "BnaC09g50630D"),])
+fatty.acid.genes.three
+dim(fatty.acid.genes.three)
+
+## add gene annotation to ID 
+### annotation was obtained by blast sequences against Arabidopsis transcript database and the top one was used for annotation. 
+
+fatty.acid.genes.annotation <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty_acid_gene_name.csv", header = F)
+
+fatty.acid.genes.annotation
+rownames(fatty.acid.genes.annotation) <- fatty.acid.genes.annotation$V1
+fatty.acid.genes.three <- merge(fatty.acid.genes.three, fatty.acid.genes.annotation, by="row.names")
+dim(fatty.acid.genes.three)
+fatty.acid.genes.three
+
+write.csv(fatty.acid.genes.three, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty.acid.genes.three.ID.txt")
+
+# reformat for ggplot 
+rownames(fatty.acid.genes.three) <- paste(fatty.acid.genes.three$Row.names, fatty.acid.genes.three$V2, sep = "-")
+head(fatty.acid.genes.three)
+fatty.acid.genes.three <- fatty.acid.genes.three[,-c(1,29:31)]
+dim(fatty.acid.genes.three)
+head(fatty.acid.genes.three)
+
+fatty.acid.genes.three$geneID <- rownames(fatty.acid.genes.three)
+fatty.acid.genes.three.melt <- melt(fatty.acid.genes.three)
+fatty.acid.genes.three.melt$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1",fatty.acid.genes.three.melt$variable)
+fatty.acid.genes.three.melt$tissue <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\3",fatty.acid.genes.three.melt$variable)
+fatty.acid.genes.three.melt$rep <-  gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\5",fatty.acid.genes.three.melt$variable)
+fatty.acid.genes.three.melt$group <- paste(fatty.acid.genes.three.melt$gt, fatty.acid.genes.three.melt$tissue, fatty.acid.genes.three.melt$geneID, sep = "_")
+head(fatty.acid.genes.three.melt)
+tail(fatty.acid.genes.three.melt)
+dim(fatty.acid.genes.three.melt)
+
+# to do: reshape, calculate & make ggplot ... 
+fatty.acid.genes.three.melt.reshape <- reshape(fatty.acid.genes.three.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(fatty.acid.genes.three.melt.reshape)
+fatty.acid.genes.three.melt.reshape
+
+fatty.acid.genes.three.melt.reshape$mean <- apply(fatty.acid.genes.three.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+fatty.acid.genes.three.melt.reshape$min <- apply(fatty.acid.genes.three.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+fatty.acid.genes.three.melt.reshape$max <- apply(fatty.acid.genes.three.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+fatty.acid.genes.three.melt.reshape
+fatty.acid.genes.three.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",fatty.acid.genes.three.melt.reshape$group)
+fatty.acid.genes.three.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",fatty.acid.genes.three.melt.reshape$group)
+fatty.acid.genes.three.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",fatty.acid.genes.three.melt.reshape$group)
+fatty.acid.genes.three.melt.reshape 
+
+# order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+fatty.acid.genes.three.melt.reshape$tissue <- factor(fatty.acid.genes.three.melt.reshape$tissue, levels = c("Young","bolting","flowering","early-silique","late-silique"))
+
+fatty.acid.genes.three.melt.reshape <- fatty.acid.genes.three.melt.reshape[order(fatty.acid.genes.three.melt.reshape$tissue),]
+fatty.acid.genes.three.melt.reshape
+
+p.fatty.acid.three <- ggplot(data = fatty.acid.genes.three.melt.reshape)
+p.fatty.acid.three <- p.fatty.acid.three + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.fatty.acid.three <- p.fatty.acid.three + facet_grid(~geneID~gt)
+p.fatty.acid.three <- p.fatty.acid.three + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+p.fatty.acid.three <- p.fatty.acid.three + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.fatty.acid.three <- p.fatty.acid.three + labs(y = "mean expression value", x="tissue")
+
+p.fatty.acid.three
+
+# based on the figure, three genes were identified to have huge interaction effect, extract these three genes and make figure only for them --> modify the code  
+
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/fatty.acid.three.png", width = 11, height = 8)
+```
+
 
 # GO enrichment analysis 
 ```{r}

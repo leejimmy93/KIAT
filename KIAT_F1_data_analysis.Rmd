@@ -176,6 +176,7 @@ dge.data.F1$sample
 hist(dge.data.F1$samples$norm.factors)
 
 # MDS to check sample seperation, also using dengrogram.  
+plotMDS(dge.data.F1, method = "bcv",labels = rownames(dge.data.F1$samples))
 mds.F1 <- plotMDS(dge.data.F1, method = "bcv",labels = dge.data.F1$samples$group)
 
 x.F1 <- as.data.frame(mds.F1$x)
@@ -606,6 +607,70 @@ p.fatty.acid.interaction.F1
 # based on the figure, three genes were identified to have huge interaction effect, extract these three genes and make figure only for them --> modify the code  
 
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.interaction.F1.png", width = 8, height = 20)
+```
+
+# three fatty acid genes 
+```{r}
+fatty.acid.genes.annotation <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty_acid_gene_name.csv", header = F)
+
+fatty.acid.genes.annotation
+rownames(fatty.acid.genes.annotation) <- fatty.acid.genes.annotation$V1
+
+fatty.acid.genes.three.F1 <- as.data.frame( vstMat.F1[c("BnaA05g06830D","BnaA10g09300D",  "BnaC09g50630D"),])
+fatty.acid.genes.three.F1
+
+# reformat for ggplot 
+fatty.acid.genes.three.F1 <- merge(fatty.acid.genes.three.F1, fatty.acid.genes.annotation, by="row.names")
+dim(fatty.acid.genes.three.F1)
+rownames(fatty.acid.genes.three.F1) <- paste(fatty.acid.genes.three.F1$Row.names, fatty.acid.genes.three.F1$V2, sep = "-")
+head(fatty.acid.genes.three.F1)
+fatty.acid.genes.three.F1 <- fatty.acid.genes.three.F1[,-c(1,26:28)]
+dim(fatty.acid.genes.three.F1)
+head(fatty.acid.genes.three.F1)
+
+
+fatty.acid.genes.three.F1$geneID <- rownames(fatty.acid.genes.three.F1)
+fatty.acid.genes.three.melt.F1 <- melt(fatty.acid.genes.three.F1)
+fatty.acid.genes.three.melt.F1$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",fatty.acid.genes.three.melt.F1$variable)
+fatty.acid.genes.three.melt.F1$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",fatty.acid.genes.three.melt.F1$variable)
+fatty.acid.genes.three.melt.F1$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",fatty.acid.genes.three.melt.F1$variable)
+fatty.acid.genes.three.melt.F1$group <- paste(fatty.acid.genes.three.melt.F1$gt, fatty.acid.genes.three.melt.F1$tissue, fatty.acid.genes.three.melt.F1$geneID, sep = "_")
+head(fatty.acid.genes.three.melt.F1)
+tail(fatty.acid.genes.three.melt.F1)
+dim(fatty.acid.genes.three.melt.F1)
+
+# to do: reshape, calculate & make ggplot ... 
+fatty.acid.genes.three.melt.reshape.F1 <- reshape(fatty.acid.genes.three.melt.F1[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+dim(fatty.acid.genes.three.melt.reshape.F1)
+fatty.acid.genes.three.melt.reshape.F1
+
+fatty.acid.genes.three.melt.reshape.F1$mean <- apply(fatty.acid.genes.three.melt.reshape.F1[,c(2:4)], 1, mean, na.rm=TRUE)
+fatty.acid.genes.three.melt.reshape.F1$min <- apply(fatty.acid.genes.three.melt.reshape.F1[,c(2:4)], 1, max, na.rm=T)
+fatty.acid.genes.three.melt.reshape.F1$max <- apply(fatty.acid.genes.three.melt.reshape.F1[,c(2:4)], 1, min, na.rm=T)
+fatty.acid.genes.three.melt.reshape.F1
+fatty.acid.genes.three.melt.reshape.F1$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",fatty.acid.genes.three.melt.reshape.F1$group)
+fatty.acid.genes.three.melt.reshape.F1$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",fatty.acid.genes.three.melt.reshape.F1$group)
+fatty.acid.genes.three.melt.reshape.F1$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",fatty.acid.genes.three.melt.reshape.F1$group)
+fatty.acid.genes.three.melt.reshape.F1
+
+# order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+fatty.acid.genes.three.melt.reshape.F1$tissue <- factor(fatty.acid.genes.three.melt.reshape.F1$tissue, levels = c("Young","flowering","early-silique","late-silique"))
+
+fatty.acid.genes.three.melt.reshape.F1 <- fatty.acid.genes.three.melt.reshape.F1[order(fatty.acid.genes.three.melt.reshape.F1$tissue),]
+fatty.acid.genes.three.melt.reshape.F1
+
+p.fatty.acid.three.F1 <- ggplot(data = fatty.acid.genes.three.melt.reshape.F1)
+p.fatty.acid.three.F1 <- p.fatty.acid.three.F1 + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+p.fatty.acid.three.F1 <- p.fatty.acid.three.F1 + facet_grid(~geneID~gt)
+p.fatty.acid.three.F1 <- p.fatty.acid.three.F1 + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+p.fatty.acid.three.F1 <- p.fatty.acid.three.F1 + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+p.fatty.acid.three.F1 <- p.fatty.acid.three.F1 + labs(y = "mean expression value", x="tissue")
+
+p.fatty.acid.three.F1
+
+# based on the figure, three genes were identified to have huge interaction effect, extract these three genes and make figure only for them --> modify the code  
+
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.acid.three.F1.png", width = 11, height = 8) 
 ```
 
 ### other important genes 
