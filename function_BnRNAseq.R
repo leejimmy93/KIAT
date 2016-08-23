@@ -1,3 +1,6 @@
+### function for BnRNAseq 
+
+####### 1) GO annotaion 
 # ORA with GOseq (Brassica napa version)
 # prerequisit
 library(ShortRead);library(goseq);library(GO.db);library("annotate")
@@ -68,3 +71,118 @@ GOseq.Bn.ORA<-function(genelist,padjust=0.05,ontology="BP") { # return GO enrich
     return(enriched.GO)
   }
 } 
+
+### 2) expression profile graph drawing w/o annotation 
+# expression profile graph, need to have voom transformed data  
+expression.pattern.Bn.parent <- function(ID){
+  rownames(ID) <- ID$V1
+  data <- as.data.frame(vstMat.parent[(c(which(rownames(vstMat.parent) %in% rownames(ID)))),])
+  data$geneID <- rownames(data)
+  data.melt <- melt(data)
+  data.melt$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",data.melt$variable)
+  data.melt$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",data.melt$variable)
+  data.melt$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",data.melt$variable)
+  data.melt$group <- paste(data.melt$gt, data.melt$tissue, data.melt$geneID, sep = "_")
+  
+  data.melt.reshape <- reshape(data.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+  data.melt.reshape$mean <- apply(data.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+  data.melt.reshape$min <- apply(data.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+  data.melt.reshape$max <- apply(data.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+  
+  data.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",data.melt.reshape$group)
+  data.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",data.melt.reshape$group)
+  data.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",data.melt.reshape$group)
+  
+  # order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+  data.melt.reshape$tissue <- factor(data.melt.reshape$tissue, levels = c("Young","bolting","flowering","early-silique","late-silique"))
+  data.melt.reshape <- data.melt.reshape[order(data.melt.reshape$tissue),]
+  
+  
+  p <- ggplot(data = data.melt.reshape)
+  p <- p + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+  p <- p + facet_grid(~geneID~gt)
+  p <- p + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+  p <- p + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+  p <- p + labs(y = "mean expression value", x="tissue", title="")
+  
+  p
+  
+  return(p)
+}
+
+### 3) expression profile drawing w/ annotation 
+expression.pattern.Bn.parent.with.annot <- function(ID, annotation){
+  data <- as.data.frame(vstMat.parent[(c(which(rownames(vstMat.parent) %in% ID))),]) 
+  ## add gene annotation to ID 
+  rownames(annotation) <- annotation$V1
+  data <- merge(data, annotation, by="row.names")
+  
+  rownames(data) <- paste(data$Row.names, data$V2, sep = "-")
+  data <- data[,-c(1,29:31)]
+  
+  data$geneID <- rownames(data)
+  data.melt <- melt(data)
+  data.melt$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",data.melt$variable)
+  data.melt$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",data.melt$variable)
+  data.melt$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",data.melt$variable)
+  data.melt$group <- paste(data.melt$gt, data.melt$tissue, data.melt$geneID, sep = "_")
+  
+  data.melt.reshape <- reshape(data.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+  
+  data.melt.reshape$mean <- apply(data.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+  data.melt.reshape$min <- apply(data.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+  data.melt.reshape$max <- apply(data.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+  data.melt.reshape
+  data.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",data.melt.reshape$group)
+  data.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",data.melt.reshape$group)
+  data.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",data.melt.reshape$group)
+  data.melt.reshape 
+  
+  # order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+  data.melt.reshape$tissue <- factor(data.melt.reshape$tissue, levels = c("Young","bolting","flowering","early-silique","late-silique"))
+  
+  data.melt.reshape <- data.melt.reshape[order(data.melt.reshape$tissue),]
+  data.melt.reshape
+  
+  p <- ggplot(data = data.melt.reshape)
+  p <- p + geom_line(aes(x = factor(tissue), y = mean,group=gt, color=gt))
+  p <- p + facet_grid(~geneID~gt)
+  p <- p + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
+  p <- p + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
+  p <- p + labs(y = "mean expression value", x="tissue")
+  
+  return(p)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -685,8 +685,9 @@ ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/fatty.a
 # B-Ketoacyl-ACP-synthase 
 A.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/B-Ketoacyl-ACP-synthase", header = F)
 A.ID
+rownames(A.ID) <- A.ID$V1
 
-A <- as.data.frame(vstMat.F1[c(A.ID$V1),])
+A <- as.data.frame(vstMat.F1[(rownames(A.ID)),])
 A
 dim(A)
 
@@ -731,14 +732,18 @@ p.A <- p.A + theme(axis.text.x=element_text(angle=90),strip.text.y = element_tex
 p.A <- p.A + labs(y = "mean expression value", x="tissue", title ="B-Ketoacyl-ACP synthase")
 
 p.A
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/A.png", width = 8, height = 20)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/5f.png", width = 8, height = 20)
 
 # Malonyl-CoA-ACP-transacetylase  
 B.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Malonyl-CoA-ACP-transacetylase", header = F)
 B.ID
+rownames(B.ID) <- B.ID$V1
 
-B <- as.data.frame(vstMat.F1[c(B.ID$V1),])
+which(rownames(vstMat.F1) %in% rownames(B.ID))
+B <- as.data.frame(vstMat.F1[(c(which(rownames(vstMat.F1) %in% rownames(B.ID)))),])
 B
+summary(rownames(B) %in% rownames(B.ID))
+identical(rownames(B), rownames(B.ID))
 dim(B)
 
 # reformat for ggplot 
@@ -783,13 +788,14 @@ p.B <- p.B + labs(y = "mean expression value", x="tissue", title ="Malonyl-CoA-A
 
 p.B
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/B.png", width = 8, height = 10)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/5g.png", width = 8, height = 10)
 
 # B-ketoacyl-ACP-reductase: GO:0004316 --> C 
 C.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/B-ketoacyl-ACP-reductase", header = F)
 C.ID
+rownames(C.ID) <- C.ID$V1
 
-C <- as.data.frame(vstMat.F1[c(C.ID$V1),])
+C <- as.data.frame(vstMat.F1[(rownames(C.ID)),])
 C
 dim(C)
 
@@ -835,13 +841,14 @@ p.C <- p.C + labs(y = "mean expression value", x="tissue", title="B-ketoacyl-ACP
 
 p.C
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/C.png", width = 8, height = 8)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/5h.png", width = 8, height = 8)
 
 # Enoyl-ACP-hydrase: IPR018376 --> D
 D.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Enoyl-ACP-hydrase", header = F)
 D.ID
+rownames(D.ID) <- D.ID$V1
 
-D <- as.data.frame(vstMat.F1[c(D.ID$V1),])
+D <- as.data.frame(vstMat.F1[(rownames(D.ID)),])
 D
 dim(D)
 
@@ -887,14 +894,18 @@ p.D <- p.D + labs(y = "mean expression value", x="tissue", title="Enoyl-ACP hydr
 
 p.D
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/D.png", width = 8, height = 20)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/5i.png", width = 8, height = 20)
 
 # Palmitoyl-thioesterase: IPR002472 --> E 
 E.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Palmitoyl-thioesterase", header = F)
 E.ID
+rownames(E.ID) <- E.ID$V1
 
-E <- as.data.frame(vstMat.F1[c(E.ID$V1),])
+which(rownames(vstMat.F1) %in% rownames(E.ID))
+E <- as.data.frame(vstMat.F1[(c(which(rownames(vstMat.F1) %in% rownames(E.ID)))),])
 E
+summary(rownames(E) %in% rownames(E.ID))
+identical(rownames(E), rownames(E.ID))
 dim(E)
 
 # reformat for ggplot 
@@ -937,9 +948,9 @@ p.E <- p.E + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max, width=0.25))
 p.E <- p.E + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none")
 p.E <- p.E + labs(y = "mean expression value", x="tissue", title="Palmitoyl thioesterase")
 
-p.E
+p.E 
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/E.png", width = 8, height = 20) 
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/5j.png", width = 8, height = 20) 
 
 ```
 
