@@ -46,8 +46,12 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # 1) get B.napus reference genome: Brassica_napus_v4.1.chromosomes.fa 
 # make STAR reference index: STAR --runMode genomeGenerate --genomeDir star_nome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --runThreadN 2 
 # mapping using run_star.sh 
+### because of the naming problems of All1_Yeong3_160621 & All1_Yeong2_160621, two seperate STAR mapping were made for them using the below codes: 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_2.fq --runThreadN 6
 
-# play with SAM/BAM file 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --runThreadN 6
+
+# work with SAM/BAM file 
 # 1) convert SAM/BAM file 
 # samtools view -h file.bam > file.sam
 # samtools view -b -S file.sam > file.bam  
