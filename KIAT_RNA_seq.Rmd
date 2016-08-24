@@ -7,7 +7,7 @@ output: html_document
 
 # download data, QC, and mapping (using kallisto)
 ```{r}
-# 1) download file from ftp using ftp_file_transfer.sh
+# 1) download file from ftp using ftp_file_transfer.sh # ftp works only under whitney. 
 # 1.1) unzip files using gunzip *  
 # 2) get first 1000 sequences for each file extract_1000_reads.sh, actually worked with all data instead of the 1st 1000 seqs
 # 3) QC file using fastQC: fastqc *.fq -o /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/fastqc_result
@@ -42,9 +42,10 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # using STAR 
 ```{r}
+##### STAR is only installed on coloma!!! 
 # 1) get B.napus reference genome: Brassica_napus_v4.1.chromosomes.fa 
 # make STAR reference index: STAR --runMode genomeGenerate --genomeDir star_nome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --runThreadN 2 
-# mapping, only map the 2nd end using run_star.sh 
+# mapping using run_star.sh 
 
 # play with SAM/BAM file 
 # 1) convert SAM/BAM file 
@@ -103,22 +104,6 @@ head(parent.read.count.one)
 save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
 ```
 
-# fatty acid biosynthesis pathways genes (GO:0006633)
-```{r}
-fatty_acid_gene_index <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_biosynthesis_genes_ID.txt", header = F)
-head(fatty_acid_gene_index)
-nrow(fatty_acid_gene_index)
-rownames(fatty_acid_gene_index) <- fatty_acid_gene_index$V1
-
-# extract only fatty acid genes from dataset 
-fatty.acid.genes <- (merge(parent.read.count.one.small, fatty_acid_gene_index, by="row.names"))[,1:28]
-head(fatty.acid.genes)
-rownames(fatty.acid.genes) <- fatty.acid.genes$Row.names
-fatty.acid.genes <- fatty.acid.genes[,-1]
-dim(fatty.acid.genes) # 207 27 
-fatty.acid.genes$total <- rowSums(fatty.acid.genes)
-dim(fatty.acid.genes)
-```
 
 # data summary statisitics read count number & expressed genes 
 ```{r}
@@ -159,7 +144,7 @@ sapply(colnames((parent.read.count.one.normalized)), function(RNAlib){
   rownames(head(parent.read.count.one.normalized[order(parent.read.count.one.normalized[,RNAlib],decreasing = TRUE),], 10))
 }
 )
-write.csv(t(most_highly_expressed_genes), file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/most_highly_expressed_genes.csv")
+# write.csv(t(most_highly_expressed_genes), file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/most_highly_expressed_genes.csv")
 
 temp <- sample_des[,c(4,5,6,8)]
 rownames(temp) <- paste(sample_des[,4], sample_des[,5], sample_des[,6], sep = "_")
@@ -167,7 +152,7 @@ sample_statistics <- merge(temp, expressed_gene_number, by=0)
 colnames(sample_statistics) <- c("sample_ID", "Cultivar", "Tissue", "rep", "total_reads", "expressed_gene_number")
 head(sample_statistics)
 colnames(sample_statistics)
-write.csv(sample_statistics, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/sample_statisitcs.csv")
+# write.csv(sample_statistics, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/sample_statisitcs.csv")
 
 ```
 
@@ -246,7 +231,7 @@ p.mds <- p.mds + labs(y = "BCV distance 2", x="BCV distance 1")
 p.mds <- p.mds + facet_grid(~gt)
 p.mds
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width = 11, height = 8)
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width = 11, height = 8)
 
 # clustering to check sample seperation 
 library(ggdendro)
@@ -264,7 +249,7 @@ p.dengro <- ggplot(data = segment(ggdata.parent))
 p.dendro <- p.dengro + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
 p.dendro <- p.dendro + geom_text(data = label(ggdata.parent), aes(x = x, y = y, label = label, hjust=0, color=group)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
 p.dendro
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/clustering_new.png", width = 15, height = 8) 
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/clustering_new.png", width = 15, height = 8) 
 
 # pairwise comparison using GLM model 
 # design matrix
@@ -427,7 +412,7 @@ p.DEGs_number_between_gt.parent <- p.DEGs_number_between_gt.parent + facet_grid(
 p.DEGs_number_between_gt.parent <- p.DEGs_number_between_gt.parent + labs(y = "number of differentially expressed genes", x = "")
 
 p.DEGs_number_between_gt.parent
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_gt.parent.png", width = 11, height = 8)
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_gt.parent.png", width = 11, height = 8)
 
 ## between developmental stages 
 # Da-Ae 
@@ -492,7 +477,7 @@ p.DEGs_number_between_tissue.ae.parent <- p.DEGs_number_between_tissue.ae.parent
 p.DEGs_number_between_tissue.ae.parent <- p.DEGs_number_between_tissue.ae.parent + labs(y = "number of differentially expressed genes", x = "")
 
 p.DEGs_number_between_tissue.ae.parent
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_tissue.ae.parent.png", width = 11, height = 8)
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_tissue.ae.parent.png", width = 11, height = 8)
 
 ### Da-Ol-1 
 lrt.young.vs.bolting.ol <- glmLRT(fit.parent, contrast = c(0,0,0,0,0,1,0,0,0,-1))
@@ -556,7 +541,7 @@ p.DEGs_number_between_tissue.ol.parent <- p.DEGs_number_between_tissue.ol.parent
 p.DEGs_number_between_tissue.ol.parent <- p.DEGs_number_between_tissue.ol.parent + labs(y = "number of differentially expressed genes", x = "")
 
 p.DEGs_number_between_tissue.ol.parent
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_tissue.ol.parent.png", width = 11, height = 8) 
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_tissue.ol.parent.png", width = 11, height = 8) 
 
 
 ### plot smear 
@@ -691,8 +676,26 @@ uniq.gene.ol <- uniq.gene.ol[,c("Da-Ae_early-silique_3", "Da-Ol-1_early-silique_
 dim(uniq.gene.ol) # 2436   12 
 ```
 
+# fatty acid biosynthesis pathways genes (GO:0006633)
+```{r}
+fatty_acid_gene_index <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_biosynthesis_genes_ID.txt", header = F)
+head(fatty_acid_gene_index)
+nrow(fatty_acid_gene_index)
+rownames(fatty_acid_gene_index) <- fatty_acid_gene_index$V1
+
+# extract only fatty acid genes from dataset 
+fatty.acid.genes <- (merge(parent.read.count.one.small, fatty_acid_gene_index, by="row.names"))[,1:28]
+head(fatty.acid.genes)
+rownames(fatty.acid.genes) <- fatty.acid.genes$Row.names
+fatty.acid.genes <- fatty.acid.genes[,-1]
+dim(fatty.acid.genes) # 207 27 
+fatty.acid.genes$total <- rowSums(fatty.acid.genes)
+dim(fatty.acid.genes)
+```
+
 # new design to see how many fatty acid genes' expression are differentially expressed between genotypes and during developmental stages  
 ```{r}
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 # assign group 
 ftable(parent.read.count.one.sample,row.vars=c("stage"),col.vars=c("batch","genotype"))
 
@@ -728,15 +731,23 @@ dim(fatty.acid.genes) # 207 fatty acid genes expressed in my data
 index_2 <- which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.interaction)) 
 rownames(fatty.acid.genes[index_2,])
 ID.15.fatty.acid.genes <- rownames(fatty.acid.genes[which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.interaction)),])
+fatty.acid.genes.annotation <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty_acid_gene_name.csv", header = F)
+
 expression.pattern.Bn.parent.with.annot(ID.15.fatty.acid.genes, fatty.acid.genes.annotation)
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/fatty.acid.interaction.png", width = 8, height = 20)
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/fatty.acid.interaction.png", width = 8, height = 20)
+
+# get only 3 genes 
+ID <- c("BnaA05g06830D","BnaA10g09300D",  "BnaC09g50630D") 
+expression.pattern.Bn.parent.with.annot(ID, fatty.acid.genes.annotation)
+
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/fatty.acid.three.png", width = 11, height = 8)
 ```
 
 # GO enrichment analysis 
 ```{r}
 # load all necessary functions 
-source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+# source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 
 # young 
 DEgene.young.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young))
@@ -798,48 +809,40 @@ DEgene.bolting.vs.flowering.ae.GO.ORA
 # Enoyl-ACP-reductase: GO:0016631 & GO:0004319 none 
 # Palmitoyl-thioesterase: IPR002472 --> E 
 ```{r}
-source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+# source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 
 # B-Ketoacyl-ACP-synthase  
 A.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/B-Ketoacyl-ACP-synthase", header = F)
 dim(A.ID)
 expression.pattern.Bn.parent(A.ID) 
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/A.png", width = 8, height = 20) 
+# ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/A.png", width = 8, height = 20) 
 
 # Malonyl-CoA-ACP-transacetylase  
 B.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Malonyl-CoA-ACP-transacetylase", header = F) 
 dim(B.ID)
 expression.pattern.Bn.parent(B.ID)
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/B.png", width = 8, height = 10) 
+# ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/B.png", width = 8, height = 10) 
 
 # B-ketoacyl-ACP-reductase: GO:0004316 --> C 
 C.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/B-ketoacyl-ACP-reductase", header = F) 
 dim(C.ID)
 expression.pattern.Bn.parent(C.ID)
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/C.png", width = 8, height = 8) 
+# ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/C.png", width = 8, height = 8) 
 
 # Enoyl-ACP-hydrase: IPR018376 --> D
 D.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Enoyl-ACP-hydrase", header = F)
 dim(D.ID)
 expression.pattern.Bn.parent(D.ID)
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/D.png", width = 8, height = 20) 
+# ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/D.png", width = 8, height = 20) 
 
 # Palmitoyl-thioesterase: IPR002472 --> E 
 E.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Palmitoyl-thioesterase", header = F) 
 dim(E.ID)
 expression.pattern.Bn.parent(E.ID)  
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/E.png", width = 8, height = 20) 
+# ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/E.png", width = 8, height = 20) 
 ```
 
-# get only 3 genes 
-```{r}
-ID <- c("BnaA05g06830D","BnaA10g09300D",  "BnaC09g50630D") 
-fatty.acid.genes.annotation <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty_acid_gene_name.csv", header = F)
 
-expression.pattern.Bn.parent.with.annot(ID, fatty.acid.genes.annotation)
-
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/fatty.acid.three.png", width = 11, height = 8)
-```
 
 
 
