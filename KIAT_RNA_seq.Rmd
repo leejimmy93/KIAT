@@ -57,13 +57,17 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # samtools view -b -S file.sam > file.bam  
 
 # 2) sort BAM file 
-# samtools sort -m 1000000000 test.bam -T test_sorted (running)
+# samtools sort test.bam -o test_sorted
 
-# --> to do: use cufflinks for 
+# sam to bam transformation & sorting bam file have been added to run_star.sh 
 
-
-
-
+# --> to do: use cufflinks for assembly 
+# cufflinks -o output/ --library-type ff-firststrand test.sorted
+# cufflinks -o output2/ --library-type ff-secondstrand test.sorted
+# cufflinks -o output3/ --library-type fr-firststrand test.sorted
+# cufflinks -o output4/ --library-type fr-secondstrand test.sorted 
+# since only with strand information, my code can run, I decide that the lib is with strand information, but which specific one I should use among the 4? 
+#  --library-type fr-firststrand should be used for the standard dUTP protocol, including Illumina's stranded Tru-Seq 
 
 
 
