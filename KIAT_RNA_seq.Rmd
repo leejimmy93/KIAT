@@ -45,31 +45,32 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 ##### STAR is only installed on coloma!!! 
 # 1) get B.napus reference genome: Brassica_napus_v4.1.chromosomes.fa 
 # make STAR reference index: STAR --runMode genomeGenerate --genomeDir star_nome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --runThreadN 2 
-# mapping using run_star.sh 
+# 2) mapping, convert SAM to BAM, and sort BAM file using run_star.sh 
 ### because of the naming problems of All1_Yeong3_160621 & All1_Yeong2_160621, two seperate STAR mapping were made for them using the below codes: 
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_2.fq --runThreadN 6
 
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --runThreadN 6
 
-# work with SAM/BAM file 
-# 1) convert SAM/BAM file 
-# samtools view -h file.bam > file.sam
-# samtools view -b -S file.sam > file.bam  
+### 2.2) unstranded data with output type as sorted BAM run_star_unstra.sh
+### because of the naming problems of All1_Yeong3_160621 & All1_Yeong2_160621, two seperate STAR mapping were made for them using the below codes: 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_2.fq --runThreadN 6 --outSAMstrandField intronMotif --outSAMtype BAM SortedByCoordinate 
 
-# 2) sort BAM file 
-# samtools sort test.bam -o test_sorted
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq  /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --runThreadN 6 --outSAMstrandField intronMotif --outSAMtype BAM SortedByCoordinate 
 
-# sam to bam transformation & sorting bam file have been added to run_star.sh 
+### after consulting Julin, I get to know that we used strand specific lib making protocol.(Brad-seq method) 
+### whitney has outdated cufflink version (1.0.1), I should use coloma (version 2.2.1) for assembly. 
 
 # --> to do: use cufflinks for assembly 
-# cufflinks -o output/ --library-type ff-firststrand test.sorted
-# cufflinks -o output2/ --library-type ff-secondstrand test.sorted
-# cufflinks -o output3/ --library-type fr-firststrand test.sorted
-# cufflinks -o output4/ --library-type fr-secondstrand test.sorted 
+# cufflinks -o output/ --library-type ff-firststrand test.sorted (seems stopped)
+# cufflinks -o output2/ --library-type ff-secondstrand test.sorted (seems stopped)
+# cufflinks -o output3/ --library-type fr-firststrand test.sorted (running screen -r 39044)
+# cufflinks -o output4/ --library-type fr-secondstrand test.sorted (running screen -r 39106)
 # since only with strand information, my code can run, I decide that the lib is with strand information, but which specific one I should use among the 4? 
 #  --library-type fr-firststrand should be used for the standard dUTP protocol, including Illumina's stranded Tru-Seq 
 
-
+# try the same assembly on coloma using updated version of cufflinks 
+# cufflinks -o output5/ --library-type fr-firststrand test.sorted (running screen -r 34995.ttys018.coloma: 09/01/2016 started)
+# cufflinks -o output6/ --library-type fr-secondstrand test.sorted (running screen -r 35026.ttys020.coloma: 09/01/2016 started)  
 
 ```
 
@@ -236,7 +237,7 @@ head(distance_matrix)
 p.mds <- ggplot(data = distance_matrix)
 p.mds <- p.mds + geom_point(aes(x, y, color=factor(tissue)), size=3) 
 p.mds <- p.mds + labs(y = "BCV distance 2", x="BCV distance 1")
-p.mds <- p.mds + facet_grid(~gt)
+# p.mds <- p.mds + facet_grid(~gt)
 p.mds
 
 # ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width = 11, height = 8)
