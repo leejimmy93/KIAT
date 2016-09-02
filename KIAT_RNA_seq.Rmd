@@ -61,16 +61,25 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 ### whitney has outdated cufflink version (1.0.1), I should use coloma (version 2.2.1) for assembly. 
 
 # --> to do: use cufflinks for assembly 
-# cufflinks -o output/ --library-type ff-firststrand test.sorted (seems stopped)
-# cufflinks -o output2/ --library-type ff-secondstrand test.sorted (seems stopped)
-# cufflinks -o output3/ --library-type fr-firststrand test.sorted (running screen -r 39044)
-# cufflinks -o output4/ --library-type fr-secondstrand test.sorted (running screen -r 39106)
+# cufflinks -o output/ --library-type ff-firststrand test.sorted (stopped)
+# cufflinks -o output2/ --library-type ff-secondstrand test.sorted (stopped)
+# cufflinks -o output3/ --library-type fr-firststrand test.sorted (running screen -r 39044: 08/26/2016 started)
+# cufflinks -o output4/ --library-type fr-secondstrand test.sorted (running screen -r 39106: 08/26/2016 started, stopped)
 # since only with strand information, my code can run, I decide that the lib is with strand information, but which specific one I should use among the 4? 
 #  --library-type fr-firststrand should be used for the standard dUTP protocol, including Illumina's stranded Tru-Seq 
 
 # try the same assembly on coloma using updated version of cufflinks 
-# cufflinks -o output5/ --library-type fr-firststrand test.sorted (running screen -r 34995.ttys018.coloma: 09/01/2016 started)
-# cufflinks -o output6/ --library-type fr-secondstrand test.sorted (running screen -r 35026.ttys020.coloma: 09/01/2016 started)  
+# cufflinks -o output5/ --library-type fr-firststrand test.sorted (running screen -r 34995.ttys018.coloma: 09/01/2016 started) (keep)
+# cufflinks -o output6/ --library-type fr-secondstrand test.sorted (running screen -r 35026.ttys020.coloma: 09/01/2016 started) (stopped)   
+
+### After reading Brad-seq method paper, I realized that only the strand generated during first strand synthesis is sequenced. So the library type should be fr-firststand 
+
+#### now running cufflinks using run_star.sh (screen -r 39079.ttys005.coloma)
+### also running seperate cufflinks for the 2 special libs 
+# screen -r 39106.ttys010.coloma 
+# screen -r 39131.ttys013.coloma 
+
+
 
 ```
 
