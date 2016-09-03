@@ -74,11 +74,12 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 ### After reading Brad-seq method paper, I realized that only the strand generated during first strand synthesis is sequenced. So the library type should be fr-firststand 
 
-#### now running cufflinks using run_star.sh (screen -r 39079.ttys005.coloma)
+### talked with Julin, he said: use IGV to visualize the sequence alignment to decide library type 
+# then after visualize genome, bam file, and gff file, we decide our library type is fr-secondstrand 
+#### now running cufflinks using run_star.sh (screen -r 39106.ttys010.coloma)
 ### also running seperate cufflinks for the 2 special libs 
-# screen -r 39106.ttys010.coloma 
-# screen -r 39131.ttys013.coloma 
-
+# screen -r 39584.ttys010.coloma (running)
+# screen -r 39131.ttys013.coloma (running)
 
 
 ```
