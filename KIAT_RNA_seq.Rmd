@@ -78,15 +78,30 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # then after visualize genome, bam file, and gff file, we decide our library type is fr-secondstrand 
 #### now running cufflinks using run_star.sh (screen -r 39106.ttys010.coloma)
 ### also running seperate cufflinks for the 2 special libs 
-# screen -r 39584.ttys010.coloma (running)
-# screen -r 39131.ttys013.coloma (running)
+# screen -r 39584.ttys010.coloma (done)
+# screen -r 39131.ttys013.coloma (done)
 
 
 ```
 
-# SNP calling from all individuals & check sample seperation 
+# SNP calling  
 ```{r}
+# index reference genome fasta file 
+# samtools faidx Brapa_sequence_v1.5.fa  
 
+# 1) merge libarary for Da-Ae and Da-Ol-1 
+# 2) do STAR mapping for Da-Ae & Da-Ol-1 paired-end seq 
+
+# cat Ae*1.fq 5_1.fq 6_1.fq 05-11-Final-8ul_1.fq 8_1.fq > Ae_1.fq
+# cat Ae*2.fq 5_2.fq 6_2.fq 05-11-Final-8ul_2.fq 8_2.fq > Ae_2.fq
+
+# cat All*1.fq 1_1.fq 2_1.fq 3_1.fq 4_1.fq > Ol_1.fq
+# cat All*2.fq 1_2.fq 2_2.fq 3_2.fq 4_2.fq > Ol_2.fq
+
+### STAR mapping of merged data 
+# STAR --genomeDir /Network/Servers/avalanche.plucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 39044.ttys001.coloma, accidently stopped; screen -r 39044.ttys001.coloma in seperate folder... ) 
+
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ol_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ol_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 39131.ttys013.coloma; screen -r 39584.ttys010.coloma in seperate folder... )  
 
 
 
