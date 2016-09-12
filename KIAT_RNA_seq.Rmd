@@ -99,7 +99,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # cat All*2.fq 1_2.fq 2_2.fq 3_2.fq 4_2.fq > Ol_2.fq
 
 ### STAR mapping of merged data 
-# STAR --genomeDir /Network/Servers/avalanche.plucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 39044.ttys001.coloma, accidently stopped; screen -r 39044.ttys001.coloma in seperate folder... ) 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 39044.ttys001.coloma, accidently stopped; screen -r 39044.ttys001.coloma in seperate folder... ) 
 
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ol_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ol_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 39131.ttys013.coloma; screen -r 39584.ttys010.coloma in seperate folder... )  
 
@@ -135,9 +135,8 @@ new_sample_ID
 # replace sample ID 
 colnames(parent.read.count.one) <- new_sample_ID
 head(parent.read.count.one)
-save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
+# save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
 ```
-
 
 # data summary statisitics read count number & expressed genes 
 ```{r}
@@ -215,7 +214,7 @@ ftable(parent.read.count.one.sample,row.vars="stage",col.vars=c("batch","genotyp
 # filter based on read count 
 parent.read.count.one.small <- parent.read.count.one[rowSums(parent.read.count.one > 10) >= 3,]
 dim(parent.read.count.one.small) # 60975    27 
-save(parent.read.count.one.small, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.small.Rdata")
+# save(parent.read.count.one.small, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.small.Rdata")
 ```
 
 # expression analysis 3) voom transformation 
@@ -231,7 +230,7 @@ dds.parent <- DESeqDataSetFromMatrix(countData = round(parent.read.count.one.sma
 vsd.parent <- varianceStabilizingTransformation(dds.parent)
 vstMat.parent <- assay(vsd.parent)
 colnames(vstMat.parent) <- colnames(parent.read.count.one)
-save(vstMat.parent, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.Rdata")
+# save(vstMat.parent, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.Rdata")
 ```
 
 # expression analysis 4) MDS, clustering, and expression analysis 
@@ -722,7 +721,7 @@ fatty.acid.genes <- (merge(parent.read.count.one.small, fatty_acid_gene_index, b
 head(fatty.acid.genes)
 rownames(fatty.acid.genes) <- fatty.acid.genes$Row.names
 fatty.acid.genes <- fatty.acid.genes[,-1]
-dim(fatty.acid.genes) # 207 27 
+dim(fatty.acid.genes) # 207 27
 fatty.acid.genes$total <- rowSums(fatty.acid.genes)
 dim(fatty.acid.genes)
 ```
@@ -843,7 +842,7 @@ DEgene.bolting.vs.flowering.ae.GO.ORA
 # Enoyl-ACP-reductase: GO:0016631 & GO:0004319 none 
 # Palmitoyl-thioesterase: IPR002472 --> E 
 ```{r}
-# source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 
 # B-Ketoacyl-ACP-synthase  
 A.ID <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/B-Ketoacyl-ACP-synthase", header = F)
@@ -876,6 +875,131 @@ expression.pattern.Bn.parent(E.ID)
 # ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/E.png", width = 8, height = 20) 
 ```
 
+# Q: whether 1cm/early or 5cm/late silique is the better choice for RNAseq for looking at differences in fatty acid synthesis. 
+```{r}
+# 1) used GO# & IPR# related to different fatty acid pathways as keywords to search for gene IDs the reason that I didn't use Arabidopsis blast results is: the inconsistency between the annotation of gene list from FnP & the annotation in Arabidopsis dataset. 
+
+# data 
+# gene list related to fatty acid biosynthesis 
+rownames(fatty.acid.genes) # fatty acid biosynthesis pathways genes (GO:0006633) 
+A.ID # B-Ketoacyl-ACP-synthase: IPR014030
+B.ID # Malonyl-CoA-ACP-transacetylase: IPR016036 
+C.ID # B-ketoacyl-ACP-reductase: GO:0004316
+D.ID # Enoyl-ACP-hydrase: IPR018376
+E.ID # Palmitoyl-thioesterase: IPR002472 
+
+length(unique(c(rownames(fatty.acid.genes), as.character(A.ID$V1), as.character(B.ID$V1), as.character(C.ID$V1), as.character(D.ID$V1), as.character(E.ID$V1)))) # 247 genes in total 
+
+# all the expression result 
+DEgene.early.vs.late.silique.ae
+DEgene.early.vs.late.silique.ol
+DEgene.early.silique
+DEgene.late.silique
+
+# extract fold change value & p-value from DEG dataset 
+# between early & late silique 
+DEgene.early.vs.late.silique.ae[rownames(DEgene.early.vs.late.silique.ae) %in% rownames(fatty.acid.genes),]
+DEgene.early.vs.late.silique.ae[rownames(DEgene.early.vs.late.silique.ae) %in% A.ID$V1,]
+DEgene.early.vs.late.silique.ae[rownames(DEgene.early.vs.late.silique.ae) %in% B.ID$V1,]
+DEgene.early.vs.late.silique.ae[rownames(DEgene.early.vs.late.silique.ae) %in% C.ID$V1,]
+DEgene.early.vs.late.silique.ae[rownames(DEgene.early.vs.late.silique.ae) %in% D.ID$V1,]
+DEgene.early.vs.late.silique.ae[rownames(DEgene.early.vs.late.silique.ae) %in% E.ID$V1,]
+
+gene.1 <- DEgene.early.vs.late.silique.ae[rownames(DEgene.early.vs.late.silique.ae) %in% rownames(fatty.acid.genes),]
+gene.1
+# only one fatty acid related gene is differentially expressed between early & late silique for Da-Ae 
+
+DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% rownames(fatty.acid.genes),] 
+DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% A.ID$V1,]
+DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% B.ID$V1,]
+DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% C.ID$V1,]
+DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% D.ID$V1,]
+DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% E.ID$V1,]
+
+oil.synthesis.related.early.vs.late.ol <- unique(rbind(
+  DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% rownames(fatty.acid.genes),], 
+  DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% A.ID$V1,],
+  DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% B.ID$V1,],
+  DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% C.ID$V1,],
+  DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% D.ID$V1,],
+  DEgene.early.vs.late.silique.ol[rownames(DEgene.early.vs.late.silique.ol) %in% E.ID$V1,]
+))
+
+gene.9 <- oil.synthesis.related.early.vs.late.ol # 10 genes are differentially expressed between early & late silique for Da-Ol-1 
+
+# between two genotypes at early & late silique stages 
+DEgene.early.silique[rownames(DEgene.early.silique) %in% rownames(fatty.acid.genes),]
+DEgene.early.silique[(rownames(DEgene.early.silique) %in% A.ID$V1),]
+DEgene.early.silique[(rownames(DEgene.early.silique) %in% B.ID$V1),]
+DEgene.early.silique[(rownames(DEgene.early.silique) %in% C.ID$V1),]
+DEgene.early.silique[(rownames(DEgene.early.silique) %in% D.ID$V1),]
+DEgene.early.silique[(rownames(DEgene.early.silique) %in% E.ID$V1),]
+
+oil.synthesis.related.early.silique <- unique(rbind(
+  DEgene.early.silique[rownames(DEgene.early.silique) %in% rownames(fatty.acid.genes),],
+  DEgene.early.silique[(rownames(DEgene.early.silique) %in% A.ID$V1),],
+  DEgene.early.silique[(rownames(DEgene.early.silique) %in% B.ID$V1),],
+  DEgene.early.silique[(rownames(DEgene.early.silique) %in% C.ID$V1),],
+  DEgene.early.silique[(rownames(DEgene.early.silique) %in% D.ID$V1),],
+  DEgene.early.silique[(rownames(DEgene.early.silique) %in% E.ID$V1),]
+))
+
+gene.28 <- oil.synthesis.related.early.silique # 28 genes are differentially expressed between Da-Ae & Da-Ol-1 at early silique stage 
+gene.28
+# write.table(gene.28, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/data/gene.28.txt")
+
+DEgene.late.silique[rownames(DEgene.late.silique) %in% rownames(fatty.acid.genes),]
+DEgene.late.silique[(rownames(DEgene.late.silique) %in% A.ID$V1),]
+DEgene.late.silique[(rownames(DEgene.late.silique) %in% B.ID$V1),]
+DEgene.late.silique[(rownames(DEgene.late.silique) %in% C.ID$V1),]
+DEgene.late.silique[(rownames(DEgene.late.silique) %in% D.ID$V1),]
+DEgene.late.silique[(rownames(DEgene.late.silique) %in% E.ID$V1),]
+
+oil.synthesis.related.late.silique <- unique(rbind(
+  DEgene.late.silique[rownames(DEgene.late.silique) %in% rownames(fatty.acid.genes),],
+  DEgene.late.silique[(rownames(DEgene.late.silique) %in% A.ID$V1),],
+  DEgene.late.silique[(rownames(DEgene.late.silique) %in% B.ID$V1),],
+  DEgene.late.silique[(rownames(DEgene.late.silique) %in% C.ID$V1),],
+  DEgene.late.silique[(rownames(DEgene.late.silique) %in% D.ID$V1),],
+  DEgene.late.silique[(rownames(DEgene.late.silique) %in% E.ID$V1),]
+))
+
+gene.36 <- oil.synthesis.related.late.silique # 36 genes are differentially expressed between Da-Ae & Da-Ol-1 at late silique stage 
+gene.36
+write.table(gene.36, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/data/gene.36.txt")
+
+gene.annotation <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/data/gene_annotation.csv", header = F)
+gene.annotation <- gene.annotation[,c(1:2)]
+rownames(gene.annotation) <- gene.annotation$V1
+
+### combined gene list 
+gene <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/data/gene.txt")
+gene
+
+rownames(gene.annotation) %in% gene$V1
+
+## make tables 
+gene.1 <- merge(gene.1, gene.annotation, by="row.names")[,c(1,2,3,4,5,6,8)] 
+gene.1 
+colnames(gene.1) <- c("geneID", "logFC", "logCPM", "LR", "PValue", "FDR", "Arabidopsis.hit")
+write.csv(gene.1, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/data/gene.1.csv")
+
+gene.9 <- merge(gene.9, gene.annotation, by="row.names")[,c(1,2,3,4,5,6,8)]
+gene.9
+colnames(gene.9) <- c("geneID", "logFC", "logCPM", "LR", "PValue", "FDR", "Arabidopsis.hit")
+write.csv(gene.9, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/data/gene.9.csv")
+
+gene.28 <- merge(gene.28, gene.annotation, by="row.names")[,c(1,2,3,4,5,6,8)]
+gene.28
+colnames(gene.28) <- c("geneID", "logFC", "logCPM", "LR", "PValue", "FDR", "Arabidopsis.hit")
+write.csv(gene.28, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/data/gene.28.csv")
+
+gene.36 <- merge(gene.36, gene.annotation, by="row.names")[,c(1,2,3,4,5,6,8)]
+gene.36
+colnames(gene.36) <- c("geneID", "logFC", "logCPM", "LR", "PValue", "FDR", "Arabidopsis.hit")
+write.csv(gene.36, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/data/gene.36.csv")
+
+```
 
 
 
