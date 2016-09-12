@@ -999,6 +999,30 @@ gene.36
 colnames(gene.36) <- c("geneID", "logFC", "logCPM", "LR", "PValue", "FDR", "Arabidopsis.hit")
 write.csv(gene.36, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/data/gene.36.csv")
 
+rownames(fatty.acid.genes) 
+vstMat.parent
+
+### are fatty acid genes expressed at higher level in early or late silique? 
+summary(de.early.vs.late.silique.ae.1 <- decideTestsDGE(lrt.early.vs.late.silique.ae, p=1))
+DEgene.early.vs.late.silique.ae.1 <- topTags(lrt.early.vs.late.silique.ae,n = Inf)$table[topTags(lrt.early.vs.late.silique.ae,n = Inf)$table$FDR<0.075,]
+
+summary(de.early.vs.late.silique.ol.1 <- decideTestsDGE(lrt.early.vs.late.silique.ol, p=1))
+DEgene.early.vs.late.silique.ol.1 <- topTags(lrt.early.vs.late.silique.ol,n = Inf)$table[topTags(lrt.early.vs.late.silique.ol,n = Inf)$table$FDR<0.075,]
+
+all.fatty.acid.genes <- unique(c(rownames(fatty.acid.genes), as.character(A.ID$V1), as.character(B.ID$V1), as.character(C.ID$V1), as.character(D.ID$V1), as.character(E.ID$V1)))
+
+# check fatty acid genes expression 
+all.fatty.acid.genes.ol.1.early.vs.late <- DEgene.early.vs.late.silique.ol.1[rownames(DEgene.early.vs.late.silique.ol.1) %in% all.fatty.acid.genes,]
+dim(all.fatty.acid.genes.ol.1.early.vs.late)
+
+sum(all.fatty.acid.genes.ol.1.early.vs.late$logFC >0) # 135 # 4
+sum(all.fatty.acid.genes.ol.1.early.vs.late$logFC < 0) # 108 # 5
+
+all.fatty.acid.genes.ae.1.early.vs.late <- DEgene.early.vs.late.silique.ae.1[rownames(DEgene.early.vs.late.silique.ae.1) %in% all.fatty.acid.genes,]
+dim(all.fatty.acid.genes.ae.1.early.vs.late)
+
+sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC > 0) # 96 # 0 
+sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC < 0) # 147 # 2
 ```
 
 
