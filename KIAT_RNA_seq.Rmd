@@ -76,7 +76,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 ### talked with Julin, he said: use IGV to visualize the sequence alignment to decide library type 
 # then after visualize genome, bam file, and gff file, we decide our library type is fr-secondstrand 
-#### now running cufflinks using run_star.sh (screen -r 39106.ttys010.coloma)
+#### now running cufflinks using run_star.sh (screen -r 39106.ttys010.coloma; coloma stopped for unknown reason, now running cufflinks on screen -r 17161.pts-58.whitney for the libs that were unfinished with the previous cufflinks run)
 ### also running seperate cufflinks for the 2 special libs 
 # screen -r 39584.ttys010.coloma (done)
 # screen -r 39131.ttys013.coloma (done)
@@ -1025,6 +1025,15 @@ sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC > 0) # 96 # 0
 sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC < 0) # 147 # 2
 ```
 
+# which stage has the most stress related genes expressed/ differentially expressed 
+```{r}
+# 1) get stress related GO terms
+# 2) extract genes within those GO terms
+# 3) check expression pattern of these genes for all different comparisons
+# 4) get output tables with best Arabidopsis hit annotated 
+
+# 5) Also make gene list with Arabidopsis hit from different comparisons tomorrow... 
+```
 
 
 
