@@ -99,9 +99,9 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # cat All*2.fq 1_2.fq 2_2.fq 3_2.fq 4_2.fq > Ol_2.fq
 
 ### STAR mapping of merged data 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 39044.ttys001.coloma, accidently stopped; screen -r 39044.ttys001.coloma in seperate folder... ) 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ae_1.fq ../Ae_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 15587.extract_1000 running now) 
 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ol_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ol_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 39131.ttys013.coloma; screen -r 39584.ttys010.coloma in seperate folder... )  
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ol_1.fq ../Ol_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 14264.fastqc running now)  
 
 
 
@@ -1025,6 +1025,19 @@ sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC > 0) # 96 # 0
 sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC < 0) # 147 # 2
 ```
 
+# get Arabidopsis hit for every B.napus cds 
+```{r}
+library(dplyr)
+# blast: blastn -db /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/Arabidopsis/TAIR10_cds_20110103_representative_gene_model_updated -query Brassica_napus.annotation_v5.cds.fa -out B.napus_vs_Arabidopsis -outfmt 6 -max_target_seqs 1
+# merge file to get Arabidopsis hit for each B.napus gene:  
+ara.ID <- read.delim("~/Desktop/Brassica_project/reference/ara_ID.txt")
+napus_vs_ara <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_ara.txt")
+
+# awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($2 in a) print $0 "\t" a[$2]}' ara_ID.txt napus_vs_ara.txt | awk 'BEGIN{FS="\t"}{print $1 "\t" $2 "\t" $3 "\t" $5}' > napus_vs_ara.final 
+
+napus_vs_ara.final <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_ara.final")
+```
+
 # which stage has the most stress related genes expressed/ differentially expressed 
 ```{r}
 # 1) get stress related GO terms
@@ -1032,8 +1045,36 @@ sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC < 0) # 147 # 2
 # 3) check expression pattern of these genes for all different comparisons
 # 4) get output tables with best Arabidopsis hit annotated 
 
-# 5) Also make gene list with Arabidopsis hit from different comparisons tomorrow... 
+# 5) Also make gene list with Arabidopsis hit from different comparisons tomorrow...
+dim(DEgene.early.vs.late.silique.ol) # 2776 5 
+dim(DEgene.early.vs.late.silique.ae) # 545 5 
+dim(DEgene.late.silique) # 7413 5 
+dim(DEgene.early.silique) # 6695 5 
+rownames(napus_vs_ara.final) <- napus_vs_ara.final$napus_ID
+colnames(napus_vs_ara.final)[2:4] <- c("Arabidopsis_ID", "blast_evalue", "description")
+
+DEgene.early.vs.late.silique.ol.list <- (merge(DEgene.early.vs.late.silique.ol, napus_vs_ara.final, by="row.names"))[,-7]
+rownames(DEgene.early.vs.late.silique.ol.list) <- DEgene.early.vs.late.silique.ol.list$Row.names
+DEgene.early.vs.late.silique.ol.list <- DEgene.early.vs.late.silique.ol.list[,-1]
+head(DEgene.early.vs.late.silique.ol.list)
+
+DEgene.early.vs.late.silique.ae.list <- merge(DEgene.early.vs.late.silique.ae, napus_vs_ara.final, by="row.names")
+rownames(DEgene.early.vs.late.silique.ae.list) <- DEgene.early.vs.late.silique.ae.list$Row.names
+DEgene.early.vs.late.silique.ae.list <- DEgene.early.vs.late.silique.ae.list[,-1]
+head(DEgene.early.vs.late.silique.ae.list)
+
+DEgene.early.silique.list <- merge(DEgene.early.silique, napus_vs_ara.final, by="row.names")
+rownames(DEgene.early.silique.list) <- DEgene.early.silique.list$Row.names
+DEgene.early.silique.list <- DEgene.early.silique.list[,-1]
+head(DEgene.early.silique.list)
+
+DEgene.late.silique.list <- merge(DEgene.late.silique, napus_vs_ara.final, by="row.names")
+rownames(DEgene.late.silique.list) <- DEgene.late.silique.list$Row.names
+DEgene.late.silique.list <- DEgene.late.silique.list[,-1]
+head(DEgene.late.silique.list)
+
 ```
+
 
 
 
