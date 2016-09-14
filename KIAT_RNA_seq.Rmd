@@ -1044,7 +1044,10 @@ napus_vs_ara.final <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_
 # 2) extract genes within those GO terms
 # 3) check expression pattern of these genes for all different comparisons
 # 4) get output tables with best Arabidopsis hit annotated 
+```
 
+# generate DEGs with Arabidopsis hit & up down regulated genes with GO enriched terms 
+```{r}
 # 5) Also make gene list with Arabidopsis hit from different comparisons tomorrow...
 dim(DEgene.early.vs.late.silique.ol) # 2776 5 
 dim(DEgene.early.vs.late.silique.ae) # 545 5 
@@ -1057,21 +1060,56 @@ DEgene.early.vs.late.silique.ol.list <- (merge(DEgene.early.vs.late.silique.ol, 
 rownames(DEgene.early.vs.late.silique.ol.list) <- DEgene.early.vs.late.silique.ol.list$Row.names
 DEgene.early.vs.late.silique.ol.list <- DEgene.early.vs.late.silique.ol.list[,-1]
 head(DEgene.early.vs.late.silique.ol.list)
+write.csv(DEgene.early.vs.late.silique.ol.list, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/early.vs.late.silique.ol.list.csv")
 
 DEgene.early.vs.late.silique.ae.list <- merge(DEgene.early.vs.late.silique.ae, napus_vs_ara.final, by="row.names")
 rownames(DEgene.early.vs.late.silique.ae.list) <- DEgene.early.vs.late.silique.ae.list$Row.names
 DEgene.early.vs.late.silique.ae.list <- DEgene.early.vs.late.silique.ae.list[,-1]
 head(DEgene.early.vs.late.silique.ae.list)
+write.csv(DEgene.early.vs.late.silique.ae.list, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/early.vs.late.silique.ae.list.csv")
+
 
 DEgene.early.silique.list <- merge(DEgene.early.silique, napus_vs_ara.final, by="row.names")
 rownames(DEgene.early.silique.list) <- DEgene.early.silique.list$Row.names
 DEgene.early.silique.list <- DEgene.early.silique.list[,-1]
 head(DEgene.early.silique.list)
+write.csv(DEgene.early.silique.list, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/early.silique.list.csv")
+
 
 DEgene.late.silique.list <- merge(DEgene.late.silique, napus_vs_ara.final, by="row.names")
 rownames(DEgene.late.silique.list) <- DEgene.late.silique.list$Row.names
 DEgene.late.silique.list <- DEgene.late.silique.list[,-1]
 head(DEgene.late.silique.list)
+write.csv(DEgene.late.silique.list, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/late.silique.list.csv")
+
+
+## Go enrichment of up & down regulated genes separately 
+DEgene.early.vs.late.silique.ae.up.GO.out <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.ae[DEgene.early.vs.late.silique.ae$logFC > 0,]))
+DEgene.early.vs.late.silique.ae.up.GO.out$class <- rep("early.vs.late.silique.ae.up", nrow(DEgene.early.vs.late.silique.ae.up.GO.out))
+
+
+DEgene.early.vs.late.silique.ae.down.GO.out <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.ae[DEgene.early.vs.late.silique.ae$logFC < 0,]))
+DEgene.early.vs.late.silique.ae.down.GO.out$class <- rep("early.vs.late.silique.ae.down", nrow(DEgene.early.vs.late.silique.ae.down.GO.out))
+
+DEgene.early.vs.late.silique.ol.up.GO.out <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.ol[DEgene.early.vs.late.silique.ol$logFC > 0,]))
+DEgene.early.vs.late.silique.ol.up.GO.out$class <- rep("early.vs.late.silique.ol.up", nrow(DEgene.early.vs.late.silique.ol.up.GO.out))
+
+DEgene.early.vs.late.silique.ol.down.GO.out <- GOseq.Bn.ORA(rownames(DEgene.early.vs.late.silique.ol[DEgene.early.vs.late.silique.ol$logFC < 0,]))
+DEgene.early.vs.late.silique.ol.down.GO.out$class <- rep("early.vs.late.silique.ol.down", nrow(DEgene.early.vs.late.silique.ol.down.GO.out))
+
+DEgene.early.silique.up.GO.out <- GOseq.Bn.ORA(rownames(DEgene.early.silique[DEgene.early.silique$logFC > 0,])) # no enriched GO
+
+DEgene.early.silique.down.GO.out <- GOseq.Bn.ORA(rownames(DEgene.early.silique[DEgene.early.silique$logFC < 0,]))
+DEgene.early.silique.down.GO.out$class <- rep("early.silique.down", nrow(DEgene.early.silique.down.GO.out))
+
+DEgene.late.silique.up.GO.out <- GOseq.Bn.ORA(rownames(DEgene.late.silique[DEgene.late.silique$logFC > 0,]))
+DEgene.late.silique.up.GO.out$class <- rep("late.silique.up", nrow(DEgene.late.silique.up.GO.out)) 
+
+DEgene.late.silique.down.GO.out <- GOseq.Bn.ORA(rownames(DEgene.late.silique[DEgene.late.silique$logFC < 0,])) # no enriched GO 
+
+all.up.down.GO.out <- rbind(DEgene.early.vs.late.silique.ol.up.GO.out, DEgene.early.vs.late.silique.ol.down.GO.out, DEgene.early.vs.late.silique.ae.up.GO.out, DEgene.early.vs.late.silique.ae.down.GO.out, DEgene.late.silique.up.GO.out, DEgene.early.silique.down.GO.out)
+
+write.csv(all.up.down.GO.out, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/up.down.GO.out.csv")
 
 ```
 
