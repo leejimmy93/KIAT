@@ -376,40 +376,40 @@ fit.parent <- glmFit(dge.data.parent, design.parent)
 
 lrt.young <- glmLRT(fit.parent, contrast = c(0,0,0,0,1,0,0,0,0,-1))
 topTags(lrt.young)
-summary(de.young <- decideTestsDGE(lrt.young, p=0.05))
-DEgene.young <- topTags(lrt.young,n = Inf)$table[topTags(lrt.young,n = Inf)$table$FDR<0.05,]
+summary(de.young <- decideTestsDGE(lrt.young, p=0.075))
+DEgene.young <- topTags(lrt.young,n = Inf)$table[topTags(lrt.young,n = Inf)$table$FDR<0.075,]
 # -1  4553
 # 0  51999
 # 1   4423
 
 lrt.flowering <- glmLRT(fit.parent, contrast = c(0,0,1,0,0,0,0,-1,0,0))
 topTags(lrt.flowering)
-summary(de.flowering <- decideTestsDGE(lrt.flowering, p=0.05))
-DEgene.flowering <- topTags(lrt.flowering,n = Inf)$table[topTags(lrt.flowering,n = Inf)$table$FDR<0.05,]
+summary(de.flowering <- decideTestsDGE(lrt.flowering, p=0.075))
+DEgene.flowering <- topTags(lrt.flowering,n = Inf)$table[topTags(lrt.flowering,n = Inf)$table$FDR<0.075,]
 # -1  2877
 # 0  54894
 # 1   3204
 
 lrt.early.silique <- glmLRT(fit.parent, contrast = c(0,1,0,0,0,0,-1,0,0,0))
 topTags(lrt.early.silique)
-summary(de.early.silique <- decideTestsDGE(lrt.early.silique, p=0.05))
-DEgene.early.silique <- topTags(lrt.early.silique,n = Inf)$table[topTags(lrt.early.silique,n = Inf)$table$FDR<0.05,]
+summary(de.early.silique <- decideTestsDGE(lrt.early.silique, p=0.075))
+DEgene.early.silique <- topTags(lrt.early.silique,n = Inf)$table[topTags(lrt.early.silique,n = Inf)$table$FDR<0.075,]
 # -1  3200
 # 0  54280
 # 1   3495
 
 lrt.late.silique <- glmLRT(fit.parent, contrast = c(0,0,0,1,0,0,0,0,-1,0))
 topTags(lrt.late.silique)
-summary(de.late.silique <- decideTestsDGE(lrt.late.silique, p=0.05))
-DEgene.late.silique <- topTags(lrt.late.silique,n = Inf)$table[topTags(lrt.late.silique,n = Inf)$table$FDR<0.05,]
+summary(de.late.silique <- decideTestsDGE(lrt.late.silique, p=0.075))
+DEgene.late.silique <- topTags(lrt.late.silique,n = Inf)$table[topTags(lrt.late.silique,n = Inf)$table$FDR<0.075,]
 # -1  3745
 # 0  53562
 # 1   3668
 
 lrt.bolting <- glmLRT(fit.parent, contrast = c(1,0,0,0,0,-1,0,0,0,0))
 topTags(lrt.bolting)
-summary(de.bolting <- decideTestsDGE(lrt.bolting, p=0.05))
-DEgene.bolting <- topTags(lrt.bolting,n = Inf)$table[topTags(lrt.bolting,n = Inf)$table$FDR<0.05,]
+summary(de.bolting <- decideTestsDGE(lrt.bolting, p=0.075))
+DEgene.bolting <- topTags(lrt.bolting,n = Inf)$table[topTags(lrt.bolting,n = Inf)$table$FDR<0.075,]
 # -1  2794
 # 0  56327
 # 1   1854
@@ -1087,6 +1087,23 @@ stress.related.geneID.between.gt <- lapply(list.between.gt, function(DEgene){
   stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
 }
 )
+
+# calculate 
+# total 
+lapply(stress.related.geneID.between.gt, function(DEgene){
+  dim(DEgene)
+})
+
+# up 
+lapply(stress.related.geneID.between.gt, function(DEgene){
+  sum(DEgene$logFC > 0)
+})
+  
+# down 
+lapply(stress.related.geneID.between.gt, function(DEgene){
+  sum(DEgene$logFC < 0)
+})
+
 
 drought.stress.related.geneID.between.gt <- lapply(list.between.gt, function(DEgene){
   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
