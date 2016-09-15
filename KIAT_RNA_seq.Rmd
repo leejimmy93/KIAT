@@ -376,40 +376,40 @@ fit.parent <- glmFit(dge.data.parent, design.parent)
 
 lrt.young <- glmLRT(fit.parent, contrast = c(0,0,0,0,1,0,0,0,0,-1))
 topTags(lrt.young)
-summary(de.young <- decideTestsDGE(lrt.young, p=0.075))
-DEgene.young <- topTags(lrt.young,n = Inf)$table[topTags(lrt.young,n = Inf)$table$FDR<0.075,]
+summary(de.young <- decideTestsDGE(lrt.young, p=0.05))
+DEgene.young <- topTags(lrt.young,n = Inf)$table[topTags(lrt.young,n = Inf)$table$FDR<0.05,]
 # -1  4553
 # 0  51999
 # 1   4423
 
 lrt.flowering <- glmLRT(fit.parent, contrast = c(0,0,1,0,0,0,0,-1,0,0))
 topTags(lrt.flowering)
-summary(de.flowering <- decideTestsDGE(lrt.flowering, p=0.075))
-DEgene.flowering <- topTags(lrt.flowering,n = Inf)$table[topTags(lrt.flowering,n = Inf)$table$FDR<0.075,]
+summary(de.flowering <- decideTestsDGE(lrt.flowering, p=0.05))
+DEgene.flowering <- topTags(lrt.flowering,n = Inf)$table[topTags(lrt.flowering,n = Inf)$table$FDR<0.05,]
 # -1  2877
 # 0  54894
 # 1   3204
 
 lrt.early.silique <- glmLRT(fit.parent, contrast = c(0,1,0,0,0,0,-1,0,0,0))
 topTags(lrt.early.silique)
-summary(de.early.silique <- decideTestsDGE(lrt.early.silique, p=0.075))
-DEgene.early.silique <- topTags(lrt.early.silique,n = Inf)$table[topTags(lrt.early.silique,n = Inf)$table$FDR<0.075,]
+summary(de.early.silique <- decideTestsDGE(lrt.early.silique, p=0.05))
+DEgene.early.silique <- topTags(lrt.early.silique,n = Inf)$table[topTags(lrt.early.silique,n = Inf)$table$FDR<0.05,]
 # -1  3200
 # 0  54280
 # 1   3495
 
 lrt.late.silique <- glmLRT(fit.parent, contrast = c(0,0,0,1,0,0,0,0,-1,0))
 topTags(lrt.late.silique)
-summary(de.late.silique <- decideTestsDGE(lrt.late.silique, p=0.075))
-DEgene.late.silique <- topTags(lrt.late.silique,n = Inf)$table[topTags(lrt.late.silique,n = Inf)$table$FDR<0.075,]
+summary(de.late.silique <- decideTestsDGE(lrt.late.silique, p=0.05))
+DEgene.late.silique <- topTags(lrt.late.silique,n = Inf)$table[topTags(lrt.late.silique,n = Inf)$table$FDR<0.05,]
 # -1  3745
 # 0  53562
 # 1   3668
 
 lrt.bolting <- glmLRT(fit.parent, contrast = c(1,0,0,0,0,-1,0,0,0,0))
 topTags(lrt.bolting)
-summary(de.bolting <- decideTestsDGE(lrt.bolting, p=0.075))
-DEgene.bolting <- topTags(lrt.bolting,n = Inf)$table[topTags(lrt.bolting,n = Inf)$table$FDR<0.075,]
+summary(de.bolting <- decideTestsDGE(lrt.bolting, p=0.05))
+DEgene.bolting <- topTags(lrt.bolting,n = Inf)$table[topTags(lrt.bolting,n = Inf)$table$FDR<0.05,]
 # -1  2794
 # 0  56327
 # 1   1854
@@ -1104,16 +1104,44 @@ lapply(stress.related.geneID.between.gt, function(DEgene){
   sum(DEgene$logFC < 0)
 })
 
-
 drought.stress.related.geneID.between.gt <- lapply(list.between.gt, function(DEgene){
   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
 }
 )
 
+# total 
+lapply(drought.stress.related.geneID.between.gt, function(DEgene){
+  total <- dim(DEgene) 
+})
+
+# up 
+lapply(drought.stress.related.geneID.between.gt, function(DEgene){
+  sum(DEgene$logFC > 0)
+})
+  
+# down 
+lapply(drought.stress.related.geneID.between.gt, function(DEgene){
+  sum(DEgene$logFC < 0)
+}) 
+
 drought.stress.related.geneID.2.between.gt <- lapply(list.between.gt, function(DEgene){
   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
 }
 )
+
+lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
+  total <- dim(DEgene) 
+})
+
+# up 
+lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
+  sum(DEgene$logFC > 0)
+})
+  
+# down 
+lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
+  sum(DEgene$logFC < 0)
+}) 
 
 list.between.stages.ae <- list(DEgene.young.vs.bolting.ae, DEgene.bolting.vs.flowering.ae, DEgene.flowering.vs.early.silique.ae, DEgene.early.vs.late.silique.ae)
 
@@ -1122,10 +1150,41 @@ stress.related.geneID.between.stages.ae <- lapply(list.between.stages.ae, functi
 }
 )
 
+# calculate 
+# total 
+lapply(stress.related.geneID.between.stages.ae, function(DEgene){
+  dim(DEgene)
+})
+
+# up 
+lapply(stress.related.geneID.between.stages.ae, function(DEgene){
+  sum(DEgene$logFC > 0)
+})
+  
+# down 
+lapply(stress.related.geneID.between.stages.ae, function(DEgene){
+  sum(DEgene$logFC < 0)
+})
+
 drought.related.geneID.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
 }
 )
+
+# total 
+lapply(drought.related.geneID.between.stages.ae, function(DEgene){
+  dim(DEgene)
+})
+
+# up 
+lapply(drought.related.geneID.between.stages.ae, function(DEgene){
+  sum(DEgene$logFC > 0)
+})
+  
+# down 
+lapply(drought.related.geneID.between.stages.ae, function(DEgene){
+  sum(DEgene$logFC < 0)
+})   
 
 drought.related.geneID.2.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
@@ -1139,10 +1198,41 @@ stress.related.geneID.between.stages.ol <- lapply(list.between.stages.ol, functi
 }
 )
 
+# calculate 
+# total 
+lapply(stress.related.geneID.between.stages.ol, function(DEgene){
+  dim(DEgene)
+})
+
+# up 
+lapply(stress.related.geneID.between.stages.ol, function(DEgene){
+  sum(DEgene$logFC > 0)
+})
+  
+# down 
+lapply(stress.related.geneID.between.stages.ol, function(DEgene){
+  sum(DEgene$logFC < 0)
+})
+
 drought.related.geneID.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
 }
 )
+
+# total 
+lapply(drought.related.geneID.between.stages.ol, function(DEgene){
+  dim(DEgene)
+})
+
+# up 
+lapply(drought.related.geneID.between.stages.ol, function(DEgene){
+  sum(DEgene$logFC > 0)
+})
+  
+# down 
+lapply(drought.related.geneID.between.stages.ol, function(DEgene){
+  sum(DEgene$logFC < 0)
+})
 
 drought.related.geneID.2.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
@@ -1150,12 +1240,86 @@ drought.related.geneID.2.between.stages.ol <- lapply(list.between.stages.ol, fun
 )
 
 # 4) get output tables with best Arabidopsis hit annotated 
+stress.related.between.gt.w.anno <- 
+lapply(stress.related.geneID.between.gt, function(DEgene){
+  merge(DEgene, napus_vs_ara.final, by="row.names")
+})
 
+stress.related.between.gt.w.anno[[1]]$class <- "young"
+stress.related.between.gt.w.anno[[2]]$class <- "bolting"
+stress.related.between.gt.w.anno[[3]]$class <- "flowering"
+stress.related.between.gt.w.anno[[4]]$class <- "early_silique"
+stress.related.between.gt.w.anno[[5]]$class <- "late_silique"
 
+stress.related.between.gt.w.anno.bind <- rbind(stress.related.between.gt.w.anno[[1]], stress.related.between.gt.w.anno[[2]],stress.related.between.gt.w.anno[[3]], stress.related.between.gt.w.anno[[4]],stress.related.between.gt.w.anno[[5]])
 
+write.csv(stress.related.between.gt.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/stress.related.between.gt.w.anno.bind.csv")
 
+stress.related.geneID.between.stages.ae.w.anno <- 
+  lapply(stress.related.geneID.between.stages.ae, function(DEgene){
+  merge(DEgene, napus_vs_ara.final, by="row.names")
+}) 
 
+stress.related.geneID.between.stages.ae.w.anno[[1]]$class <- "young_vs_bolting_ae"
+stress.related.geneID.between.stages.ae.w.anno[[2]]$class <- "bolting_vs_flowering_ae"
+stress.related.geneID.between.stages.ae.w.anno[[3]]$class <- "flowering_vs_earlysilique_ae"
+stress.related.geneID.between.stages.ae.w.anno[[4]]$class <- "earlysilique_vs_latesilique_ae"
 
+stress.related.geneID.between.stages.ol.w.anno <- 
+  lapply(stress.related.geneID.between.stages.ol, function(DEgene){
+  merge(DEgene, napus_vs_ara.final, by="row.names")
+}) 
+
+stress.related.geneID.between.stages.ol.w.anno[[1]]$class <- "young_vs_bolting_ol"
+stress.related.geneID.between.stages.ol.w.anno[[2]]$class <- "bolting_vs_flowering_ol"
+stress.related.geneID.between.stages.ol.w.anno[[3]]$class <- "flowering_vs_earlysilique_ol"
+stress.related.geneID.between.stages.ol.w.anno[[4]]$class <- "earlysilique_vs_latesilique_ol"
+
+stress.related.geneID.between.stages.w.anno.bind <- rbind(stress.related.geneID.between.stages.ae.w.anno[[1]], stress.related.geneID.between.stages.ae.w.anno[[2]], stress.related.geneID.between.stages.ae.w.anno[[3]], stress.related.geneID.between.stages.ae.w.anno[[4]], stress.related.geneID.between.stages.ol.w.anno[[1]], stress.related.geneID.between.stages.ol.w.anno[[2]], stress.related.geneID.between.stages.ol.w.anno[[3]], stress.related.geneID.between.stages.ol.w.anno[[4]])  
+
+write.csv(stress.related.geneID.between.stages.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/stress.related.geneID.between.stages.w.anno.bind.csv")
+
+# drought related 
+drought.related.between.gt.w.anno <- 
+lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
+  merge(DEgene, napus_vs_ara.final, by="row.names")
+})
+
+drought.related.between.gt.w.anno[[1]]$class <- "young"
+drought.related.between.gt.w.anno[[2]]$class <- "bolting"
+drought.related.between.gt.w.anno[[3]]$class <- "flowering"
+drought.related.between.gt.w.anno[[4]]$class <- "early_silique"
+drought.related.between.gt.w.anno[[5]]$class <- "late_silique"
+
+drought.related.between.gt.w.anno.bind <- rbind(drought.related.between.gt.w.anno[[1]], drought.related.between.gt.w.anno[[2]],drought.related.between.gt.w.anno[[3]], drought.related.between.gt.w.anno[[4]],drought.related.between.gt.w.anno[[5]])
+
+write.csv(drought.related.between.gt.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/drought.related.between.gt.w.anno.bind.csv")
+
+drought.related.geneID.between.stages.ae.w.anno <- 
+  lapply(drought.related.geneID.2.between.stages.ae, function(DEgene){
+  merge(DEgene, napus_vs_ara.final, by="row.names")
+}) 
+
+drought.related.geneID.between.stages.ae.w.anno[[1]]$class <- "young_vs_bolting_ae"
+drought.related.geneID.between.stages.ae.w.anno[[2]]$class <- "bolting_vs_flowering_ae"
+drought.related.geneID.between.stages.ae.w.anno[[3]]$class <- "flowering_vs_earlysilique_ae"
+drought.related.geneID.between.stages.ae.w.anno[[4]]$class <- "earlysilique_vs_latesilique_ae"
+
+drought.related.geneID.between.stages.ol.w.anno <- 
+  lapply(drought.related.geneID.2.between.stages.ol, function(DEgene){
+  merge(DEgene, napus_vs_ara.final, by="row.names")
+}) 
+
+drought.related.geneID.between.stages.ol.w.anno[[1]]$class <- "young_vs_bolting_ol"
+drought.related.geneID.between.stages.ol.w.anno[[2]]$class <- "bolting_vs_flowering_ol"
+drought.related.geneID.between.stages.ol.w.anno[[3]]$class <- "flowering_vs_earlysilique_ol"
+drought.related.geneID.between.stages.ol.w.anno[[4]]$class <- "earlysilique_vs_latesilique_ol"
+
+drought.related.geneID.between.stages.w.anno.bind <- rbind(drought.related.geneID.between.stages.ae.w.anno[[1]], drought.related.geneID.between.stages.ae.w.anno[[2]], drought.related.geneID.between.stages.ae.w.anno[[3]], drought.related.geneID.between.stages.ae.w.anno[[4]], drought.related.geneID.between.stages.ol.w.anno[[1]], drought.related.geneID.between.stages.ol.w.anno[[2]], drought.related.geneID.between.stages.ol.w.anno[[3]], drought.related.geneID.between.stages.ol.w.anno[[4]])  
+
+drought.related.geneID.between.stages.w.anno.bind
+
+write.csv(drought.related.geneID.between.stages.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/drought.related.geneID.between.stages.w.anno.bind.csv") 
 
 ```
 
