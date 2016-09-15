@@ -1040,10 +1040,106 @@ napus_vs_ara.final <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_
 
 # which stage has the most stress related genes expressed/ differentially expressed 
 ```{r}
-# 1) get stress related GO terms
-# 2) extract genes within those GO terms
+# 1) get stress related GO terms 
+# GO:0006950 response to stress 
+# GO:0009414 response to water deprivation
+  # drought recovery: GO:0009819 
+  # cellular response to water deprivation: GO:0042631
+  # response to dessication: GO:0009269
+  # behavioral response to water deprivation: GO:0042630
+  # regulation of response to water deprivation: GO:2000070 
+  # negative regulation of response to water deprivation: GO:0080148  
+  # positive regulation of response to water deprivation: GO:1902584 
+  # cellular response to dessication: GO:0071465 
+  # trehalose transport in response to water deprivation: GO:0072514	
+  # trehalose transport in response to desiccation: GO:0072515 
+  # trehalose metabolism in response to water deprivation: GO:0070416
+
+
+### the number of drought related genes are very small, see whether I can get more genes by using Ara GO term 
+# awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($2 in a) print $0 "\t" a[$2]}' ../KIAT_RNA_seq/stress_related/ATH_GO_GOSLIM.txt napus_vs_ara.final.tmp | awk 'BEGIN{FS="\t"}{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" $10}' > napus_vs_ara.with.GO.final.final 
+
+
+# 2) extract genes with those GO terms
+stress.related.geneID <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/stress_related_geneID", header = F)
+drought.stress.related.geneID <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/response_to_desiccation", header = F)
+
+# get drought related genes by using Arabidopsis blast hit 
+drought.stress.related.geneID.2 <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/drought_related_geneID", header = F)
+
+length(unique(c(as.character(stress.related.geneID$V1), as.character(drought.stress.related.geneID.2)))) # 243 genes in total 
+
+length(stress.related.geneID$V1) # 242 genes 
+length(drought.stress.related.geneID.2$V1) # 13 genes
+
 # 3) check expression pattern of these genes for all different comparisons
+## All of the dataset that I need to check with 
+dim(DEgene.young); dim(DEgene.bolting); dim(DEgene.flowering); dim(DEgene.early.silique); dim(DEgene.late.silique)
+
+dim(DEgene.young.vs.bolting.ae); dim(DEgene.bolting.vs.flowering.ae); dim(DEgene.flowering.vs.early.silique.ae); dim(DEgene.early.vs.late.silique.ae)
+
+dim(DEgene.young.vs.bolting.ol); dim(DEgene.bolting.vs.flowering.ol); dim(DEgene.flowering.vs.early.silique.ol); dim(DEgene.early.vs.late.silique.ol)
+
+### extract genes expression pattern 
+list.between.gt <- list(DEgene.young, DEgene.bolting, DEgene.flowering, DEgene.early.silique, DEgene.late.silique)
+
+stress.related.geneID.between.gt <- lapply(list.between.gt, function(DEgene){
+  stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
+}
+)
+
+drought.stress.related.geneID.between.gt <- lapply(list.between.gt, function(DEgene){
+  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
+}
+)
+
+drought.stress.related.geneID.2.between.gt <- lapply(list.between.gt, function(DEgene){
+  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
+}
+)
+
+list.between.stages.ae <- list(DEgene.young.vs.bolting.ae, DEgene.bolting.vs.flowering.ae, DEgene.flowering.vs.early.silique.ae, DEgene.early.vs.late.silique.ae)
+
+stress.related.geneID.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
+  stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
+}
+)
+
+drought.related.geneID.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
+  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
+}
+)
+
+drought.related.geneID.2.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
+  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
+}
+)
+
+list.between.stages.ol <- list(DEgene.young.vs.bolting.ol, DEgene.bolting.vs.flowering.ol, DEgene.flowering.vs.early.silique.ol, DEgene.early.vs.late.silique.ol)
+
+stress.related.geneID.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
+  stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
+}
+)
+
+drought.related.geneID.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
+  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
+}
+)
+
+drought.related.geneID.2.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
+  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
+}
+)
+
 # 4) get output tables with best Arabidopsis hit annotated 
+
+
+
+
+
+
+
 ```
 
 # generate DEGs with Arabidopsis hit & up down regulated genes with GO enriched terms 
