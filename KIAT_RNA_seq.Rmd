@@ -56,7 +56,9 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_2.fq --runThreadN 6 --outSAMstrandField intronMotif --outSAMtype BAM SortedByCoordinate 
 
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq  /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --runThreadN 6 --outSAMstrandField intronMotif --outSAMtype BAM SortedByCoordinate 
+```
 
+```{r}
 ### after consulting Julin, I get to know that we used strand specific lib making protocol.(Brad-seq method) 
 ### whitney has outdated cufflink version (1.0.1), I should use coloma (version 2.2.1) for assembly. 
 
@@ -81,6 +83,13 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # screen -r 39584.ttys010.coloma (done)
 # screen -r 39131.ttys013.coloma (done)
 
+########### running cufflinks using different set of parameters: eg: cufflinks -u -p 16 -o cufflink_output --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.out.sorted.bam 
+
+# screens that I used for my job: 
+# screen -r 2828.ttys001.coloma 
+# screen -r 9810.ttys004.coloma 
+# screen -r 9837.ttys004.coloma 
+# screen -r 9867.ttys004.coloma  
 
 ```
 
@@ -99,9 +108,9 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # cat All*2.fq 1_2.fq 2_2.fq 3_2.fq 4_2.fq > Ol_2.fq
 
 ### STAR mapping of merged data 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ae_1.fq ../Ae_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 15587.extract_1000 running now) 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ae_1.fq ../Ae_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate --limitBAMsortRAM 21327579859 (screen -r 10070.ttys003.coloma running now) 
 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ol_1.fq ../Ol_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 14264.fastqc running now)  
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ol_1.fq ../Ol_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate --limitBAMsortRAM 21327579859 (screen -r 10196.ttys004.coloma running now)  
 
 
 

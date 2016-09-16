@@ -46,9 +46,18 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # mapping using run_star.sh 
  
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/automate_transfer/F1/414F1-gea-1_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/automate_transfer/F1/414F1-gea-1_2.fq --runThreadN 6
+```
 
+
+```{r}
 ### running stranded fr-secondstrand cufflinks 
 # screen -r 35026.ttys020.coloma (running cufflinks, stopped due to coloma shutdown, now running on screen -r 16004.pts-36.whitney for the remaining unassembleled libs)  
+
+### running my job using different parameters (suggested by Monica)
+# screens that I used for my job
+# screen -r 9923.ttys004.coloma
+# screen -r 9950.ttys004.coloma 
+
 ```
 
 # data summary statisitics read count number & expressed genes 
