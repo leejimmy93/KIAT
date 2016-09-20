@@ -42,22 +42,17 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # using STAR 
 ```{r}
-##### STAR is only installed on coloma!!! 
 # 1) get B.napus reference genome: 
 # gffread *.gff3 -T -o *.gtf
 # STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --sjdbGTFfile Brassica_napus.annotation_v5.gtf --runThreadN 6 
 
-# 2) mapping, convert SAM to BAM, and sort BAM file using run_star.sh 
+# 2) mapping 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_1.fq" /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_2.fq" --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.gtf --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 (screen -r 5640.pts-3.whitney)
+
 ### because of the naming problems of All1_Yeong3_160621 & All1_Yeong2_160621, two seperate STAR mapping were made for them using the below codes: 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_2.fq --runThreadN 6
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../All1_Yeong2_160621_1.fq ../All1_Yeong2_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.gtf --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 (screen -r 10070.ttys003.coloma)  
 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --runThreadN 6
-
-### 2.2) unstranded data with output type as sorted BAM run_star_unstra.sh
-### because of the naming problems of All1_Yeong3_160621 & All1_Yeong2_160621, two seperate STAR mapping were made for them using the below codes: 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_2.fq --runThreadN 6 --outSAMstrandField intronMotif --outSAMtype BAM SortedByCoordinate 
-
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq  /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --runThreadN 6 --outSAMstrandField intronMotif --outSAMtype BAM SortedByCoordinate 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../All1_Yeong3_160621_1.fq ../All1_Yeong3_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.gtf --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 (screen -r 10196.ttys004.coloma)  
 ```
 
 ```{r}
@@ -113,7 +108,6 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ae_1.fq ../Ae_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 10196.ttys004.coloma) 
 
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ol_1.fq ../Ol_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 10070.ttys003.coloma)  
-
 
 
 ```
