@@ -43,8 +43,10 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # using STAR 
 ```{r}
 ##### STAR is only installed on coloma!!! 
-# 1) get B.napus reference genome: Brassica_napus_v4.1.chromosomes.fa 
-# make STAR reference index: STAR --runMode genomeGenerate --genomeDir star_nome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --runThreadN 2 
+# 1) get B.napus reference genome: 
+# gffread *.gff3 -T -o *.gtf
+# STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --sjdbGTFfile Brassica_napus.annotation_v5.gtf --runThreadN 6 
+
 # 2) mapping, convert SAM to BAM, and sort BAM file using run_star.sh 
 ### because of the naming problems of All1_Yeong3_160621 & All1_Yeong2_160621, two seperate STAR mapping were made for them using the below codes: 
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong2_160621_2.fq --runThreadN 6
@@ -1398,6 +1400,33 @@ all.up.down.GO.out <- rbind(DEgene.early.vs.late.silique.ol.up.GO.out, DEgene.ea
 write.csv(all.up.down.GO.out, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/up.down.GO.out.csv")
 
 ```
+
+# fatty acid related analysis, display the result in mapman 
+```{r}
+# 1) get reciprocal hit for B.rapa gene in Arabidopsis 
+# 1.1) blast B.napus against Arabidopsis get only the top hit (already have) 
+# 1.2) blast Arabidopsis against B.napus get only the top hit 
+# blastn -db /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa -query TAIR10_cds_20110103_representative_gene_model_updated -out Arabidopsis_vs_napus -outfmt 6 -max_target_seqs 1 
+# 1.3) if the top hit of for the two files are the same, write out the result, a python script 
+
+# 2) learn mapman
+# 3) display the fatty acid genes in mapman 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
