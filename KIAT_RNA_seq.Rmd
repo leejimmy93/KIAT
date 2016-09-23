@@ -59,43 +59,15 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped fastx (screen -r 10070.ttys003.coloma)  
 
 # screen -r 10070.ttys003.coloma get unmapped reads with command "STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx" 
-
 ```
 
 # cufflinks 
 ```{r}
-### after consulting Julin, I get to know that we used strand specific lib making protocol.(Brad-seq method) 
-### whitney has outdated cufflink version (1.0.1), I should use coloma (version 2.2.1) for assembly. 
-
-# --> to do: use cufflinks for assembly 
-# cufflinks -o output/ --library-type ff-firststrand test.sorted (stopped)
-# cufflinks -o output2/ --library-type ff-secondstrand test.sorted (stopped)
-# cufflinks -o output3/ --library-type fr-firststrand test.sorted (running screen -r 39044: 08/26/2016 started)
-# cufflinks -o output4/ --library-type fr-secondstrand test.sorted (running screen -r 39106: 08/26/2016 started, stopped)
-# since only with strand information, my code can run, I decide that the lib is with strand information, but which specific one I should use among the 4? 
-#  --library-type fr-firststrand should be used for the standard dUTP protocol, including Illumina's stranded Tru-Seq 
-
-# try the same assembly on coloma using updated version of cufflinks 
-# cufflinks -o output5/ --library-type fr-firststrand test.sorted (running screen -r 34995.ttys018.coloma: 09/01/2016 started) (keep)
-# cufflinks -o output6/ --library-type fr-secondstrand test.sorted (running screen -r 35026.ttys020.coloma: 09/01/2016 started) (stopped)   
-
-### After reading Brad-seq method paper, I realized that only the strand generated during first strand synthesis is sequenced. So the library type should be fr-firststand 
-
-### talked with Julin, he said: use IGV to visualize the sequence alignment to decide library type 
+### talked with Julin: use IGV to visualize the sequence alignment to decide library type 
 # then after visualize genome, bam file, and gff file, we decide our library type is fr-secondstrand 
-#### now running cufflinks using run_star.sh (screen -r 39106.ttys010.coloma; coloma stopped for unknown reason, now running cufflinks on screen -r 17161.pts-58.whitney for the libs that were unfinished with the previous cufflinks run)
-### also running seperate cufflinks for the 2 special libs 
-# screen -r 39584.ttys010.coloma (done)
-# screen -r 39131.ttys013.coloma (done)
 
-########### running cufflinks using different set of parameters: eg: cufflinks -u -p 16 -o cufflink_output --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.out.sorted.bam 
-
-# screens that I used for my job: 
-# screen -r 2828.ttys001.coloma 
-# screen -r 9810.ttys004.coloma 
-# screen -r 9837.ttys004.coloma (core dumped) 
-# screen -r 9867.ttys004.coloma (done) 
-
+########### running cufflinks:
+# cufflinks -u -p 8 -v -o cufflink_output --max-bundle-frags 10000000 --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.sortedByCoord.out.bam (did I really used 8 processors for my job???)  
 ```
 
 # SNP calling  
