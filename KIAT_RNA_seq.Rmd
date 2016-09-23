@@ -43,24 +43,19 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # using STAR 
 ```{r}
 # 1) get B.napus reference genome: 
-# gffread *.gff3 -T -o *.gtf (NO)
-# add "gene_id..." to 9th colomn (NO) 
 
-# STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --sjdbGTFfile Brassica_napus.annotation_v5.gff3 --runThreadN 6 (NO)
-
-# STAR --runMode genomeGenerate --genomeDir star_genome_gtf/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --sjdbGTFfile Brassica_napus.annotation_v5.gff3 --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --sjdbGTFtagExonParentGene ID (screen -r 10218.ttys004.coloma) 
+# add "gene_id" colomn to gff3 file 
+# run with modified gff3 file 
+# STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --sjdbGTFfile Brassica_napus.annotation_v5_modified_modified.gff3 --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS (screen -r 10070.ttys003.coloma) 
 
 # 2) mapping 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_1.fq" /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_2.fq" --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.gtf --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --
-
-# (screen -r 5640.pts-3.whitney)
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_1.fq" /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_2.fq" --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped fasta (screen -r 10070.ttys003.coloma) 
 
 ### because of the naming problems of All1_Yeong3_160621 & All1_Yeong2_160621, two seperate STAR mapping were made for them using the below codes: 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../All1_Yeong2_160621_1.fq ../All1_Yeong2_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified.gtf --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 (screen -r 10218.ttys004.coloma) 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../All1_Yeong2_160621_1.fq ../All1_Yeong2_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS 
 ### very high percentage of unmapped!!!!!! 
 
-
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../All1_Yeong3_160621_1.fq ../All1_Yeong3_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.gtf --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 (screen -r 10196.ttys004.coloma: done!!!)  
+# All1_Yeong3_160621 sample  
 ```
 
 ```{r}
@@ -1038,21 +1033,23 @@ sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC > 0) # 96 # 0
 sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC < 0) # 147 # 2
 ```
 
-# get Arabidopsis hit for every B.napus cds 
+# get Arabidopsis hit for every B.napus cds (reciprocal blast, need to write out the bash script for reciprocal blast...)
 ```{r}
-library(dplyr)
-# blast: blastn -db /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/Arabidopsis/TAIR10_cds_20110103_representative_gene_model_updated -query Brassica_napus.annotation_v5.cds.fa -out B.napus_vs_Arabidopsis -outfmt 6 -max_target_seqs 1
+# blast: reciprocal blast bewteen Arabidopsis & B.napus 
 # merge file to get Arabidopsis hit for each B.napus gene:  
 ara.ID <- read.delim("~/Desktop/Brassica_project/reference/ara_ID.txt")
-napus_vs_ara <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_ara.txt")
+napus_vs_ara <- read.delim("~/Desktop/Brassica_project/reference/B.napus_vs_ara.final")
 
-# awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($2 in a) print $0 "\t" a[$2]}' ara_ID.txt napus_vs_ara.txt | awk 'BEGIN{FS="\t"}{print $1 "\t" $2 "\t" $3 "\t" $5}' > napus_vs_ara.final 
+# awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($2 in a) print $0 "\t" a[$2]}' ara_ID.txt B.napus_vs_ara.final | awk 'BEGIN{FS="\t"}{print $1 "\t" $3 "\t" $5}' > napus_vs_ara.final.final  
 
 napus_vs_ara.final <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_ara.final")
+rownames(napus_vs_ara.final) <- napus_vs_ara.final$napus_ID
+head(napus_vs_ara.final)
 ```
 
 # which stage has the most stress related genes expressed/ differentially expressed 
 ```{r}
+
 # 1) get stress related GO terms 
 # GO:0006950 response to stress 
 # GO:0009414 response to water deprivation
@@ -1080,10 +1077,13 @@ drought.stress.related.geneID <- read.delim("~/Desktop/Brassica_project/KIAT_RNA
 # get drought related genes by using Arabidopsis blast hit 
 drought.stress.related.geneID.2 <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/drought_related_geneID", header = F)
 
+drought.stress.related.geneID.3 <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/drought_related/drought_related_napus_ID", header = F)
+
 length(unique(c(as.character(stress.related.geneID$V1), as.character(drought.stress.related.geneID.2)))) # 243 genes in total 
 
 length(stress.related.geneID$V1) # 242 genes 
 length(drought.stress.related.geneID.2$V1) # 13 genes
+length(drought.stress.related.geneID.3$V1) # 13694 genes 
 
 # 3) check expression pattern of these genes for all different comparisons
 ## All of the dataset that I need to check with 
@@ -1096,29 +1096,29 @@ dim(DEgene.young.vs.bolting.ol); dim(DEgene.bolting.vs.flowering.ol); dim(DEgene
 ### extract genes expression pattern 
 list.between.gt <- list(DEgene.young, DEgene.bolting, DEgene.flowering, DEgene.early.silique, DEgene.late.silique)
 
-stress.related.geneID.between.gt <- lapply(list.between.gt, function(DEgene){
-  stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
-}
-)
-
-# calculate 
-# total 
-lapply(stress.related.geneID.between.gt, function(DEgene){
-  dim(DEgene)
-})
-
-# up 
-lapply(stress.related.geneID.between.gt, function(DEgene){
-  sum(DEgene$logFC > 0)
-})
-  
-# down 
-lapply(stress.related.geneID.between.gt, function(DEgene){
-  sum(DEgene$logFC < 0)
-})
+# stress.related.geneID.between.gt <- lapply(list.between.gt, function(DEgene){
+#   stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
+# }
+# )
+# 
+# # calculate 
+# # total 
+# lapply(stress.related.geneID.between.gt, function(DEgene){
+#   dim(DEgene)
+# })
+# 
+# # up 
+# lapply(stress.related.geneID.between.gt, function(DEgene){
+#   sum(DEgene$logFC > 0)
+# })
+#   
+# # down 
+# lapply(stress.related.geneID.between.gt, function(DEgene){
+#   sum(DEgene$logFC < 0)
+# })
 
 drought.stress.related.geneID.between.gt <- lapply(list.between.gt, function(DEgene){
-  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
+  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.3$V1,]
 }
 )
 
@@ -1137,50 +1137,50 @@ lapply(drought.stress.related.geneID.between.gt, function(DEgene){
   sum(DEgene$logFC < 0)
 }) 
 
-drought.stress.related.geneID.2.between.gt <- lapply(list.between.gt, function(DEgene){
-  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
-}
-)
-
-lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
-  total <- dim(DEgene) 
-})
-
-# up 
-lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
-  sum(DEgene$logFC > 0)
-})
-  
-# down 
-lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
-  sum(DEgene$logFC < 0)
-}) 
+# drought.stress.related.geneID.2.between.gt <- lapply(list.between.gt, function(DEgene){
+#   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
+# }
+# )
+# 
+# lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
+#   total <- dim(DEgene) 
+# })
+# 
+# # up 
+# lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
+#   sum(DEgene$logFC > 0)
+# })
+#   
+# # down 
+# lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
+#   sum(DEgene$logFC < 0)
+# }) 
 
 list.between.stages.ae <- list(DEgene.young.vs.bolting.ae, DEgene.bolting.vs.flowering.ae, DEgene.flowering.vs.early.silique.ae, DEgene.early.vs.late.silique.ae)
 
-stress.related.geneID.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
-  stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
-}
-)
-
-# calculate 
-# total 
-lapply(stress.related.geneID.between.stages.ae, function(DEgene){
-  dim(DEgene)
-})
-
-# up 
-lapply(stress.related.geneID.between.stages.ae, function(DEgene){
-  sum(DEgene$logFC > 0)
-})
-  
-# down 
-lapply(stress.related.geneID.between.stages.ae, function(DEgene){
-  sum(DEgene$logFC < 0)
-})
+# stress.related.geneID.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
+#   stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
+# }
+# )
+# 
+# # calculate 
+# # total 
+# lapply(stress.related.geneID.between.stages.ae, function(DEgene){
+#   dim(DEgene)
+# })
+# 
+# # up 
+# lapply(stress.related.geneID.between.stages.ae, function(DEgene){
+#   sum(DEgene$logFC > 0)
+# })
+#   
+# # down 
+# lapply(stress.related.geneID.between.stages.ae, function(DEgene){
+#   sum(DEgene$logFC < 0)
+# })
 
 drought.related.geneID.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
-  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
+  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.3$V1,]
 }
 )
 
@@ -1198,37 +1198,37 @@ lapply(drought.related.geneID.between.stages.ae, function(DEgene){
 lapply(drought.related.geneID.between.stages.ae, function(DEgene){
   sum(DEgene$logFC < 0)
 })   
-
-drought.related.geneID.2.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
-  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
-}
-)
-
+# 
+# drought.related.geneID.2.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
+#   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
+# }
+# )
+# 
 list.between.stages.ol <- list(DEgene.young.vs.bolting.ol, DEgene.bolting.vs.flowering.ol, DEgene.flowering.vs.early.silique.ol, DEgene.early.vs.late.silique.ol)
-
-stress.related.geneID.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
-  stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
-}
-)
+# 
+# stress.related.geneID.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
+#   stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
+# }
+# )
 
 # calculate 
 # total 
-lapply(stress.related.geneID.between.stages.ol, function(DEgene){
-  dim(DEgene)
-})
-
-# up 
-lapply(stress.related.geneID.between.stages.ol, function(DEgene){
-  sum(DEgene$logFC > 0)
-})
-  
-# down 
-lapply(stress.related.geneID.between.stages.ol, function(DEgene){
-  sum(DEgene$logFC < 0)
-})
+# lapply(stress.related.geneID.between.stages.ol, function(DEgene){
+#   dim(DEgene)
+# })
+# 
+# # up 
+# lapply(stress.related.geneID.between.stages.ol, function(DEgene){
+#   sum(DEgene$logFC > 0)
+# })
+#   
+# # down 
+# lapply(stress.related.geneID.between.stages.ol, function(DEgene){
+#   sum(DEgene$logFC < 0)
+# })
 
 drought.related.geneID.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
-  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID$V1,]
+  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.3$V1,]
 }
 )
 
@@ -1247,54 +1247,54 @@ lapply(drought.related.geneID.between.stages.ol, function(DEgene){
   sum(DEgene$logFC < 0)
 })
 
-drought.related.geneID.2.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
-  drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
-}
-)
+# drought.related.geneID.2.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
+#   drought.related <- DEgene[rownames(DEgene) %in% drought.stress.related.geneID.2$V1,]
+# }
+# )
 
 # 4) get output tables with best Arabidopsis hit annotated 
-stress.related.between.gt.w.anno <- 
-lapply(stress.related.geneID.between.gt, function(DEgene){
-  merge(DEgene, napus_vs_ara.final, by="row.names")
-})
+# stress.related.between.gt.w.anno <- 
+# lapply(stress.related.geneID.between.gt, function(DEgene){
+#   merge(DEgene, napus_vs_ara.final, by="row.names")
+# })
+# 
+# stress.related.between.gt.w.anno[[1]]$class <- "young"
+# stress.related.between.gt.w.anno[[2]]$class <- "bolting"
+# stress.related.between.gt.w.anno[[3]]$class <- "flowering"
+# stress.related.between.gt.w.anno[[4]]$class <- "early_silique"
+# stress.related.between.gt.w.anno[[5]]$class <- "late_silique"
+# 
+# stress.related.between.gt.w.anno.bind <- rbind(stress.related.between.gt.w.anno[[1]], stress.related.between.gt.w.anno[[2]],stress.related.between.gt.w.anno[[3]], stress.related.between.gt.w.anno[[4]],stress.related.between.gt.w.anno[[5]])
+# 
+# write.csv(stress.related.between.gt.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/stress.related.between.gt.w.anno.bind.csv")
 
-stress.related.between.gt.w.anno[[1]]$class <- "young"
-stress.related.between.gt.w.anno[[2]]$class <- "bolting"
-stress.related.between.gt.w.anno[[3]]$class <- "flowering"
-stress.related.between.gt.w.anno[[4]]$class <- "early_silique"
-stress.related.between.gt.w.anno[[5]]$class <- "late_silique"
-
-stress.related.between.gt.w.anno.bind <- rbind(stress.related.between.gt.w.anno[[1]], stress.related.between.gt.w.anno[[2]],stress.related.between.gt.w.anno[[3]], stress.related.between.gt.w.anno[[4]],stress.related.between.gt.w.anno[[5]])
-
-write.csv(stress.related.between.gt.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/stress.related.between.gt.w.anno.bind.csv")
-
-stress.related.geneID.between.stages.ae.w.anno <- 
-  lapply(stress.related.geneID.between.stages.ae, function(DEgene){
-  merge(DEgene, napus_vs_ara.final, by="row.names")
-}) 
-
-stress.related.geneID.between.stages.ae.w.anno[[1]]$class <- "young_vs_bolting_ae"
-stress.related.geneID.between.stages.ae.w.anno[[2]]$class <- "bolting_vs_flowering_ae"
-stress.related.geneID.between.stages.ae.w.anno[[3]]$class <- "flowering_vs_earlysilique_ae"
-stress.related.geneID.between.stages.ae.w.anno[[4]]$class <- "earlysilique_vs_latesilique_ae"
-
-stress.related.geneID.between.stages.ol.w.anno <- 
-  lapply(stress.related.geneID.between.stages.ol, function(DEgene){
-  merge(DEgene, napus_vs_ara.final, by="row.names")
-}) 
-
-stress.related.geneID.between.stages.ol.w.anno[[1]]$class <- "young_vs_bolting_ol"
-stress.related.geneID.between.stages.ol.w.anno[[2]]$class <- "bolting_vs_flowering_ol"
-stress.related.geneID.between.stages.ol.w.anno[[3]]$class <- "flowering_vs_earlysilique_ol"
-stress.related.geneID.between.stages.ol.w.anno[[4]]$class <- "earlysilique_vs_latesilique_ol"
-
-stress.related.geneID.between.stages.w.anno.bind <- rbind(stress.related.geneID.between.stages.ae.w.anno[[1]], stress.related.geneID.between.stages.ae.w.anno[[2]], stress.related.geneID.between.stages.ae.w.anno[[3]], stress.related.geneID.between.stages.ae.w.anno[[4]], stress.related.geneID.between.stages.ol.w.anno[[1]], stress.related.geneID.between.stages.ol.w.anno[[2]], stress.related.geneID.between.stages.ol.w.anno[[3]], stress.related.geneID.between.stages.ol.w.anno[[4]])  
-
-write.csv(stress.related.geneID.between.stages.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/stress.related.geneID.between.stages.w.anno.bind.csv")
+# stress.related.geneID.between.stages.ae.w.anno <- 
+#   lapply(stress.related.geneID.between.stages.ae, function(DEgene){
+#   merge(DEgene, napus_vs_ara.final, by="row.names")
+# }) 
+# 
+# stress.related.geneID.between.stages.ae.w.anno[[1]]$class <- "young_vs_bolting_ae"
+# stress.related.geneID.between.stages.ae.w.anno[[2]]$class <- "bolting_vs_flowering_ae"
+# stress.related.geneID.between.stages.ae.w.anno[[3]]$class <- "flowering_vs_earlysilique_ae"
+# stress.related.geneID.between.stages.ae.w.anno[[4]]$class <- "earlysilique_vs_latesilique_ae"
+# 
+# stress.related.geneID.between.stages.ol.w.anno <- 
+#   lapply(stress.related.geneID.between.stages.ol, function(DEgene){
+#   merge(DEgene, napus_vs_ara.final, by="row.names")
+# }) 
+# 
+# stress.related.geneID.between.stages.ol.w.anno[[1]]$class <- "young_vs_bolting_ol"
+# stress.related.geneID.between.stages.ol.w.anno[[2]]$class <- "bolting_vs_flowering_ol"
+# stress.related.geneID.between.stages.ol.w.anno[[3]]$class <- "flowering_vs_earlysilique_ol"
+# stress.related.geneID.between.stages.ol.w.anno[[4]]$class <- "earlysilique_vs_latesilique_ol"
+# 
+# stress.related.geneID.between.stages.w.anno.bind <- rbind(stress.related.geneID.between.stages.ae.w.anno[[1]], stress.related.geneID.between.stages.ae.w.anno[[2]], stress.related.geneID.between.stages.ae.w.anno[[3]], stress.related.geneID.between.stages.ae.w.anno[[4]], stress.related.geneID.between.stages.ol.w.anno[[1]], stress.related.geneID.between.stages.ol.w.anno[[2]], stress.related.geneID.between.stages.ol.w.anno[[3]], stress.related.geneID.between.stages.ol.w.anno[[4]])  
+# 
+# write.csv(stress.related.geneID.between.stages.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/stress.related.geneID.between.stages.w.anno.bind.csv")
 
 # drought related 
 drought.related.between.gt.w.anno <- 
-lapply(drought.stress.related.geneID.2.between.gt, function(DEgene){
+lapply(drought.stress.related.geneID.between.gt, function(DEgene){
   merge(DEgene, napus_vs_ara.final, by="row.names")
 })
 
@@ -1309,7 +1309,7 @@ drought.related.between.gt.w.anno.bind <- rbind(drought.related.between.gt.w.ann
 write.csv(drought.related.between.gt.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/drought.related.between.gt.w.anno.bind.csv")
 
 drought.related.geneID.between.stages.ae.w.anno <- 
-  lapply(drought.related.geneID.2.between.stages.ae, function(DEgene){
+  lapply(drought.related.geneID.between.stages.ae, function(DEgene){
   merge(DEgene, napus_vs_ara.final, by="row.names")
 }) 
 
@@ -1319,7 +1319,7 @@ drought.related.geneID.between.stages.ae.w.anno[[3]]$class <- "flowering_vs_earl
 drought.related.geneID.between.stages.ae.w.anno[[4]]$class <- "earlysilique_vs_latesilique_ae"
 
 drought.related.geneID.between.stages.ol.w.anno <- 
-  lapply(drought.related.geneID.2.between.stages.ol, function(DEgene){
+  lapply(drought.related.geneID.between.stages.ol, function(DEgene){
   merge(DEgene, napus_vs_ara.final, by="row.names")
 }) 
 
@@ -1330,7 +1330,7 @@ drought.related.geneID.between.stages.ol.w.anno[[4]]$class <- "earlysilique_vs_l
 
 drought.related.geneID.between.stages.w.anno.bind <- rbind(drought.related.geneID.between.stages.ae.w.anno[[1]], drought.related.geneID.between.stages.ae.w.anno[[2]], drought.related.geneID.between.stages.ae.w.anno[[3]], drought.related.geneID.between.stages.ae.w.anno[[4]], drought.related.geneID.between.stages.ol.w.anno[[1]], drought.related.geneID.between.stages.ol.w.anno[[2]], drought.related.geneID.between.stages.ol.w.anno[[3]], drought.related.geneID.between.stages.ol.w.anno[[4]])  
 
-drought.related.geneID.between.stages.w.anno.bind
+dim(drought.related.geneID.between.stages.w.anno.bind)
 
 write.csv(drought.related.geneID.between.stages.w.anno.bind, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/stress_related/drought.related.geneID.between.stages.w.anno.bind.csv") 
 
