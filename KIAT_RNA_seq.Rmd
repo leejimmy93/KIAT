@@ -49,15 +49,20 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --sjdbGTFfile Brassica_napus.annotation_v5_modified_modified.gff3 --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS (screen -r 10070.ttys003.coloma) 
 
 # 2) mapping 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_1.fq" /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_2.fq" --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped fasta (screen -r 10070.ttys003.coloma) 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_1.fq" /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/$i"_2.fq" --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped fasta (done) 
 
 ### because of the naming problems of All1_Yeong3_160621 & All1_Yeong2_160621, two seperate STAR mapping were made for them using the below codes: 
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../All1_Yeong2_160621_1.fq ../All1_Yeong2_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS 
 ### very high percentage of unmapped!!!!!! 
 
 # All1_Yeong3_160621 sample  
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped fastx (screen -r 10070.ttys003.coloma)  
+
+# screen -r 10070.ttys003.coloma get unmapped reads with command "STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx" 
+
 ```
 
+# cufflinks 
 ```{r}
 ### after consulting Julin, I get to know that we used strand specific lib making protocol.(Brad-seq method) 
 ### whitney has outdated cufflink version (1.0.1), I should use coloma (version 2.2.1) for assembly. 
@@ -883,6 +888,20 @@ expression.pattern.Bn.parent(E.ID)
 # ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/figure/E.png", width = 8, height = 20) 
 ```
 
+# get Arabidopsis hit for every B.napus cds (reciprocal blast, need to write out the bash script for reciprocal blast...)
+```{r}
+# blast: reciprocal blast bewteen Arabidopsis & B.napus 
+# merge file to get Arabidopsis hit for each B.napus gene:  
+ara.ID <- read.delim("~/Desktop/Brassica_project/reference/ara_ID.txt")
+napus_vs_ara <- read.delim("~/Desktop/Brassica_project/reference/B.napus_vs_ara.final")
+
+# awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($2 in a) print $0 "\t" a[$2]}' ara_ID.txt B.napus_vs_ara.final | awk 'BEGIN{FS="\t"}{print $1 "\t" $3 "\t" $5}' > napus_vs_ara.final.final  
+
+napus_vs_ara.final <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_ara.final")
+rownames(napus_vs_ara.final) <- napus_vs_ara.final$napus_ID
+head(napus_vs_ara.final)
+```
+
 # Q: whether 1cm/early or 5cm/late silique is the better choice for RNAseq for looking at differences in fatty acid synthesis. 
 ```{r}
 # 1) used GO# & IPR# related to different fatty acid pathways as keywords to search for gene IDs the reason that I didn't use Arabidopsis blast results is: the inconsistency between the annotation of gene list from FnP & the annotation in Arabidopsis dataset. 
@@ -1031,20 +1050,33 @@ dim(all.fatty.acid.genes.ae.1.early.vs.late)
 
 sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC > 0) # 96 # 0 
 sum(all.fatty.acid.genes.ae.1.early.vs.late$logFC < 0) # 147 # 2
-```
 
-# get Arabidopsis hit for every B.napus cds (reciprocal blast, need to write out the bash script for reciprocal blast...)
-```{r}
-# blast: reciprocal blast bewteen Arabidopsis & B.napus 
-# merge file to get Arabidopsis hit for each B.napus gene:  
-ara.ID <- read.delim("~/Desktop/Brassica_project/reference/ara_ID.txt")
-napus_vs_ara <- read.delim("~/Desktop/Brassica_project/reference/B.napus_vs_ara.final")
+### We would like to present the result in mapman, below I format my data for mapman visualization 
+fatty.acid.early.silique.data <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_related/table1.csv")
+fatty.acid.late.silique.data <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_related/table2.csv")
+fatty.acid.Ae.data <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_related/table3.csv") 
+fatty.acid.Ol.data <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_related/table4.csv")
 
-# awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($2 in a) print $0 "\t" a[$2]}' ara_ID.txt B.napus_vs_ara.final | awk 'BEGIN{FS="\t"}{print $1 "\t" $3 "\t" $5}' > napus_vs_ara.final.final  
-
-napus_vs_ara.final <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_ara.final")
-rownames(napus_vs_ara.final) <- napus_vs_ara.final$napus_ID
 head(napus_vs_ara.final)
+
+fatty.acid.early.silique <- data.frame(napus_ID = fatty.acid.early.silique.data$geneID,
+                                       early_silique = fatty.acid.early.silique.data$logFC)
+fatty.acid.late.silique <- data.frame(napus_ID = fatty.acid.late.silique.data$geneID,
+                                       late_silique = fatty.acid.late.silique.data$logFC)
+fatty.acid.Ae <- data.frame(napus_ID = fatty.acid.Ae.data$geneID,
+                                       Ae = fatty.acid.Ae$logFC)
+fatty.acid.Ol <- data.frame(napus_ID = fatty.acid.Ol.data$geneID,
+                                       Ol = fatty.acid.Ol.data$logFC)
+
+tmp <- merge(fatty.acid.early.silique, fatty.acid.late.silique, by="napus_ID", all=T)
+tmp <- merge(tmp, fatty.acid.Ae, by="napus_ID", all=T)
+tmp <- merge(tmp, fatty.acid.Ol, by="napus_ID", all=T)
+
+tmp <- merge(tmp, napus_vs_ara.final, by="napus_ID")[, c(6,2,3,4,5)]
+tmp
+write.csv(tmp, file = "~/Desktop/tmp.csv")
+
+
 ```
 
 # which stage has the most stress related genes expressed/ differentially expressed 
