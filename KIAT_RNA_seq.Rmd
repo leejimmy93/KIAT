@@ -67,7 +67,20 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # then after visualize genome, bam file, and gff file, we decide our library type is fr-secondstrand 
 
 ########### running cufflinks:
-# cufflinks -u -p 8 -v -o cufflink_output --max-bundle-frags 10000000 --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.sortedByCoord.out.bam (did I really used 8 processors for my job???)  
+# cufflinks -u -p 8 -o cufflink_output --max-bundle-frags 10000000 --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.sortedByCoord.out.bam 
+
+### cannot really use the processor numbers I specified, so running several cufflinks at the same time on different screens 
+# screen -r 10070.ttys003.coloma (1-3)
+# screen -r 10196.ttys004.coloma (4-6)
+# screen -r 10218.ttys004.coloma (8 Ae_Cho_2 Ae_Cho_3)
+# screen -r 2828.ttys001.coloma (Ae_Chu_2 Ae_Gae_2 Ae_Gae_3)
+# screen -r 31031.ttys003.coloma (Ae_Hu_2 Ae_Hu_3 Ae_Yeong_2)
+# screen -r 9810.ttys004.coloma (Ae_Yeong_3 All1_Cho_2 All1_Cho_3)
+# screen -r 9837.ttys004.coloma (All1_Chu_2 All1_Chu_3 All1_Gae_2)
+# screen -r 9867.ttys004.coloma (All1_Gae_3 All1_Hu_2 All1_Hu_3)
+# screen -r 9923.ttys004.coloma (All1_Yeong2)
+# screen -r 9950.ttys004.coloma (All1_Yeong3)
+
 ```
 
 # SNP calling  
@@ -274,87 +287,11 @@ p.dendro
 # design.parent.batch <- model.matrix(~batch+group, data = parent.read.count.one.sample) 
 design.parent <- model.matrix(~0+group, data = parent.read.count.one.sample)
 
-# # estimate dispersion
-# # w/ batch effect
-# dge.data.parent.batch <- estimateGLMCommonDisp(dge.data.parent.batch, design.parent.batch,verbose = TRUE) # Disp = 0.22238 , BCV = 0.4716
-# dge.data.parent.batch <- estimateGLMTrendedDisp(dge.data.parent.batch,design.parent.batch)
-# dge.data.parent.batch <- estimateGLMTagwiseDisp(dge.data.parent.batch,design.parent.batch)
-# plotBCV(dge.data.parent.batch)
-
 # w/o batch effect
 dge.data.parent <- estimateGLMCommonDisp(dge.data.parent, design.parent,verbose = TRUE) # Disp = 0.25572 , BCV = 0.5057
 dge.data.parent <- estimateGLMTrendedDisp(dge.data.parent,design.parent)
 dge.data.parent <- estimateGLMTagwiseDisp(dge.data.parent,design.parent)
 plotBCV(dge.data.parent)
-
-# fit GLM model & test for differential expression
-# w/ batch effect
-# fit.parent.batch <- glmFit(dge.data.parent.batch, design.parent.batch)
-# lrt.young.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,0,0,1,0,0,0,0,-1))
-# topTags(lrt.young.batch)
-# DEgene.young.batch <- topTags(lrt.young.batch,n = Inf)$table[topTags(lrt.young.batch,n = Inf)$table$FDR<0.05,]
-# summary(de.young.batch <- decideTestsDGE(lrt.young.batch, p=0.05))
-# # summary(de.young.batch <- decideTestsDGE(lrt.young.batch, p=0.05, lfc = 2))
-# # -1  5072
-# # 0  51131
-# # 1   4772
-# 
-# detags.young <- rownames(lrt.young.batch)[as.logical(de.young.batch)]
-# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.young.png")
-# plotSmear(lrt.young.batch, de.tags=detags.young, main="young")
-# abline(h = c(-2, 2), col = "blue")
-# dev.off()
-# 
-# lrt.flowering.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,1,0,0,0,0,-1,0,0))
-# topTags(lrt.flowering.batch)
-# summary(de.flowering.batch <- decideTestsDGE(lrt.flowering.batch, p=0.05))
-# DEgene.flowering.batch <- topTags(lrt.flowering.batch,n = Inf)$table[topTags(lrt.flowering.batch,n = Inf)$table$FDR<0.05,]
-# # -1  3150
-# # 0  54342
-# # 1   3483
-# detags.flowering <- rownames(lrt.flowering.batch)[as.logical(de.flowering.batch)]
-# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.flowering.png")
-# plotSmear(lrt.flowering.batch, de.tags=detags.flowering, main="flowering")
-# abline(h = c(-2, 2), col = "blue")
-# dev.off()
-# 
-# lrt.early.silique.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,1,0,0,0,0,-1,0,0,0))
-# topTags(lrt.early.silique.batch)
-# summary(de.early.silique.batch <- decideTestsDGE(lrt.early.silique.batch, p=0.05))
-# DEgene.early.silique.batch <- topTags(lrt.early.silique.batch,n = Inf)$table[topTags(lrt.early.silique.batch,n = Inf)$table$FDR<0.05,]
-# # -1  3542
-# # 0  53647
-# # 1   3786
-# detags.early.silique <- rownames(lrt.early.silique.batch)[as.logical(de.early.silique.batch)]
-# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.early.silique.png")
-# plotSmear(lrt.early.silique.batch, de.tags=detags.early.silique, main="early silique")
-# abline(h = c(-2, 2), col = "blue")
-# dev.off()
-# 
-# 
-# lrt.late.silique.batch <- glmLRT(fit.parent.batch, contrast = c(0,0,0,0,0,1,0,0,0,0,-1,0))
-# topTags(lrt.late.silique.batch)
-# summary(de.late.silique.batch <- decideTestsDGE(lrt.late.silique.batch, p=0.05))
-# # -1  4064
-# # 0  52880
-# # 1   4031
-# detags.late.silique <- rownames(lrt.late.silique.batch)[as.logical(de.late.silique.batch)]
-# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.late.silique.png")
-# plotSmear(lrt.late.silique.batch, de.tags=detags.late.silique, main="late silique")
-# abline(h = c(-2, 2), col = "blue")
-# dev.off()
-# 
-# lrt.bolting.batch <- glmLRT(fit.parent.batch, coef = "groupDa-al-1bolting")
-# topTags(lrt.bolting.batch)
-# summary(de.bolting.batch <- decideTestsDGE(lrt.bolting.batch, p=0.05, lfc = 1))
-# # -1  1949
-# # 0  55971
-# # 1   3055
-# detags.bolting <- rownames(lrt.bolting.batch)[as.logical(de.bolting.batch)]
-# png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.bolting.png")
-# plotSmear(lrt.bolting.batch, de.tags=detags.bolting, main="bolting")
-# abline(h = c(-2, 2), col = "blue")
-# dev.off()
 
 ## w/o batch effect
 fit.parent <- glmFit(dge.data.parent, design.parent)
@@ -560,46 +497,6 @@ p.DEGs_number_between_tissue.ol.parent <- p.DEGs_number_between_tissue.ol.parent
 
 p.DEGs_number_between_tissue.ol.parent
 # ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_tissue.ol.parent.png", width = 11, height = 8) 
-
-
-### plot smear 
-# young
-detags.young.1 <- rownames(lrt.young)[as.logical(de.young)]
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.young.1.png")
-plotSmear(lrt.young, de.tags=detags.young.1, main="young")
-abline(h = c(-2, 2), col = "blue")
-dev.off()
-
-# bolting 
-detags.bolting.1 <- rownames(lrt.bolting)[as.logical(de.bolting)]
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.bolting.1.png")
-plotSmear(lrt.bolting, de.tags=detags.bolting.1, main="bolting")
-abline(h = c(-2, 2), col = "blue")
-dev.off()
-
-# early silique 
-detags.early.silique.1 <- rownames(lrt.early.silique)[as.logical(de.early.silique)]
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.early.silique.1.png")
-plotSmear(lrt.early.silique, de.tags=detags.early.silique.1, main="early silique")
-abline(h = c(-2, 2), col = "blue")
-dev.off()
-
-# late silique 
-detags.late.silique.1 <- rownames(lrt.late.silique)[as.logical(de.late.silique)]
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.late.silique.1.png")
-plotSmear(lrt.late.silique, de.tags=detags.late.silique.1, main="late silique")
-abline(h = c(-2, 2), col = "blue")
-dev.off()
-
-# flowering 
-detags.flowering.1 <- rownames(lrt.flowering)[as.logical(de.flowering)]
-png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.flowering.1.png")
-plotSmear(lrt.flowering, de.tags=detags.flowering.1, main="flowering")
-abline(h = c(-2, 2), col = "blue")
-dev.off()
-
-# plot histogram 
-### 
 
 ```
 
@@ -865,7 +762,6 @@ expression.pattern.Bn.parent(E.ID)
 # blast: reciprocal blast bewteen Arabidopsis & B.napus 
 # merge file to get Arabidopsis hit for each B.napus gene:  
 ara.ID <- read.delim("~/Desktop/Brassica_project/reference/ara_ID.txt")
-napus_vs_ara <- read.delim("~/Desktop/Brassica_project/reference/B.napus_vs_ara.final")
 
 # awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($2 in a) print $0 "\t" a[$2]}' ara_ID.txt B.napus_vs_ara.final | awk 'BEGIN{FS="\t"}{print $1 "\t" $3 "\t" $5}' > napus_vs_ara.final.final  
 
@@ -1036,16 +932,18 @@ head(napus_vs_ara.final)
 napus_vs_ara.final$ara_locus_ID <- gsub("([[:print:]]+)(\\.)([[:digit:]]+)","\\1",napus_vs_ara.final$ara_ID)
 head(napus_vs_ara.final)
 
-list.between.gt
-list.between.stages.ae
-list.between.stages.ol
+list.between.gt <- list(DEgene.young, DEgene.bolting, DEgene.flowering, DEgene.early.silique, DEgene.late.silique)
+
+list.between.stages.ae <- list(DEgene.young.vs.bolting.ae, DEgene.bolting.vs.flowering.ae, DEgene.flowering.vs.early.silique.ae, DEgene.early.vs.late.silique.ae)
+ 
+list.between.stages.ol <- list(DEgene.young.vs.bolting.ol, DEgene.bolting.vs.flowering.ol, DEgene.flowering.vs.early.silique.ol, DEgene.early.vs.late.silique.ol)
+
 
 DEG.between.gt <- lapply(list.between.gt, function(DEgene){
   DEG <- data.frame(napus_ID = rownames(DEgene),
                     fold_change = DEgene$logFC)  
 }
 )
-
 
 DEG.between.stage.ae <- lapply(list.between.stages.ae, function(DEgene){
   DEG <- data.frame(napus_ID = rownames(DEgene),
@@ -1077,7 +975,6 @@ for (i in c(1:4)){
 
 (DEG.between.gt[[1]])
 
-
 tmp <- merge(DEG.between.gt[[1]], DEG.between.gt[[2]], by="napus_ID", all=T)
 tmp <- merge(tmp, DEG.between.gt[[3]], by="napus_ID", all=T)
 tmp <- merge(tmp, DEG.between.gt[[4]], by="napus_ID", all=T)
@@ -1095,11 +992,17 @@ colnames(tmp)
 tmp <- merge(tmp, napus_vs_ara.final, by="napus_ID")[,c(2,3,4,5,6,7,8,9,10,11,12,13,14,17)]
 head(tmp)
 
-write.csv(tmp, file = "~/Desktop/tmp_all_final.csv")
+# double check I get everything right 
+dim(DEgene.young); dim(DEgene.bolting); dim(DEgene.flowering); dim(DEgene.early.silique); dim(DEgene.late.silique); dim(DEgene.young.vs.bolting.ae); dim(DEgene.bolting.vs.flowering.ae); dim(DEgene.flowering.vs.early.silique.ae); dim(DEgene.early.vs.late.silique.ae); dim(DEgene.young.vs.bolting.ol); dim(DEgene.bolting.vs.flowering.ol); dim(DEgene.flowering.vs.early.silique.ol); dim(DEgene.early.vs.late.silique.ol) 
 
+dim(tmp)
+for (i in c(2:14)){
+  print(sum(!is.na(tmp[,i])))
+}
+
+write.csv(tmp, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/mapman_input_all_final.csv")
 # cat tmp.csv | sed 's/NA/X/g' > tmp_all_final_2.csv
 ```
-
 
 # which stage has the most stress related genes expressed/ differentially expressed 
 ```{r}
@@ -1141,14 +1044,9 @@ length(drought.stress.related.geneID.3$V1) # 13694 genes
 
 # 3) check expression pattern of these genes for all different comparisons
 ## All of the dataset that I need to check with 
-dim(DEgene.young); dim(DEgene.bolting); dim(DEgene.flowering); dim(DEgene.early.silique); dim(DEgene.late.silique)
-
-dim(DEgene.young.vs.bolting.ae); dim(DEgene.bolting.vs.flowering.ae); dim(DEgene.flowering.vs.early.silique.ae); dim(DEgene.early.vs.late.silique.ae)
-
-dim(DEgene.young.vs.bolting.ol); dim(DEgene.bolting.vs.flowering.ol); dim(DEgene.flowering.vs.early.silique.ol); dim(DEgene.early.vs.late.silique.ol)
 
 ### extract genes expression pattern 
-list.between.gt <- list(DEgene.young, DEgene.bolting, DEgene.flowering, DEgene.early.silique, DEgene.late.silique)
+
 
 # stress.related.geneID.between.gt <- lapply(list.between.gt, function(DEgene){
 #   stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
@@ -1210,8 +1108,6 @@ lapply(drought.stress.related.geneID.between.gt, function(DEgene){
 #   sum(DEgene$logFC < 0)
 # }) 
 
-list.between.stages.ae <- list(DEgene.young.vs.bolting.ae, DEgene.bolting.vs.flowering.ae, DEgene.flowering.vs.early.silique.ae, DEgene.early.vs.late.silique.ae)
-
 # stress.related.geneID.between.stages.ae <- lapply(list.between.stages.ae, function(DEgene){
 #   stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
 # }
@@ -1258,7 +1154,7 @@ lapply(drought.related.geneID.between.stages.ae, function(DEgene){
 # }
 # )
 # 
-list.between.stages.ol <- list(DEgene.young.vs.bolting.ol, DEgene.bolting.vs.flowering.ol, DEgene.flowering.vs.early.silique.ol, DEgene.early.vs.late.silique.ol)
+
 # 
 # stress.related.geneID.between.stages.ol <- lapply(list.between.stages.ol, function(DEgene){
 #   stress.related <- DEgene[rownames(DEgene) %in% stress.related.geneID$V1,]
