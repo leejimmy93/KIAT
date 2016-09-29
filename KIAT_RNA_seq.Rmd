@@ -61,15 +61,33 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # screen -r 10070.ttys003.coloma get unmapped reads with command "STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx" 
 ```
 
-# work on high percentage of unmapped reads prob
+### find out why low mapping % 
 ```{r}
-# hypothesis: too high percentage of unmapped because of rRNA contamination? 
+# 1) because of rRNA contamination??? 
+# hypothesis: too high percentage of unmapped because of rRNA contamination & rRNA is absent in genome seq 
 # 1) keep unmapped reads from STAR mapping by using command: STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn *_1.fq *_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx
-# 2) download rRNA referece seq from https://www.arb-silva.de/fileadmin/arb_web_db/release_123_1/ARB_files/SSURef_123.1_SILVA_03_03_16_opt.arb.gz
-# 3) get plant specific rRNA --> build killisto reference index --> map to killosto index and get percentage of mapped reads. 
+# 2) download rRNA referece seq from SILVA 
 
+# SILVA_128_SSURef_Nr99_tax_silva.fasta 
+# SILVA_128_LSURef_tax_silva.fasta
+# NCBI_rRNA_seq.fa (NCBI viradeaplantea rRNA)
+
+# 3) compare B.napus genome & rRNA by blast ... 
+
+# 2) because of genes from other organism??? 
+# 2.1) mapping to combined B.rapa & B.oleracea genome to see the mapping result 
+# 2.1.1) B.rapa used v1.5 genome version; there are two genome asesmblies for B.oleracea: one variety is cabbage, one is TO1000. While TO1000 is the representive one, I decide to make three combinations: a) B.rapa & cabbage b) B.rapa & TO1000 c) all three together. 
+# About the genome data, there are two places I can get genome data fro B.oleracea: NCBI & http://brassicadb.org/brad/downloadOverview.php.After reading genome papers & NCBI inforamtion, I decide to use genome information from NCBI. 
+
+# So for cabbage, its genome data is GCA_000604025.1_BOL_v1.0_genomic.fna (scaffold level assembly)
+# for TO1000, there are two versions, GCF_000695525.1_BOL_genomic.fna & GCA_000695525.1_BOL_genomic.fna, I used GCF_000695525.1_BOL_genomic.fna. 
+
+# I) build the genome index (rapa & TO1000)
+# STAR --runMode genomeGenerate --genomeDir TO1000.rapa.star.genome/ --genomeFastaFiles TO10000.rapa.fa --sjdbGTFfile TO10000.rapa.gff --runThreadN 8 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --limitGenomeGenerateRAM 53099915306   
+# II) map to genome 
+
+### John found BWA has very high mapping rate, so it is because we didn't use STAR right. working to get the right STAR parameters.  
 ```
-
 
 # cufflinks 
 ```{r}
@@ -80,16 +98,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # cufflinks -u -p 1 -o cufflink_output --max-bundle-frags 10000000 --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.sortedByCoord.out.bam 
 
 ### cannot really use the processor numbers I specified, so running several cufflinks at the same time on different screens 
-# screen -r 10070.ttys003.coloma (1-3)
-# screen -r 10196.ttys004.coloma (4-6)
-# screen -r 10218.ttys004.coloma (8 Ae_Cho_2 Ae_Cho_3)
-# screen -r 2828.ttys001.coloma (Ae_Chu_2 Ae_Gae_2 Ae_Gae_3)
-# screen -r 31031.ttys003.coloma (Ae_Hu_2 Ae_Hu_3 Ae_Yeong_2)
-# screen -r 9810.ttys004.coloma (Ae_Yeong_3 All1_Cho_2 All1_Cho_3)
-# screen -r 9837.ttys004.coloma (All1_Chu_2 All1_Chu_3 All1_Gae_2)
-# screen -r 9867.ttys004.coloma (All1_Gae_3 All1_Hu_2 All1_Hu_3)
-# screen -r 9923.ttys004.coloma (All1_Yeong2)
-# screen -r 9950.ttys004.coloma (All1_Yeong3)
+
 
 ```
 
@@ -1024,6 +1033,8 @@ write.csv(tmp, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/mapman_inp
 
 Ara_fatty_acid_ID <- c("AT1G36160", "AT1G36180", "AT2G38040", "ATCG00500", "AT3G15690", "AT5G15530", "AT5G16390", "AT5G35360", "AT3G56130", "AT2G30200", "AT1G62640", "AT1G74960", "AT2G04540", "AT5G46290", "AT1G24360", "AT2G22230", "AT5G10160", "AT2G05990")
 
+length(Ara_fatty_acid_ID)
+
 Ara_fatty_acid_ID %in% napus_vs_ara.final$ara_locus_ID # only one is not absent in my data 
 Ara_fatty_acid_ID %in% tmp$ara_locus_ID # however, only 4 are differentially expressed 
 
@@ -1390,6 +1401,17 @@ write.csv(all.up.down.GO.out, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/ou
 # 3) display the fatty acid genes in mapman 
 
 ```
+
+
+
+
+
+
+
+
+
+
+
 
 
 
