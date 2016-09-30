@@ -87,6 +87,24 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # II) map to genome 
 
 ### John found BWA has very high mapping rate, so it is because we didn't use STAR right. working to get the right STAR parameters.  
+
+### include mt, chlroplast genome and  build the genome again 
+# download napus Mt, napus chloroplast and rRNA from all plants, added these seqs into reference genome, rebuilt the genome using the same gff3 file 
+# STAR --runMode genomeGenerate --genomeDir star_genome_chl_mt_rRNAall/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.chl.mt.rRNAall.fa --sjdbGTFfile Brassica_napus.annotation_v5_modified_modified.gff3 --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS
+
+# map to the new ref genome to see whether I can get higher mapping rate 
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome_chl_mt_rRNAall/ --readFilesIn ../1_1.fq ../1_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx 
+
+
+
+```
+
+# which is the right STAR parameter??? 
+```{r}
+# 1) low mapping rate because we didn't trim the data? 
+
+
+
 ```
 
 # cufflinks 
