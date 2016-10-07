@@ -56,9 +56,9 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 ### very high percentage of unmapped!!!!!! 
 
 # All1_Yeong3_160621 sample  
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped fastx (screen -r 10070.ttys003.coloma)  
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/All1_Yeong3_160621_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped fastx 
 
-# screen -r 10070.ttys003.coloma get unmapped reads with command "STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx" 
+# get unmapped reads with command "STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx" 
 ```
 
 ### find out why low mapping % 
@@ -72,7 +72,8 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # SILVA_128_LSURef_tax_silva.fasta
 # NCBI_rRNA_seq.fa (NCBI viradeaplantea rRNA)
 
-# 3) compare B.napus genome & rRNA by blast ... 
+# 3) compare B.napus genome & rRNA by blast ...  
+# blast "blastn -db /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -query NCBI_rRNA_seq.fa -out NCBIrRNA_napa_genome.blast.out -evalue 1e-6 -outfmt 6" found that out of the 520 rRNA seqs, 421 of them have significant hit in napus genone. so this is not the problem. 
 
 # 2) because of genes from other organism??? 
 # 2.1) mapping to combined B.rapa & B.oleracea genome to see the mapping result 
@@ -85,8 +86,9 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # I) build the genome index (rapa & TO1000)
 # STAR --runMode genomeGenerate --genomeDir TO1000.rapa.star.genome/ --genomeFastaFiles TO10000.rapa.fa --sjdbGTFfile TO10000.rapa.gff --runThreadN 8 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --limitGenomeGenerateRAM 53099915306   
 # II) map to genome 
+# no improvement on mapping rate 
 
-### John found BWA has very high mapping rate, so it is because we didn't use STAR right. working to get the right STAR parameters.  
+### John found BWA has very high mapping rate, so it is because we didn't use STAR right? working to get the right STAR parameters.... but since TopHat also gives John low mapping rate, now John is trying to figure out why BWA gives such a high mapping rate.   
 
 ### include mt, chlroplast genome and  build the genome again 
 # download napus Mt, napus chloroplast and rRNA from all plants, added these seqs into reference genome, rebuilt the genome using the same gff3 file 
@@ -95,13 +97,40 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # map to the new ref genome to see whether I can get higher mapping rate 
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome_chl_mt_rRNAall/ --readFilesIn ../1_1.fq ../1_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx 
 
+# result, no mapping rate improvement, why? because the chloroplast & Mt are not the ones that I should use? use different ones? I am confused... 
 
+#### map unmapped reads to Mt, chloroplast, and rRNA to see the mapping rate (using STAR, BWA)
+# bwa index -p mitochondria_chloroplast_rRNA_all_bwa ../mitochondria_chloroplast_rRNA_all.fa 
+# bwa mem -t 8 /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/non_coding/bwa_index/mitochondria_chloroplast_rRNA_all_bwa Unmapped.out.mate1 > unmapped_mate1_mt_chl_rRNA_bwa.se.sam 
+# about half is mapped from BWA 
+
+# Now I trim another sample to see whether I get high mapping rate for this sample trimmed with overrepresented seqs. 
+# yes, with paired end mapping, 20% unampped, single end get 3% unmapped. 
+
+# map to Arabidopsis genome 
+
+# sequences trimmed with custom adapters map to napus genome 
 
 ```
 
-# which is the right STAR parameter??? 
+# assemble unmapped reads to see what they hit 
 ```{r}
-# 1) low mapping rate because we didn't trim the data? 
+# 1) get unmapped reads by running STAR again for Da-Ol-1 young tissue 
+# 2) Trinity to assemble unmapped reads
+# 2.1) decide which library type my unmapped read1 is after visulizaing it in IGV, determined the library type for unmappedmate1 is F, unmappedmate2 is R then. paired end is FR  
+
+# Trinity --seqType fq --single 1.star.dir.no.annotation.mapping/Unmapped.out.mate2.replaceID,All1_Yeong2_160621.star.dir.w.unmapped/Unmapped.out.mate2.replaceID,All1_Yeong3_160621.star.dir.w.unmapped/Unmapped.out.mate2.replaceID --SS_lib_type R --max_memory 50G --CPU 4 --output trinity_out_unmapped_mate2 
+
+# 3) how to get reads with multi mapping and too many mapping ??? 
+# 4) Trinity assemble paired end raw reads 
+# Trinity --seqType fq --left 1_1.fq --right 1_2.fq --SS_lib_type FR --max_memory 50G --CPU 8 --output trinity_out_all
+
+# also, check I get the right bolting data, by checking earlier email, realize that bolting might not be good data. 
+
+# next, blast trinity assembled transcripts to NCBI see homology 
+# also Richard suggested 
+# 1) download other SRA data to see whether using my pipeline those data get high mapping rate, if not, then my pipeline might be problematic. If yes, then data has problem 
+# 2) map reads to transcriptome to see mapping rate. If very low mapping rate to CDS, that means most of the unmapped are from non coding regions...  
 
 
 
