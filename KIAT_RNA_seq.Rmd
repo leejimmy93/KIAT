@@ -121,18 +121,23 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # Trinity --seqType fq --single 1.star.dir.no.annotation.mapping/Unmapped.out.mate2.replaceID,All1_Yeong2_160621.star.dir.w.unmapped/Unmapped.out.mate2.replaceID,All1_Yeong3_160621.star.dir.w.unmapped/Unmapped.out.mate2.replaceID --SS_lib_type R --max_memory 50G --CPU 4 --output trinity_out_unmapped_mate2 
 
-# 3) how to get reads with multi mapping and too many mapping ??? 
+# next, blast trinity assembled transcripts to NCBI see homology 
+# blastn -db /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/NCBI/nt/nt -query Trinity.fasta -out Trinity.nt.blast.out -evalue 1e-6 -outfmt 0 -max_target_seqs 1 -num_threads 6 
+
+# 3) how to get reads with multi mapping and too many mapping ??? (under John's help)
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/johndavis/Ruijuan/Multi_Mapped 
+
 # 4) Trinity assemble paired end raw reads 
 # Trinity --seqType fq --left 1_1.fq --right 1_2.fq --SS_lib_type FR --max_memory 50G --CPU 8 --output trinity_out_all
 
 # also, check I get the right bolting data, by checking earlier email, realize that bolting might not be good data. 
 
-# next, blast trinity assembled transcripts to NCBI see homology 
 # also Richard suggested 
 # 1) download other SRA data to see whether using my pipeline those data get high mapping rate, if not, then my pipeline might be problematic. If yes, then data has problem 
+
+# downloading data now... 
+
 # 2) map reads to transcriptome to see mapping rate. If very low mapping rate to CDS, that means most of the unmapped are from non coding regions...  
-
-
 
 ```
 
@@ -145,7 +150,6 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # cufflinks -u -p 1 -o cufflink_output --max-bundle-frags 10000000 --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.sortedByCoord.out.bam 
 
 ### cannot really use the processor numbers I specified, so running several cufflinks at the same time on different screens 
-
 
 ```
 
@@ -1449,8 +1453,340 @@ write.csv(all.up.down.GO.out, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/ou
 
 ```
 
+## coverage test 
+```{r}
+######### all trimmed data 
+flowering.read.count.all <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.flowering.all.tsv", header = T, check.names = F)
+rownames(flowering.read.count.all) <- flowering.read.count.all[,1]
+flowering.read.count.all <- flowering.read.count.all[,-1]
+
+# format data 
+head(flowering.read.count.all)
+dim(flowering.read.count.all) # 101040     6 
+colnames(flowering.read.count.all)
+
+# replace sample ID 
+colnames(flowering.read.count.all) <- c("Da-Ol-1_flowering_3","Da-Ae_flowering_3","Da-Ae_flowering_1","Da-Ae_flowering_2","Da-Ol-1_flowering_1","Da-Ol-1_flowering_2")
+head(flowering.read.count.all)
+
+library(edgeR)
+library(ggplot2)
+
+# filter based on read count, assign group, normalize, design matrix, calculate dispersion   
+# set up group 
+flowering.read.count.all <- flowering.read.count.all[,colSums(flowering.read.count.all) > 1000000]  
+dim(flowering.read.count.all) # 101040     6 
+flowering.read.count.all.sample <-data.frame(file=colnames(flowering.read.count.all),
+                             batch=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\5",colnames(flowering.read.count.all))),  
+                             genotype=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1",colnames(flowering.read.count.all))),	
+                             stage=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\3",colnames(flowering.read.count.all))),	
+                             group=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1\\3",colnames(flowering.read.count.all)))
+)
+
+flowering.read.count.all.sample
+ftable(flowering.read.count.all.sample,row.vars="stage",col.vars=c("batch","genotype"))
+
+# filter based on read count 
+flowering.read.count.all.small <- flowering.read.count.all[rowSums(flowering.read.count.all > 10) >= 3,]
+dim(flowering.read.count.all.small) # 48968     6 
+
+# 
+# flowering.read.count.all.sample$genotype <- as.factor(flowering.read.count.all.sample$genotype)
+# is.factor(flowering.read.count.all.sample$genotype)
+# flowering.read.count.all.sample$genotype <- relevel(flowering.read.count.all.sample$genotype,ref="Da-Ol-1")
+
+# normalize 
+dge.data.flowering.all <- DGEList(counts=flowering.read.count.all.small, group=flowering.read.count.all.sample$group)
+dim(dge.data.flowering.all)
+dge.data.flowering.all <- calcNormFactors(dge.data.flowering.all, method = "TMM") 
+dge.data.flowering.all$sample
+hist(dge.data.flowering.all$samples$norm.factors)
+
+# MDS to check sample seperation, also using dengrogram.  
+plotMDS(dge.data.flowering.all, method = "bcv")
+
+# pairwise comparison using GLM model 
+# design matrix # w/o batch effect
+design.flowering.all <- model.matrix(~0+group, data = flowering.read.count.all.sample)
+dge.data.flowering.all <- estimateGLMCommonDisp(dge.data.flowering.all, design.flowering.all,verbose = TRUE) # Disp = 0.14725 , BCV = 0.3837
+dge.data.flowering.all <- estimateGLMTrendedDisp(dge.data.flowering.all,design.flowering.all)
+dge.data.flowering.all <- estimateGLMTagwiseDisp(dge.data.flowering.all,design.flowering.all)
+plotBCV(dge.data.flowering.all)
+
+## w/o batch effect
+fit.flowering.all <- glmFit(dge.data.flowering.all, design.flowering.all)
+# lrt.tmp <- glmLRT(fit.flowering.all, coef = "genotypeDa-Ae")
+# topTags(lrt.tmp)
+# summary(de.flowering.all.tmp <- decideTestsDGE(lrt.tmp, p=0.05))
+
+colnames(fit.flowering.all$coefficients)
+lrt.flowering.all <- glmLRT(fit.flowering.all, contrast = c(1, -1))
+topTags(lrt.flowering.all)
+number.all <- summary(de.flowering.all <- decideTestsDGE(lrt.flowering.all, p=0.05))
+DEgene.flowering.all <- topTags(lrt.flowering.all,n = Inf)$table[topTags(lrt.flowering.all,n = Inf)$table$FDR<0.05,]
+
+dim(DEgene.flowering.all)
+head(DEgene.flowering.all)
+
+##### half of the reads 
+flowering.read.count.half <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.flowering.half.tsv", header = T, check.names = F)
+rownames(flowering.read.count.half) <- flowering.read.count.half[,1]
+flowering.read.count.half <- flowering.read.count.half[,-1]
+
+# format data 
+head(flowering.read.count.half)
+dim(flowering.read.count.half) # 101040     6 
+colnames(flowering.read.count.half)
+
+# replace sample ID 
+colnames(flowering.read.count.half) <- c("Da-Ol-1_flowering_3","Da-Ae_flowering_3","Da-Ae_flowering_1","Da-Ae_flowering_2","Da-Ol-1_flowering_1","Da-Ol-1_flowering_2")
+head(flowering.read.count.half)
+
+# filter based on read count, assign group, normalize, design matrix, calculate dispersion   
+# set up group 
+flowering.read.count.half <- flowering.read.count.half[,colSums(flowering.read.count.half) > 1000000]  
+dim(flowering.read.count.half) # 101040     6 
+flowering.read.count.half.sample <-data.frame(file=colnames(flowering.read.count.half),
+                             batch=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\5",colnames(flowering.read.count.half))),  
+                             genotype=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1",colnames(flowering.read.count.half))),	
+                             stage=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\3",colnames(flowering.read.count.half))),	
+                             group=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1\\3",colnames(flowering.read.count.half)))
+)
+
+flowering.read.count.half.sample
+ftable(flowering.read.count.half.sample,row.vars="stage",col.vars=c("batch","genotype"))
+
+# filter based on read count 
+flowering.read.count.half.small <- flowering.read.count.half[rowSums(flowering.read.count.half > 10) >= 3,]
+dim(flowering.read.count.half.small) # 41412     6 
+
+# normalize 
+dge.data.flowering.half <- DGEList(counts=flowering.read.count.half.small, group=flowering.read.count.half.sample$group)
+dim(dge.data.flowering.half)
+dge.data.flowering.half <- calcNormFactors(dge.data.flowering.half, method = "TMM") 
+dge.data.flowering.half$sample
+hist(dge.data.flowering.half$samples$norm.factors)
+
+# MDS to check sample seperation, also using dengrogram.  
+plotMDS(dge.data.flowering.half, method = "bcv")
+
+# pairwise comparison using GLM model 
+# design matrix # w/o batch effect
+design.flowering.half <- model.matrix(~0+group, data = flowering.read.count.half.sample)
+dge.data.flowering.half <- estimateGLMCommonDisp(dge.data.flowering.half, design.flowering.half,verbose = TRUE) # Disp = 0.14364 , BCV = 0.379 
+dge.data.flowering.half <- estimateGLMTrendedDisp(dge.data.flowering.half,design.flowering.half)
+dge.data.flowering.half <- estimateGLMTagwiseDisp(dge.data.flowering.half,design.flowering.half)
+plotBCV(dge.data.flowering.half)
+
+## w/o batch effect
+fit.flowering.half <- glmFit(dge.data.flowering.half, design.flowering.half)
+
+colnames(fit.flowering.half$coefficients)
+lrt.flowering.half <- glmLRT(fit.flowering.half, contrast = c(1, -1))
+topTags(lrt.flowering.half) 
+number.half <- summary(de.flowering.half <- decideTestsDGE(lrt.flowering.half, p=0.05))
+DEgene.flowering.half <- topTags(lrt.flowering.half,n = Inf)$table[topTags(lrt.flowering.half,n = Inf)$table$FDR<0.05,]
+
+dim(DEgene.flowering.half)
+head(DEgene.flowering.half) 
+
+##### 1/4 of the reads 
+flowering.read.count.halfhalf <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.flowering.halfhalf.tsv", header = T, check.names = F)
+rownames(flowering.read.count.halfhalf) <- flowering.read.count.halfhalf[,1]
+flowering.read.count.halfhalf <- flowering.read.count.halfhalf[,-1]
+
+# format data 
+head(flowering.read.count.halfhalf)
+dim(flowering.read.count.halfhalf) # 101040     6 
+colnames(flowering.read.count.halfhalf)
+
+# replace sample ID 
+colnames(flowering.read.count.halfhalf) <- c("Da-Ol-1_flowering_3","Da-Ae_flowering_3","Da-Ae_flowering_1","Da-Ae_flowering_2","Da-Ol-1_flowering_1","Da-Ol-1_flowering_2")
+head(flowering.read.count.halfhalf)
+
+# filter based on read count, assign group, normalize, design matrix, calculate dispersion   
+# set up group 
+flowering.read.count.halfhalf <- flowering.read.count.halfhalf[,colSums(flowering.read.count.halfhalf) > 1000000]  
+dim(flowering.read.count.halfhalf) # 101040     6 
+flowering.read.count.halfhalf.sample <-data.frame(file=colnames(flowering.read.count.halfhalf),
+                             batch=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\5",colnames(flowering.read.count.halfhalf))),  
+                             genotype=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1",colnames(flowering.read.count.halfhalf))),	
+                             stage=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\3",colnames(flowering.read.count.halfhalf))),	
+                             group=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1\\3",colnames(flowering.read.count.halfhalf)))
+)
+
+flowering.read.count.halfhalf.sample
+ftable(flowering.read.count.halfhalf.sample,row.vars="stage",col.vars=c("batch","genotype"))
+
+# filter based on read count 
+flowering.read.count.halfhalf.small <- flowering.read.count.halfhalf[rowSums(flowering.read.count.halfhalf > 10) >= 0,]
+dim(flowering.read.count.halfhalf.small) # 32179     6 
+
+# normalize 
+dge.data.flowering.halfhalf <- DGEList(counts=flowering.read.count.halfhalf.small, group=flowering.read.count.halfhalf.sample$group)
+dim(dge.data.flowering.halfhalf)
+dge.data.flowering.halfhalf <- calcNormFactors(dge.data.flowering.halfhalf, method = "TMM") 
+dge.data.flowering.halfhalf$sample
+hist(dge.data.flowering.halfhalf$samples$norm.factors)
+
+# MDS to check sample seperation, also using dengrogram.  
+plotMDS(dge.data.flowering.halfhalf, method = "bcv")
+
+# pairwise comparison using GLM model 
+# design matrix # w/o batch effect
+design.flowering.halfhalf <- model.matrix(~0+group, data = flowering.read.count.halfhalf.sample)
+dge.data.flowering.halfhalf <- estimateGLMCommonDisp(dge.data.flowering.halfhalf, design.flowering.halfhalf,verbose = TRUE) # Disp = 0.13675 , BCV = 0.3698
+dge.data.flowering.halfhalf <- estimateGLMTrendedDisp(dge.data.flowering.halfhalf,design.flowering.halfhalf)
+dge.data.flowering.halfhalf <- estimateGLMTagwiseDisp(dge.data.flowering.halfhalf,design.flowering.halfhalf)
+plotBCV(dge.data.flowering.halfhalf)
+
+## w/o batch effect
+fit.flowering.halfhalf <- glmFit(dge.data.flowering.halfhalf, design.flowering.halfhalf)
+
+colnames(fit.flowering.halfhalf$coefficients)
+lrt.flowering.halfhalf <- glmLRT(fit.flowering.halfhalf, contrast = c(1, -1))
+topTags(lrt.flowering.halfhalf) 
+number.halfhalf <- summary(de.flowering.halfhalf <- decideTestsDGE(lrt.flowering.halfhalf, p=0.05))
+DEgene.flowering.halfhalf <- topTags(lrt.flowering.halfhalf,n = Inf)$table[topTags(lrt.flowering.halfhalf,n = Inf)$table$FDR<0.05,]
+
+dim(DEgene.flowering.halfhalf)
+head(DEgene.flowering.halfhalf) 
+
+### 3/4 
+##### 1/4 of the reads 
+flowering.read.count.3_4 <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.flowering.3_4.tsv", header = T, check.names = F)
+rownames(flowering.read.count.3_4) <- flowering.read.count.3_4[,1]
+flowering.read.count.3_4 <- flowering.read.count.3_4[,-1]
+
+# format data 
+head(flowering.read.count.3_4)
+dim(flowering.read.count.3_4) # 101040     6 
+colnames(flowering.read.count.3_4)
+
+# replace sample ID 
+colnames(flowering.read.count.3_4) <- c("Da-Ol-1_flowering_3","Da-Ae_flowering_3","Da-Ae_flowering_1","Da-Ae_flowering_2","Da-Ol-1_flowering_1","Da-Ol-1_flowering_2")
+head(flowering.read.count.3_4)
+
+# filter based on read count, assign group, normalize, design matrix, calculate dispersion   
+# set up group 
+flowering.read.count.3_4 <- flowering.read.count.3_4[,colSums(flowering.read.count.3_4) > 1000000]  
+dim(flowering.read.count.3_4) # 101040     6 
+flowering.read.count.3_4.sample <-data.frame(file=colnames(flowering.read.count.3_4),
+                             batch=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\5",colnames(flowering.read.count.3_4))),  
+                             genotype=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1",colnames(flowering.read.count.3_4))),	
+                             stage=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\3",colnames(flowering.read.count.3_4))),	
+                             group=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1\\3",colnames(flowering.read.count.3_4)))
+)
+
+flowering.read.count.3_4.sample
+ftable(flowering.read.count.3_4.sample,row.vars="stage",col.vars=c("batch","genotype"))
+
+# filter based on read count 
+flowering.read.count.3_4.small <- flowering.read.count.3_4[rowSums(flowering.read.count.3_4 > 10) >= 0,]
+dim(flowering.read.count.3_4.small)  
+
+# normalize 
+dge.data.flowering.3_4 <- DGEList(counts=flowering.read.count.3_4.small, group=flowering.read.count.3_4.sample$group)
+dim(dge.data.flowering.3_4)
+dge.data.flowering.3_4 <- calcNormFactors(dge.data.flowering.3_4, method = "TMM") 
+dge.data.flowering.3_4$sample
+hist(dge.data.flowering.3_4$samples$norm.factors)
+
+# MDS to check sample seperation, also using dengrogram.  
+plotMDS(dge.data.flowering.3_4, method = "bcv")
+
+# pairwise comparison using GLM model 
+# design matrix # w/o batch effect
+design.flowering.3_4 <- model.matrix(~0+group, data = flowering.read.count.3_4.sample)
+dge.data.flowering.3_4 <- estimateGLMCommonDisp(dge.data.flowering.3_4, design.flowering.3_4,verbose = TRUE) # Disp = 0.15922 , BCV = 0.399 
+dge.data.flowering.3_4 <- estimateGLMTrendedDisp(dge.data.flowering.3_4,design.flowering.3_4)
+dge.data.flowering.3_4 <- estimateGLMTagwiseDisp(dge.data.flowering.3_4,design.flowering.3_4)
+plotBCV(dge.data.flowering.3_4)
+
+## w/o batch effect
+fit.flowering.3_4 <- glmFit(dge.data.flowering.3_4, design.flowering.3_4)
+
+colnames(fit.flowering.3_4$coefficients)
+lrt.flowering.3_4 <- glmLRT(fit.flowering.3_4, contrast = c(1, -1))
+topTags(lrt.flowering.3_4) 
+number.3_4 <- summary(de.flowering.3_4 <- decideTestsDGE(lrt.flowering.3_4, p=0.05))
+DEgene.flowering.3_4 <- topTags(lrt.flowering.3_4,n = Inf)$table[topTags(lrt.flowering.3_4,n = Inf)$table$FDR<0.05,]
+
+dim(DEgene.flowering.3_4)
+head(DEgene.flowering.3_4)  
+
+################################# 
+
+# make graphs of results 
+number.all; number.3_4; number.half; number.halfhalf
+number.all[[1]]
 
 
+DE.table.all <- data.frame(up = c(number.all[[3]], number.3_4[[3]], number.half[[3]], number.halfhalf[[3]]), 
+                       down = c(number.all[[1]], number.3_4[[1]], number.half[[1]], number.halfhalf[[1]]),
+                       total = c(sum(number.all[[1]], number.all[[3]]), sum(number.3_4[[1]], number.3_4[[3]]), sum(number.half[[1]], number.half[[3]]), sum(number.halfhalf[[1]], number.halfhalf[[3]])))
+
+rownames(DE.table.all) <- c("all","threequarter","half","halfhalf")
+DE.table.all 
+
+# reshape for ggplot 
+DE.table.all.melt <- melt(DE.table.all) 
+DE.table.all.melt$type <- rep(c("all","threequarter","half","halfhalf"), 3)
+DE.table.all.melt
+DE.table.all.melt$type <- factor(DE.table.all.melt$type, levels = DE.table.all.melt$type)
+DE.table.all.melt$label <- factor(DE.table.all.melt$value)
+
+p.DE.all <- ggplot(data = DE.table.all.melt)
+p.DE.all <- p.DE.all + geom_line(aes(x = factor(type), y = value, group=variable, color=variable))
+p.DE.all <- p.DE.all + ggplot(data = DE.table.all.melt, aes(x=factor(type), y=values*1.05, label= DE.table.all.melt$label))  
+p.DE.all <- p.DE.all + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0))
+p.DE.all <- p.DE.all + labs(y = "number of differentially expressed genes", x = "coverage type")
+
+p.DE.all
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_diff_coverage_level.png", width = 11, height = 8)  
+
+# number of overlap genes
+head(DEgene.flowering.halfhalf)
+dim(DEgene.flowering.all); dim(DEgene.flowering.3_4); dim(DEgene.flowering.half); dim(DEgene.flowering.halfhalf)
+number.all; number.half; number.halfhalf 
+
+dim(DEgene.flowering.all[rownames(DEgene.flowering.half),]) 
+dim(DEgene.flowering.half[rownames(DEgene.flowering.halfhalf),])
+dim(DEgene.flowering.halfhalf) 
+
+# install.packages("gplots")
+library(gplots)
+
+# all genes overlapped 
+DE.flowering.all <- rownames(DEgene.flowering.all)
+DE.flowering.3_4 <- rownames(DEgene.flowering.3_4)
+DE.flowering.half <- rownames(DEgene.flowering.half)
+DE.flowering.halfhalf <- rownames(DEgene.flowering.halfhalf)
+
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/venn.between.diff.coverage.all.png")
+venn(list(all=DE.flowering.all, threequarter=DE.flowering.3_4, half=DE.flowering.half, halfhalf=DE.flowering.halfhalf))
+dev.off()
+
+# up regulated genes 
+DE.flowering.all.up <- rownames(DEgene.flowering.all[DEgene.flowering.all$logFC>=0,])
+DE.flowering.3_4.up <- rownames(DEgene.flowering.3_4[DEgene.flowering.3_4$logFC>=0,])
+DE.flowering.half.up <- rownames(DEgene.flowering.half[DEgene.flowering.half$logFC>=0,])
+DE.flowering.halfhalf.up <- rownames(DEgene.flowering.halfhalf[DEgene.flowering.halfhalf$logFC>=0,])
+
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/venn.between.diff.coverage.up.png")
+venn(list(all=DE.flowering.all.up, threequarter=DE.flowering.3_4.up, half=DE.flowering.half.up, halfhalf=DE.flowering.halfhalf.up))
+dev.off()
+
+# down regulated genes 
+DE.flowering.all.down <- rownames(DEgene.flowering.all[DEgene.flowering.all$logFC<0,])
+DE.flowering.3_4.down <- rownames(DEgene.flowering.3_4[DEgene.flowering.3_4$logFC<0,])
+DE.flowering.half.down <- rownames(DEgene.flowering.half[DEgene.flowering.half$logFC<0,])
+DE.flowering.halfhalf.down <- rownames(DEgene.flowering.halfhalf[DEgene.flowering.halfhalf$logFC<0,])
+
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/venn.between.diff.coverage.down.png")
+venn(list(all=DE.flowering.all.down, threequarter=DE.flowering.3_4.down, half=DE.flowering.half.down, halfhalf=DE.flowering.halfhalf.down))
+dev.off()
+```
 
 
 
