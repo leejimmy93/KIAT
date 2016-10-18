@@ -147,7 +147,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # then after visualize genome, bam file, and gff file, we decide our library type is fr-secondstrand 
 
 ########### running cufflinks:
-# cufflinks -u -p 1 -o cufflink_output --max-bundle-frags 10000000 --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.sortedByCoord.out.bam 
+# cufflinks -u -p 10 -o cufflink_output --max-bundle-frags 10000000 --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.sortedByCoord.out.bam  
 
 ### cannot really use the processor numbers I specified, so running several cufflinks at the same time on different screens 
 
@@ -159,20 +159,18 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # samtools faidx Brapa_sequence_v1.5.fa  
 
 # 1) merge libarary for Da-Ae and Da-Ol-1 
-# 2) do STAR mapping for Da-Ae & Da-Ol-1 paired-end seq 
-
 # cat Ae*1.fq 5_1.fq 6_1.fq 05-11-Final-8ul_1.fq 8_1.fq > Ae_1.fq
 # cat Ae*2.fq 5_2.fq 6_2.fq 05-11-Final-8ul_2.fq 8_2.fq > Ae_2.fq
 
 # cat All*1.fq 1_1.fq 2_1.fq 3_1.fq 4_1.fq > Ol_1.fq
 # cat All*2.fq 1_2.fq 2_2.fq 3_2.fq 4_2.fq > Ol_2.fq
 
+# trim Da-Ae & Da-Ol sample using: java -jar /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/bin/Trimmomatic-0.36/trimmomatic-0.36.jar PE ${i}_1.fq ${i}_2.fq ${i}_paired_1.fq ${i}_unpaired_1.fq ${i}_paired_2.fq ${i}_unpaired_2.fq ILLUMINACLIP:Bradseq_adapter.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 -threads 2 
+
+# 2) do STAR mapping for Da-Ae & Da-Ol-1 paired-end seq 
+
 ### STAR mapping of merged data 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ae_1.fq ../Ae_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 10196.ttys004.coloma) 
-
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn ../Ol_1.fq ../Ol_2.fq --runThreadN 6 --outSAMtype BAM SortedByCoordinate (screen -r 10070.ttys003.coloma)  
-
-
+# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn *_1.fq *_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 1 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx 
 ```
 
 # Expression analysis 1) formatting data   
@@ -1619,7 +1617,7 @@ flowering.read.count.halfhalf.sample
 ftable(flowering.read.count.halfhalf.sample,row.vars="stage",col.vars=c("batch","genotype"))
 
 # filter based on read count 
-flowering.read.count.halfhalf.small <- flowering.read.count.halfhalf[rowSums(flowering.read.count.halfhalf > 10) >= 0,]
+flowering.read.count.halfhalf.small <- flowering.read.count.halfhalf[rowSums(flowering.read.count.halfhalf > 10) >= 3,]
 dim(flowering.read.count.halfhalf.small) # 32179     6 
 
 # normalize 
@@ -1682,7 +1680,7 @@ flowering.read.count.3_4.sample
 ftable(flowering.read.count.3_4.sample,row.vars="stage",col.vars=c("batch","genotype"))
 
 # filter based on read count 
-flowering.read.count.3_4.small <- flowering.read.count.3_4[rowSums(flowering.read.count.3_4 > 10) >= 0,]
+flowering.read.count.3_4.small <- flowering.read.count.3_4[rowSums(flowering.read.count.3_4 > 10) >= 3,]
 dim(flowering.read.count.3_4.small)  
 
 # normalize 
