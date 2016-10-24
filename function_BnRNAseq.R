@@ -5,7 +5,7 @@
 # prerequisit
 library(ShortRead);library(goseq);library(GO.db);library("annotate")
 # for ggplot heatmap
-library(WGCNA);library(ggplot2);library(reshape2);library(scales)
+library(WGCNA);library(ggplot2);library(reshape2);library(scales); library (plyr)
 
 Bn_cdna<-readDNAStringSet("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Brassica_napus.annotation_v5.cds_modified.fa") 
 head(Bn_cdna)
@@ -32,7 +32,6 @@ length(bias) # 101040
 # Bngo.DF[1:10,]
 # do.call(rbind.data.frame, Bngo.list)
 # Bngo.DF2<-do.call(rbind.data.frame,Bngo.list) # ???? 
-# library (plyr)
 # Bngo.DF3 <- ldply (Bngo.list, data.frame) 
 # names(Bngo.DF3)<-c("gene","GO") #if Brgo.list does not work in goseq, use DF3.
 
@@ -307,6 +306,8 @@ expression.pattern.Bn.parent <- function(ID){
   
   return(p)
 }
+
+
 
 
 
