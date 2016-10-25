@@ -172,6 +172,18 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 ### STAR mapping of merged data 
 # STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn *_1.fq *_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 2 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx 
 
+# (visualizing the MDS plot and hierachical plot, I found bolting are not mixed between genotypes, its that they are not clustering with themselve, which might because the two genotypes have different flowering time? Da_Ae's bolting is more similar to young whereas Da-Ol's bolting is more similar to flowering.)  
+
+### remove PCR duplicate 
+# samtools rmdup -s Aligned.sortedByCoord.out.bam Ae_rmdup.bam
+# samtools rmdup -s Aligned.sortedByCoord.out.bam Ol_rmdup.bam 
+
+### add read group 
+
+
+
+
+############### 
 ################### 
 # opps, forget that bolting data should not be included for SNP calling !!! 
 # mapping w/o bolting data 
@@ -184,7 +196,12 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # cat All1_Yeong2_160621_paired_2.fq All1_Yeong3_160621_paired_2.fq All1_Gae_2_paired_2.fq All1_Gae_3_paired_2.fq All1_Cho_2_paired_2.fq All1_Cho_3_paired_2.fq All1_Hu_2_paired_2.fq All1_Hu_3_paired_2.fq 1_paired_2.fq 2_paired_2.fq 3_paired_2.fq 4_paired_2.fq > Ol_no_bolting_2.fq
 
-## remapping the new data using STAR 
+## remapping the new data using STAR ... ing 
+
+
+
+
+
 
 
 
@@ -346,7 +363,7 @@ p.mds <- ggplot(data = distance_matrix)
 p.mds <- p.mds + geom_point(aes(x, y, color=factor(tissue)), size=3) 
 p.mds <- p.mds + labs(y = "BCV distance 2", x="BCV distance 1")
 # p.mds <- p.mds + facet_grid(~gt)
-p.mds
+p.mds     
 
 # ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/MDS.png", width = 11, height = 8)
 
@@ -1804,10 +1821,13 @@ venn(list(all=DE.flowering.all.down, threequarter=DE.flowering.3_4.down, half=DE
 dev.off()
 ```
 
+### expression analysis using genome mapped reads 
+```{r}
 
 
 
 
+```
 
 
 
