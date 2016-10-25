@@ -1821,13 +1821,357 @@ venn(list(all=DE.flowering.all.down, threequarter=DE.flowering.3_4.down, half=DE
 dev.off()
 ```
 
-### expression analysis using genome mapped reads 
+##################################################################
+# anaylsis using genome mapped reads 
+##################################################################
+# Expression analysis using genome mapped reads 1) formatting data    
 ```{r}
+parent.read.count.2 <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/read_count/read.count.genome.mapped.tsv", header = T, check.names = F)
+rownames(parent.read.count.2) <- parent.read.count.2[,1]
+parent.read.count.2 <- parent.read.count.2[,-1]
 
+# format data 
+head(parent.read.count.2)
+dim(parent.read.count.2) # 101040     27  
+colnames(parent.read.count.2)
+colnames(parent.read.count.2) <- sub("_paired","",colnames(parent.read.count.2),fixed = TRUE) # remove _paired.fq 
+colnames(parent.read.count.2)
 
+# sample description  
+sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/parent_summary_corrected.csv")
+dim(sample_des) # 27 22
+sorted_sample_des <- sample_des[order(sample_des$SampleID),]
+sorted_sample_des$SampleID <- as.character(sorted_sample_des$SampleID)
+sorted_sample_des$SampleID
 
+sorted_sample_des[,4:7]
+new_sample_ID <- paste(sorted_sample_des$Cultivar, sorted_sample_des$Stage, sorted_sample_des$rep, sep = "_")
+new_sample_ID
+
+# replace sample ID (if the sorted sample ID is the same as colname of read count file, replace colname of read count file with new sample ID)
+if (identical(colnames(parent.read.count.2), sorted_sample_des$SampleID) == TRUE){
+  colnames(parent.read.count.2) <- new_sample_ID 
+}
+
+head(parent.read.count.2)
+
+### remove bolting data 
+parent.read.count.2 <- parent.read.count.2[,grep("bolting", colnames(parent.read.count.2), invert = TRUE)]
+dim(parent.read.count.2) # [1] 101040     24
+# save(parent.read.count.2,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.Rdata") 
+```
+
+# expression analysis using genome mapped reads 2) set up sample description 
+```{r}
+# load necessary libs & functions 
+library(edgeR)
+library(ggplot2)
+
+# filter based on read count, assign group, normalize, design matrix, calculate dispersion   
+# set up group 
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.Rdata")
+parent.read.count.2 <- parent.read.count.2[,colSums(parent.read.count.2) > 1000000]  
+dim(parent.read.count.2) # 101040     24 
+parent.read.count.2.sample<-data.frame(file=colnames(parent.read.count.2),
+                             batch=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:digit:]])","\\5",colnames(parent.read.count.2))),  
+                             genotype=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:digit:]])","\\1",colnames(parent.read.count.2))),	
+                             tissue=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:digit:]])","\\3",colnames(parent.read.count.2))),	
+                             group=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:digit:]])","\\1\\3",colnames(parent.read.count.2)))
+)
+
+parent.read.count.2.sample
+ftable(parent.read.count.2.sample,row.vars="tissue",col.vars=c("batch","genotype"))
+
+# filter based on read count 
+parent.read.count.2.small <- parent.read.count.2[rowSums(parent.read.count.2 > 10) >= 3,]
+dim(parent.read.count.2.small) # 57925    24   
+# save(parent.read.count.2.small, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.small.Rdata")
+```
+
+# expression analysis using genome mapped reads 3) voom transformation for clustering analysis 
+```{r}
+# voom transformation 
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("DESeq2")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.small.Rdata")
+library("DESeq2")
+
+dds.parent.2 <- DESeqDataSetFromMatrix(countData = round(parent.read.count.2.small), colData = parent.read.count.2.sample, design = ~ batch + genotype*tissue)
+
+vsd.parent.2 <- varianceStabilizingTransformation(dds.parent.2)
+vstMat.parent.2 <- assay(vsd.parent.2)
+colnames(vstMat.parent.2) <- colnames(parent.read.count.2)
+# save(vstMat.parent.2, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.2.Rdata")
+```
+
+# expression analysis using genome mapped reads 4) MDS and hierachical clustering  
+```{r}
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.2.Rdata")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.small.Rdata")
+
+# normalize 
+dge.data.parent.2 <- DGEList(counts=parent.read.count.2.small, group=parent.read.count.2.sample$group)
+dge.data.parent.2 <- calcNormFactors(dge.data.parent.2, method = "TMM") 
+dge.data.parent.2$sample
+hist(dge.data.parent.2$samples$norm.factors)
+
+# MDS to check sample seperation, also using dengrogram.  
+mds.2 <- plotMDS(dge.data.parent.2, method = "bcv",labels = dge.data.parent.2$samples$group)
+
+x.2 <- as.data.frame(mds.2$x)
+y.2 <- as.data.frame(mds.2$y)
+
+distance_matrix.2 <- merge(x.2, y.2, by="row.names")
+
+distance_matrix.2$group <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique)(_)(1|2|3)","\\1\\3",distance_matrix.2$Row.names) 
+distance_matrix.2$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique)(_)(1|2|3)","\\1",distance_matrix.2$Row.names)
+distance_matrix.2$tissue <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique)(_)(1|2|3)","\\3",distance_matrix.2$Row.names)
+
+colnames(distance_matrix.2) <- c("lib","x","y","group","gt","tissue")
+head(distance_matrix.2)
+
+# making color MDS figure 
+p.mds.2 <- ggplot(data = distance_matrix.2)
+p.mds.2 <- p.mds.2 + geom_point(aes(x, y, color=factor(tissue)), size=3) 
+p.mds.2 <- p.mds.2 + labs(y = "BCV distance 2", x="BCV distance 1")
+p.mds.2 <- p.mds.2 + facet_grid(~gt)
+p.mds.2     
+
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/genome_mapped/MDS.png", width = 11, height = 8)
+
+# clustering to check sample seperation 
+library(ggdendro)
+
+hc.parent.2 <- hclust(dist(t(vstMat.parent.2)))
+
+ggdata.parent.2 <- dendro_data(as.dendrogram(hc.parent.2))
+ggdata.parent.2$labels$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique)(_)(1|2|3)","\\1",ggdata.parent.2$labels$label) 
+ggdata.parent.2$labels$tissue <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\3",ggdata.parent.2$labels$label)
+ggdata.parent.2$labels$group <- paste(ggdata.parent.2$labels$gt, ggdata.parent.2$labels$tissue, sep = "_")
+ggdata.parent.2$labels
+
+# start ggplot here 
+p.dengro.2 <- ggplot(data = segment(ggdata.parent.2))
+p.dendro.2 <- p.dengro.2 + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
+p.dendro.2 <- p.dendro.2 + geom_text(data = label(ggdata.parent.2), aes(x = x, y = y, label = label, hjust=0, color=group)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
+p.dendro.2
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/genome_mapped/clustering_new.png", width = 15, height = 8) 
+```
+
+# expression analysis using genome mapped reads 5) pairwise expression analysis 
+```{r}
+####
+# pairwise comparison using GLM model  
+# design matrix
+design.parent.2 <- model.matrix(~0+group, data = parent.read.count.2.sample)
+
+# w/o batch effect
+dge.data.parent.2 <- estimateGLMCommonDisp(dge.data.parent.2, design.parent.2,verbose = TRUE) # Disp = 0.27855 , BCV = 0.5278
+dge.data.parent.2 <- estimateGLMTrendedDisp(dge.data.parent.2,design.parent.2)
+dge.data.parent.2 <- estimateGLMTagwiseDisp(dge.data.parent.2,design.parent.2)
+plotBCV(dge.data.parent.2)
+
+## w/o batch effect
+fit.parent.2 <- glmFit(dge.data.parent.2, design.parent.2)
+
+lrt.young.2 <- glmLRT(fit.parent.2, contrast = c(0,0,0,1,0,0,0,-1))
+topTags(lrt.young.2)
+summary(de.young.2 <- decideTestsDGE(lrt.young.2, p=0.05))
+DEgene.young.2 <- topTags(lrt.young.2,n = Inf)$table[topTags(lrt.young.2,n = Inf)$table$FDR<0.05,]
+# -1  3319
+# 0  50820 
+# 1   3786
+
+lrt.flowering.2 <- glmLRT(fit.parent.2, contrast = c(0,1,0,0,0,-1,0,0))
+topTags(lrt.flowering.2)
+summary(de.flowering.2 <- decideTestsDGE(lrt.flowering.2, p=0.05))
+DEgene.flowering.2 <- topTags(lrt.flowering.2,n = Inf)$table[topTags(lrt.flowering.2,n = Inf)$table$FDR<0.05,]
+# -1  2180
+# 0  53340
+# 1   2405 
+
+lrt.early.silique.2 <- glmLRT(fit.parent.2, contrast = c(1,0,0,0,-1,0,0,0))
+topTags(lrt.early.silique.2)
+summary(de.early.silique.2 <- decideTestsDGE(lrt.early.silique.2, p=0.05))
+DEgene.early.silique <- topTags(lrt.early.silique,n = Inf)$table[topTags(lrt.early.silique,n = Inf)$table$FDR<0.05,]
+# -1  2510
+# 0  52799
+# 1   2616
+
+lrt.late.silique.2 <- glmLRT(fit.parent.2, contrast = c(0,0,1,0,0,0,-1,0))
+topTags(lrt.late.silique.2)
+summary(de.late.silique.2 <- decideTestsDGE(lrt.late.silique.2, p=0.05))
+DEgene.late.silique.2 <- topTags(lrt.late.silique.2,n = Inf)$table[topTags(lrt.late.silique.2,n = Inf)$table$FDR<0.05,]
+# -1  2865
+# 0  52077
+# 1   2983 
+
+### barplot for DEGs number 
+### reformat for ggplot barplot 
+DEGs_number_between_gt.parent.2 <- data.frame(young = as.data.frame(summary(de.young.2 <- decideTestsDGE(lrt.young.2, p=0.05)))$Freq,
+                                     flowering = as.data.frame(summary(de.flowering.2 <- decideTestsDGE(lrt.flowering.2, p=0.05)))$Freq, 
+                                     early.silique = as.data.frame(summary(de.early.silique.2 <- decideTestsDGE(lrt.early.silique.2, p=0.05)))$Freq,
+                                     late.silique = as.data.frame(summary(de.late.silique.2 <- decideTestsDGE(lrt.late.silique.2, p=0.05)))$Freq)
+
+rownames(DEGs_number_between_gt.parent.2) <- c("down", "no", "up")
+DEGs_number_between_gt.parent.2 <- DEGs_number_between_gt.parent.2[c("down", "up"),]
+DEGs_number_between_gt.parent.2
+
+library(reshape2)
+DEGs_number_between_gt.melt.parent.2 <- melt(DEGs_number_between_gt.parent.2)
+DEGs_number_between_gt.melt.parent.2$DE <- rep(c("down", "up"), 4)
+colnames(DEGs_number_between_gt.melt.parent.2) <- c("tissue", "number", "DE")
+DEGs_number_between_gt.melt.parent.2
+
+# reorder: up 1st down 2nd 
+DEGs_number_between_gt.melt.parent.2$DE <- factor(DEGs_number_between_gt.melt.parent.2$DE, levels = c("up", "down"))
+
+DEGs_number_between_gt.melt.parent.2 <- DEGs_number_between_gt.melt.parent.2[order(DEGs_number_between_gt.melt.parent.2$DE),]
+DEGs_number_between_gt.melt.parent.2
+
+### making ggplot for DEGs 
+p.DEGs_number_between_gt.parent.2 <- ggplot(data = DEGs_number_between_gt.melt.parent.2)
+p.DEGs_number_between_gt.parent.2 <- p.DEGs_number_between_gt.parent.2 + geom_bar(mapping = aes(fill=DE, x = factor(DE), y = number), stat = "identity")
+p.DEGs_number_between_gt.parent.2 <- p.DEGs_number_between_gt.parent.2 + facet_grid(~tissue)
+p.DEGs_number_between_gt.parent.2 <- p.DEGs_number_between_gt.parent.2 + labs(y = "number of differentially expressed genes", x = "")
+
+p.DEGs_number_between_gt.parent
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_gt.parent.png", width = 11, height = 8)
+
+## between developmental stages 
+# Da-Ae 
+lrt.young.vs.bolting.ae <- glmLRT(fit.parent, contrast = c(1,0,0,0,-1,0,0,0,0,0))
+topTags(lrt.young.vs.bolting.ae)
+summary(de.young.vs.bolting.ae <- decideTestsDGE(lrt.young.vs.bolting.ae, p=0.05))
+DEgene.young.vs.bolting.ae <- topTags(lrt.young.vs.bolting.ae,n = Inf)$table[topTags(lrt.young.vs.bolting.ae,n = Inf)$table$FDR<0.05,]
+# -1   442
+# 0  59872
+# 1    661
+
+lrt.bolting.vs.flowering.ae <- glmLRT(fit.parent, contrast = c(-1,0,1,0,0,0,0,0,0,0))
+topTags(lrt.bolting.vs.flowering.ae)
+summary(de.bolting.vs.flowering.ae <- decideTestsDGE(lrt.bolting.vs.flowering.ae, p=0.05))
+DEgene.bolting.vs.flowering.ae <- topTags(lrt.bolting.vs.flowering.ae,n = Inf)$table[topTags(lrt.bolting.vs.flowering.ae,n = Inf)$table$FDR<0.05,]
+# -1   736
+# 0  57389
+# 1   2850
+
+lrt.flowering.vs.early.silique.ae <- glmLRT(fit.parent, contrast = c(0,1,-1,0,0,0,0,0,0,0))
+topTags(lrt.flowering.vs.early.silique.ae)
+summary(de.flowering.vs.early.silique.ae <- decideTestsDGE(lrt.flowering.vs.early.silique.ae, p=0.05))
+DEgene.flowering.vs.early.silique.ae <- topTags(lrt.flowering.vs.early.silique.ae,n = Inf)$table[topTags(lrt.flowering.vs.early.silique.ae,n = Inf)$table$FDR<0.05,]
+# -1  3811
+# 0  56054
+# 1   1110
+
+lrt.early.vs.late.silique.ae <- glmLRT(fit.parent, contrast = c(0,-1,0,1,0,0,0,0,0,0))
+topTags(lrt.early.vs.late.silique.ae)
+summary(de.early.vs.late.silique.ae <- decideTestsDGE(lrt.early.vs.late.silique.ae, p=0.05))
+DEgene.early.vs.late.silique.ae <- topTags(lrt.early.vs.late.silique.ae,n = Inf)$table[topTags(lrt.early.vs.late.silique.ae,n = Inf)$table$FDR<0.05,]
+# -1   285
+# 0  60430
+# 1    260
+
+### ggplot 
+### reformat for ggplot barplot 
+DEGs_number_between_tissue.ae <- data.frame("bolting-vs-young" = as.data.frame(summary(de.young.vs.bolting.ae <- decideTestsDGE(lrt.young.vs.bolting.ae, p=0.05)))$Freq, 
+                                            "flowering-vs-bolting" = as.data.frame(summary(de.bolting.vs.flowering.ae <- decideTestsDGE(lrt.bolting.vs.flowering.ae, p=0.05)))$Freq,
+                                     "early.slique-vs-flowering"= as.data.frame(summary(de.flowering.vs.early.silique.ae <- decideTestsDGE(lrt.flowering.vs.early.silique.ae, p=0.05)))$Freq, 
+                                     "late.silique-vs-early.silique" = as.data.frame(summary(de.early.vs.late.silique.ae <- decideTestsDGE(lrt.early.vs.late.silique.ae, p=0.05)))$Freq)
+
+rownames(DEGs_number_between_tissue.ae) <- c("down", "no", "up")
+DEGs_number_between_tissue.ae <- DEGs_number_between_tissue.ae[c("down", "up"),]
+DEGs_number_between_tissue.ae
+
+DEGs_number_between_tissue.ae.melt.parent <- melt(DEGs_number_between_tissue.ae)
+DEGs_number_between_tissue.ae.melt.parent$DE <- rep(c("down", "up"), 4)
+colnames(DEGs_number_between_tissue.ae.melt.parent) <- c("tissue", "number", "DE")
+DEGs_number_between_tissue.ae.melt.parent
+
+# reorder: up 1st down 2nd 
+DEGs_number_between_tissue.ae.melt.parent$DE <- factor(DEGs_number_between_tissue.ae.melt.parent$DE, levels = c("up", "down"))
+
+DEGs_number_between_tissue.ae.melt.parent <- DEGs_number_between_tissue.ae.melt.parent[order(DEGs_number_between_tissue.ae.melt.parent$DE),]
+DEGs_number_between_tissue.ae.melt.parent
+
+### making ggplot for DEGs 
+p.DEGs_number_between_tissue.ae.parent <- ggplot(data = DEGs_number_between_tissue.ae.melt.parent)
+p.DEGs_number_between_tissue.ae.parent <- p.DEGs_number_between_tissue.ae.parent + geom_bar(mapping = aes(fill=DE, x = factor(DE), y = number), stat = "identity")
+p.DEGs_number_between_tissue.ae.parent <- p.DEGs_number_between_tissue.ae.parent + facet_grid(~tissue)
+p.DEGs_number_between_tissue.ae.parent <- p.DEGs_number_between_tissue.ae.parent + labs(y = "number of differentially expressed genes", x = "")
+
+p.DEGs_number_between_tissue.ae.parent
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_tissue.ae.parent.png", width = 11, height = 8)
+
+### Da-Ol-1 
+lrt.young.vs.bolting.ol <- glmLRT(fit.parent, contrast = c(0,0,0,0,0,1,0,0,0,-1))
+topTags(lrt.young.vs.bolting.ol)
+summary(de.young.vs.bolting.ol <- decideTestsDGE(lrt.young.vs.bolting.ol, p=0.05))
+DEgene.young.vs.bolting.ol <- topTags(lrt.young.vs.bolting.ol,n = Inf)$table[topTags(lrt.young.vs.bolting.ol,n = Inf)$table$FDR<0.05,]
+# -1  2683
+# 0  54969
+# 1   3323
+
+lrt.bolting.vs.flowering.ol <- glmLRT(fit.parent, contrast = c(0,0,0,0,0,-1,0,1,0,0))
+topTags(lrt.bolting.vs.flowering.ol)
+summary(de.bolting.vs.flowering.ol <- decideTestsDGE(lrt.bolting.vs.flowering.ol, p=0.05))
+DEgene.bolting.vs.flowering.ol <- topTags(lrt.bolting.vs.flowering.ol,n = Inf)$table[topTags(lrt.bolting.vs.flowering.ol,n = Inf)$table$FDR<0.05,]
+# -1   914
+# 0  58313
+# 1   1748
+
+lrt.flowering.vs.early.silique.ol <- glmLRT(fit.parent, contrast = c(0,0,0,0,0,0,1,-1,0,0))
+topTags(lrt.flowering.vs.early.silique.ol)
+summary(de.flowering.vs.early.silique.ol <- decideTestsDGE(lrt.flowering.vs.early.silique.ol, p=0.05))
+DEgene.flowering.vs.early.silique.ol <- topTags(lrt.flowering.vs.early.silique.ol,n = Inf)$table[topTags(lrt.flowering.vs.early.silique.ol,n = Inf)$table$FDR<0.05,]
+# -1  4845
+# 0  54087
+# 1   2043
+
+lrt.early.vs.late.silique.ol <- glmLRT(fit.parent, contrast = c(0,0,0,0,0,0,-1,0,1,0))
+topTags(lrt.early.vs.late.silique.ol)
+summary(de.early.vs.late.silique.ol <- decideTestsDGE(lrt.early.vs.late.silique.ol, p=0.05))
+DEgene.early.vs.late.silique.ol <- topTags(lrt.early.vs.late.silique.ol,n = Inf)$table[topTags(lrt.early.vs.late.silique.ol,n = Inf)$table$FDR<0.05,]
+# -1  1042
+# 0  58199
+# 1   1734
+
+### ggplot 
+### reformat for ggplot barplot 
+DEGs_number_between_tissue.ol <- data.frame("bolting-vs-young" = as.data.frame(summary(de.young.vs.bolting.ol <- decideTestsDGE(lrt.young.vs.bolting.ol, p=0.05)))$Freq, 
+                                            "flowering-vs-bolting" = as.data.frame(summary(de.bolting.vs.flowering.ol <- decideTestsDGE(lrt.bolting.vs.flowering.ol, p=0.05)))$Freq,
+                                     "early.slique-vs-flowering"= as.data.frame(summary(de.flowering.vs.early.silique.ol <- decideTestsDGE(lrt.flowering.vs.early.silique.ol, p=0.05)))$Freq, 
+                                     "late.silique-vs-early.silique" = as.data.frame(summary(de.early.vs.late.silique.ol <- decideTestsDGE(lrt.early.vs.late.silique.ol, p=0.05)))$Freq)
+
+rownames(DEGs_number_between_tissue.ol) <- c("down", "no", "up")
+DEGs_number_between_tissue.ol <- DEGs_number_between_tissue.ol[c("down", "up"),]
+DEGs_number_between_tissue.ol
+
+DEGs_number_between_tissue.ol.melt.parent <- melt(DEGs_number_between_tissue.ol)
+DEGs_number_between_tissue.ol.melt.parent$DE <- rep(c("down", "up"), 4)
+colnames(DEGs_number_between_tissue.ol.melt.parent) <- c("tissue", "number", "DE")
+DEGs_number_between_tissue.ol.melt.parent
+
+# reorder: up 1st down 2nd 
+DEGs_number_between_tissue.ol.melt.parent$DE <- factor(DEGs_number_between_tissue.ol.melt.parent$DE, levels = c("up", "down"))
+
+DEGs_number_between_tissue.ol.melt.parent <- DEGs_number_between_tissue.ol.melt.parent[order(DEGs_number_between_tissue.ol.melt.parent$DE),]
+DEGs_number_between_tissue.ol.melt.parent
+
+### making ggplot for DEGs 
+p.DEGs_number_between_tissue.ol.parent <- ggplot(data = DEGs_number_between_tissue.ol.melt.parent)
+p.DEGs_number_between_tissue.ol.parent <- p.DEGs_number_between_tissue.ol.parent + geom_bar(mapping = aes(fill=DE, x = factor(DE), y = number), stat = "identity")
+p.DEGs_number_between_tissue.ol.parent <- p.DEGs_number_between_tissue.ol.parent + facet_grid(~tissue)
+p.DEGs_number_between_tissue.ol.parent <- p.DEGs_number_between_tissue.ol.parent + labs(y = "number of differentially expressed genes", x = "")
+
+p.DEGs_number_between_tissue.ol.parent
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_tissue.ol.parent.png", width = 11, height = 8) 
 
 ```
+
+
+
+
 
 
 
