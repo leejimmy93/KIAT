@@ -178,8 +178,12 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # samtools rmdup -s Aligned.sortedByCoord.out.bam Ae_rmdup.bam
 # samtools rmdup -s Aligned.sortedByCoord.out.bam Ol_rmdup.bam 
 
-### add read group 
+### index bam file 
+# samtools index Ae_rmdup.bam
+# samtools index Ol_rmdup.bam
 
+### add read group & SNP calling ... 
+# bamaddrg -b Ae_paired.star.trim.dir/Ae_rmdup.bam -s Ae -r Ae -b Ol_paired.star.trim.dir/Ol_rmdup.bam -s Ol -r Ol | freebayes --fasta-reference /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa --stdin --ploidy 4 --min-alternate-count 4 --min-alternate-fraction 0.4 > Ae_Ol.vcf
 
 
 
@@ -2035,7 +2039,7 @@ p.DEGs_number_between_gt.parent.2 <- p.DEGs_number_between_gt.parent.2 + geom_ba
 p.DEGs_number_between_gt.parent.2 <- p.DEGs_number_between_gt.parent.2 + facet_grid(~tissue)
 p.DEGs_number_between_gt.parent.2 <- p.DEGs_number_between_gt.parent.2 + labs(y = "number of differentially expressed genes", x = "")
 
-p.DEGs_number_between_gt.parent
+p.DEGs_number_between_gt.parent.2
 # ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/DEGs_number_between_gt.parent.png", width = 11, height = 8)
 
 ## between developmental stages 
