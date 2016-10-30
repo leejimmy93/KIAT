@@ -183,7 +183,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # samtools index Ol_rmdup.bam
 
 ### add read group & SNP calling ... 
-# bamaddrg -b Ae_paired.star.trim.dir/Ae_rmdup.bam -s Ae -r Ae -b Ol_paired.star.trim.dir/Ol_rmdup.bam -s Ol -r Ol | freebayes --fasta-reference /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa --stdin --ploidy 4 --min-alternate-count 4 --min-alternate-fraction 0.4 > Ae_Ol.vcf
+# bamaddrg -b Ae_paired.star.trim.dir/Ae_rmdup.bam -s Ae -r Ae -b Ol_paired.star.trim.dir/Ol_rmdup.bam -s Ol -r Ol | freebayes_v0.9.21-7-g7dd41db --fasta-reference /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa --stdin --ploidy 4 --min-alternate-count 4 --min-alternate-fraction 0.4 --dont-left-align-indels > Ae_Ol.vcf 
 
 
 
@@ -200,7 +200,10 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # cat All1_Yeong2_160621_paired_2.fq All1_Yeong3_160621_paired_2.fq All1_Gae_2_paired_2.fq All1_Gae_3_paired_2.fq All1_Cho_2_paired_2.fq All1_Cho_3_paired_2.fq All1_Hu_2_paired_2.fq All1_Hu_3_paired_2.fq 1_paired_2.fq 2_paired_2.fq 3_paired_2.fq 4_paired_2.fq > Ol_no_bolting_2.fq
 
-## remapping the new data using STAR ... ing 
+## STAR mapping 
+## remove PCR duplicate 
+# samtools rmdup -s Aligned.sortedByCoord.out.bam Ae_no_bolting_rmdup.bam (screen -r 35910.ttys009.coloma)
+# samtools rmdup -s Aligned.sortedByCoord.out.bam Ol_no_bolting_rmdup.bam (screen -r 35901.ttys009.coloma)
 
 
 
@@ -2044,13 +2047,14 @@ p.DEGs_number_between_gt.parent.2
 
 ## between developmental stages 
 # Da-Ae 
-lrt.young.vs.bolting.ae <- glmLRT(fit.parent, contrast = c(1,0,0,0,-1,0,0,0,0,0))
-topTags(lrt.young.vs.bolting.ae)
-summary(de.young.vs.bolting.ae <- decideTestsDGE(lrt.young.vs.bolting.ae, p=0.05))
-DEgene.young.vs.bolting.ae <- topTags(lrt.young.vs.bolting.ae,n = Inf)$table[topTags(lrt.young.vs.bolting.ae,n = Inf)$table$FDR<0.05,]
+lrt.young.vs.flowering.ae.2 <- glmLRT(fit.parent.2, contrast = c(0,1,0,-1,0,0,0,0))
+topTags(lrt.young.vs.flowering.ae.2)
+summary(de.young.vs.flowering.ae.2 <- decideTestsDGE(lrt.young.vs.flowering.ae.2, p=0.05))
+DEgene.young.vs.flowering.ae.2 <- topTags(lrt.young.vs.flowering.ae.2,n = Inf)$table[topTags(lrt.young.vs.flowering.ae.2,n = Inf)$table$FDR<0.05,]
 # -1   442
 # 0  59872
 # 1    661
+############ stopped here... 
 
 lrt.bolting.vs.flowering.ae <- glmLRT(fit.parent, contrast = c(-1,0,1,0,0,0,0,0,0,0))
 topTags(lrt.bolting.vs.flowering.ae)
