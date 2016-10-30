@@ -202,10 +202,12 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 ## STAR mapping 
 ## remove PCR duplicate 
-# samtools rmdup -s Aligned.sortedByCoord.out.bam Ae_no_bolting_rmdup.bam (screen -r 35910.ttys009.coloma)
-# samtools rmdup -s Aligned.sortedByCoord.out.bam Ol_no_bolting_rmdup.bam (screen -r 35901.ttys009.coloma)
+# samtools rmdup -s Aligned.sortedByCoord.out.bam Ae_no_bolting_rmdup.bam 
+# samtools rmdup -s Aligned.sortedByCoord.out.bam Ol_no_bolting_rmdup.bam 
 
-
+### index bam file 
+# samtools index Ae_no_bolting_rmdup.bam (screen -r 35910.ttys009.coloma) 
+# samtools index Ol_no_bolting_rmdup.bam (screen -r 35901.ttys009.coloma) 
 
 
 
