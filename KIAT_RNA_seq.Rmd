@@ -148,6 +148,18 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 ########### running cufflinks:
 # cufflinks -u -p 10 -o cufflink_output --max-bundle-frags 10000000 --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.sortedByCoord.out.bam  
+
+####### cufflinks takes forever to run, why? 
+# by checking the progress of cufflinks, I found that it took 15 days to get one transcript.gtf file for one lib. and mostly the progress is stucked at the last 5%. Why? Also at the begnining of the command, it says "segementation fault, core dumped", but still makes progress. previously, I had cufflinks running on one core and only takes 3 days to finish 11 libs. And I was using exactly the same command. Why??? 
+
+# test on one lib: 2_paired.star.trim.dir 
+# change the core number to 6 because John is using 8, if I still ask for 10, it might cause problem. Also add 
+# && 
+# echo "success"
+# to the end of the command to make sure I get it run correctly. now it is running for sample 2, waiting for the result, fingers crossed!!! 
+
+
+
 ```
 
 # SNP calling  
