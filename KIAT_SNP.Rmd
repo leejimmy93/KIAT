@@ -1,0 +1,63 @@
+---
+title: "KIAT_SNP"
+author: "Ruijuan Li"
+date: "11/2/2016"
+output: html_document
+---
+
+# set wkdir & reformat data 
+```{r}
+setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/")
+vcf.Ae.Ol.no.bolting <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_no_bolting.vcf",as.is=T,na.strings = ".")
+head(vcf.Ae.Ol.no.bolting)
+
+vcf.header.Ae.Ol <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_no_bolting.vcf",intern = TRUE) 
+head(vcf.header.Ae.Ol)
+vcf.header.Ae.Ol <- sub("#","",vcf.header.Ae.Ol) #get rid of the pound sign
+vcf.header.Ae.Ol
+
+vcf.header.Ae.Ol <- unlist(strsplit(vcf.header.Ae.Ol,split="\t"))
+colnames(vcf.Ae.Ol.no.bolting) <- vcf.header.Ae.Ol
+head(vcf.Ae.Ol.no.bolting)
+
+system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_no_bolting.vcf")
+system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_no_bolting.vcf") 
+
+# Before splitting add NAs to blank cells
+
+vcf.Ae.Ol.no.bolting$Ae[is.na(vcf.Ae.Ol.no.bolting$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
+
+Ae.tmp <- matrix(
+  unlist(strsplit(vcf.Ae.Ol.no.bolting$Ae,split = ":")),
+  nrow=nrow(vcf.Ae.Ol.no.bolting),  
+  byrow=TRUE
+  )
+head(Ae.tmp)
+Ae.tmp
+
+
+
+
+
+```
+
+# explore data to make a summary of the SNP data 
+```{r}
+
+```
+
+# filter SNPs 
+```{r}
+
+```
+
+# SNP distribution on the chromosome 
+```{r}
+
+```
+
+# others 
+```{r}
+
+```
+
