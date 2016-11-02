@@ -158,6 +158,10 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # echo "success"
 # to the end of the command to make sure I get it run correctly. now it is running for sample 2, waiting for the result, fingers crossed!!! 
 # since cufflinks can only use one core during some step, the best practice should be make make it several cufflinks run in parallel, each using one core? 
+# this still runs very slow.... 
+
+### after talking to Richard group, we decide to stop Trinity and run cufflinks only on 14 cores to see whether this will speed up assembly. 
+# library 
 
 
 
