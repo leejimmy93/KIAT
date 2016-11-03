@@ -5,7 +5,7 @@ date: "11/2/2016"
 output: html_document
 ---
 
-# set wkdir & reformat data 
+# set wd & reformat data 
 ```{r}
 setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/")
 vcf.Ae.Ol.no.bolting <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_no_bolting.vcf",as.is=T,na.strings = ".")
@@ -25,7 +25,7 @@ system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data
 
 # Before splitting add NAs to blank cells
 
-vcf.Ae.Ol.no.bolting$Ae[is.na(vcf.Ae.Ol.no.bolting$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
+vcf.Ae.Ol.no.bolting$Ae[is.na(vcf.Ae.Ol.no.bolting$Ae)] <- "NA:NA:NA:NA:NA:NA"
 
 Ae.tmp <- matrix(
   unlist(strsplit(vcf.Ae.Ol.no.bolting$Ae,split = ":")),
@@ -35,25 +35,103 @@ Ae.tmp <- matrix(
 head(Ae.tmp)
 Ae.tmp
 
+colnames(Ae.tmp) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual"),sep="_")
 
+vcf.Ae.Ol.no.bolting$Ol[is.na(vcf.Ae.Ol.no.bolting$Ol)] <- "NA:NA:NA:NA:NA:NA"
 
+Ol.tmp <- matrix(
+  unlist(strsplit(vcf.Ae.Ol.no.bolting$Ol,split = ":")),
+  nrow=nrow(vcf.Ae.Ol.no.bolting),
+  byrow=TRUE
+  )
+head(Ol.tmp)
+colnames(Ol.tmp) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual"),sep="_")
 
+vcf.Ae.Ol.no.bolting <- cbind(vcf.Ae.Ol.no.bolting,Ae.tmp,Ol.tmp,stringsAsFactors=FALSE)
+summary(vcf.Ae.Ol.no.bolting)
+head(vcf.Ae.Ol.no.bolting)
 
+vcf.Ae.Ol.no.bolting[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual",
+            "Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")] <- 
+  apply(vcf.Ae.Ol.no.bolting[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual",
+            "Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")],
+        2,
+        as.numeric
+        )
+summary(vcf.Ae.Ol.no.bolting)
+head(vcf.Ae.Ol.no.bolting)
+dim(vcf.Ae.Ol.no.bolting) # 1079112      23 
 ```
 
 # explore data to make a summary of the SNP data 
 ```{r}
+### 1) filter based on QUAl score 
+
+# make a histogram of QUAL scores 
+hist(vcf.Ae.Ol.no.bolting$QUAL)
+
+length(vcf.Ae.Ol.no.bolting$QUAL) # a total of 1079112 SNPs 
+sum(vcf.Ae.Ol.no.bolting$QUAL>20) / length(vcf.Ae.Ol.no.bolting$QUAL) # 92% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
+
+hist(vcf.Ae.Ol.no.bolting[vcf.Ae.Ol.no.bolting$QUAL<20,]$QUAL)
+hist(vcf.Ae.Ol.no.bolting[vcf.Ae.Ol.no.bolting$QUAL<1,]$QUAL)
+
+# subset the data to keep positions where the quality score is 40 or higher 
+vcf.Ae.Ol.no.bolting.HQ <- vcf.Ae.Ol.no.bolting[vcf.Ae.Ol.no.bolting$QUAL>40,]
+dim(vcf.Ae.Ol.no.bolting.HQ) # 977114     23 
+sum(vcf.Ae.Ol.no.bolting$QUAL>40) / length(vcf.Ae.Ol.no.bolting$QUAL) # 90.5% of SNPs were retained with QUAL > 40 
+
+# count the number 
+table(vcf.Ae.Ol.no.bolting.HQ$Ae_gt)
+table(vcf.Ae.Ol.no.bolting.HQ$Ol_gt)
+
+tmp <- ftable(vcf.Ae.Ol.no.bolting.HQ[,c("Ae_gt","Ol_gt")])
+write.csv(tmp, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/gt_Ae_Ol.csv")
+
+# which SNPs would be most useful for a downstream QTL analysis between Ae & Ol? 
+# SNPs between Ae & ref
+sum(vcf.Ae.Ol.no.bolting.HQ$Ae_gt=="1/1/1/1") # 438138 
+# SNPs between Ol & ref 
+sum(vcf.Ae.Ol.no.bolting.HQ$Ol_gt=="1/1/1/1") # 427905 
+# SNPs between Ae & Ol 
+sum(vcf.Ae.Ol.no.bolting.HQ$Ae_gt=="1/1/1/1" & vcf.Ae.Ol.no.bolting.HQ$Ol_gt=="0/0/0/0") +  sum(vcf.Ae.Ol.no.bolting.HQ$Ae_gt=="0/0/0/0" & vcf.Ae.Ol.no.bolting.HQ$Ol_gt=="1/1/1/1") # 275111 SNPs between Ae & Ol 
+
+275111/length(vcf.Ae.Ol.no.bolting.HQ$CHROM) # 28% of the total SNPs 
+# subset SNPs between Ae & Ol 
+vcf.Ae.Ol.no.bolting.HQ.new <- vcf.Ae.Ol.no.bolting.HQ[((vcf.Ae.Ol.no.bolting.HQ$Ae_gt=="1/1/1/1" & vcf.Ae.Ol.no.bolting.HQ$Ol_gt=="0/0/0/0") | (vcf.Ae.Ol.no.bolting.HQ$Ae_gt=="0/0/0/0" & vcf.Ae.Ol.no.bolting.HQ$Ol_gt=="1/1/1/1")),]
+
+dim(vcf.Ae.Ol.no.bolting.HQ.new) # 275111 23 
+
+# plot the position along the chromosome of each SNP, read depth 
+head(vcf.Ae.Ol.no.bolting.HQ.new) 
+
+# get main chromosome and random chromsome seperately 
+vcf.Ae.Ol.no.bolting.HQ.new.main <- vcf.Ae.Ol.no.bolting.HQ.new[grep("random", vcf.Ae.Ol.no.bolting.HQ.new$CHROM, invert = T),]
+dim(vcf.Ae.Ol.no.bolting.HQ.new.main) # 235237     23 
+
+vcf.Ae.Ol.no.bolting.HQ.new.random <- vcf.Ae.Ol.no.bolting.HQ.new[grep("random", vcf.Ae.Ol.no.bolting.HQ.new$CHROM),] 
+dim(vcf.Ae.Ol.no.bolting.HQ.new.random) # 39874    23 
+
+## make plot for main & random chromosome seperately (distribution of SNPs per Mb)
+library(ggplot2)
+pl.SNP <- ggplot(data = vcf.Ae.Ol.no.bolting.HQ.new.main)
+pl.SNP <- pl.SNP + geom_histogram(aes(x=POS), binwidth = 1000000) 
+pl.SNP <- pl.SNP + facet_wrap(~ CHROM, ncol = 1)
+pl.SNP
+
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.png", width = 11, height = 22)
+
+pl.SNP.random <- ggplot(data = vcf.Ae.Ol.no.bolting.HQ.new.random)
+pl.SNP.random <- pl.SNP.random + geom_histogram(aes(x=POS), binwidth = 1000000) 
+pl.SNP.random <- pl.SNP.random + facet_wrap(~ CHROM, ncol = 1)
+pl.SNP.random
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.random.png", width = 11, height = 22)
 
 ```
 
-# filter SNPs 
+# additonal filter  
 ```{r}
-
-```
-
-# SNP distribution on the chromosome 
-```{r}
-
+# filter based on read depth (DP)? alternate allele observation count (AO)? QA (sum of quality of the alternate observation count)   
 ```
 
 # others 
