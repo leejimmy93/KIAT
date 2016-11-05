@@ -161,7 +161,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # this still runs very slow.... 
 
 ### after talking to Richard group, we decide to stop Trinity and run cufflinks only on 14 cores to see whether this will speed up assembly. 
-# library 
+# library, now still runs very slow, now I decide not to use --max-bundle-frags option to see whether this can speed up the assembly. 
 
 
 
