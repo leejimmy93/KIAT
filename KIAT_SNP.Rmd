@@ -166,7 +166,7 @@ ggsave(pl.SNP.main.1, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_ca
 
 ########### plot the position along the chromosome of each SNP, read depth 
 head(Ae_Ol_after_filter) 
-
+write.table(Ae_Ol_after_filter, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_after_filter.vcf")
 # get main chromosome and random chromsome seperately 
 Ae_Ol_after_filter.main <- Ae_Ol_after_filter[grep("random", Ae_Ol_after_filter$CHROM, invert = T),]
 dim(Ae_Ol_after_filter.main) # 235214   23 
@@ -204,6 +204,20 @@ dim(Ae_Ol_after_filter.random) # 39869    23
 
 # SNP annotation 
 ```{r}
+vcf.Ae.Ol.no.bolting.ann <- read.table("~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf",as.is=T,na.strings = ".")
+head(vcf.Ae.Ol.no.bolting.ann) 
+
+vcf.header.Ae.Ol.ann <- system("grep '#C' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf",intern = TRUE) 
+head(vcf.header.Ae.Ol.ann)
+vcf.header.Ae.Ol.ann <- sub("#","",vcf.header.Ae.Ol.ann) #get rid of the pound sign
+vcf.header.Ae.Ol.ann
+
+vcf.header.Ae.Ol.ann <- unlist(strsplit(vcf.header.Ae.Ol.ann,split="\t"))
+colnames(vcf.Ae.Ol.no.bolting.ann) <- vcf.header.Ae.Ol.ann
+head(vcf.Ae.Ol.no.bolting.ann)
+
+system("grep '##INFO' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
+system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf") 
 
 ```
 

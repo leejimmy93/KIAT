@@ -244,6 +244,10 @@ colnames(parent.read.count.one) <- sub("_2.fq","",colnames(parent.read.count.one
 # sample description  
 sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/parent_summary_corrected.csv")
 dim(sample_des) # 27 22
+
+hist(sample_des$TotalReads/2, xlab = "number of reads", ylab = "number of library", main = "reads number distribution", col = 4, font=1, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5, lwd=2) 
+?hist
+
 sorted_sample_des <- sample_des[order(sample_des$SampleID),]
 
 sorted_sample_des[,4:7]
@@ -260,6 +264,7 @@ head(parent.read.count.one)
 ```{r}
 parent.read.count.normalized <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/read.count.normalized.tsv", header = T, check.names = F)
 rownames(parent.read.count.normalized) <- parent.read.count.normalized[,1]
+
 parent.read.count.normalized <- parent.read.count.normalized[,-1]
 
 # format data 
@@ -1541,7 +1546,7 @@ library(ggplot2)
 flowering.read.count.all <- flowering.read.count.all[,colSums(flowering.read.count.all) > 1000000]  
 dim(flowering.read.count.all) # 101040     6 
 flowering.read.count.all.sample <-data.frame(file=colnames(flowering.read.count.all),
-                             batch=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\5",colnames(flowering.read.count.all))),  
+                             batch=factor(("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\5",colnames(flowering.read.count.all))),  
                              genotype=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1",colnames(flowering.read.count.all))),	
                              stage=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\3",colnames(flowering.read.count.all))),	
                              group=factor(gsub("([[:print:]]+)(_)([[:print:]]+)(_)(1|2|3)","\\1\\3",colnames(flowering.read.count.all)))
@@ -2301,6 +2306,64 @@ expression.pattern.Bn.parent(tail(tmp3))
 
 ``` 
 
+# for lab meeting
+```{r}
+sample_summary <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/parent_summary_corrected 2.csv")
+head(sample_summary)
+sample_summary$mapping_rate_no_trimming_numeric <- as.numeric(sub("%", "", sample_summary$mapping_rate_no_trimming))/100
+sample_summary$mapping_rate_no_trimming_numeric
+
+sample_summary$mapped_reads <- as.numeric(sample_summary$TotalReads_paired) * as.numeric(sample_summary$mapping_rate_no_trimming_numeric)
+sample_summary$mapped_reads
+sample_summary$mapped_reads_2 <- sample_summary$mapped_reads/2
+sample_summary$TotalReads_paired
+head(sample_summary)
+sample_summary$TotalReads <- sample_summary$TotalReads_paired/2
+sample_summary$mapping_rate_no_trimming_numeric_2 <- sample_summary$mapping_rate_no_trimming_numeric/2
+
+# reformat 
+sample_summary_1 <- data.frame(row.names = c(1:54),
+                               lib_ID = rep((sample_summary$SampleID), 2), 
+                               reads_number = c(sample_summary$TotalReads-sample_summary$mapped_reads_2, sample_summary$mapped_reads_2), 
+                               type = c(rep("unmapped", 27), rep("mapped", 27)))
+sample_summary_1
+
+pl.mapping.rate <- ggplot(data = sample_summary_1)
+pl.mapping.rate <- pl.mapping.rate + geom_bar(aes(x=lib_ID, y = reads_number, fill=type), stat = "identity")
+pl.mapping.rate <- pl.mapping.rate + labs(list(title = "", x = " ", y = "reads number")) + theme(axis.text.x=element_blank())
+
+pl.mapping.rate
+ggsave(filename = "~/Desktop/mapping_rate.png", width = 10, height = 7)
+
+sample_summary$trimmed_off_perc <- 1-as.numeric(sub("%", "", sample_summary$HQR_percentage))/100
+sample_summary$HQR_percentage_2 <- as.numeric(sub("%", "", sample_summary$HQR_percentage))/100
+sample_summary$HQR_percentage_2
+sample_summary$trimmed_off <- sample_summary$TotalReads*sample_summary$trimmed_off_perc
+sample_summary$HQR_reads <- sample_summary$TotalReads*sample_summary$HQR_percentage_2
+sample_summary$HQR_reads
+sample_summary$mapped_after_trimming <- sample_summary$HQR_reads*sample_summary$HQR_percentage_2
+sample_summary$unmapped_after_trimming <- sample_summary$HQR_reads-sample_summary$mapped_after_trimming  
+
+sample_summary_2 <- data.frame(row.names = c(1:81), 
+                               lib_ID = rep((sample_summary$SampleID), 3),
+                               reads_number = c(sample_summary$unmapped_after_trimming, sample_summary$mapped_after_trimming, sample_summary$trimmed_off), 
+                               type = c(rep("unmapped", 27), rep("mapped", 27), rep("trimmed_off", 27))
+                               )
+
+sample_summary_2$type <- factor(sample_summary_2$type, levels = c("mapped", "unmapped", "trimmed_off"))
+ 
+
+pl.mapping.rate.2 <- ggplot(data = sample_summary_2)
+pl.mapping.rate.2 <- pl.mapping.rate.2 + geom_bar(aes(x=lib_ID, y = reads_number, fill=type), stat = "identity")
+pl.mapping.rate.2 <- pl.mapping.rate.2 + labs(list(title = "", x = " ", y = "reads number")) + theme(axis.text.x=element_blank())
+
+pl.mapping.rate.2
+ggsave(filename = "~/Desktop/mapping_rate.2.png", width = 10, height = 7)
+
+
+
+
+```
 
 
 
