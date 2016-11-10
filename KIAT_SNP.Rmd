@@ -351,17 +351,20 @@ system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
 # samtools sort Ae_test.bam -o Ae_unique_sorted
 # samtools sort Ol_test.bam -o Ol_unique_sorted 
 
-# 1) mark PCR duplicate (for the 1st time, stay with non unique reads and start from this step)
+# 1.1) mark PCR duplicate (for the 1st time, stay with non unique reads and start from this step *** need more understanding of this step)
 # picard MarkDuplicates I=../alignment_freebayes/Ae_paired.star.trim.dir/Aligned.sortedByCoord.out.bam O=Ae_marked_duplicates.bam M=marked_dup_metrics.txt 
 # picard MarkDuplicates I=../alignment_freebayes/Ol_paired.star.trim.dir/Aligned.sortedByCoord.out.bam O=Ol_marked_duplicates.bam M=marked_dup_metrics.txt 
 
+# 1.2) index bam file..
+# samtools index Ae_marked_duplicates.bam 
+# samtools index Ol_marked_duplicates.bam
 
-# 1.5) add readgroup, index bam file... 
+# 1.3) add readgroup 
+# picard AddOrReplaceReadGroups I=Ae_marked_duplicates.bam O=Ae_marked_duplicates_addrg.bam RGID=Ae RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=Ae
+# picard AddOrReplaceReadGroups I=Ol_marked_duplicates.bam O=Ol_marked_duplicates_addrg.bam RGID=Ol RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=Ol
 
-
-
-# 2) split 'N' trim
-# .... 
+# 2) split 'N' trim (visualize bam alignment before & after alignment in IGV)
+# java -jar GenomeAnalysisTK.jar -T SplitNCigarReads -R ref.fasta -I dedupped.bam -o split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS  
 
 
 
@@ -369,7 +372,11 @@ system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
 
 # 
 
+# 4) call SNPs seperetely against ref genome 
 
+# 5) combine two VCF files... 
+
+# 6) check result using IGV 
 
 
 ```
