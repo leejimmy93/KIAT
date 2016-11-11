@@ -355,7 +355,7 @@ system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
 # picard MarkDuplicates I=../alignment_freebayes/Ae_paired.star.trim.dir/Aligned.sortedByCoord.out.bam O=Ae_marked_duplicates.bam M=marked_dup_metrics.txt 
 # picard MarkDuplicates I=../alignment_freebayes/Ol_paired.star.trim.dir/Aligned.sortedByCoord.out.bam O=Ol_marked_duplicates.bam M=marked_dup_metrics.txt 
 
-# 1.2) index bam file..
+# 1.2) index bam file.. (don't need this? )
 # samtools index Ae_marked_duplicates.bam 
 # samtools index Ol_marked_duplicates.bam
 
@@ -363,10 +363,16 @@ system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
 # picard AddOrReplaceReadGroups I=Ae_marked_duplicates.bam O=Ae_marked_duplicates_addrg.bam RGID=Ae RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=Ae
 # picard AddOrReplaceReadGroups I=Ol_marked_duplicates.bam O=Ol_marked_duplicates_addrg.bam RGID=Ol RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=Ol
 
-# 2) split 'N' trim (visualize bam alignment before & after alignment in IGV)
-# java -jar GenomeAnalysisTK.jar -T SplitNCigarReads -R ref.fasta -I dedupped.bam -o split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS  
+# 1.4) index 
+# samtools index Ol_marked_duplicates_addrg.bam
+# samtools index Ae_marked_duplicates_addrg.bam
 
+# 2.1) create fastq sequence dictionary file 
+# picard CreateSequenceDictionary R=Brassica_napus_v4.1.chromosomes.fa O=Brassica_napus_v4.1.chromosomes.dict
 
+# 2.2) split 'N' trim (visualize bam alignment before & after alignment in IGV)
+# GATK -T SplitNCigarReads -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_marked_duplicates_addrg.bam -o Ae_marked_duplicates_addrg_split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
+# GATK -T SplitNCigarReads -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_marked_duplicates_addrg.bam -o Ol_marked_duplicates_addrg_split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS 
 
 # 3) realignment Around Indels
 
