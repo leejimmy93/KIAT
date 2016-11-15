@@ -338,6 +338,14 @@ system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
 
 ```
 
+# using freebayes with unique mapped reads 
+```{r}
+# the sorted unique mapped bam file 
+# Ae_unique_sorted; Ol_unique_sorted
+
+# SNP_calling_freebayes_pipeline.sh 
+```
+
 # using GATK to call SNP 
 ```{r}
 # 0) get uniquely mapped reads --> from sam to bam --> sort bam file (Do we need to do this step?)
@@ -374,14 +382,24 @@ system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
 # GATK -T SplitNCigarReads -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_marked_duplicates_addrg.bam -o Ae_marked_duplicates_addrg_split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
 # GATK -T SplitNCigarReads -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_marked_duplicates_addrg.bam -o Ol_marked_duplicates_addrg_split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS 
 
-# 3) realignment Around Indels
+# 3.1) determine suspicious intervals which are likely in need of realignment 
+# GATK -T RealignerTargetCreator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_marked_duplicates_addrg_split.bam -o Ae_forIndelRealigner.intervals
+# GATK -T RealignerTargetCreator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_marked_duplicates_addrg_split.bam -o Ol_forIndelRealigner.intervals
 
-# 
+# 3.2) running realigner over those intervals 
+# GATK -T IndelRealigner -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_marked_duplicates_addrg_split.bam -targetIntervals Ae_forIndelRealigner.intervals -o Ae_realignedBam.bam 
+# GATK -T IndelRealigner -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_marked_duplicates_addrg_split.bam -targetIntervals Ol_forIndelRealigner.intervals -o Ol_realignedBam.bam
 
-# 4) call SNPs seperetely against ref genome 
+# 3-4) Base Recalibration (command line: BaseRecalibrator & PrintReads) 
+# GATK -T BaseRecalibrator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_realignedBam.bam -o Ae_recal_data.table
+# GATK -T BaseRecalibrator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_realignedBam.bam -o Ol_recal_data.table  
+
+# This step is recommanded, but I don't have a SNP set which I have confidence to use as a reference for calibration now, so decide to run SNP calling w/o this step, and after I get SNP set from freebayes and GATK, check the overlaps between those two, that overlapped set can be used as a reference. 
+
+# 4) Variant calling 
 
 # 5) combine two VCF files... 
-
+ 
 # 6) check result using IGV 
 
 
