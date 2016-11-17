@@ -2359,12 +2359,32 @@ pl.mapping.rate.2 <- pl.mapping.rate.2 + labs(list(title = "", x = " ", y = "rea
 
 pl.mapping.rate.2
 ggsave(filename = "~/Desktop/mapping_rate.2.png", width = 10, height = 7)
+```
 
+# check kallisto mapping rate from previous run back in August
+```{r}
+# get higher DEGs from kallisto might because 
+# 1) was using 100bp single end for kallisto mapping but 100bp PE for STAR mapping, based on John's simulation, 100bp single end get higher mapping rate and more differentially expressed genes. 
+# but, are genes mapped to intron count as reads? 
 
+# think about this: mapping to a CDS ref where there is no intron VS. mapping to a genome ref with annotation... (don't know how things align, check the bam alignment in IGV) 
+
+# get bam output from kalliso (single end version)
+# kallisto quant --single --plaintext -l 250 -s 50 --fr-stranded --pseudobam -i /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.19.kai -o /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_fall/kallisto_again/visuliza_STAR_kallisto_bam  /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/1_paired_1.fq | samtools view -Sb > 1_kallisto_SE.bam 
+
+# get bam output from kalliso (paired end version)
+# kallisto quant --plaintext --fr-stranded --pseudobam -i   /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.19.kai -o /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_fall/kallisto_again/visuliza_STAR_kallisto_bam  /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/1_paired_1.fq  /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/1_paired_2.fq | samtools view -Sb > 1_kallisto_PE.bam (screen -r 98400.ttys007.coloma) 
+
+# To do: 
+# sort bam file
+
+# index bam file 
+
+# import to IGV for visulization... (visualize STAR, kalliso SE, kallisto PE), and compare 
+# how to use IGV for sequence data visulization... need to learn... 
 
 
 ```
-
 
 
 
