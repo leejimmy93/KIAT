@@ -397,6 +397,8 @@ system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
 # This step is recommanded, but I don't have a SNP set which I have confidence to use as a reference for calibration now, so decide to run SNP calling w/o this step, and after I get SNP set from freebayes and GATK, check the overlaps between those two, that overlapped set can be used as a reference. 
 
 # 4) Variant calling 
+# GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_realignedBam.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o Ae_ref.vcf 
+# GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_realignedBam.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o Ol_ref.vcf 
 
 # 5) combine two VCF files... 
  
