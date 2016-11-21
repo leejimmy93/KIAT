@@ -630,6 +630,29 @@ p.E
 # ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/5j.png", width = 8, height = 20) 
 ``` 
 
+# FLC gene expression 
+```{r}
+FLC <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/FLC_gene/FLC_napus", header = F)
+names(FLC) <- "V1"
+FLC
+F1.read.count.small["BnaC09g46500D",]
+# 1 BnaA02g00370D 
+# 2 BnaA03g02820D  
+# 3 BnaA10g22080D existed 
+# 4 BnaC02g00490D
+# 5 BnaC03g04170D
+# 6 BnaC09g46500D existed 
+FLC.expression.F1 <- expression.pattern.Bn.F1(FLC) 
+FLC.expression.F1
+ggsave(FLC.expression.F1, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/figure/FLC_414_415.png", width=4, height = 4)
+
+# pairwise expression pattern 
+DEgene.young.F1["BnaA10g22080D",]
+DEgene.flowering.F1["BnaA10g22080D",]
+DEgene.early.silique.F1["BnaA10g22080D",]
+DEgene.late.silique.F1["BnaA10g22080D",]
+
+```
 
 
 

@@ -246,7 +246,6 @@ sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/a
 dim(sample_des) # 27 22
 
 hist(sample_des$TotalReads/2, xlab = "number of reads", ylab = "number of library", main = "reads number distribution", col = 4, font=1, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5, lwd=2) 
-?hist
 
 sorted_sample_des <- sample_des[order(sample_des$SampleID),]
 
@@ -260,27 +259,27 @@ head(parent.read.count.one)
 # save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
 ```
 
-# data summary statisitics read count number & expressed genes 
+# data summary statisitics read count number & expressed genes (not very useful but keep it here for future reference)
 ```{r}
 parent.read.count.normalized <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/read.count.normalized.tsv", header = T, check.names = F)
 rownames(parent.read.count.normalized) <- parent.read.count.normalized[,1]
 
 parent.read.count.normalized <- parent.read.count.normalized[,-1]
 
-# format data 
+# format data
 head(parent.read.count.normalized)
-dim(parent.read.count.normalized) # 101040     54 
+dim(parent.read.count.normalized) # 101040     54
 colnames(parent.read.count.normalized)
 even_indexes<-seq(2,length(colnames(parent.read.count.normalized)),2)
 parent.read.count.one.normalized <- parent.read.count.normalized[,even_indexes]
-dim(parent.read.count.one.normalized) # 101040     27 
+dim(parent.read.count.one.normalized) # 101040     27
 colnames(parent.read.count.one.normalized)
-colnames(parent.read.count.one.normalized) <- sub("_2.fq","",colnames(parent.read.count.one.normalized),fixed = TRUE) # remove _2.fq 
+colnames(parent.read.count.one.normalized) <- sub("_2.fq","",colnames(parent.read.count.one.normalized),fixed = TRUE) # remove _2.fq
 
-# sample description  
+# sample description
 new_sample_ID
 
-# replace sample ID 
+# replace sample ID
 colnames(parent.read.count.one.normalized) <- new_sample_ID
 head(parent.read.count.one.normalized)
 save(parent.read.count.one.normalized,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.normalized.Rdata")
@@ -311,6 +310,51 @@ colnames(sample_statistics)
 # write.csv(sample_statistics, file = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/sample_statisitcs.csv")
 
 ```
+
+# number of expressed genes in each tissue type of each genotype (>10 reads in at least one rep)
+```{r}
+# total number of expressed genes (>10 read count in at least 3 libs)
+# expressed genes in each tissue type of each genotype 
+colnames(parent.read.count.one)
+total <- list()
+total[[1]] <- parent.read.count.one[,c("Da-Ae_Young_1","Da-Ae_Young_2","Da-Ae_Young_3")]
+head(total[[1]])
+total[[2]] <- as.data.frame(parent.read.count.one[,c("Da-Ae_bolting_1")])
+rownames(total[[2]]) <- rownames(parent.read.count.one)
+head(total[[2]])
+total[[3]] <- parent.read.count.one[,c("Da-Ae_flowering_1","Da-Ae_flowering_3","Da-Ae_flowering_3")]
+total[[4]] <- parent.read.count.one[,c("Da-Ae_early-silique_1","Da-Ae_early-silique_2","Da-Ae_early-silique_3")]
+total[[5]] <- parent.read.count.one[,c("Da-Ae_late-silique_2","Da-Ae_late-silique_2","Da-Ae_late-silique_2")]
+
+total[[6]] <- parent.read.count.one[,c("Da-Ol-1_Young_1","Da-Ol-1_Young_2","Da-Ol-1_Young_3")]
+total[[7]] <- parent.read.count.one[,c("Da-Ol-1_bolting_1", "Da-Ol-1_bolting_2")]
+total[[8]] <- parent.read.count.one[,c("Da-Ol-1_flowering_1","Da-Ol-1_flowering_3","Da-Ol-1_flowering_3")]
+total[[9]] <- parent.read.count.one[,c("Da-Ol-1_early-silique_1","Da-Ol-1_early-silique_2","Da-Ol-1_early-silique_3")]
+total[[10]] <- parent.read.count.one[,c("Da-Ol-1_late-silique_2","Da-Ol-1_late-silique_2","Da-Ol-1_late-silique_2")] 
+
+
+sum(rowSums(total[[10]] > 10) >=1) 
+
+number.expressed.genes <- 
+lapply(total, function(sample){
+  sum(rowSums(sample > 10) >=3) 
+}
+)
+number.expressed.genes 
+number.expressed.genes <- as.data.frame(unlist(number.expressed.genes))
+number.expressed.genes$sample <- c("Da-Ae_young", "Da-Ae_bolting", "Da-Ae_flowering", "Da-Ae_early-silique", "Da-Ae_late-silique", "Da-Ol-1_young", "Da-Ol-1_bolting", "Da-Ol-1_flowering", "Da-Ol_early-silique", "Da-Ol-1_late-silique")
+colnames(number.expressed.genes)[1] <- "number"
+number.expressed.genes$sample <- factor(number.expressed.genes$sample, levels = c("Da-Ae_young", "Da-Ae_bolting", "Da-Ae_flowering", "Da-Ae_early-silique", "Da-Ae_late-silique", "Da-Ol-1_young", "Da-Ol-1_bolting", "Da-Ol-1_flowering", "Da-Ol_early-silique", "Da-Ol-1_late-silique"))
+
+pl.num.expressed.genes <- ggplot(data = number.expressed.genes) + theme_grey(base_size = 25)
+pl.num.expressed.genes <- pl.num.expressed.genes + geom_bar(aes(x=factor(sample), y=number), stat = "identity", fill = "#FF6666")
+pl.num.expressed.genes <- pl.num.expressed.genes + labs(list(title="", x="", y="number of expressed genes"))
+pl.num.expressed.genes <- pl.num.expressed.genes + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0),legend.position="none", axis.text=element_text(size=25)) 
+
+pl.num.expressed.genes 
+ggsave(pl.num.expressed.genes, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/figure/expressed.gene.png", width = 16, height = 16)
+
+``` 
 
 # expression analysis 2) set up sample description 
 ```{r}
@@ -380,13 +424,14 @@ colnames(distance_matrix) <- c("lib","x","y","group","gt","tissue")
 head(distance_matrix)
 
 # making color MDS figure 
-p.mds <- ggplot(data = distance_matrix) + theme_gray()
-p.mds <- p.mds + geom_point(aes(x, y, color=factor(group)), size=3) 
+p.mds <- ggplot(data = distance_matrix) + theme_gray(base_size = 20)
+p.mds <- p.mds + geom_point(aes(x, y, color=factor(gt), shape=factor(tissue)), size=5) 
 p.mds <- p.mds + labs(y = "BCV distance 2", x="BCV distance 1")
+p.mds <- p.mds + theme()
 # p.mds <- p.mds + facet_grid(~gt)
 p.mds      
 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/cDNA_mapped/MDS.by.gt.png", width = 11, height = 8)
+# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/cDNA_mapped/MDS.by.gt.png", width = 11, height = 8) 
 
 # clustering to check sample seperation 
 library(ggdendro)
@@ -778,14 +823,54 @@ nrow(DEgene.new.tissue) # number of genes for tissue effect  22580
 lrt.new.gt <- glmLRT(fit.new,coef = c("genotypeDa-Ae", "tissuebolting:genotypeDa-Ae", "tissueearly-silique:genotypeDa-Ae", "tissueflowering:genotypeDa-Ae", "tissuelate-silique:genotypeDa-Ae"))
 topTags(lrt.new.gt)
 DEgene.new.gt <- topTags(lrt.new.gt,n = Inf)$table[topTags(lrt.new.gt,n = Inf)$table$FDR<0.05,]
-nrow(DEgene.new.gt) # number of genes for gt effect # 15098   
+nrow(DEgene.new.gt) # number of genes for gt effect # 15098  
 
-dim(fatty.acid.genes) # 207 fatty acid genes expressed in my data  
+rownames(DEgene.new.gt)
+# look to see whether more genes are differentially expressed in A subgenome 
+# total genes 
+sum(gsub("(Bna)(A|C|U)([[:print:]]+)", "\\2", rownames(parent.read.count.one)) =="A") # 44452  
+sum(gsub("(Bna)(A|C|U)([[:print:]]+)", "\\2", rownames(parent.read.count.one)) =="C") # 56055   
+sum(gsub("(Bna)(A|C|U)([[:print:]]+)", "\\2", rownames(parent.read.count.one)) =="U") # 533 
 
+# expressed genes 
+sum(gsub("(Bna)(A|C|U)([[:print:]]+)", "\\2", rownames(parent.read.count.one.small)) =="A") # 29107 
+sum(gsub("(Bna)(A|C|U)([[:print:]]+)", "\\2", rownames(parent.read.count.one.small)) =="C") # 31703  
+sum(gsub("(Bna)(A|C|U)([[:print:]]+)", "\\2", rownames(parent.read.count.one.small)) =="U") # 165 
+
+# gt specific genes 
+sum(gsub("(Bna)(A|C|U)([[:print:]]+)", "\\2", rownames(DEgene.new.gt)) =="A") # 8096 
+sum(gsub("(Bna)(A|C|U)([[:print:]]+)", "\\2", rownames(DEgene.new.gt)) =="C") # 6964 
+sum(gsub("(Bna)(A|C|U)([[:print:]]+)", "\\2", rownames(DEgene.new.gt)) =="U") # 38 
+
+dim(fatty.acid.genes) # 207 fatty acid genes expressed in my data 
+############ gt effect 
+index_1 <- which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.gt)) 
+rownames(fatty.acid.genes[index_1,])
+ID.67.fatty.acid.genes <- as.data.frame(rownames(fatty.acid.genes[which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.gt)),]))
+ID.67.fatty.acid.genes <- data.frame(V1=ID.67.fatty.acid.genes) 
+names(ID.67.fatty.acid.genes) <- "V1"
+ 
+tmp1 <- as.data.frame(ID.67.fatty.acid.genes[c(1:5),]) 
+names(tmp1) <- "V1"
+ID.67.fatty.acid.genes
+expression.pattern.Bn.parent(tmp1) 
+
+########## tissue effect ######
+index_3 <- which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.tissue)) 
+rownames(fatty.acid.genes[index_3,])
+ID.100.fatty.acid.genes <- as.data.frame(rownames(fatty.acid.genes[which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.tissue)),]))
+ID.100.fatty.acid.genes <- data.frame(V1=ID.100.fatty.acid.genes) 
+names(ID.100.fatty.acid.genes) <- "V1"
+ 
+tmp2 <- as.data.frame(ID.100.fatty.acid.genes[c(95:100),]) 
+names(tmp2) <- "V1"
+expression.pattern.Bn.parent(tmp2)   
+
+###### fatty acid genes for gt:tissue interaction ############ 
 index_2 <- which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.interaction)) 
 rownames(fatty.acid.genes[index_2,])
 ID.15.fatty.acid.genes <- rownames(fatty.acid.genes[which(rownames(fatty.acid.genes) %in% rownames(DEgene.new.interaction)),])
-fatty.acid.genes.annotation <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty_acid_gene_name.csv", header = F)
+fatty.acid.genes.annotation <-  read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/fatty_acid_gene_name.csv", header = F)
 
 expression.pattern.Bn.parent.with.annot(ID.15.fatty.acid.genes, fatty.acid.genes.annotation)
 
@@ -802,6 +887,33 @@ expression.pattern.Bn.parent.with.annot(ID, fatty.acid.genes.annotation)
 ```{r}
 # load all necessary functions 
 # source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+
+# gt effect 
+DEgene.GO.ORA.gt <- GOseq.Bn.ORA(rownames(DEgene.new.gt))
+class(DEgene.GO.ORA.gt)
+DEgene.GO.ORA.gt$Term
+# tissue effect 
+DEgene.GO.ORA.tissue <- GOseq.Bn.ORA(rownames(DEgene.new.tissue))
+DEgene.GO.ORA.tissue
+DEgene.GO.ORA.tissue$Term 
+# gt:tissue effect 
+DEgene.GO.ORA.interaction <- GOseq.Bn.ORA(rownames(DEgene.new.interaction))
+DEgene.GO.ORA.interaction$Term 
+
+# draw heatmap for gt & gt:tissue effect genes 
+gt <- DEgene.GO.ORA.gt[,c("Term", "over_represented_padjust")] 
+gt.tissue <- DEgene.GO.ORA.interaction[,c("Term", "over_represented_padjust")]
+gt_gt.tissue <- merge(gt, gt.tissue, by="Term", all=TRUE)
+names(gt_gt.tissue)[c(2:3)] <- c("genotype_effect", "genotype_by_tissue_effect")
+gt_gt.tissue.melt <- melt(gt_gt.tissue)
+gt_gt.tissue.melt
+gt_gt.tissue.melt$logPvalue <- -log10(gt_gt.tissue.melt$value)
+
+# plot 
+pl.heatmap1 <- ggplot(data = gt_gt.tissue.melt)
+pl.heatmap1 <- pl.heatmap1 + geom_tile(color = "black", aes(x = factor(variable), y = Term, fill=logPvalue)) + scale_fill_gradient2(low=muted("green"), high=muted("magenta")) 
+pl.heatmap1 <- pl.heatmap1 + labs(y = "GO term", x="", title=" ") 
+pl.heatmap1
 
 # young 
 DEgene.young.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young))
@@ -2352,13 +2464,30 @@ sample_summary_2 <- data.frame(row.names = c(1:81),
 
 sample_summary_2$type <- factor(sample_summary_2$type, levels = c("mapped", "unmapped", "trimmed_off"))
  
-
 pl.mapping.rate.2 <- ggplot(data = sample_summary_2)
 pl.mapping.rate.2 <- pl.mapping.rate.2 + geom_bar(aes(x=lib_ID, y = reads_number, fill=type), stat = "identity")
 pl.mapping.rate.2 <- pl.mapping.rate.2 + labs(list(title = "", x = " ", y = "reads number")) + theme(axis.text.x=element_blank())
 
 pl.mapping.rate.2
 ggsave(filename = "~/Desktop/mapping_rate.2.png", width = 10, height = 7)
+
+# mapping rate between Da-Ae & Da-Ol-1 
+sample_summary_3 <- sample_summary[,c("Cultivar", "mapping_rate_trimming")]
+sample_summary_3$mapping_rate_trimming <- as.numeric(sub("%", "", sample_summary_3$mapping_rate_trimming))/100
+sample_summary_3
+
+library(plyr)
+sample_summary_3_summary <- ddply(sample_summary_3,~Cultivar,summarise,mean=mean(mapping_rate_trimming),sd=sd(mapping_rate_trimming))
+sample_summary_3_summary$max <- sample_summary_3_summary$mean + sample_summary_3_summary$sd
+sample_summary_3_summary$min <- sample_summary_3_summary$mean - sample_summary_3_summary$sd
+sample_summary_3_summary
+
+pl.mapping.rate.3 <- ggplot(data = sample_summary_3_summary)
+pl.mapping.rate.3 <- pl.mapping.rate.3 + geom_bar(aes(x=Cultivar, y=mean, fill=Cultivar), stat = "identity")
+pl.mapping.rate.3 <- pl.mapping.rate.3 + geom_errorbar(aes(x=Cultivar, ymin=min, ymax=max))
+pl.mapping.rate.3 
+ggsave(pl.mapping.rate.3, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/figure/mapping_rate_Da_Ol.png", width = 5, height = 5)
+
 ```
 
 # check kallisto mapping rate from previous run back in August
@@ -2383,10 +2512,71 @@ ggsave(filename = "~/Desktop/mapping_rate.2.png", width = 10, height = 7)
 # import to IGV for visulization... (visualize STAR, kalliso SE, kallisto PE), and compare 
 # how to use IGV for sequence data visulization... need to learn... 
 
+```
+
+# compare mapping result to napus, rapa, and juncea for Da-Ae & Da-Ol-1 
+```{r}
+# 1) get material, flowering stage sample for Da-Ae & Da-Ol-1 
+# done
+
+# 2) index reference rapa & juncea genome 
+# rapa genome 
+# juncea genome (screen -r 76768.ttys007.coloma) 
+
+# 3) map 
+# screen -r 35901.ttys009.coloma
+
+# 4) check & compare result 
 
 ```
 
+# FLC expression 
+```{r}
+# FLC gene in Arabidopsis: AT5G10140 
+# blastn -db /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa -query FLC_gene.fa -out FLC_napus.blast.out -evalue 1e-6 -outfmt 6
+FLC <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/FLC_gene/FLC_napus", header = F)
+names(FLC) <- "V1"
+FLC
+parent.read.count.one.small["BnaA03g02820D",]
+# 1 BnaA03g02820D existed 
+# 2 BnaA10g22080D existed 
+# 3 BnaC02g00490D
+# 4 BnaC03g04170D
+# 5 BnaC09g46500D
+FLC.expression <- expression.pattern.Bn.parent(FLC) 
+FLC.expression
+ggsave(FLC.expression, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/figure/FLC_Ae_Ol.png", width = 4, height = 4)
 
+# gt effect 
+DEgene.new.gt["BnaA03g02820D",]
+DEgene.new.gt["BnaA10g22080D",]
+
+# tissue effect
+DEgene.new.tissue["BnaA03g02820D",]
+DEgene.new.tissue["BnaA10g22080D",]
+
+# gt:tissue effect 
+DEgene.new.interaction["BnaA03g02820D",]
+DEgene.new.interaction["BnaA10g22080D",]
+
+# pairwise expression for gene BnaA03g02820D & BnaA10g22080D
+DEgene.young["BnaA03g02820D",] # DE  
+DEgene.bolting["BnaA03g02820D",]
+DEgene.flowering["BnaA03g02820D",]
+DEgene.early.silique["BnaA03g02820D",]
+DEgene.late.silique["BnaA03g02820D",]
+
+DEgene.young.vs.bolting.ol["BnaA03g02820D",]
+DEgene.bolting.vs.flowering.ol["BnaA03g02820D",]
+DEgene.flowering.vs.early.silique.ol["BnaA03g02820D",]
+DEgene.early.vs.late.silique.ol["BnaA03g02820D",]
+
+DEgene.young.vs.bolting.ae["BnaA03g02820D",]
+DEgene.bolting.vs.flowering.ae["BnaA03g02820D",]
+DEgene.flowering.vs.early.silique.ae["BnaA03g02820D",]
+DEgene.early.vs.late.silique.ae["BnaA03g02820D",]
+
+```
 
 
 
