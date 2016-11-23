@@ -2526,7 +2526,7 @@ ggsave(pl.mapping.rate.3, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/fi
 # 3) map 
 # screen -r 35901.ttys009.coloma
 
-# 4) check & compare result 
+# 4) check & compare result  
 
 ```
 
@@ -2576,6 +2576,29 @@ DEgene.bolting.vs.flowering.ae["BnaA03g02820D",]
 DEgene.flowering.vs.early.silique.ae["BnaA03g02820D",]
 DEgene.early.vs.late.silique.ae["BnaA03g02820D",]
 
+# check all FLC like genes & act through genes 
+FLC.like.act.through <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/FLC_gene/FLC_like_act_through_napus_ID", header = F)
+names(FLC.like.act.through) <- "V1"
+FLC.like.act.through
+
+FLC.like.act.through.ID <- (FLC.like.act.through)
+FLC.like.act.through.ID
+
+FLC.like.act.through.expression <- expression.pattern.Bn.parent(FLC.like.act.through) 
+FLC.like.act.through.expression
+
+# check expression 
+DEgene.young[c(which(rownames(DEgene.young) %in% FLC.like.act.through$V1)),] #6 
+DEgene.bolting[c(which(rownames(DEgene.bolting) %in% FLC.like.act.through$V1)),] # 1 
+DEgene.flowering[c(which(rownames(DEgene.flowering) %in% FLC.like.act.through$V1)),] # 2
+DEgene.early.silique[c(which(rownames(DEgene.early.silique) %in% FLC.like.act.through$V1)),] # 5 
+
+FLC.like.act.through.DE.gt <- as.data.frame(rownames(DEgene.new.gt[c(which(rownames(DEgene.new.gt) %in% FLC.like.act.through$V1)),]))
+names(FLC.like.act.through.DE.gt) <- "V1"
+FLC.like.act.through.DE.gt
+
+FLC.1 <- expression.pattern.Bn.parent(FLC.like.act.through.DE.gt)
+ggsave(FLC.1, filename = "~/Desktop/FLC.parent.png", width = 6, height = 14)
 ```
 
 
