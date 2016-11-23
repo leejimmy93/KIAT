@@ -652,6 +652,53 @@ DEgene.flowering.F1["BnaA10g22080D",]
 DEgene.early.silique.F1["BnaA10g22080D",]
 DEgene.late.silique.F1["BnaA10g22080D",]
 
+
+expression.pattern.Bn.F1(FLC.like.act.through.DE.gt)
+
+DEgene.young[c(which(rownames(DEgene.young) %in% FLC.like.act.through$V1)),]
+```
+
+# new design for gt effect 
+```{r}
+# new design to see how many fatty acid genes' expression are differentially expressed between genotypes and during developmental stages  
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+# assign group 
+ftable(F1.read.count.sample,row.vars=c("tissue"),col.vars=c("batch","genotype"))
+
+# normalize 
+dge.new.F1 <- DGEList(counts=F1.read.count.small, group=F1.read.count.sample$group)
+dim(dge.new.F1) # [1] 360176    24 
+dge.new.F1 <- calcNormFactors(dge.new.F1, method = "TMM") 
+dge.new.F1$sample
+# design matrix 
+F1.read.count.sample$genotype <- as.factor(F1.read.count.sample$genotype)
+F1.read.count.sample$tissue <- as.factor(F1.read.count.sample$tissue)
+F1.read.count.sample$genotype <- relevel(F1.read.count.sample$genotype,ref="414F1")
+F1.read.count.sample$tissue <- relevel(F1.read.count.sample$tissue,ref="Young")
+
+design.new.F1 <- model.matrix(~tissue*genotype,data = F1.read.count.sample) 
+colnames(design.new.F1)
+
+# calculate dispersion
+dge.new.F1 <- estimateGLMCommonDisp(dge.new.F1, design.new.F1,verbose = TRUE) # Disp = 0.25646 , BCV = 0.5064 
+dge.new.F1 <- estimateGLMTrendedDisp(dge.new.F1,design.new.F1)
+dge.new.F1 <- estimateGLMTagwiseDisp(dge.new.F1,design.new.F1)
+# plotBCV(dge.new)
+
+fit.new.F1 <- glmFit(dge.new.F1, design.new.F1)
+
+# genes for gt 
+lrt.new.gt.F1 <- glmLRT(fit.new.F1,coef = c("genotype415F1", "tissueearly-silique:genotype415F1", "tissueflowering:genotype415F1", "tissuelate-silique:genotype415F1"))
+topTags(lrt.new.gt.F1)
+DEgene.new.gt.F1 <- topTags(lrt.new.gt.F1,n = Inf)$table[topTags(lrt.new.gt.F1,n = Inf)$table$FDR<0.05,]
+nrow(DEgene.new.gt.F1) # number of genes for gt effect # 15098  
+
+FLC.like.act.through.DE.gt.F1 <- as.data.frame(rownames(DEgene.new.gt.F1[c(which(rownames(DEgene.new.gt.F1) %in% FLC.like.act.through$V1)),]))
+names(FLC.like.act.through.DE.gt.F1) <- "V1"
+FLC.like.act.through.DE.gt.F1
+
+FLC.2 <- expression.pattern.Bn.F1(FLC.like.act.through.DE.gt.F1)
+ggsave(FLC.2, filename = "~/Desktop/FLC_F1.png", width = 6, height = 7)
 ```
 
 
