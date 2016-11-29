@@ -697,14 +697,18 @@ dim(Ae_Ol_after_filter.random.unique) # 38710    23
 # GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_realignedBam.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o Ae_ref.vcf 
 # GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_realignedBam.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o Ol_ref.vcf 
 
-# 5) combine two VCF files... 
- 
+# 5) variant filtering (something wrong...come back later)
+# GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ae_ref.vcf -window 35 -cluster 3 -filterName FS -filter "FS > 30.0" -filterName QD -filter "QD < 2.0" -o Ae_ref_filtered.vcf
+# GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ol_ref.vcf -window 35 -cluster 3 -filterName FS -filter "FS > 30.0" -filterName QD -filter "QD < 2.0" -o Ol_ref_filtered.vcf 
+
+
 # 6) check result using IGV 
+
 
 
 ```
 
-# 
+# mapping summary napus, rapa, and juncea between Da-Ae & Da-Ol-1 
 ```{r}
 Ae_mapped <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_mapping_chr_2", header = F)
 Ae_mapped$value <- gsub("([[:digit:]]+)(|)([[:print:]]+)", "\\1", Ae_mapped$V1)
