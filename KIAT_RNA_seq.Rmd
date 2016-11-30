@@ -462,6 +462,15 @@ dge.data.parent <- estimateGLMTrendedDisp(dge.data.parent,design.parent)
 dge.data.parent <- estimateGLMTagwiseDisp(dge.data.parent,design.parent)
 plotBCV(dge.data.parent)
 
+########
+colnames(design.new)
+lrt.young.test <- glmLRT(fit.new, coef = "genotypeDa-Ae")
+summary(de.young.test <- decideTestsDGE(lrt.young.test, p=0.05))
+DEgene.young.test <- topTags(lrt.young.test,n = Inf)$table[topTags(lrt.young.test,n = Inf)$table$FDR<0.05,]
+sum(rownames(DEgene.young.test) %in% rownames(DEgene.young))
+DEgene.young.test[1:10,]
+DEgene.young[1:10,]
+########
 ## w/o batch effect
 fit.parent <- glmFit(dge.data.parent, design.parent)
 
@@ -798,7 +807,6 @@ parent.read.count.one.sample$genotype <- relevel(parent.read.count.one.sample$ge
 parent.read.count.one.sample$tissue <- relevel(parent.read.count.one.sample$tissue,ref="Young")
 
 design.new <- model.matrix(~tissue*genotype,data = parent.read.count.one.sample) 
-colnames(design.new)
 
 # calculate dispersion
 dge.new <- estimateGLMCommonDisp(dge.new, design.new,verbose = TRUE) # Disp = 0.25646 , BCV = 0.5064 
@@ -808,8 +816,14 @@ dge.new <- estimateGLMTagwiseDisp(dge.new,design.new)
 
 # use interaction as coefficient and see how many fatty acid genes are important for interaction term... 
 fit.new <- glmFit(dge.new, design.new)
+colnames(design.new)
+colnames(fit.new$coefficients)
+
 lrt.new.interaction <- glmLRT(fit.new,coef = c("tissuebolting:genotypeDa-Ae", "tissueearly-silique:genotypeDa-Ae", "tissueflowering:genotypeDa-Ae", "tissuelate-silique:genotypeDa-Ae"))
 topTags(lrt.new.interaction)
+
+
+
 DEgene.new.interaction <- topTags(lrt.new.interaction,n = Inf)$table[topTags(lrt.new.interaction,n = Inf)$table$FDR<0.05,]
 nrow(DEgene.new.interaction) # number of genes with interaction effect in any tissue types 
 
@@ -2511,22 +2525,6 @@ ggsave(pl.mapping.rate.3, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/fi
 
 # import to IGV for visulization... (visualize STAR, kalliso SE, kallisto PE), and compare 
 # how to use IGV for sequence data visulization... need to learn... 
-
-```
-
-# compare mapping result to napus, rapa, and juncea for Da-Ae & Da-Ol-1 
-```{r}
-# 1) get material, flowering stage sample for Da-Ae & Da-Ol-1 
-# done
-
-# 2) index reference rapa & juncea genome 
-# rapa genome 
-# juncea genome (screen -r 76768.ttys007.coloma) 
-
-# 3) map 
-# screen -r 35901.ttys009.coloma
-
-# 4) check & compare result  
 
 ```
 
