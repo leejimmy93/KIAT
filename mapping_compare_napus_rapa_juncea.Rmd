@@ -32,7 +32,7 @@ total_mapping$lib
 p.total_mapping <- ggplot(data = total_mapping) + theme_grey()
 p.total_mapping <- p.total_mapping + geom_bar(aes(x=factor(V2), y = value, fill=V2), stat="identity")
 p.total_mapping <- p.total_mapping + facet_grid(ref~lib)
-p.total_mapping <- p.total_mapping + geom_text(data = total_mapping, aes(x=factor(V2), y=value, label=factor(value)))
+p.total_mapping <- p.total_mapping + geom_text(data = total_mapping, aes(x=factor(V2), y=value, label=factor(round(value, digits = 2))))
 # geom_text(data=DEGs_number_between_gt.melt.parent,aes(x=DE,y=number*1.05,label=factor(number)))
 p.total_mapping 
 ggsave(p.total_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapping_napus_rapa_juncea/p.total_mapping.png", width = 12, height=8)
