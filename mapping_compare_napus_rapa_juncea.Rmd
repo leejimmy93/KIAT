@@ -92,6 +92,6 @@ p.reads_mapping <- p.reads_mapping + geom_text(data = reads_mapping.2, aes(x=fac
 p.reads_mapping 
 ggsave(p.reads_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapping_napus_rapa_juncea/p.reads_mapping.png", width = 12, height=8)
 
-### conclussion: by looking at the composition of reads mapped to rapa & juncea (where do they map to the napus genome), relatively bigger difference was observed for the juncea B subgenome mapped reads, some of Da-Ol-1 C subgenome reads were from juncea's B subgenome?    
+### conclussion: by looking at the composition of reads mapped to rapa & juncea (where do they map to the napus genome), (as expected,) reads that mapped to A subgenome of juncea were more originally mapped to A subgenome of napus. Reads that mapped to B subgenome of juncea were more ogriginally mapped to C subgenome of napus, and also higher ratio of them in Da-Ol-1 were originally mapped to B subgenome. So... actually Da-Ol-1 has genetic content from Juncea? repeat this analysis 
 ```
 
