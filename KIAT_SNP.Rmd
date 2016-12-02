@@ -539,108 +539,107 @@ dim(Ae_Ol_after_filter.random.unique) # 38710    23
 
 ### check Da-Ae VS ref, do I get the same pattern? 
 
-# chr_ID_Ae_ref <- unique(Ae_ref_after_filter$CHROM)
-# number_Ae_ref <- c()
-# 
-# for (chr in chr_ID_Ae_ref) {
-#   number_Ae_ref[chr] <- sum(sum(Ae_ref_after_filter$CHROM==chr))
-#   print(number_Ae_ref[chr])
-# }
-# 
-# SNP_chr_Ae_ref <- as.data.frame(number_Ae_ref)
-# SNP_chr_Ae_ref
-# SNP_chr_Ae_ref$ID <- rownames(SNP_chr_Ae_ref)
-# # split to main & random chromosomes 
-# # main 
-# SNP_chr_main_Ae_ref <- SNP_chr_Ae_ref[!grepl("random", SNP_chr_Ae_ref$ID),]  
-# SNP_chr_main_Ae_ref$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main_Ae_ref$ID)   
-# SNP_chr_main_Ae_ref$subgenome
-# SNP_chr_main_Ae_ref$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", SNP_chr_main_Ae_ref$ID) 
-# SNP_chr_main_Ae_ref$chr_ID
-# SNP_chr_main_Ae_ref$number_Ae_ref
-# # random 
-# SNP_chr_random_Ae_ref <- SNP_chr_Ae_ref[grep("random", SNP_chr_Ae_ref$ID),]  
-# SNP_chr_random_Ae_ref$subgenome <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\2", SNP_chr_random_Ae_ref$ID)
-# SNP_chr_random_Ae_ref$chr_ID <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\3", SNP_chr_random_Ae_ref$ID) 
-# 
-# # do a little calculation: how many SNPs on main & random chromosomes? 
-# sum(SNP_chr_main_Ae_ref$number) # 341458  
-# sum(SNP_chr_random_Ae_ref$number) # 73147
-# 235214/275083 # 85.5%
-# 
-# sum(SNP_chr_main_Ae_ref[SNP_chr_main_Ae_ref$subgenome=="A",]$number_Ae_ref) # 212656 
-# sum(SNP_chr_main_Ae_ref[SNP_chr_main_Ae_ref$subgenome=="C",]$number_Ae_ref) # 128802  
-# 
-# SNP_chr_main_Ae_ref$chr_ID_2 <- paste(SNP_chr_main_Ae_ref$subgenome, SNP_chr_main_Ae_ref$chr_ID, sep = "")
-# SNP_chr_main_Ae_ref$chr_ID_2
-# 
-# # make a plot to see how many SNPs on each chromosome 
-# pl.SNP.main.Ae_ref <- ggplot(data = SNP_chr_main_Ae_ref) 
-# pl.SNP.main.Ae_ref <- pl.SNP.main.Ae_ref + geom_bar(aes(x=factor(chr_ID_2), y = number_Ae_ref, fill=subgenome), stat = "identity")
-# # pl.SNP.main.Ae_ref <- pl.SNP.main.Ae_ref + facet_wrap(~subgenome, ncol = 1)
-# # pl.SNP.main.1 <- pl.SNP.main.1 + geom_text(aes(x=factor(chr_ID), y = number, label=factor(number), size=1)) 
-# pl.SNP.main.Ae_ref <- pl.SNP.main.Ae_ref + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
-# # pl.SNP.main.Ae_ref <- pl.SNP.main.Ae_ref + theme(legend.position = "none")
-# pl.SNP.main.Ae_ref 
-# 
+chr_ID_Ae_ref.unique <- unique(Ae_ref_after_filter.unique$CHROM)
+number_Ae_ref.unique <- c()
+
+for (chr in chr_ID_Ae_ref.unique) {
+  number_Ae_ref.unique[chr] <- sum(sum(Ae_ref_after_filter.unique$CHROM==chr))
+  print(number_Ae_ref.unique[chr])
+}
+
+SNP_chr_Ae_ref.unique <- as.data.frame(number_Ae_ref.unique)
+SNP_chr_Ae_ref.unique
+SNP_chr_Ae_ref.unique$ID <- rownames(SNP_chr_Ae_ref.unique)
+# split to main & random chromosomes
+# main
+SNP_chr_main_Ae_ref.unique <- SNP_chr_Ae_ref.unique[!grepl("random", SNP_chr_Ae_ref.unique$ID),]
+SNP_chr_main_Ae_ref.unique$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main_Ae_ref.unique$ID)
+SNP_chr_main_Ae_ref.unique$subgenome
+SNP_chr_main_Ae_ref.unique$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", SNP_chr_main_Ae_ref.unique$ID)
+SNP_chr_main_Ae_ref.unique$chr_ID
+SNP_chr_main_Ae_ref.unique$number_Ae_ref
+# random
+SNP_chr_random_Ae_ref.unique <- SNP_chr_Ae_ref.unique[grep("random", SNP_chr_Ae_ref.unique$ID),]
+SNP_chr_random_Ae_ref.unique$subgenome <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\2", SNP_chr_random_Ae_ref.unique$ID)
+SNP_chr_random_Ae_ref.unique$chr_ID <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\3", SNP_chr_random_Ae_ref.unique$ID)
+
+# do a little calculation: how many SNPs on main & random chromosomes?
+sum(SNP_chr_main_Ae_ref.unique$number) # 333713
+sum(SNP_chr_random_Ae_ref.unique$number) # 69978
+235214/275083 # 85.5%
+
+sum(SNP_chr_main_Ae_ref.unique[SNP_chr_main_Ae_ref.unique$subgenome=="A",]$number_Ae_ref) # 209113 
+sum(SNP_chr_main_Ae_ref.unique[SNP_chr_main_Ae_ref.unique$subgenome=="C",]$number_Ae_ref) # 124600  
+
+SNP_chr_main_Ae_ref.unique$chr_ID_2 <- paste(SNP_chr_main_Ae_ref.unique$subgenome, SNP_chr_main_Ae_ref.unique$chr_ID, sep = "")
+SNP_chr_main_Ae_ref.unique$chr_ID_2
+ 
+# make a plot to see how many SNPs on each chromosome 
+pl.SNP.main.Ae_ref.unique <- ggplot(data = SNP_chr_main_Ae_ref.unique) 
+pl.SNP.main.Ae_ref.unique <- pl.SNP.main.Ae_ref.unique + geom_bar(aes(x=factor(chr_ID_2), y = number_Ae_ref.unique, fill=subgenome), stat = "identity")
+# pl.SNP.main.Ae_ref <- pl.SNP.main.Ae_ref + facet_wrap(~subgenome, ncol = 1)
+# pl.SNP.main.1 <- pl.SNP.main.1 + geom_text(aes(x=factor(chr_ID), y = number, label=factor(number), size=1))
+pl.SNP.main.Ae_ref.unique <- pl.SNP.main.Ae_ref.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+# pl.SNP.main.Ae_ref <- pl.SNP.main.Ae_ref + theme(legend.position = "none")
+pl.SNP.main.Ae_ref.unique
+
 # ggsave(pl.SNP.main.Ae_ref, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.Ae_ref.png", height = 6, width = 10)
 # 
-# ### check Da-Ol VS ref, do I get the same pattern? 
-# 
-# chr_ID_Ol_ref <- unique(Ol_ref_after_filter$CHROM)
-# number_Ol_ref <- c()
-# 
-# for (chr in chr_ID_Ol_ref) {
-#   number_Ol_ref[chr] <- sum(sum(Ol_ref_after_filter$CHROM==chr))
-#   print(number_Ol_ref[chr])
-# }
-# 
-# SNP_chr_Ol_ref <- as.data.frame(number_Ol_ref)
-# SNP_chr_Ol_ref
-# SNP_chr_Ol_ref$ID <- rownames(SNP_chr_Ol_ref)
-# # split to main & random chromosomes 
-# # main 
-# SNP_chr_main_Ol_ref <- SNP_chr_Ol_ref[!grepl("random", SNP_chr_Ol_ref$ID),]  
-# SNP_chr_main_Ol_ref$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main_Ol_ref$ID)   
-# SNP_chr_main_Ol_ref$subgenome
-# SNP_chr_main_Ol_ref$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", SNP_chr_main_Ol_ref$ID) 
-# SNP_chr_main_Ol_ref$chr_ID
-# SNP_chr_main_Ol_ref$number_Ol_ref
-# # random 
-# SNP_chr_random_Ol_ref <- SNP_chr_Ol_ref[grep("random", SNP_chr_Ol_ref$ID),]  
-# SNP_chr_random_Ol_ref$subgenome <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\2", SNP_chr_random_Ol_ref$ID)
-# SNP_chr_random_Ol_ref$chr_ID <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\3", SNP_chr_random_Ol_ref$ID) 
-# 
-# # do a little calculation: how many SNPs on main & random chromosomes? 
-# sum(SNP_chr_main_Ol_ref$number) # 330184   
-# sum(SNP_chr_random_Ol_ref$number) # 73147
-# 235214/275083 # 85.5%
-# 
-# sum(SNP_chr_main_Ol_ref[SNP_chr_main_Ol_ref$subgenome=="A",]$number_Ol_ref) # 193141 
-# sum(SNP_chr_main_Ol_ref[SNP_chr_main_Ol_ref$subgenome=="C",]$number_Ol_ref) # 137043  
-# 
-# SNP_chr_main_Ol_ref$chr_ID_2 <- paste(SNP_chr_main_Ol_ref$subgenome, SNP_chr_main_Ol_ref$chr_ID, sep = "")
-# 
-# # make a plot to see how many SNPs on each chromosome 
-# pl.SNP.main.Ol_ref <- ggplot(data = SNP_chr_main_Ol_ref) 
-# pl.SNP.main.Ol_ref <- pl.SNP.main.Ol_ref + geom_bar(aes(x=factor(chr_ID_2), y = number_Ol_ref, fill=subgenome), stat = "identity")
-# # pl.SNP.main.Ol_ref <- pl.SNP.main.Ol_ref + facet_wrap(~subgenome, ncol = 1)
-# # pl.SNP.main.1 <- pl.SNP.main.1 + geom_text(aes(x=factor(chr_ID), y = number, label=factor(number), size=1)) 
-# pl.SNP.main.Ol_ref <- pl.SNP.main.Ol_ref + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
-# # pl.SNP.main.Ol_ref <- pl.SNP.main.Ol_ref + theme(legend.position = "none")
-# pl.SNP.main.Ol_ref 
-# 
-# ggsave(pl.SNP.main.Ol_ref, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.Ol_ref.png", height = 6, width = 10)
-# 
-# # combine 2 graphs 
-# library(cowplot)
-# plot.w.ref<-plot_grid(
-#   pl.SNP.main.Ae_ref+labs(title="Da-Ae VS. reference genome"),
-#   pl.SNP.main.Ol_ref+labs(title="Da-Ol-1 VS. reference genome"),
-#   ncol=1, nrow = 2,labels=c("","","",""))
-# 
-# plot.w.ref
-# save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8) 
+### check Da-Ol VS ref, do I get the same pattern?
+
+chr_ID_Ol_ref.unique <- unique(Ol_ref_after_filter.unique$CHROM)
+number_Ol_ref.unique <- c()
+
+for (chr in chr_ID_Ol_ref.unique) {
+  number_Ol_ref.unique[chr] <- sum(sum(Ol_ref_after_filter.unique$CHROM==chr))
+  print(number_Ol_ref.unique[chr])
+}
+
+SNP_chr_Ol_ref.unique <- as.data.frame(number_Ol_ref.unique)
+SNP_chr_Ol_ref.unique
+SNP_chr_Ol_ref.unique$ID <- rownames(SNP_chr_Ol_ref.unique)
+# split to main & random chromosomes
+# main
+SNP_chr_main_Ol_ref.unique <- SNP_chr_Ol_ref.unique[!grepl("random", SNP_chr_Ol_ref.unique$ID),]
+SNP_chr_main_Ol_ref.unique$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main_Ol_ref.unique$ID)
+SNP_chr_main_Ol_ref.unique$subgenome
+SNP_chr_main_Ol_ref.unique$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", SNP_chr_main_Ol_ref.unique$ID)
+SNP_chr_main_Ol_ref.unique$chr_ID
+SNP_chr_main_Ol_ref.unique$number_Ol_ref
+# random
+SNP_chr_random_Ol_ref.unique <- SNP_chr_Ol_ref.unique[grep("random", SNP_chr_Ol_ref.unique$ID),]
+SNP_chr_random_Ol_ref.unique$subgenome <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\2", SNP_chr_random_Ol_ref.unique$ID)
+SNP_chr_random_Ol_ref.unique$chr_ID <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\3", SNP_chr_random_Ol_ref.unique$ID)
+
+# do a little calculation: how many SNPs on main & random chromosomes?
+sum(SNP_chr_main_Ol_ref.unique$number) # 326149 
+sum(SNP_chr_random_Ol_ref.unique$number) # 70973 
+
+sum(SNP_chr_main_Ol_ref.unique[SNP_chr_main_Ol_ref.unique$subgenome=="A",]$number_Ol_ref) # 191590 
+sum(SNP_chr_main_Ol_ref.unique[SNP_chr_main_Ol_ref.unique$subgenome=="C",]$number_Ol_ref) # 134559
+
+SNP_chr_main_Ol_ref.unique$chr_ID_2 <- paste(SNP_chr_main_Ol_ref.unique$subgenome, SNP_chr_main_Ol_ref.unique$chr_ID, sep = "")
+
+# make a plot to see how many SNPs on each chromosome
+pl.SNP.main.Ol_ref.unique <- ggplot(data = SNP_chr_main_Ol_ref.unique)
+pl.SNP.main.Ol_ref.unique <- pl.SNP.main.Ol_ref.unique + geom_bar(aes(x=factor(chr_ID_2), y = number_Ol_ref.unique, fill=subgenome), stat = "identity")
+# pl.SNP.main.Ol_ref <- pl.SNP.main.Ol_ref + facet_wrap(~subgenome, ncol = 1)
+# pl.SNP.main.1 <- pl.SNP.main.1 + geom_text(aes(x=factor(chr_ID), y = number, label=factor(number), size=1))
+pl.SNP.main.Ol_ref.unique <- pl.SNP.main.Ol_ref.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+# pl.SNP.main.Ol_ref <- pl.SNP.main.Ol_ref + theme(legend.position = "none")
+pl.SNP.main.Ol_ref.unique
+
+ggsave(pl.SNP.main.Ol_ref, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.Ol_ref.png", height = 6, width = 10)
+
+# combine 2 graphs
+library(cowplot)
+plot.w.ref.unique<-plot_grid(
+  pl.SNP.main.Ae_ref.unique+labs(title="Da-Ae VS. reference genome"),
+  pl.SNP.main.Ol_ref.unique+labs(title="Da-Ol-1 VS. reference genome"),
+  ncol=1, nrow = 2,labels=c("","","",""))
+
+plot.w.ref.unique
+save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8)
 
 
 ```
@@ -700,9 +699,9 @@ dim(Ae_Ol_after_filter.random.unique) # 38710    23
 # GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_realignedBam.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o Ol_ref.vcf 
 
 # 5) variant filtering (something wrong...come back later)
+# this step now running with chromosome splitted 
 # GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ae_ref.vcf -window 35 -cluster 3 -filterName FS -filter "FS > 30.0" -filterName QD -filter "QD < 2.0" -o Ae_ref_filtered.vcf
 # GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ol_ref.vcf -window 35 -cluster 3 -filterName FS -filter "FS > 30.0" -filterName QD -filter "QD < 2.0" -o Ol_ref_filtered.vcf 
-
 
 # 6) check result using IGV 
 
@@ -818,7 +817,6 @@ ggsave(p.reads_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapp
 
 # conclussion: 
 
-
 # p.reads_mapping.2 <- ggplot(data = reads_mapping.2) 
 # p.reads_mapping.2 <- p.reads_mapping.2 + geom_bar(aes(x="", y= ratio, fill=V2), stat="identity")
 # p.reads_mapping.2 <- p.reads_mapping.2 + coord_polar("y") 
@@ -826,9 +824,6 @@ ggsave(p.reads_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapp
 # p.reads_mapping.2 <- p.reads_mapping.2 + geom_text(data = reads_mapping.2, aes(x="", y=ratio, label=factor(round(ratio, digits = 2)), size=3), check_overlap = TRUE) 
 # p.reads_mapping.2 
 # ggsave(p.reads_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapping_napus_rapa_juncea/p.reads_mapping.png", width = 12, height=8)
-
-
-
 ```
 
 
