@@ -309,38 +309,6 @@ save_plot("/Users/ruijuanli/Desktop/Brassica_project/RNA_seq/output/figure/plot.
 # ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.random.png", width = 11, height = 22)
 ```
 
-# additonal filter  
-```{r}
-# filter based on read depth (DP)? alternate allele observation count (AO)? QA (sum of quality of the alternate observation count) 
-
-
-
-```
-
-# SNP annotation 
-```{r}
-# snpEff 
-
-
-
-
-vcf.Ae.Ol.no.bolting.ann <- read.table("~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf",as.is=T,na.strings = ".")
-head(vcf.Ae.Ol.no.bolting.ann) 
-
-vcf.header.Ae.Ol.ann <- system("grep '#C' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf",intern = TRUE) 
-head(vcf.header.Ae.Ol.ann)
-vcf.header.Ae.Ol.ann <- sub("#","",vcf.header.Ae.Ol.ann) #get rid of the pound sign
-vcf.header.Ae.Ol.ann
-
-vcf.header.Ae.Ol.ann <- unlist(strsplit(vcf.header.Ae.Ol.ann,split="\t"))
-colnames(vcf.Ae.Ol.no.bolting.ann) <- vcf.header.Ae.Ol.ann
-head(vcf.Ae.Ol.no.bolting.ann)
-
-system("grep '##INFO' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
-system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf") 
-
-```
-
 # using freebayes with unique mapped reads 
 ```{r}
 # the sorted unique mapped bam file 
@@ -638,7 +606,7 @@ plot.w.ref.unique<-plot_grid(
   pl.SNP.main.Ol_ref.unique+labs(title="Da-Ol-1 VS. reference genome"),
   ncol=1, nrow = 2,labels=c("","","",""))
 
-plot.w.ref.unique
+plot.w.ref
 save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8)
 
 
@@ -824,8 +792,55 @@ ggsave(p.reads_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapp
 # p.reads_mapping.2 <- p.reads_mapping.2 + geom_text(data = reads_mapping.2, aes(x="", y=ratio, label=factor(round(ratio, digits = 2)), size=3), check_overlap = TRUE) 
 # p.reads_mapping.2 
 # ggsave(p.reads_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapping_napus_rapa_juncea/p.reads_mapping.png", width = 12, height=8)
+
 ```
 
+# additional filter  
+```{r}
+### visulize unique & non-unique SNPs in IGV 
+# export Ae VS Ol SNP dataset 
+head(Ae_Ol_after_filter.main.unique)
+
+colnames(Ae_Ol_after_filter.main)
+dim(Ae_Ol_after_filter.main.unique); dim(Ae_Ol_after_filter.main)  
+
+Ae_Ol_after_filter.main.unique.export <- Ae_Ol_after_filter.main.unique[,c(1:11)]
+Ae_Ol_after_filter.main.export <- Ae_Ol_after_filter.main[,c(1:11)]
+head(Ae_Ol_after_filter.main.unique.export)
+
+
+write.matrix()
+write.table(Ae_Ol_after_filter.main.unique.export, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_after_filter.main.unique.export.txt", row.names=FALSE)
+
+### filter based on read depth (DP)? alternate allele observation count (AO)? QA (sum of quality of the alternate observation count) 
+
+
+
+```
+
+# SNP annotation 
+```{r}
+# snpEff 
+
+
+
+
+vcf.Ae.Ol.no.bolting.ann <- read.table("~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf",as.is=T,na.strings = ".")
+head(vcf.Ae.Ol.no.bolting.ann) 
+
+vcf.header.Ae.Ol.ann <- system("grep '#C' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf",intern = TRUE) 
+head(vcf.header.Ae.Ol.ann)
+vcf.header.Ae.Ol.ann <- sub("#","",vcf.header.Ae.Ol.ann) #get rid of the pound sign
+vcf.header.Ae.Ol.ann
+
+vcf.header.Ae.Ol.ann <- unlist(strsplit(vcf.header.Ae.Ol.ann,split="\t"))
+colnames(vcf.Ae.Ol.no.bolting.ann) <- vcf.header.Ae.Ol.ann
+head(vcf.Ae.Ol.no.bolting.ann)
+
+system("grep '##INFO' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
+system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf") 
+
+``` 
 
 
 
