@@ -1,0 +1,12 @@
+---
+title: "F2_data_analysis"
+author: "Ruijuan Li"
+date: "12/5/2016"
+output: html_document
+---
+
+# download 
+```{r}
+# wget -r ftp://FNP_KSJ:FNp_71aofb@bioftp.org/TBD160783_20161129/ (screen -r 35891.ttys009.coloma)  
+```
+
