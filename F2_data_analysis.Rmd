@@ -10,3 +10,9 @@ output: html_document
 # wget -r ftp://FNP_KSJ:FNp_71aofb@bioftp.org/TBD160783_20161129/ (screen -r 35891.ttys009.coloma)  
 ```
 
+# QC 
+```{r}
+# QC already done by Korean side, I checked result by using make_summary_report.sh, OK 
+# finished mapping using kallisto 
+```
+
