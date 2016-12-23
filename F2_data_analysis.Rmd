@@ -7,7 +7,8 @@ output: html_document
 
 # download 
 ```{r}
-# wget -r ftp://FNP_KSJ:FNp_71aofb@bioftp.org/TBD160783_20161129/ (screen -r 35891.ttys009.coloma)  
+# wget -r ftp://FNP_KSJ:FNp_71aofb@bioftp.org/TBD160783_20161129/ (screen -r 35891.ttys009.coloma) 
+# wget -r ftp://FNP_KSJ:FNp_71aofb@bioftp.org/TBD160897_20161221/ (35901.ttys009.coloma)
 ```
 
 # QC 
