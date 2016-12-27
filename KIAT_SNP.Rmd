@@ -614,7 +614,7 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 
 # using GATK to call SNP 
 ```{r}
-# 0) get uniquely mapped reads --> from sam to bam --> sort bam file (Do we need to do this step?)
+# 0) get uniquely mapped reads --> from sam to bam --> sort bam file (Do we need to do this step? yes, this step should be done for polyploid, based on discussion with Julin...)
 # 0.1) get uniquely mapped reads 
 # samtools view ../alignment_freebayes/Ae_paired.star.trim.dir/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' > Ae_unique_mapped.bam (screen -r 35901.ttys009.coloma)
 # samtools view ../alignment_freebayes/Ol_paired.star.trim.dir/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' > Ol_unique_mapped.bam (screen -r 35910.ttys009.coloma)
@@ -660,14 +660,14 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 # GATK -T BaseRecalibrator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_realignedBam.bam -o Ae_recal_data.table
 # GATK -T BaseRecalibrator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_realignedBam.bam -o Ol_recal_data.table  
 
-# This step is recommanded, but I don't have a SNP set which I have confidence to use as a reference for calibration now, so decide to run SNP calling w/o this step, and after I get SNP set from freebayes and GATK, check the overlaps between those two, that overlapped set can be used as a reference. 
+# This step is recommanded, but I don't have a SNP set which I have confidence to use as a reference for calibration now, so decide to run SNP calling w/o this step, and after I get SNP set from freebayes and GATK, check the overlaps between those two, that overlapped set can be used as a reference. (Zhongxu suggested that this step is not necessary when there is no refernece set of SNP... however I should understand and talk to different poeple...) 
 
 # 4) Variant calling 
+# ran with chromosome splitted (use script GATK.sh)    
 # GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_realignedBam.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o Ae_ref.vcf 
 # GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_realignedBam.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o Ol_ref.vcf 
 
-# 5) variant filtering (something wrong...come back later)
-# this step now running with chromosome splitted 
+# 5) variant filtering (something wrong...come back later) 
 # GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ae_ref.vcf -window 35 -cluster 3 -filterName FS -filter "FS > 30.0" -filterName QD -filter "QD < 2.0" -o Ae_ref_filtered.vcf
 # GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ol_ref.vcf -window 35 -cluster 3 -filterName FS -filter "FS > 30.0" -filterName QD -filter "QD < 2.0" -o Ol_ref_filtered.vcf 
 
