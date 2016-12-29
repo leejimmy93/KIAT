@@ -12,7 +12,7 @@ output:
 ```{r}
 setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/")
 vcf.Ae.Ol.no.bolting <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_no_bolting.vcf",as.is=T,na.strings = ".")
-head(vcf.Ae.Ol.no.bolting)
+head(vcf.Ae.Ol.no.bolting) 
 
 vcf.header.Ae.Ol <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_no_bolting.vcf",intern = TRUE) 
 head(vcf.header.Ae.Ol)
@@ -664,16 +664,14 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 
 # 4) Variant calling 
 # ran with chromosome splitted (use script GATK.sh)    
-# GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_realignedBam.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o Ae_ref.vcf 
-# GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_realignedBam.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o Ol_ref.vcf 
+# GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I in.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o out.vcf 
 
-# 5) variant filtering (merge after fitration...)  
-# GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ae_ref.vcf -window 35 -cluster 3 -filterName FS -o Ae_ref_filtered.vcf
-# GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ol_ref.vcf -window 35 -cluster 3 -filterName FS -o Ol_ref_filtered.vcf 
+# 5) variant filtering (use script GATK_filter.sh) 
+# GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V in.vcf -window 35 -cluster 3 -o filtered.vcf
 
-# 6) check result using IGV 
+# 6) merge SNPs from two genotypes seperately (use GATK_combine_Ae.sh and GATK_combine_Ol.sh)
 
-
+# 7) further analysis, how to find SNPs between the two genotypes? SNP filtering... 
 
 ```
 
