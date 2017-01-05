@@ -613,9 +613,7 @@ plot.w.ref.unique<-plot_grid(
   ncol=1, nrow = 2,labels=c("","","",""))
 
 plot.w.ref.unique
-save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8)
-
-
+save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8) 
 ```
 
 # using GATK to call SNP 
@@ -800,8 +798,11 @@ ggsave(p.reads_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapp
 
 ```
 
-# SNP filter inside linux 
+# SNP filter inside linux or R 
 ```{r}
+######## SNP filtering can be done inside R, but need bgzip & tabix to index the vcf file.... 
+#### spent quite a long time to figure this out... 
+
 ### visulize unique & non-unique SNPs in IGV, done... 
 
 ### SNP filtering inside linux using script (see /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_fall/SNP_calling/alignment_freebayes/vcf_file/log file in whitney)
@@ -838,19 +839,13 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 # people use different cutoff values for max read depth, eg: 
 # 1) average read depth + 3*sqrt(average read depth) 2) average read depth + 3 * stdv of read depth ... 
 # based on all these different information, I decided to use less than 500 for both Ae and Ol as the cutoff value. 
-# In summary, alternate allele count > 4, min read depth of 4, and max read depth of 500 for both genotypes 
-
-
+# In summary, alternate allele count > 4, min read depth of 4, and max read depth of 500 for both genotypes  
 
 ```
 
 # SNP annotation 
 ```{r}
 # snpEff 
-
-
-
-
 vcf.Ae.Ol.no.bolting.ann <- read.table("~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf",as.is=T,na.strings = ".")
 head(vcf.Ae.Ol.no.bolting.ann) 
 
