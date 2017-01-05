@@ -323,8 +323,11 @@ save_plot("/Users/ruijuanli/Desktop/Brassica_project/RNA_seq/output/figure/plot.
 # chrC08_random   53544   .       C       G       28740.6 .       AB=0.612022;ABP=262.317;AC=2;AF=0.25;AN=8;AO=1469;CIGAR=1X;DP=2765;DPB=2765;DPRA=0;EPP=3192.9;EPPR=218.75;GTI=2;LEN=1;MEANALT=3;MQM=255;MQMR=255;NS=2;NUMALT=1;ODDS=78.7339;PAIRED=1;PAIREDR=1;PAO=0;PQA=0;PQR=0;PRO=0;QA=55557;QR=49054;RO=1290;RPL=1469;RPP=3192.9;RPPR=1567.31;RPR=0;RUN=1;SAF=146chrC08_random      58668   .       TA      CG      44546.5 .       AB=0;ABP=0;AC=8;AF=1;AN=8;AO=1541;CIGAR=2X;DP=1551;DPB=1551;DPRA=0;EPP=1643.58;EPPR=9.52472;GTI=0;LEN=2;MEANALT=3;MQM=255;MQMR=255;NS=2;NUMALT=1;ODDS=223.83;PAIRED=1;PAIREDR=1;PAO=0;PQA=0;PQR=0;PRO=0;QA=58556;QR=97;RO=3;RPL=1312;RPP=1655.77;RPPR=9.52472;RPR=229;RUN=1;SAF=8;SAP=3280.12;SAR=1533;SRF=0;SRP=9.52472;SRR=3;TYPE=mnp GT:DP:RO:QR:AO:QA       1/1/1/1:1511:3:97:1501:57094    1/1/1/1:40:0:0:40:1462
 # for now, just ignore this.... 
 
-vcf.Ae.Ol.no.bolting.unique <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_unique_modified.vcf",as.is=T,na.strings = ".")
-head(vcf.Ae.Ol.no.bolting.unique) 
+vcf.Ae.Ol.no.bolting.unique <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_unique_modified.vcf",as.is=T,na.strings = ".") 
+
+### How to export data to vcf format 
+dim(vcf.Ae.Ol.no.bolting.unique) # 
+write.table(vcf.Ae.Ol.no.bolting.unique, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/test_content.txt")
 
 vcf.header.Ae.Ol.unique <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_unique_modified.vcf",intern = TRUE) 
 head(vcf.header.Ae.Ol.unique)
@@ -332,6 +335,7 @@ vcf.header.Ae.Ol.unique <- sub("#","",vcf.header.Ae.Ol.unique) #get rid of the p
 vcf.header.Ae.Ol.unique
 
 vcf.header.Ae.Ol.unique <- unlist(strsplit(vcf.header.Ae.Ol.unique,split="\t"))
+vcf.header.Ae.Ol.unique
 colnames(vcf.Ae.Ol.no.bolting.unique) <- vcf.header.Ae.Ol.unique
 head(vcf.Ae.Ol.no.bolting.unique)
 
@@ -339,6 +343,7 @@ system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/A
 system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/Ae_Ol_unique_modified.vcf") 
 
 # Before splitting add NAs to blank cells
+vcf.Ae.Ol.no.bolting.unique$Ae
 
 vcf.Ae.Ol.no.bolting.unique$Ae[is.na(vcf.Ae.Ol.no.bolting.unique$Ae)] <- "NA:NA:NA:NA:NA:NA"
 
@@ -391,7 +396,7 @@ hist(vcf.Ae.Ol.no.bolting.unique[vcf.Ae.Ol.no.bolting.unique$QUAL<1,]$QUAL)
 # subset the data to keep positions where the quality score is 40 or higher 
 vcf.Ae.Ol.no.bolting.unique.HQ <- vcf.Ae.Ol.no.bolting.unique[vcf.Ae.Ol.no.bolting.unique$QUAL>40,]
 dim(vcf.Ae.Ol.no.bolting.unique.HQ) # 997853     23  
-sum(vcf.Ae.Ol.no.bolting.unique$QUAL>40) / length(vcf.Ae.Ol.no.bolting.unique$QUAL) # 98% of SNPs were retained with QUAL > 40 
+sum(vcf.Ae.Ol.no.bolting.unique$QUAL>40) / length(vcf.Ae.Ol.no.bolting.unique$QUAL) # 98% of SNPs were retained with QUAL > 40
 
 # count the number 
 table(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt)
@@ -408,6 +413,7 @@ Ae_ref.unique <- vcf.Ae.Ol.no.bolting.unique.HQ[vcf.Ae.Ol.no.bolting.unique.HQ$A
 # alter allele count > 2 & not equal to NA 
 Ae_ref_after_filter.unique <- Ae_ref.unique[Ae_ref.unique$Ae_alt.depth > 2 & is.na(Ae_ref.unique$Ae_alt.depth)=="FALSE",] 
 dim(Ae_ref_after_filter.unique) # 403691     23  
+head(Ae_ref_after_filter.unique)
 
 # SNPs between Ol & ref 
 sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1/1/1") # 421125  
@@ -606,7 +612,7 @@ plot.w.ref.unique<-plot_grid(
   pl.SNP.main.Ol_ref.unique+labs(title="Da-Ol-1 VS. reference genome"),
   ncol=1, nrow = 2,labels=c("","","",""))
 
-plot.w.ref
+plot.w.ref.unique
 save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8)
 
 
@@ -670,9 +676,10 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 # GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V in.vcf -window 35 -cluster 3 -o filtered.vcf
 
 # 6) merge SNPs from two genotypes seperately (use GATK_combine_Ae.sh and GATK_combine_Ol.sh)
+# done 
 
 # 7) further analysis, how to find SNPs between the two genotypes? SNP filtering... 
-
+# ...... 
 ```
 
 # compare mapping result to napus, rapa, and juncea for Da-Ae & Da-Ol-1 
@@ -793,24 +800,45 @@ ggsave(p.reads_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapp
 
 ```
 
-# additional filter  
+# SNP filter inside linux 
 ```{r}
-### visulize unique & non-unique SNPs in IGV 
-# export Ae VS Ol SNP dataset 
-head(Ae_Ol_after_filter.main.unique)
+### visulize unique & non-unique SNPs in IGV, done... 
 
-colnames(Ae_Ol_after_filter.main)
-dim(Ae_Ol_after_filter.main.unique); dim(Ae_Ol_after_filter.main)  
+### SNP filtering inside linux using script (see /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_fall/SNP_calling/alignment_freebayes/vcf_file/log file in whitney)
 
-Ae_Ol_after_filter.main.unique.export <- Ae_Ol_after_filter.main.unique[,c(1:11)]
-Ae_Ol_after_filter.main.export <- Ae_Ol_after_filter.main[,c(1:11)]
-head(Ae_Ol_after_filter.main.unique.export)
+### alignment score can also be taken into consideration for filtering before SNP calling, because there are multiple possible causes of false-positive SNPs: 1) sequencing error [Phred score] 2) alignment error [mapping score inside bam file] 3) incompleness of ref genome (ref: Wang et al. 2015; )
 
+### filter based on read depth (DP)? alternate allele observation count (AO)? QA (sum of quality of the alternate observation count)  
 
-write.matrix()
-write.table(Ae_Ol_after_filter.main.unique.export, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_after_filter.main.unique.export.txt", row.names=FALSE)
+Ae_Ol_after_filter.main.unique.test <- Ae_Ol_after_filter.main.unique[Ae_Ol_after_filter.main.unique$CHROM=="chrA02",]
 
-### filter based on read depth (DP)? alternate allele observation count (AO)? QA (sum of quality of the alternate observation count) 
+colnames(Ae_Ol_after_filter.main.unique.test)
+total_depth_check <- Ae_Ol_after_filter.main.unique.test[,c("CHROM","POS", "Ae_tot.depth", "Ol_tot.depth")]
+head(total_depth_check)
+total_depth_check_long <- melt(total_depth_check, id.vars = c("CHROM", "POS"))
+head(total_depth_check_long)
+
+pl.total_depth <- ggplot(data = total_depth_check_long)
+pl.total_depth <- pl.total_depth + geom_line(aes(x=POS, y = value, color=variable))
+# pl.total_depth <- pl.total_depth + facet_facet(~variable)
+# pl.SNP.main.2 <- pl.SNP.main.2 + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+# pl.SNP.main.2 <- pl.SNP.main.2 + theme(legend.position = "none")
+pl.total_depth
+
+# based on the total depth visualization result, some regions are having high depth for both Ae and Ol, whereas some regions are only exibiting high depth for one of the genotype 
+
+hist(Ae_Ol_after_filter.main.unique.test[Ae_Ol_after_filter.main.unique.test$Ae_tot.depth>10000,]$Ae_tot.depth)
+# average depth 
+# Ae 
+sum(Ae_Ol_after_filter.main.unique$Ae_tot.depth)/nrow(Ae_Ol_after_filter.main.unique) # 185.4755 
+# Ol 
+sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.unique) # 207.3724 
+# 
+
+# people use different cutoff values for max read depth, eg: 
+# 1) average read depth + 3*sqrt(average read depth) 2) average read depth + 3 * stdv of read depth ... 
+# based on all these different information, I decided to use less than 500 for both Ae and Ol as the cutoff value. 
+# In summary, alternate allele count > 4, min read depth of 4, and max read depth of 500 for both genotypes 
 
 
 
@@ -839,6 +867,20 @@ system("grep '##INFO' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
 system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf") 
 
 ``` 
+
+# final output 
+```{r}
+# 1) summary of identified SNPs (table3, synnomynous & non synnomymous SNPs requires SNP annotation, exonic, intergenic, intronic...)
+
+# 2) SNP distribution on sub A and sub C genome 
+
+# 3) SNP distribution across chromosome (normalized by gene number, mapping rate...)
+
+# 4) Ka/Ks... 
+
+# 5) if GATK result is available, add result, venn diagram show overlaps... 
+
+```
 
 
 
