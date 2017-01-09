@@ -677,6 +677,9 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 # done 
 
 # 7) further analysis, how to find SNPs between the two genotypes? SNP filtering... 
+
+
+
 # ...... 
 ```
 
@@ -845,7 +848,7 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 
 # SNP annotation 
 ```{r}
-# snpEff 
+# snpEff # this version of annotated vcf file is not correct... because "ERROR_CHROMOSOME_NOT_FOUND" 
 vcf.Ae.Ol.no.bolting.ann <- read.table("~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf",as.is=T,na.strings = ".")
 head(vcf.Ae.Ol.no.bolting.ann) 
 
@@ -860,6 +863,34 @@ head(vcf.Ae.Ol.no.bolting.ann)
 
 system("grep '##INFO' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf")
 system("grep '##FORMAT' ~/bin/snpEff/Ae_Ol_no_bolting.ann.vcf") 
+
+# build my own database ############### 
+# cd data 
+# mkdir Bnv5
+# cd Bnv5 
+# wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus.annotation_v5.gff3.gz
+# mv Brassica_napus.annotation_v5.gff3.gz genes.gff.gz
+# wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus.annotation_v5.pep.fa.gz
+# wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus.annotation_v5.gff3.cds.fa.gz
+# mv Brassica_napus.annotation_v5.pep.fa.gz protein.fa.gz
+# mv Brassica_napus.annotation_v5.gff3.cds.fa.gz cds.fa.gz
+# gunzip *.gz
+# cd ..
+# mkdir genomes 
+# cd genomes/ 
+# wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus_v4.1.chromosomes.fa.gz
+# mv Brassica_napus_v4.1.chromosomes.fa.gz Bnv5.fa.gz 
+# gunzip Bnv5.fa.gz
+# cd ..  (to snpEff home directory)
+# vim snpEff.config #### 
+# add "# Brassica_napus v5 (self-built) Bnv5.genome: Brassica_napus Bnv5.reference: ftp://brassicadb.org/Brassica_napus/" 
+# java -jar snpEff.jar build -gff3 -v Bnv5 
+
+### SNP annotation 
+
+
+
+
 
 ``` 
 
