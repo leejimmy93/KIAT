@@ -17,3 +17,37 @@ output: html_document
 # finished mapping using kallisto 
 ```
 
+# trimming & mapping kallisto 
+```{r}
+### bunchrun_kallisto.sh 
+### count number of HQ reads 
+# count_HQ_reads.sh 
+
+### get readcount output 
+# ls | grep "Sample" | sed 's/Sample_//g' | sed 's/\///g' > ID
+# cat Sample*/HQ_single_end_count > reads_number
+# paste ID reads_number > HQ_reads_lib 
+```
+
+# get data for 
+```{r}
+F2.stats.1 <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/Sequencing_Statistics_Result_F2.csv")
+F2.stats.2 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/HQ_reads_lib")
+
+head(F2.stats.1)
+head(F2.stats.2)
+
+colnames(F2.stats.2)[1] <- "Sample.ID"
+colnames(F2.stats.2)[2] <- "HQ.reads"
+
+F2.stats <- merge(F2.stats.1[,c("Sample.ID", "TotalReads")], F2.stats.2, by="Sample.ID")
+summary(F2.stats)
+
+F2.stats$TotalReads.2 <- as.numeric(as.character(F2.stats$TotalReads))/2
+F2.stats$HQ_percent <- round(F2.stats$HQ.reads/F2.stats$TotalReads.2, digits = 2)
+head(F2.stats)
+
+```
+
+
+
