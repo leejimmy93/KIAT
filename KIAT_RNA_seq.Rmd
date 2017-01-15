@@ -2599,7 +2599,51 @@ FLC.1 <- expression.pattern.Bn.parent(FLC.like.act.through.DE.gt)
 ggsave(FLC.1, filename = "~/Desktop/FLC.parent.png", width = 6, height = 14)
 ```
 
+# determine which libs to assemble based on the number of mapped HQ reads, based on what Julin said, 100-150M reads should be the optimum number to use for assembly. 
+```{r}
+# sample descriptione 
+sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/parent_summary_corrected.csv") 
+sample_des
+sample_des_2 <- sample_des[,c("Cultivar", "Stage", "rep", "SampleID")]
+sample_des_2
+# number of aligned HQ reads 
+aligned_HQ_reads <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/Sample_aligned_HQ_reads")
+head(aligned_HQ_reads)
+colnames(aligned_HQ_reads) <- c("SampleID", "aligned_HQ_reads")
+parent.stats <- merge(sample_des_2, aligned_HQ_reads, by="SampleID") 
+head(parent.stats)
 
+sum(parent.stats[parent.stats$Cultivar=="Da-Ae",]$aligned_HQ_reads)/1000000
+sum(parent.stats[parent.stats$Cultivar=="Da-Ol-1",]$aligned_HQ_reads)/1000000
+
+parent.stats$ID <- paste(parent.stats$Cultivar, parent.stats$Stage, sep = "_")
+parent.stats$ID
+parent.stats
+
+# determine which lib to use for assembly 
+
+max(parent.stats[parent.stats$ID=="Da-Ae_Young",]$aligned_HQ_reads) + max(parent.stats[parent.stats$ID=="Da-Ae_flowering",]$aligned_HQ_reads) + max(parent.stats[parent.stats$ID=="Da-Ae_bolting",]$aligned_HQ_reads) + max(parent.stats[parent.stats$ID=="Da-Ae_early-silique",]$aligned_HQ_reads) + max(parent.stats[parent.stats$ID=="Da-Ae_late-silique",]$aligned_HQ_reads)
+
+max(parent.stats[parent.stats$ID=="Da-Ol-1_Young",]$aligned_HQ_reads) + max(parent.stats[parent.stats$ID=="Da-Ol-1_flowering",]$aligned_HQ_reads) + max(parent.stats[parent.stats$ID=="Da-Ol-1_bolting",]$aligned_HQ_reads) + max(parent.stats[parent.stats$ID=="Da-Ol-1_early-silique",]$aligned_HQ_reads) + max(parent.stats[parent.stats$ID=="Da-Ol-1_late-silique",]$aligned_HQ_reads)
+
+# looks like I can use one rep from each stage, which rep? 
+parent.stats[parent.stats$ID=="Da-Ae_Young",] # sample 5 
+parent.stats[parent.stats$ID=="Da-Ae_flowering",] # sample 6 
+parent.stats[parent.stats$ID=="Da-Ae_bolting",] # sample Ae_Chu_2 
+parent.stats[parent.stats$ID=="Da-Ae_early-silique",] # sample 05-11-Final-8ul 
+parent.stats[parent.stats$ID=="Da-Ae_late-silique",] $ # sample 8 
+
+parent.stats[parent.stats$ID=="Da-Ol-1_Young",] # sample 1 
+parent.stats[parent.stats$ID=="Da-Ol-1_flowering",] # sample 2 
+parent.stats[parent.stats$ID=="Da-Ol-1_bolting",] # sample All1_Chu_3 
+parent.stats[parent.stats$ID=="Da-Ol-1_early-silique",] # sample 3 
+parent.stats[parent.stats$ID=="Da-Ol-1_late-silique",] # sample 4 
+
+# samples that I need 
+# 5, 6, Ae_Chu_2, 05-11-Final-8ul, 8, 1, 2, All_Chu_3, 3, 4  
+# now 05-11-Final-8ul, 1, and 2 are done, 3 is in progress 
+# wait... 
+```
 
 
 
