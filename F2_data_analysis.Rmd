@@ -24,12 +24,12 @@ output: html_document
 # count_HQ_reads.sh 
 
 ### get readcount output 
-# ls | grep "Sample" | sed 's/Sample_//g' | sed 's/\///g' > ID
+# ls Sample*/HQ_single_end_count | sed 's/\/HQ_single_end_count//g' | sed 's/Sample_//g' > ID 
 # cat Sample*/HQ_single_end_count > reads_number
-# paste ID reads_number > HQ_reads_lib 
+# paste ID reads_number > HQ_reads_lib  
 ```
 
-# get data for 
+# F2 data stats 
 ```{r}
 F2.stats.1 <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/Sequencing_Statistics_Result_F2.csv")
 F2.stats.2 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/HQ_reads_lib")
@@ -47,7 +47,114 @@ F2.stats$TotalReads.2 <- as.numeric(as.character(F2.stats$TotalReads))/2
 F2.stats$HQ_percent <- round(F2.stats$HQ.reads/F2.stats$TotalReads.2, digits = 2)
 head(F2.stats)
 
+F2.stats <- F2.stats[,c("Sample.ID", "TotalReads.2", "HQ.reads", "HQ_percent")]
+head(F2.stats)
+
+colnames(F2.stats)[2] <- "TotalReads" 
+write.csv(F2.stats, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.stats.csv")
+
+F2.stats.modified <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/modified.F2.stats.csv")
+head(F2.stats.modified)
+
+batch.a <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/Sequencing_Statistics_Result_16.12.05 (1).csv")
+colnames(batch.a)[1] <- "Sample_ID"
+
+batch.b <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/Sequencing_Statistics_Result_16.12.23 (1).csv")
+colnames(batch.b)[1] <- "Sample_ID"
+
+batch.a.stats <- merge(F2.stats.modified, batch.a, by="Sample_ID")
+batch.a.stats$batch <- rep("a", nrow(batch.a.stats))
+
+batch.b.stats <- merge(F2.stats.modified, batch.b, by="Sample_ID")
+batch.b.stats$batch <- rep("b", nrow(batch.b.stats))
+  
+F2.stats.modified.2 <- rbind(batch.a.stats, batch.b.stats)
+head(F2.stats.modified.2)
+
+F2.stats.modified.2$batch
+
+library(ggplot2) 
+p.uniq.mapping <- ggplot(data=F2.stats.modified.2)
+p.uniq.mapping <- p.uniq.mapping + geom_histogram(aes(x=Percent_Unique_Mapped, fill=batch), binwidth = 2.5) 
+p.uniq.mapping <- p.uniq.mapping + labs(list(title = "", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping  
+ggsave(p.uniq.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.uniq.mapping.1.png", height = 8, width = 11) 
+
+p.uniq.mapping.2 <- ggplot(data=F2.stats.modified.2)
+p.uniq.mapping.2 <- p.uniq.mapping.2 + geom_histogram(aes(x=Percent_Unique_Mapped), binwidth = 2.5) 
+p.uniq.mapping.2 <- p.uniq.mapping.2 + labs(list(title = "", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping.2  
+ggsave(p.uniq.mapping.2, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.uniq.mapping.png", height = 8, width = 11) 
+
+p.all.reads <- ggplot(data = F2.stats.modified.2)
+p.all.reads <- p.all.reads + geom_bar(aes(x=Sample_ID, y=TotalReads.x, fill=batch), stat = "identity")
+p.all.reads
+
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-106",]
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-72",]
+
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-38",]
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-105",]
+
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-10",]
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-118",] 
+
+sort(F2.stats.modified.2$TotalReads.x) 
+?sort
+
 ```
+
+# batch effect of F2 
+```{r}
+single.mapping.result.A <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/batch_effect/Batch_A_Star_Stats.tab", header = T)
+single.mapping.result.B <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/batch_effect/Batch_B_Star_Stats.tab", header = T)
+
+single.mapping.result.A$batch <- rep("a", 5)
+single.mapping.result.B$batch <- rep("b", 5)
+
+single.mapping.result <- rbind(single.mapping.result.A, single.mapping.result.B)
+head(single.mapping.result)
+single.mapping.result$Sample_ID <- gsub("(Sample_)([[:print:]]+)(\\.)(single)","\\2",single.mapping.result$Sample) 
+single.mapping.result$Sample_ID
+
+library(ggplot2) 
+p.uniq.mapping.single <- ggplot(data=single.mapping.result)
+p.uniq.mapping.single <- p.uniq.mapping.single + geom_bar(aes(x=reorder(Sample_ID, Percent_Unique_Mapped), y=Percent_Unique_Mapped, fill=batch), stat = "identity") 
+p.uniq.mapping.single <- p.uniq.mapping.single + labs(list(title = "", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping.single  
+ggsave(p.uniq.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.uniq.mapping.single.png", height = 8, width = 11) 
+
+p.multi.mapping.single <- ggplot(data=single.mapping.result)
+p.multi.mapping.single <- p.multi.mapping.single + geom_bar(aes(x=reorder(Sample_ID, Percent_Multi_Mapped), y=Percent_Multi_Mapped, fill=batch), stat = "identity") 
+p.multi.mapping.single <- p.multi.mapping.single + labs(list(title = "", x = "Percent of multi mapped reads", y = "number of samples"))
+p.multi.mapping.single 
+ggsave(p.multi.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.multi.mapping.single.png", height = 8, width = 11)
+
+p.toomany.mapping.single <- ggplot(data=single.mapping.result)
+p.toomany.mapping.single <- p.toomany.mapping.single + geom_bar(aes(x=reorder(Sample_ID, Percent_Too_Many_Multi_Mapped), y=Percent_Too_Many_Multi_Mapped, fill=batch), stat = "identity") 
+p.toomany.mapping.single <- p.toomany.mapping.single + labs(list(title = "", x = "Percent of toomany mapped reads", y = "number of samples"))
+p.toomany.mapping.single 
+ggsave(p.toomany.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.toomany.mapping.single.png", height = 8, width = 11)
+
+p.unmapped.mapping.single <- ggplot(data=single.mapping.result)
+p.unmapped.mapping.single <- p.unmapped.mapping.single + geom_bar(aes(x=reorder(Sample_ID, Percent_Unmapped_Too_Short), y=Percent_Unmapped_Too_Short, fill=batch), stat = "identity") 
+p.unmapped.mapping.single <- p.unmapped.mapping.single + labs(list(title = "", x = "Percent of unmapped reads", y = "number of samples"))
+p.unmapped.mapping.single 
+ggsave(p.unmapped.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.unmapped.mapping.single.png", height = 8, width = 11)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
