@@ -701,7 +701,20 @@ FLC.2 <- expression.pattern.Bn.F1(FLC.like.act.through.DE.gt.F1)
 ggsave(FLC.2, filename = "~/Desktop/FLC_F1.png", width = 6, height = 7)
 ```
 
+# call SNPs between 414 & 415 F1 population 
+```{r}
+# 1) trim & map fastq file using script trimming_mapping_01_23_2017.sh 
 
+# 2) merge bam files from biological replicates 
+
+# 3) extract uniquely mapped file, sort, and convert to bam file 
+
+# 4) call SNPs for each tissue type seperately, include Da-Ae & Da-Ol 
+
+
+
+
+```
 
 
 

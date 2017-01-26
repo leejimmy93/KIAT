@@ -6,79 +6,67 @@ output:
   html_document: 
     keep_md: yes
 ---
-
-# using freebayes with unique mapped reads 
+# using freebayes to call SNP 
 ```{r}
-# the sorted unique mapped bam file 
-# Ae_unique_sorted; Ol_unique_sorted 
+# call as diploid 
+vcf.Ae.Ol.no.bolting.unique.diploid <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",as.is=T,na.strings = ".") 
 
-# SNP_calling_freebayes_pipeline.sh 
+dim(vcf.Ae.Ol.no.bolting.unique.diploid) # 2102031      11  
+head(vcf.Ae.Ol.no.bolting.unique.diploid)
 
-# when importing, Error in scan(file, what, nmax, sep, dec, quote, skip, nlines, na.strings,  : 
-# line 894493 did not have 11 elements
-# so line 894493 was removed 
-# line 894493 looks like: 
-# chrC08_random   53544   .       C       G       28740.6 .       AB=0.612022;ABP=262.317;AC=2;AF=0.25;AN=8;AO=1469;CIGAR=1X;DP=2765;DPB=2765;DPRA=0;EPP=3192.9;EPPR=218.75;GTI=2;LEN=1;MEANALT=3;MQM=255;MQMR=255;NS=2;NUMALT=1;ODDS=78.7339;PAIRED=1;PAIREDR=1;PAO=0;PQA=0;PQR=0;PRO=0;QA=55557;QR=49054;RO=1290;RPL=1469;RPP=3192.9;RPPR=1567.31;RPR=0;RUN=1;SAF=146chrC08_random      58668   .       TA      CG      44546.5 .       AB=0;ABP=0;AC=8;AF=1;AN=8;AO=1541;CIGAR=2X;DP=1551;DPB=1551;DPRA=0;EPP=1643.58;EPPR=9.52472;GTI=0;LEN=2;MEANALT=3;MQM=255;MQMR=255;NS=2;NUMALT=1;ODDS=223.83;PAIRED=1;PAIREDR=1;PAO=0;PQA=0;PQR=0;PRO=0;QA=58556;QR=97;RO=3;RPL=1312;RPP=1655.77;RPPR=9.52472;RPR=229;RUN=1;SAF=8;SAP=3280.12;SAR=1533;SRF=0;SRP=9.52472;SRR=3;TYPE=mnp GT:DP:RO:QR:AO:QA       1/1/1/1:1511:3:97:1501:57094    1/1/1/1:40:0:0:40:1462
-# for now, just ignore this.... 
+vcf.header.Ae.Ol.unique.diploid <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",intern = TRUE) 
+vcf.header.Ae.Ol.unique.diploid
+vcf.header.Ae.Ol.unique.diploid <- sub("#","",vcf.header.Ae.Ol.unique.diploid) #get rid of the pound sign
+vcf.header.Ae.Ol.unique.diploid
 
-vcf.Ae.Ol.no.bolting.unique <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/Ae_Ol_unique_modified.vcf",as.is=T,na.strings = ".") 
+vcf.header.Ae.Ol.unique.diploid <- unlist(strsplit(vcf.header.Ae.Ol.unique.diploid,split="\t"))
+vcf.header.Ae.Ol.unique.diploid
+colnames(vcf.Ae.Ol.no.bolting.unique.diploid) <- vcf.header.Ae.Ol.unique.diploid
+head(vcf.Ae.Ol.no.bolting.unique.diploid)
 
-dim(vcf.Ae.Ol.no.bolting.unique) # 1014049      11 
-
-vcf.header.Ae.Ol.unique <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/Ae_Ol_unique_modified.vcf",intern = TRUE) 
-head(vcf.header.Ae.Ol.unique)
-vcf.header.Ae.Ol.unique <- sub("#","",vcf.header.Ae.Ol.unique) #get rid of the pound sign
-vcf.header.Ae.Ol.unique
-
-vcf.header.Ae.Ol.unique <- unlist(strsplit(vcf.header.Ae.Ol.unique,split="\t"))
-vcf.header.Ae.Ol.unique
-colnames(vcf.Ae.Ol.no.bolting.unique) <- vcf.header.Ae.Ol.unique
-head(vcf.Ae.Ol.no.bolting.unique)
-
-system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/Ae_Ol_unique_modified.vcf") 
-system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/Ae_Ol_unique_modified.vcf") 
+system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
+system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
 
 # Before splitting add NAs to blank cells
-vcf.Ae.Ol.no.bolting.unique$Ae
+vcf.Ae.Ol.no.bolting.unique.diploid$Ae
 
-vcf.Ae.Ol.no.bolting.unique$Ae[is.na(vcf.Ae.Ol.no.bolting.unique$Ae)] <- "NA:NA:NA:NA:NA:NA"
+vcf.Ae.Ol.no.bolting.unique.diploid$Ae[is.na(vcf.Ae.Ol.no.bolting.unique.diploid$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
 
 Ae.tmp.unique <- matrix(
-  unlist(strsplit(vcf.Ae.Ol.no.bolting.unique$Ae,split = ":")),
-  nrow=nrow(vcf.Ae.Ol.no.bolting.unique),  
+  unlist(strsplit(vcf.Ae.Ol.no.bolting.unique.diploid$Ae,split = ":")),
+  nrow=nrow(vcf.Ae.Ol.no.bolting.unique.diploid),  
   byrow=TRUE
   )
 
 head(Ae.tmp.unique)
 Ae.tmp.unique
 
-colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual"),sep="_")
+colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
 
-vcf.Ae.Ol.no.bolting.unique$Ol[is.na(vcf.Ae.Ol.no.bolting.unique$Ol)] <- "NA:NA:NA:NA:NA:NA"
+vcf.Ae.Ol.no.bolting.unique.diploid$Ol[is.na(vcf.Ae.Ol.no.bolting.unique.diploid$Ol)] <- "NA:NA:NA:NA:NA:NA:NA"
 
 Ol.tmp.unique <- matrix(
-  unlist(strsplit(vcf.Ae.Ol.no.bolting.unique$Ol,split = ":")),
-  nrow=nrow(vcf.Ae.Ol.no.bolting.unique),
+  unlist(strsplit(vcf.Ae.Ol.no.bolting.unique.diploid$Ol,split = ":")),
+  nrow=nrow(vcf.Ae.Ol.no.bolting.unique.diploid),
   byrow=TRUE
   )
 head(Ol.tmp.unique)
-colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual"),sep="_")
+colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
 
-vcf.Ae.Ol.no.bolting.unique <- cbind(vcf.Ae.Ol.no.bolting.unique,Ae.tmp.unique,Ol.tmp.unique,stringsAsFactors=FALSE)
-summary(vcf.Ae.Ol.no.bolting.unique)
-head(vcf.Ae.Ol.no.bolting.unique)
+vcf.Ae.Ol.no.bolting.unique.diploid <- cbind(vcf.Ae.Ol.no.bolting.unique.diploid,Ae.tmp.unique,Ol.tmp.unique,stringsAsFactors=FALSE)
+summary(vcf.Ae.Ol.no.bolting.unique.diploid)
+head(vcf.Ae.Ol.no.bolting.unique.diploid)
 
-vcf.Ae.Ol.no.bolting.unique[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual",
-            "Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")] <- 
-  apply(vcf.Ae.Ol.no.bolting.unique[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual",
-            "Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")],
+vcf.Ae.Ol.no.bolting.unique.diploid[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ae_gen.lik","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual","Ol_gen.lik")] <- 
+  apply(vcf.Ae.Ol.no.bolting.unique.diploid[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ae_gen.lik","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual","Ol_gen.lik")],
         2,
         as.numeric
         )
-summary(vcf.Ae.Ol.no.bolting.unique)
-head(vcf.Ae.Ol.no.bolting.unique)
-dim(vcf.Ae.Ol.no.bolting.unique) # 1014049      23  
+summary(vcf.Ae.Ol.no.bolting.unique.diploid)
+head(vcf.Ae.Ol.no.bolting.unique.diploid)
+dim(vcf.Ae.Ol.no.bolting.unique.diploid) # 1014049      25  
 
+######### 
 ### 1) filter based on QUAl score 
 
 # make a histogram of QUAL scores 
@@ -305,7 +293,9 @@ plot.w.ref.unique<-plot_grid(
 
 plot.w.ref.unique 
 save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8) 
+
 ```
+
 
 # using GATK to call SNP 
 ```{r}
@@ -506,7 +496,6 @@ dim(vcf.Ae.Ol.GATK) # 8491 21
 # read depth > 3 and read depth < 501  
    
 ```  
-
 
 # compare SNPs from freebayes & GATK 
 ```{r}

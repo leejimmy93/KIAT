@@ -250,6 +250,7 @@ p.average.mapping.36 <- p.average.mapping.36 + geom_text(data = average.mapping.
 p.average.mapping.36
 ggsave(p.average.mapping.36, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/average.mapping.36.png", height = 5, width = 4)  
 
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-156",]$batch 
 
 ```
 
