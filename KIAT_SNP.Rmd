@@ -12,7 +12,6 @@ output:
 vcf.Ae.Ol.no.bolting.unique.diploid <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",as.is=T,na.strings = ".") 
 
 dim(vcf.Ae.Ol.no.bolting.unique.diploid) # 2102031      11  
-head(vcf.Ae.Ol.no.bolting.unique.diploid)
 
 vcf.header.Ae.Ol.unique.diploid <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",intern = TRUE) 
 vcf.header.Ae.Ol.unique.diploid
@@ -22,7 +21,7 @@ vcf.header.Ae.Ol.unique.diploid
 vcf.header.Ae.Ol.unique.diploid <- unlist(strsplit(vcf.header.Ae.Ol.unique.diploid,split="\t"))
 vcf.header.Ae.Ol.unique.diploid
 colnames(vcf.Ae.Ol.no.bolting.unique.diploid) <- vcf.header.Ae.Ol.unique.diploid
-head(vcf.Ae.Ol.no.bolting.unique.diploid)
+head(vcf.Ae.Ol.no.bolting.unique.diploid) # why no print out??? 
 
 system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
 system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
@@ -39,7 +38,6 @@ Ae.tmp.unique <- matrix(
   )
 
 head(Ae.tmp.unique)
-Ae.tmp.unique
 
 colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
 
@@ -57,31 +55,31 @@ vcf.Ae.Ol.no.bolting.unique.diploid <- cbind(vcf.Ae.Ol.no.bolting.unique.diploid
 summary(vcf.Ae.Ol.no.bolting.unique.diploid)
 head(vcf.Ae.Ol.no.bolting.unique.diploid)
 
-vcf.Ae.Ol.no.bolting.unique.diploid[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ae_gen.lik","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual","Ol_gen.lik")] <- 
-  apply(vcf.Ae.Ol.no.bolting.unique.diploid[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ae_gen.lik","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual","Ol_gen.lik")],
+vcf.Ae.Ol.no.bolting.unique.diploid[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")] <- 
+  apply(vcf.Ae.Ol.no.bolting.unique.diploid[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")],
         2,
         as.numeric
         )
 summary(vcf.Ae.Ol.no.bolting.unique.diploid)
 head(vcf.Ae.Ol.no.bolting.unique.diploid)
-dim(vcf.Ae.Ol.no.bolting.unique.diploid) # 1014049      25  
+dim(vcf.Ae.Ol.no.bolting.unique.diploid) # 2102031      25   
 
 ######### 
 ### 1) filter based on QUAl score 
 
 # make a histogram of QUAL scores 
-hist(vcf.Ae.Ol.no.bolting.unique$QUAL)
+hist(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL)
 
-length(vcf.Ae.Ol.no.bolting.unique$QUAL) # a total of 1014049 SNPs 
-sum(vcf.Ae.Ol.no.bolting.unique$QUAL>20) / length(vcf.Ae.Ol.no.bolting.unique$QUAL) # 99% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
+length(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL) # a total of 21002031 SNPs 
+sum(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL>20) / length(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL) # 81% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
 
-hist(vcf.Ae.Ol.no.bolting.unique[vcf.Ae.Ol.no.bolting.unique$QUAL<20,]$QUAL)
-hist(vcf.Ae.Ol.no.bolting.unique[vcf.Ae.Ol.no.bolting.unique$QUAL<1,]$QUAL)
+hist(vcf.Ae.Ol.no.bolting.unique.diploid[vcf.Ae.Ol.no.bolting.unique.diploid$QUAL<20,]$QUAL)
+hist(vcf.Ae.Ol.no.bolting.unique.diploid[vcf.Ae.Ol.no.bolting.unique.diploid$QUAL<1,]$QUAL)
 
 # subset the data to keep positions where the quality score is 40 or higher 
-vcf.Ae.Ol.no.bolting.unique.HQ <- vcf.Ae.Ol.no.bolting.unique[vcf.Ae.Ol.no.bolting.unique$QUAL>40,]
-dim(vcf.Ae.Ol.no.bolting.unique.HQ) # 997853     23  
-sum(vcf.Ae.Ol.no.bolting.unique$QUAL>40) / length(vcf.Ae.Ol.no.bolting.unique$QUAL) # 98% of SNPs were retained with QUAL > 40
+vcf.Ae.Ol.no.bolting.unique.HQ <- vcf.Ae.Ol.no.bolting.unique.diploid[vcf.Ae.Ol.no.bolting.unique.diploid$QUAL>40,]
+dim(vcf.Ae.Ol.no.bolting.unique.HQ) # 1502350      25  
+sum(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL>40) / length(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL) # 71% of SNPs were retained with QUAL > 40
 
 # count the number 
 table(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt)
@@ -93,33 +91,33 @@ tmp.unique <- ftable(vcf.Ae.Ol.no.bolting.unique.HQ[,c("Ae_gt","Ol_gt")])
 # which SNPs would be most useful for a downstream QTL analysis between Ae & Ol? 
 
 # SNPs between Ae & ref
-sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1/1/1") # 428665  
-Ae_ref.unique <- vcf.Ae.Ol.no.bolting.unique.HQ[vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1/1/1",]
+sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1") # 595704   
+Ae_ref.unique <- vcf.Ae.Ol.no.bolting.unique.HQ[vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1",]
 # read depth > 3 and read depth < 501  
 Ae_ref_after_filter.unique <- Ae_ref.unique[Ae_ref.unique$Ae_tot.depth > 3 &Ae_ref.unique$Ae_tot.depth <  501,] 
-dim(Ae_ref_after_filter.unique) # 380246  23  
+dim(Ae_ref_after_filter.unique) # 394737     25   
 head(Ae_ref_after_filter.unique)
 
 # SNPs between Ol & ref 
-sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1/1/1") # 421125  
-Ol_ref.unique <- vcf.Ae.Ol.no.bolting.unique.HQ[vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1/1/1",]
+sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1") # 421125  
+Ol_ref.unique <- vcf.Ae.Ol.no.bolting.unique.HQ[vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1",]
 # read depth > 3 and read depth < 501  
 Ol_ref_after_filter.unique <- Ol_ref.unique[Ol_ref.unique$Ol_tot.depth > 3 &Ol_ref.unique$Ol_tot.depth <  501,] 
-dim(Ol_ref_after_filter.unique) # 373641  23   
+dim(Ol_ref_after_filter.unique) # 391944     25   
 
 # SNPs between Ae & Ol 
-sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1/1/1" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="0/0/0/0") +  sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/0/0/0" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1/1/1") # 271105 SNPs between Ae & Ol 
+sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="0/0") +  sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/0" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1") # 314046 SNPs between Ae & Ol 
 
-275111/length(vcf.Ae.Ol.no.bolting.unique.HQ$CHROM) # 27.5% of the total SNPs 
+314046/length(vcf.Ae.Ol.no.bolting.unique.HQ$CHROM) # 21% of the total SNPs 
 # subset SNPs between Ae & Ol 
-vcf.Ae.Ol.no.bolting.unique.HQ.new <- vcf.Ae.Ol.no.bolting.unique.HQ[((vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1/1/1" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="0/0/0/0") | (vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/0/0/0" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1/1/1")),] 
+vcf.Ae.Ol.no.bolting.unique.HQ.new <- vcf.Ae.Ol.no.bolting.unique.HQ[((vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="0/0") | (vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/0" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1")),] 
 
-dim(vcf.Ae.Ol.no.bolting.unique.HQ.new) # 271105     23  
+dim(vcf.Ae.Ol.no.bolting.unique.HQ.new) # 314046     25  
 # read depth > 3 and read depth < 501  
 
 Ae_Ol_after_filter.unique  <- 
 vcf.Ae.Ol.no.bolting.unique.HQ.new[(vcf.Ae.Ol.no.bolting.unique.HQ.new$Ae_tot.depth > 3 & vcf.Ae.Ol.no.bolting.unique.HQ.new$Ae_tot.depth < 501 & vcf.Ae.Ol.no.bolting.unique.HQ.new$Ol_tot.depth > 3 & vcf.Ae.Ol.no.bolting.unique.HQ.new$Ol_tot.depth < 501),]  
-dim(Ae_Ol_after_filter.unique)  # 211900   
+dim(Ae_Ol_after_filter.unique)  # 232477     25    
   
 ######### using IGV to check SNP 
   
@@ -149,11 +147,12 @@ SNP_chr_random.unique$subgenome <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09
 SNP_chr_random.unique$chr_ID <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\3", SNP_chr_random.unique$ID) 
 
 # do a little calculation: how many SNPs on main & random chromosomes? 
-sum(SNP_chr_main.unique$V1) # 182754   
-sum(SNP_chr_random.unique$V1) # 29146   
+sum(SNP_chr_main.unique$V1) # 200317    
+sum(SNP_chr_random.unique$V1) # 32160    
 sum(SNP_chr_main.unique$V1)/sum(sum(SNP_chr_main.unique$V1),sum(SNP_chr_random.unique$V1)) # 86.2% 
 
 # make a plot to see how many SNPs on each chromosome 
+library(ggplot2)
 pl.SNP.main.1.unique <- ggplot(data = SNP_chr_main.unique) 
 pl.SNP.main.1.unique <- pl.SNP.main.1.unique + geom_bar(aes(x=factor(chr_ID), y = V1, fill=subgenome), stat = "identity")
 pl.SNP.main.1.unique <- pl.SNP.main.1.unique + facet_wrap(~subgenome, ncol = 1)
@@ -162,21 +161,21 @@ pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromo
 pl.SNP.main.1.unique <- pl.SNP.main.1.unique + theme(legend.position = "none")
 pl.SNP.main.1.unique 
 
-ggsave(pl.SNP.main.1.unique, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.1.unique.png", height = 6, width = 8)
+ggsave(pl.SNP.main.1.unique, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.1.unique.01_26.png", height = 6, width = 8)
 
 ########### plot the position along the chromosome of each SNP, read depth 
 head(Ae_Ol_after_filter.unique) 
 # write.table(Ae_Ol_after_filter.unique, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_after_filter.unique.vcf")
 # get main chromosome and random chromsome seperately 
 Ae_Ol_after_filter.main.unique <- Ae_Ol_after_filter.unique[grep("random", Ae_Ol_after_filter.unique$CHROM, invert = T),]
-dim(Ae_Ol_after_filter.main.unique) # 182754   23  
+dim(Ae_Ol_after_filter.main.unique) # 200317     25   
 
 Ae_Ol_after_filter.main.unique$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", Ae_Ol_after_filter.main.unique$CHROM)
 Ae_Ol_after_filter.main.unique$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", Ae_Ol_after_filter.main.unique$CHROM)
 
 # number of SNPs on A & C subgenome
 sum(Ae_Ol_after_filter.main.unique$subgenome=="A")/nrow(Ae_Ol_after_filter.main.unique) # 69.6%
-sum(Ae_Ol_after_filter.main.unique$subgenome=="C") 
+sum(Ae_Ol_after_filter.main.unique$subgenome=="C") # 61464
 
 ## make plot for main & random chromosome seperately (distribution of SNPs per Mb)
 library(ggplot2)
@@ -187,10 +186,10 @@ pl.SNP.main.2.unique <- pl.SNP.main.2.unique + labs(list(title = "", x = "chromo
 pl.SNP.main.2.unique <- pl.SNP.main.2.unique + theme(legend.position = "none")
 pl.SNP.main.2.unique
 
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.2.unique.png", width = 23, height = 13)
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.2.unique.01.26.2017.png", width = 23, height = 13)
 
 Ae_Ol_after_filter.random.unique <- Ae_Ol_after_filter.unique[grep("random", Ae_Ol_after_filter.unique$CHROM),] 
-dim(Ae_Ol_after_filter.random.unique) # 29146    23  
+dim(Ae_Ol_after_filter.random.unique) # 32160    25   
 
 ### check Da-Ae VS ref, do I get the same pattern? 
 
@@ -219,12 +218,12 @@ SNP_chr_random_Ae_ref.unique$subgenome <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|0
 SNP_chr_random_Ae_ref.unique$chr_ID <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\3", SNP_chr_random_Ae_ref.unique$ID)
 
 # do a little calculation: how many SNPs on main & random chromosomes?
-sum(SNP_chr_main_Ae_ref.unique$number) # 314269 
-sum(SNP_chr_random_Ae_ref.unique$number) # 65977 
+sum(SNP_chr_main_Ae_ref.unique$number) # 325903  
+sum(SNP_chr_random_Ae_ref.unique$number) # 68834  
 sum(SNP_chr_main_Ae_ref.unique$number)/sum(sum(SNP_chr_main_Ae_ref.unique$number),sum(SNP_chr_random_Ae_ref.unique$number)) # 82.6% 
 
-sum(SNP_chr_main_Ae_ref.unique[SNP_chr_main_Ae_ref.unique$subgenome=="A",]$number_Ae_ref) # 196494 
-sum(SNP_chr_main_Ae_ref.unique[SNP_chr_main_Ae_ref.unique$subgenome=="C",]$number_Ae_ref) # 117775   
+sum(SNP_chr_main_Ae_ref.unique[SNP_chr_main_Ae_ref.unique$subgenome=="A",]$number_Ae_ref) # 203780  
+sum(SNP_chr_main_Ae_ref.unique[SNP_chr_main_Ae_ref.unique$subgenome=="C",]$number_Ae_ref) # 122123    
 
 SNP_chr_main_Ae_ref.unique$chr_ID_2 <- paste(SNP_chr_main_Ae_ref.unique$subgenome, SNP_chr_main_Ae_ref.unique$chr_ID, sep = "")
 SNP_chr_main_Ae_ref.unique$chr_ID_2
@@ -265,11 +264,11 @@ SNP_chr_random_Ol_ref.unique$subgenome <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|0
 SNP_chr_random_Ol_ref.unique$chr_ID <- gsub("(chr)(A|C|U)(01|02|03|04|05|06|07|08|09|10|nn)(_)(random)", "\\3", SNP_chr_random_Ol_ref.unique$ID)
 
 # do a little calculation: how many SNPs on main & random chromosomes?
-sum(SNP_chr_main_Ol_ref.unique$number) #306967 
-sum(SNP_chr_random_Ol_ref.unique$number) # 66674  
+sum(SNP_chr_main_Ol_ref.unique$number) #322119  
+sum(SNP_chr_random_Ol_ref.unique$number) # 69825   
 
-sum(SNP_chr_main_Ol_ref.unique[SNP_chr_main_Ol_ref.unique$subgenome=="A",]$number_Ol_ref) # 179855  
-sum(SNP_chr_main_Ol_ref.unique[SNP_chr_main_Ol_ref.unique$subgenome=="C",]$number_Ol_ref) # 127112 
+sum(SNP_chr_main_Ol_ref.unique[SNP_chr_main_Ol_ref.unique$subgenome=="A",]$number_Ol_ref) # 189154   
+sum(SNP_chr_main_Ol_ref.unique[SNP_chr_main_Ol_ref.unique$subgenome=="C",]$number_Ol_ref) # 132965  
 
 SNP_chr_main_Ol_ref.unique$chr_ID_2 <- paste(SNP_chr_main_Ol_ref.unique$subgenome, SNP_chr_main_Ol_ref.unique$chr_ID, sep = "")
 
@@ -282,7 +281,7 @@ pl.SNP.main.Ol_ref.unique <- pl.SNP.main.Ol_ref.unique + labs(list(title = "", x
 # pl.SNP.main.Ol_ref <- pl.SNP.main.Ol_ref + theme(legend.position = "none")
 pl.SNP.main.Ol_ref.unique
 
-ggsave(pl.SNP.main.Ol_ref, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.Ol_ref.png", height = 6, width = 10)
+ggsave(pl.SNP.main.Ol_ref.unique, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/SNP.main.Ol_ref.01_26_2017.png", height = 6, width = 10)
 
 # combine 2 graphs
 library(cowplot)
@@ -292,7 +291,7 @@ plot.w.ref.unique<-plot_grid(
   ncol=1, nrow = 2,labels=c("","","",""))
 
 plot.w.ref.unique 
-save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8) 
+save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8)  
 
 ```
 
