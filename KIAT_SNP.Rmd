@@ -244,7 +244,7 @@ number_Ol_ref.unique <- c()
 
 for (chr in chr_ID_Ol_ref.unique) {
   number_Ol_ref.unique[chr] <- sum(sum(Ol_ref_after_filter.unique$CHROM==chr))
-  print(number_Ol_ref.unique[chr])
+  print(number_Ol_ref.unique[chr])s
 }
 
 SNP_chr_Ol_ref.unique <- as.data.frame(number_Ol_ref.unique)

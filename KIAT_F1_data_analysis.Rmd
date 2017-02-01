@@ -710,13 +710,111 @@ ggsave(FLC.2, filename = "~/Desktop/FLC_F1.png", width = 6, height = 7)
 # 3) extract uniquely mapped file, sort, and convert to bam file 
 
 # 4) call SNPs for each tissue type seperately, include Da-Ae & Da-Ol 
-
-
-
-
 ```
 
+# examine F1 dataset to study gene imprinting effect 
+```{r}
+vcf.F1 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1_young_modified.vcf",as.is=T,na.strings = ".")  
 
+dim(vcf.F1) # 2318107     13  
+
+vcf.header.F1 <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1_young_modified.vcf",intern = TRUE) 
+vcf.header.F1
+vcf.header.F1 <- sub("#","",vcf.header.F1) #get rid of the pound sign
+vcf.header.F1
+
+vcf.header.F1 <- unlist(strsplit(vcf.header.F1,split="\t"))
+vcf.header.F1
+colnames(vcf.F1) <- vcf.header.F1
+head(vcf.F1) # why no print out??? 
+
+system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1_young_modified.vcf") 
+system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1_young_modified.vcf") 
+
+# Before splitting add NAs to blank cells
+vcf.F1$Ae
+
+vcf.F1$Ae[is.na(vcf.F1$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
+
+Ae.tmp.unique <- matrix(
+  unlist(strsplit(vcf.F1$Ae,split = ":")),
+  nrow=nrow(vcf.F1),  
+  byrow=TRUE
+  )
+
+head(Ae.tmp.unique)
+
+colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+
+vcf.F1$Ol[is.na(vcf.F1$Ol)] <- "NA:NA:NA:NA:NA:NA:NA"
+
+Ol.tmp.unique <- matrix(
+  unlist(strsplit(vcf.F1$Ol,split = ":")),
+  nrow=nrow(vcf.F1),
+  byrow=TRUE
+  )
+head(Ol.tmp.unique)
+colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+
+# 414 
+vcf.F1$`414F1_young`[is.na(vcf.F1$`414F1_young`)] <- "NA:NA:NA:NA:NA:NA:NA"
+
+F1_young_414.tmp.unique <- matrix(
+  unlist(strsplit(vcf.F1$`414F1_young`,split = ":")),
+  nrow=nrow(vcf.F1),
+  byrow=TRUE
+  )
+head(F1_young_414.tmp.unique)
+colnames(F1_young_414.tmp.unique) <- paste("414F1_young",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+
+vcf.F1$`415F1_young`[is.na(vcf.F1$`415F1_young`)] <- "NA:NA:NA:NA:NA:NA:NA"
+
+F1_young_415.tmp.unique <- matrix(
+  unlist(strsplit(vcf.F1$`415F1_young`,split = ":")),
+  nrow=nrow(vcf.F1),
+  byrow=TRUE
+  )
+head(F1_young_415.tmp.unique)
+colnames(F1_young_415.tmp.unique) <- paste("415F1_young",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+
+###### 
+vcf.F1 <- cbind(vcf.F1,Ae.tmp.unique,Ol.tmp.unique,F1_young_414.tmp.unique, F1_young_415.tmp.unique, stringsAsFactors=FALSE)
+summary(vcf.F1)
+head(vcf.F1)
+
+vcf.F1[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual","414F1_young_tot.depth","414F1_young_ref.depth","414F1_young_ref.qual","414F1_young_alt.depth","414F1_young_alt.qual","415F1_young_tot.depth","415F1_young_ref.depth","415F1_young_ref.qual","415F1_young_alt.depth","415F1_young_alt.qual")] <- 
+  apply(vcf.F1[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual","414F1_young_tot.depth","414F1_young_ref.depth","414F1_young_ref.qual","414F1_young_alt.depth","414F1_young_alt.qual","415F1_young_tot.depth","415F1_young_ref.depth","415F1_young_ref.qual","415F1_young_alt.depth","415F1_young_alt.qual")],
+        2,
+        as.numeric
+        )
+summary(vcf.F1) 
+head(vcf.F1)
+dim(vcf.F1) # 2318107      41  
+
+######### 
+### 1) filter based on QUAl score 
+
+# make a histogram of QUAL scores 
+hist(vcf.F1$QUAL)
+
+length(vcf.F1$QUAL) # a total of 21002031 SNPs 
+sum(vcf.F1$QUAL>20) / length(vcf.F1$QUAL) # 78.5% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
+
+hist(vcf.F1[vcf.F1$QUAL<20,]$QUAL)
+hist(vcf.F1[vcf.F1$QUAL<1,]$QUAL)
+
+# subset the data to keep positions where the quality score is 40 or higher 
+vcf.F1.HQ <- vcf.F1[vcf.F1$QUAL>40,]
+dim(vcf.F1.HQ) # 1502350      25  
+sum(vcf.F1$QUAL>40) / length(vcf.F1$QUAL) # 70% of SNPs were retained with QUAL > 40
+
+# count the number 
+table(vcf.F1.HQ$Ae_gt)
+table(vcf.F1.HQ$Ol_gt)
+table(vcf.F1$`414F1_young_gt`)
+table(vcf.F1$`415F1_young_gt`)
+
+```
 
 
 
