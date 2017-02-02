@@ -85,9 +85,64 @@ sum(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL>40) / length(vcf.Ae.Ol.no.bolting.u
 table(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt)
 table(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt)
 
-tmp.unique <- ftable(vcf.Ae.Ol.no.bolting.unique.HQ[,c("Ae_gt","Ol_gt")])
-# write.csv(tmp.unique, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/gt_Ae_Ol.csv")
+vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt==""),]
 
+
+tmp.unique <- ftable(vcf.Ae.Ol.no.bolting.unique.HQ[,c("Ae_gt","Ol_gt")])
+head(tmp.unique)
+write.table(vcf.Ae.Ol.no.bolting.unique.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/gt_Ae_Ol.vcf") 
+```
+
+# check why there are so many heterozygous and why 3, 4, 5... 
+```{r}
+# 1) Julin suggested plot by mapping score, total depth, and QUAL score... 
+# 2) also visualize SNPs in igv to spot the realignment problem, SNP calls from end of reads & intron-exon insertion is bad, don’t believe… 
+# 3) 3, 4, and 5 visualize them in IGV…  
+
+vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1" 
+vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"
+vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1" 
+
+head(vcf.Ae.Ol.no.bolting.unique.HQ)
+
+# plot QUAL by Ae_gt 
+library(ggplot2)
+p.QUAL.Ae <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ) 
+p.QUAL.Ae <- p.QUAL.Ae + geom_histogram(aes(QUAL, fill=Ae_gt)) + scale_x_log10() 
+p.QUAL.Ae <- p.QUAL.Ae + facet_wrap(~Ae_gt, ncol = 1)
+p.QUAL.Ae
+
+# plot QUAL by Ol_gt 
+p.QUAL.Ol <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ) 
+p.QUAL.Ol <- p.QUAL.Ol + geom_histogram(aes(QUAL, fill=Ol_gt)) + scale_x_log10() 
+p.QUAL.Ol <- p.QUAL.Ol + facet_wrap(~Ol_gt, ncol = 1)
+p.QUAL.Ol
+
+# plot total depth by Ae_gt 
+p.tot.depth.Ae <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ) 
+p.tot.depth.Ae <- p.tot.depth.Ae + geom_histogram(aes(Ae_tot.depth+Ol_tot.depth, fill=Ae_gt)) + scale_x_log10() 
+p.tot.depth.Ae <- p.tot.depth.Ae + facet_wrap(~Ae_gt, ncol = 1)
+p.tot.depth.Ae
+
+# plot total depth by Ol_gt 
+p.tot.depth.Ol <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ) 
+p.tot.depth.Ol <- p.tot.depth.Ol + geom_histogram(aes(Ae_tot.depth+Ol_tot.depth, fill=Ol_gt)) + scale_x_log10() 
+p.tot.depth.Ol <- p.tot.depth.Ol + facet_wrap(~Ol_gt, ncol = 1)
+p.tot.depth.Ol
+
+# no difference in mapping score, because we used only mapping score of 255 for SNP calling. mapping score of 255 means unique mapping, check stats didn't tell me anything... 
+
+#### export vcf file to igv for visulization 
+dim(vcf.Ae.Ol.no.bolting.unique.HQ) # 1502350      25 
+vcf.Ae.Ol.no.bolting.unique.HQ.export <- vcf.Ae.Ol.no.bolting.unique.HQ[,c(1:11)]
+
+write.table(vcf.Ae.Ol.no.bolting.unique.HQ.export, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.no.bolting.unique.HQ.vcf", row.names = F)
+
+
+```
+
+
+```{r}
 # which SNPs would be most useful for a downstream QTL analysis between Ae & Ol? 
 
 # SNPs between Ae & ref
@@ -368,37 +423,37 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 ```{r}
 ### import data and reformat 
 
-vcf.GATK <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/GATK/Ae_Ol_xaa_filtered.vcf",as.is=T,na.strings = ".") 
-head(vcf.GATK) 
+vcf.GATK.A01 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/xaa.intervals.vcf",as.is=T,na.strings = ".") 
+head(vcf.GATK.A01) 
 
-vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/GATK/Ae_Ol_xaa_filtered.vcf",intern = TRUE) 
+vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/xaa.intervals.vcf",intern = TRUE) 
 head(vcf.header.GATK)
 vcf.header.GATK <- sub("#","",vcf.header.GATK) #get rid of the pound sign
 vcf.header.GATK
 
 vcf.header.GATK <- unlist(strsplit(vcf.header.GATK,split="\t"))
-colnames(vcf.GATK) <- vcf.header.GATK
-head(vcf.GATK)
-tail(vcf.GATK)
-nrow(vcf.GATK) # 76461 
+colnames(vcf.GATK.A01) <- vcf.header.GATK
+head(vcf.GATK.A01)
+tail(vcf.GATK.A01)
+dim(vcf.GATK.A01) # 68068   11
 
-system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/GATK/Ae_Ol_xaa_filtered.vcf")
-system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/GATK/Ae_Ol_xaa_filtered.vcf") 
+system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/xaa.intervals.vcf")
+system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/xaa.intervals.vcf") 
 
 ########## 
 # correct the file 
-which(vcf.GATK$FORMAT=="GT:GQ:PL")
-class(vcf.GATK)
+which(vcf.GATK.A01$FORMAT=="GT:GQ:PL")
+class(vcf.GATK.A01)
 
-vcf.GATK.corrected <- vcf.GATK[-c(11720, 19386, 19387, 19655, 46800, 48360, 58009, 67202),]
+vcf.GATK.corrected <- vcf.GATK.A01[-c(2425, 10905, 17842, 17843, 18085, 41722, 43080, 59817),]
 sum(vcf.GATK.corrected$FORMAT=="GT:GQ:PL")
 dim(vcf.GATK.corrected)
 
 # Before splitting add NAs to blank cells
 vcf.GATK.corrected$Ae
-sum(vcf.GATK.corrected$Ae=="./././.")
+sum(vcf.GATK.corrected$Ae=="./.")
 
-vcf.GATK.corrected$Ae[vcf.GATK.corrected$Ae=="./././."] <- "NA:NA:NA:NA:NA"
+vcf.GATK.corrected$Ae[vcf.GATK.corrected$Ae=="./."] <- "NA:NA:NA:NA:NA"
 sum(vcf.GATK.corrected$Ae=="NA:NA:NA:NA:NA") 
 
 Ae.tmp.unique.GATK <- matrix(
@@ -412,7 +467,7 @@ tail(Ae.tmp.unique.GATK)
 
 colnames(Ae.tmp.unique.GATK) <- paste("Ae",c("gt","ref.alt.depth","approx.depth","genotype.qual","Phred.score"),sep="_")
 
-vcf.GATK.corrected$Ol[vcf.GATK.corrected$Ol=="./././."] <- "NA:NA:NA:NA:NA"
+vcf.GATK.corrected$Ol[vcf.GATK.corrected$Ol=="./."] <- "NA:NA:NA:NA:NA"
 
 Ol.tmp.unique.GATK <- matrix(
   unlist(strsplit(vcf.GATK.corrected$Ol,split = ":")),
@@ -421,48 +476,49 @@ Ol.tmp.unique.GATK <- matrix(
   ) 
 head(Ol.tmp.unique.GATK)
 tail(Ol.tmp.unique.GATK)
-dim(Ol.tmp.unique.GATK)
+dim(Ol.tmp.unique.GATK) # 68060   5 
+dim(Ae.tmp.unique.GATK) 
 
 colnames(Ol.tmp.unique.GATK) <- paste("Ol",c("gt","ref.alt.depth","approx.depth","genotype.qual","Phred.score"),sep="_")
 
-vcf.Ae.Ol.no.bolting.unique <- cbind(vcf.Ae.Ol.no.bolting.unique,Ae.tmp.unique,Ol.tmp.unique,stringsAsFactors=FALSE) 
+vcf.GATK.reform <- cbind(vcf.GATK.corrected, Ae.tmp.unique.GATK, Ol.tmp.unique.GATK,stringsAsFactors=FALSE) 
 
-vcf.GATK.reform <- cbind(vcf.GATK.corrected, Ae.tmp.unique.GATK,Ol.tmp.unique.GATK,stringsAsFactors=FALSE)
 summary(vcf.GATK.reform)
 head(vcf.GATK.reform)
 
-# vcf.GATK.reform[,c("Ae_approx.depth","Ae_genotype.qual",
-#             "Ol_approx.depth","Ol_genotype.qual")] <-
-#   apply(vcf.GATK.reform[,c("Ae_approx.depth","Ae_genotype.qual",
-#             "Ol_approx.depth","Ol_genotype.qual")],
-#         2,
-#         as.numeric
-#         )
+######## 
+vcf.GATK.reform[,c("Ae_approx.depth","Ae_genotype.qual",
+            "Ol_approx.depth","Ol_genotype.qual")] <-
+  apply(vcf.GATK.reform[,c("Ae_approx.depth","Ae_genotype.qual",
+            "Ol_approx.depth","Ol_genotype.qual")],
+        2,
+        as.numeric
+        )
 
-dim(vcf.GATK.reform) # 76453 21       
+dim(vcf.GATK.reform) # 68060 21       
 
 #### filter (based on QUAL score and snpcluster)
 # 1) filter snpcluster 
-vcf.GATK.reform.pass <- vcf.GATK.reform[vcf.GATK.reform$FILTER!="SnpCluster",]
-nrow(vcf.GATK.reform.pass)/nrow(vcf.GATK.reform) # 50% 
-unique(vcf.GATK.reform.pass$Ae_gt)
-unique(vcf.GATK.reform.pass$Ol_gt)
+# vcf.GATK.reform.pass <- vcf.GATK.reform[vcf.GATK.reform$FILTER!="SnpCluster",]
+# nrow(vcf.GATK.reform.pass)/nrow(vcf.GATK.reform) # 50% 
+unique(vcf.GATK.reform$Ae_gt)
+unique(vcf.GATK.reform$Ol_gt)
 
 ### 1) filter based on QUAl score 
 
 # make a histogram of QUAL scores 
-hist(vcf.GATK.reform.pass$QUAL) 
+hist(vcf.GATK.reform$QUAL) 
 
-length(vcf.GATK.reform.pass$QUAL) # a total of 76461 SNPs 
-sum(vcf.GATK.reform.pass$QUAL>40) / length(vcf.GATK.reform.pass$QUAL) # 84% are above QUAL score of 40, which means less than 0.0001 probability that it isn't polymorphic 
+length(vcf.GATK.reform$QUAL) # a total of 76461 SNPs 
+sum(vcf.GATK.reform$QUAL>40) / length(vcf.GATK.reform$QUAL) # 91% are above QUAL score of 40, which means less than 0.0001 probability that it isn't polymorphic 
 
 # subset the data to keep positions where the quality score is 40 or higher  
-vcf.GATK.reform.pass.HQ <- vcf.GATK.reform.pass[vcf.GATK.reform.pass$QUAL>40,]
-dim(vcf.GATK.reform.pass.HQ) # 31795    21   
+vcf.GATK.reform.HQ <- vcf.GATK.reform[vcf.GATK.reform$QUAL>40,]
+dim(vcf.GATK.reform.HQ) # 62247    21    
 
 # # count the number (for some reason this desn't work...)
-# table(vcf.GATK.reform.HQ$Ae_gt)
-# table(vcf.GATK.reform.HQ$Ol_gt)  
+table(vcf.GATK.reform.HQ$Ae_gt)
+table(vcf.GATK.reform.HQ$Ol_gt)  
 
 # which SNPs would be most useful for a downstream QTL analysis between Ae & Ol? 
 
