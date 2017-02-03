@@ -859,6 +859,8 @@ ftable(vcf.F1.HQ.filtered.1.2[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol
 dim(vcf.F1.HQ.filtered.1.2) # 34394 
 vcf.F1.HQ.filtered.1.2.3 <- vcf.F1.HQ.filtered.1.2[!((vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="1/1")),]
 dim(vcf.F1.HQ.filtered.1.2.3) # 23589 
+head(vcf.F1.HQ.filtered.1.2.3)
+head(vcf.F1.HQ.filtered.1.2.3[,c("414F1_young_gt", "415F1_young_gt")],100)
 
 ftable(vcf.F1.HQ.filtered.1.2.3[,c("414F1_young_gt", "415F1_young_gt")]) 
 
@@ -889,16 +891,16 @@ head(vcf.F1.flowering)
 # make a histogram of QUAL scores 
 hist(vcf.F1.flowering$QUAL)
 
-length(vcf.F1.flowering$QUAL) # a total of 2543959 SNPs 
-sum(vcf.F1.flowering$QUAL>20) / length(vcf.F1.flowering$QUAL) # 73.1% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
+length(vcf.F1.flowering$QUAL) # a total of 2559294 SNPs 
+sum(vcf.F1.flowering$QUAL>20) / length(vcf.F1.flowering$QUAL) # 72% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
 
-hist(vcf.F1[vcf.F1.flowering$QUAL<20,]$QUAL) 
-hist(vcf.F1[vcf.F1.flowering$QUAL<1,]$QUAL)
+hist(vcf.F1.flowering[vcf.F1.flowering$QUAL<20,]$QUAL) 
+hist(vcf.F1.flowering[vcf.F1.flowering$QUAL<1,]$QUAL)
 
 # subset the data to keep positions where the quality score is 40 or higher 
-vcf.F1.HQ.flowering <- vcf.F1[vcf.F1.flowering$QUAL>40,]
-dim(vcf.F1.HQ.flowering) # 1628615      41  
-sum(vcf.F1.flowering$QUAL>40) / length(vcf.F1.flowering$QUAL) # 64% of SNPs were retained with QUAL > 40
+vcf.F1.HQ.flowering <- vcf.F1.flowering[vcf.F1.flowering$QUAL>40,]
+dim(vcf.F1.HQ.flowering) # 1623025      41  
+sum(vcf.F1.flowering$QUAL>40) / length(vcf.F1.flowering$QUAL) # 63% of SNPs were retained with QUAL > 40
 
 # count the number 
 table(vcf.F1.HQ.flowering$Ae_gt)
@@ -916,37 +918,37 @@ vcf.F1.HQ.flowering[which(vcf.F1.HQ.flowering$Ae_tot.depth > 3 & vcf.F1.HQ.flowe
 
 max(vcf.F1.HQ.filtered.flowering$`415F1_tot.depth`)
 
-dim(vcf.F1.HQ) # 1628615      41 
-dim(vcf.F1.HQ.filtered) # 459820     41 
-head(vcf.F1.HQ.filtered)
-vcf.F1.HQ.filtered$CHROM
+dim(vcf.F1.HQ.flowering) # 1623025      41
+dim(vcf.F1.HQ.filtered.flowering) # 442740     41 
+head(vcf.F1.HQ.filtered.flowering)
+vcf.F1.HQ.filtered.flowering$CHROM
 
-nrow(vcf.F1.HQ.filtered)/nrow(vcf.F1.HQ) # 28% 
+nrow(vcf.F1.HQ.filtered.flowering)/nrow(vcf.F1.HQ.flowering) # 28% 
 
 # 2) extract the most useful SNPs based on genotype 
 #1) SNPs between the two parents  
-vcf.F1.HQ.filtered.1 <- vcf.F1.HQ.filtered[((vcf.F1.HQ.filtered$Ae_gt=="1/1" & vcf.F1.HQ.filtered$Ol_gt=="0/0") | (vcf.F1.HQ.filtered$Ae_gt=="0/0" & vcf.F1.HQ.filtered$Ol_gt=="1/1")),] 
-dim(vcf.F1.HQ.filtered.1) # 127019 41 
-nrow(vcf.F1.HQ.filtered.1)/nrow(vcf.F1.HQ.filtered) # 28% 
-ftable(vcf.F1.HQ.filtered.1[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
+vcf.F1.HQ.filtered.1.flowering <- vcf.F1.HQ.filtered.flowering[((vcf.F1.HQ.filtered.flowering$Ae_gt=="1/1" & vcf.F1.HQ.filtered.flowering$Ol_gt=="0/0") | (vcf.F1.HQ.filtered.flowering$Ae_gt=="0/0" & vcf.F1.HQ.filtered.flowering$Ol_gt=="1/1")),] 
+dim(vcf.F1.HQ.filtered.1.flowering) # 124314     41 
+nrow(vcf.F1.HQ.filtered.1.flowering)/nrow(vcf.F1.HQ.filtered.flowering) # 28% 
+ftable(vcf.F1.HQ.filtered.1.flowering[,c("414F1_gt","415F1_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
 
 # 3) now take a look at the SNPs for F1s, firstly check the ones that were determined as homozygous in F1s 
-vcf.F1.HQ.filtered.1.2 <- vcf.F1.HQ.filtered.1[(vcf.F1.HQ.filtered.1$`414F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`414F1_young_gt`=="0/0" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="0/0"),]
+vcf.F1.HQ.filtered.1.2.flowering <- vcf.F1.HQ.filtered.1.flowering[(vcf.F1.HQ.filtered.1.flowering$`414F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.flowering$`414F1_gt`=="0/0" | vcf.F1.HQ.filtered.1.flowering$`415F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.flowering$`415F1_gt`=="0/0"),]
 
-head(vcf.F1.HQ.filtered.1.2)
-vcf.F1.HQ.filtered.1.2[,c("Ae_gt", "Ol_gt", "414F1_young_gt", "414F1_young_ref.depth", "414F1_young_alt.depth", "415F1_young_gt", "415F1_young_ref.depth", "415F1_young_alt.depth")]
+head(vcf.F1.HQ.filtered.1.2.flowering)
+vcf.F1.HQ.filtered.1.2.flowering[,c("Ae_gt", "Ol_gt", "414F1_gt", "414F1_ref.depth", "414F1_alt.depth", "415F1_gt", "415F1_ref.depth", "415F1_alt.depth")]
 
 # calcualte how many SNPs are already counted as homozygous in F1 
-table(vcf.F1.HQ.filtered.1.2$`414F1_young_gt`)
-table(vcf.F1.HQ.filtered.1.2$`415F1_young_gt`)
-ftable(vcf.F1.HQ.filtered.1.2[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")])
+table(vcf.F1.HQ.filtered.1.2.flowering$`414F1_gt`)
+table(vcf.F1.HQ.filtered.1.2.flowering$`415F1_gt`)
+ftable(vcf.F1.HQ.filtered.1.2.flowering[,c("414F1_gt","415F1_gt", "Ae_gt", "Ol_gt")])
 
 # count SNPs between 414F1 & 415F1 
-dim(vcf.F1.HQ.filtered.1.2) # 34394 
-vcf.F1.HQ.filtered.1.2.3 <- vcf.F1.HQ.filtered.1.2[!((vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="1/1")),]
-dim(vcf.F1.HQ.filtered.1.2.3) # 23589 
+dim(vcf.F1.HQ.filtered.1.2.flowering) # 34453    41  
+vcf.F1.HQ.filtered.1.2.3.flowering <- vcf.F1.HQ.filtered.1.2.flowering[!((vcf.F1.HQ.filtered.1.2.flowering$`414F1_gt`=="0/0" & vcf.F1.HQ.filtered.1.2.flowering$`415F1_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2.flowering$`414F1_gt`=="1/1" & vcf.F1.HQ.filtered.1.2.flowering$`415F1_gt`=="1/1")),]
+dim(vcf.F1.HQ.filtered.1.2.3.flowering) # 24214    41  
 
-ftable(vcf.F1.HQ.filtered.1.2.3[,c("414F1_young_gt", "415F1_young_gt")])
+ftable(vcf.F1.HQ.filtered.1.2.3.flowering[,c("414F1_gt", "415F1_gt")])
 ```
 
 # early silique tissue 
@@ -960,45 +962,86 @@ vcf.F1.early.silique <- reformat.vcf.F1(vcf.F1.early.silique, vcf.header.F1)
 head(vcf.F1.early.silique)  
 ```
 
+# early silique tissue analysis 
 ```{r}
-# 1) filter based on read depth  
+######### 
+### 1) filter based on QUAl score 
+
+# make a histogram of QUAL scores 
+hist(vcf.F1.early.silique$QUAL)
+
+length(vcf.F1.early.silique$QUAL) # a total of 2608310 SNPs 
+sum(vcf.F1.early.silique$QUAL>20) / length(vcf.F1.early.silique$QUAL) # 75% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
+
+hist(vcf.F1.early.silique[vcf.F1.early.silique$QUAL<20,]$QUAL) 
+hist(vcf.F1.early.silique[vcf.F1.early.silique$QUAL<1,]$QUAL)
+
+# subset the data to keep positions where the quality score is 40 or higher 
+vcf.F1.HQ.early.silique <- vcf.F1.early.silique[vcf.F1.early.silique$QUAL>40,]
+dim(vcf.F1.HQ.early.silique) # 1680924      41  
+sum(vcf.F1.early.silique$QUAL>40) / length(vcf.F1.early.silique$QUAL) # 64% of SNPs were retained with QUAL > 40
+
+# count the number 
+table(vcf.F1.HQ.early.silique$Ae_gt)
+table(vcf.F1.HQ.early.silique$Ol_gt)
+table(vcf.F1.early.silique$`414F1_gt`)
+table(vcf.F1.early.silique$`415F1_gt`)
+
+head(vcf.F1.early.silique)
+sum(is.na(vcf.F1.early.silique$CHROM)) 
+
+# 1) filter based on read depth: worded till here...   
 # depth > 3 and < 501 in each one 
-vcf.F1.HQ.filtered <-
-vcf.F1.HQ[which(vcf.F1.HQ$Ae_tot.depth > 3 & vcf.F1.HQ$Ae_tot.depth < 501 & vcf.F1.HQ$Ol_tot.depth > 3 & vcf.F1.HQ$Ol_tot.depth < 501 & vcf.F1.HQ$`414F1_young_tot.depth` > 3 & vcf.F1.HQ$`414F1_young_tot.depth` < 501 & vcf.F1.HQ$`415F1_young_tot.depth` > 3 & vcf.F1.HQ$`415F1_young_tot.depth` < 501),]
+vcf.F1.HQ.filtered.early.silique <-
+vcf.F1.HQ.early.silique[which(vcf.F1.HQ.early.silique$Ae_tot.depth > 3 & vcf.F1.HQ.early.silique$Ae_tot.depth < 501 & vcf.F1.HQ.early.silique$Ol_tot.depth > 3 & vcf.F1.HQ.early.silique$Ol_tot.depth < 501 & vcf.F1.HQ.early.silique$`414F1_tot.depth` > 3 & vcf.F1.HQ.early.silique$`414F1_tot.depth` < 501 & vcf.F1.HQ.early.silique$`415F1_tot.depth` > 3 & vcf.F1.HQ.early.silique$`415F1_tot.depth` < 501),]
 
-max(vcf.F1.HQ.filtered$`415F1_young_tot.depth`)
+max(vcf.F1.HQ.filtered.early.silique$`415F1_tot.depth`)
 
-dim(vcf.F1.HQ) # 1628615      41 
-dim(vcf.F1.HQ.filtered) # 459820     41 
-head(vcf.F1.HQ.filtered)
-vcf.F1.HQ.filtered$CHROM
+dim(vcf.F1.HQ.early.silique) # 1680924      41
+dim(vcf.F1.HQ.filtered.early.silique) # 561189     41 
+head(vcf.F1.HQ.filtered.early.silique)
+vcf.F1.HQ.filtered.early.silique$CHROM
 
-nrow(vcf.F1.HQ.filtered)/nrow(vcf.F1.HQ) # 28% 
+nrow(vcf.F1.HQ.filtered.early.silique)/nrow(vcf.F1.HQ.early.silique) # 33% 
 
 # 2) extract the most useful SNPs based on genotype 
 #1) SNPs between the two parents  
-vcf.F1.HQ.filtered.1 <- vcf.F1.HQ.filtered[((vcf.F1.HQ.filtered$Ae_gt=="1/1" & vcf.F1.HQ.filtered$Ol_gt=="0/0") | (vcf.F1.HQ.filtered$Ae_gt=="0/0" & vcf.F1.HQ.filtered$Ol_gt=="1/1")),] 
-dim(vcf.F1.HQ.filtered.1) # 127019 41 
-nrow(vcf.F1.HQ.filtered.1)/nrow(vcf.F1.HQ.filtered) # 54% 
-ftable(vcf.F1.HQ.filtered.1[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
+vcf.F1.HQ.filtered.1.early.silique <- vcf.F1.HQ.filtered.early.silique[((vcf.F1.HQ.filtered.early.silique$Ae_gt=="1/1" & vcf.F1.HQ.filtered.early.silique$Ol_gt=="0/0") | (vcf.F1.HQ.filtered.early.silique$Ae_gt=="0/0" & vcf.F1.HQ.filtered.early.silique$Ol_gt=="1/1")),] 
+dim(vcf.F1.HQ.filtered.1.early.silique) # 152315     41 
+nrow(vcf.F1.HQ.filtered.1.early.silique)/nrow(vcf.F1.HQ.filtered.early.silique) # 27% 
+ftable(vcf.F1.HQ.filtered.1.early.silique[,c("414F1_gt","415F1_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
 
 # 3) now take a look at the SNPs for F1s, firstly check the ones that were determined as homozygous in F1s 
-vcf.F1.HQ.filtered.1.2 <- vcf.F1.HQ.filtered.1[(vcf.F1.HQ.filtered.1$`414F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`414F1_young_gt`=="0/0" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="0/0"),]
+vcf.F1.HQ.filtered.1.2.early.silique <- vcf.F1.HQ.filtered.1.early.silique[(vcf.F1.HQ.filtered.1.early.silique$`414F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.early.silique$`414F1_gt`=="0/0" | vcf.F1.HQ.filtered.1.early.silique$`415F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.early.silique$`415F1_gt`=="0/0"),]
 
-head(vcf.F1.HQ.filtered.1.2)
-vcf.F1.HQ.filtered.1.2[,c("Ae_gt", "Ol_gt", "414F1_young_gt", "414F1_young_ref.depth", "414F1_young_alt.depth", "415F1_young_gt", "415F1_young_ref.depth", "415F1_young_alt.depth")]
+head(vcf.F1.HQ.filtered.1.2.early.silique)
+vcf.F1.HQ.filtered.1.2.early.silique[,c("Ae_gt", "Ol_gt", "414F1_gt", "414F1_ref.depth", "414F1_alt.depth", "415F1_gt", "415F1_ref.depth", "415F1_alt.depth")]
 
 # calcualte how many SNPs are already counted as homozygous in F1 
-table(vcf.F1.HQ.filtered.1.2$`414F1_young_gt`)
-table(vcf.F1.HQ.filtered.1.2$`415F1_young_gt`)
-ftable(vcf.F1.HQ.filtered.1.2[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")])
+table(vcf.F1.HQ.filtered.1.2.early.silique$`414F1_gt`)
+table(vcf.F1.HQ.filtered.1.2.early.silique$`415F1_gt`)
+ftable(vcf.F1.HQ.filtered.1.2.early.silique[,c("414F1_gt","415F1_gt", "Ae_gt", "Ol_gt")])
 
 # count SNPs between 414F1 & 415F1 
-dim(vcf.F1.HQ.filtered.1.2) # 34394 
-vcf.F1.HQ.filtered.1.2.3 <- vcf.F1.HQ.filtered.1.2[!((vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="1/1")),]
-dim(vcf.F1.HQ.filtered.1.2.3) # 23589 
+dim(vcf.F1.HQ.filtered.1.2.early.silique) # 40913    41  
+vcf.F1.HQ.filtered.1.2.3.early.silique <- vcf.F1.HQ.filtered.1.2.early.silique[!((vcf.F1.HQ.filtered.1.2.early.silique$`414F1_gt`=="0/0" & vcf.F1.HQ.filtered.1.2.early.silique$`415F1_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2.early.silique$`414F1_gt`=="1/1" & vcf.F1.HQ.filtered.1.2.early.silique$`415F1_gt`=="1/1")),]
+dim(vcf.F1.HQ.filtered.1.2.3.early.silique) # 27760     41  
 
-ftable(vcf.F1.HQ.filtered.1.2.3[,c("414F1_young_gt", "415F1_young_gt")])
+ftable(vcf.F1.HQ.filtered.1.2.3.early.silique[,c("414F1_gt", "415F1_gt")])
+
+# SNPs between F1s 
+# early silique
+vcf.F1.HQ.filtered.early.silique <- vcf.F1.HQ.filtered.early.silique[!((vcf.F1.HQ.filtered.early.silique$`414F1_gt`=="0/0" & vcf.F1.HQ.filtered.early.silique$`415F1_gt`=="0/0") | (vcf.F1.HQ.filtered.early.silique$`414F1_gt`=="1/1" & vcf.F1.HQ.filtered.early.silique$`415F1_gt`=="1/1")),]
+dim(vcf.F1.HQ.filtered.early.silique) # 424545     41  
+
+# young
+vcf.F1.HQ.filtered.young <- vcf.F1.HQ.filtered[!((vcf.F1.HQ.filtered$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered$`415F1_young_gt`=="1/1")),]
+dim(vcf.F1.HQ.filtered.young) # 424545     41  
+
+
+
+
+
 ```
 
 
