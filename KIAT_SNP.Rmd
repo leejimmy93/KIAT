@@ -85,7 +85,7 @@ sum(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL>40) / length(vcf.Ae.Ol.no.bolting.u
 table(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt)
 table(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt)
 
-vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt==""),]
+head(vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"),], 20)
 
 
 tmp.unique <- ftable(vcf.Ae.Ol.no.bolting.unique.HQ[,c("Ae_gt","Ol_gt")])
@@ -137,8 +137,6 @@ dim(vcf.Ae.Ol.no.bolting.unique.HQ) # 1502350      25
 vcf.Ae.Ol.no.bolting.unique.HQ.export <- vcf.Ae.Ol.no.bolting.unique.HQ[,c(1:11)]
 
 write.table(vcf.Ae.Ol.no.bolting.unique.HQ.export, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.no.bolting.unique.HQ.vcf", row.names = F)
-
-
 ```
 
 

@@ -703,6 +703,7 @@ ggsave(FLC.2, filename = "~/Desktop/FLC_F1.png", width = 6, height = 7)
 
 # call SNPs between 414 & 415 F1 population 
 ```{r}
+# using SNP_calling_F1_young.sh 
 # 1) trim & map fastq file using script trimming_mapping_01_23_2017.sh 
 
 # 2) merge bam files from biological replicates 
@@ -714,6 +715,7 @@ ggsave(FLC.2, filename = "~/Desktop/FLC_F1.png", width = 6, height = 7)
 
 # examine F1 dataset to study gene imprinting effect 
 ```{r}
+# ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
 vcf.F1 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1_young_modified.vcf",as.is=T,na.strings = ".")  
 
 dim(vcf.F1) # 2318107     13  
@@ -789,7 +791,7 @@ vcf.F1[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qua
         )
 summary(vcf.F1) 
 head(vcf.F1)
-dim(vcf.F1) # 2318107      41  
+dim(vcf.F1) # 2543959      41  
 
 ######### 
 ### 1) filter based on QUAl score 
@@ -797,15 +799,15 @@ dim(vcf.F1) # 2318107      41
 # make a histogram of QUAL scores 
 hist(vcf.F1$QUAL)
 
-length(vcf.F1$QUAL) # a total of 21002031 SNPs 
-sum(vcf.F1$QUAL>20) / length(vcf.F1$QUAL) # 78.5% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
+length(vcf.F1$QUAL) # a total of 2543959 SNPs 
+sum(vcf.F1$QUAL>20) / length(vcf.F1$QUAL) # 73.1% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
 
 hist(vcf.F1[vcf.F1$QUAL<20,]$QUAL)
 hist(vcf.F1[vcf.F1$QUAL<1,]$QUAL)
 
 # subset the data to keep positions where the quality score is 40 or higher 
 vcf.F1.HQ <- vcf.F1[vcf.F1$QUAL>40,]
-dim(vcf.F1.HQ) # 1502350      25  
+dim(vcf.F1.HQ) # 1628615      41  
 sum(vcf.F1$QUAL>40) / length(vcf.F1$QUAL) # 70% of SNPs were retained with QUAL > 40
 
 # count the number 
@@ -814,9 +816,180 @@ table(vcf.F1.HQ$Ol_gt)
 table(vcf.F1$`414F1_young_gt`)
 table(vcf.F1$`415F1_young_gt`)
 
+head(vcf.F1)
+sum(is.na(vcf.F1$CHROM)) 
 ```
 
+# young tissue 
+# filter based on read depth, extract the useful SNPs based on genotype, do binomial test...  
+```{r}
+# 1) filter based on read depth  
+# depth > 3 and < 501 in each one 
+vcf.F1.HQ.filtered <-
+vcf.F1.HQ[which(vcf.F1.HQ$Ae_tot.depth > 3 & vcf.F1.HQ$Ae_tot.depth < 501 & vcf.F1.HQ$Ol_tot.depth > 3 & vcf.F1.HQ$Ol_tot.depth < 501 & vcf.F1.HQ$`414F1_young_tot.depth` > 3 & vcf.F1.HQ$`414F1_young_tot.depth` < 501 & vcf.F1.HQ$`415F1_young_tot.depth` > 3 & vcf.F1.HQ$`415F1_young_tot.depth` < 501),]
 
+max(vcf.F1.HQ.filtered$`415F1_young_tot.depth`)
+
+dim(vcf.F1.HQ) # 1628615      41 
+dim(vcf.F1.HQ.filtered) # 459820     41 
+head(vcf.F1.HQ.filtered)
+vcf.F1.HQ.filtered$CHROM
+
+nrow(vcf.F1.HQ.filtered)/nrow(vcf.F1.HQ) # 28% 
+
+# 2) extract the most useful SNPs based on genotype 
+#1) SNPs between the two parents  
+vcf.F1.HQ.filtered.1 <- vcf.F1.HQ.filtered[((vcf.F1.HQ.filtered$Ae_gt=="1/1" & vcf.F1.HQ.filtered$Ol_gt=="0/0") | (vcf.F1.HQ.filtered$Ae_gt=="0/0" & vcf.F1.HQ.filtered$Ol_gt=="1/1")),] 
+dim(vcf.F1.HQ.filtered.1) # 127019 41 
+nrow(vcf.F1.HQ.filtered.1)/nrow(vcf.F1.HQ.filtered) # 54% 
+ftable(vcf.F1.HQ.filtered.1[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
+
+# 3) now take a look at the SNPs for F1s, firstly check the ones that were determined as homozygous in F1s 
+vcf.F1.HQ.filtered.1.2 <- vcf.F1.HQ.filtered.1[(vcf.F1.HQ.filtered.1$`414F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`414F1_young_gt`=="0/0" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="0/0"),]
+
+head(vcf.F1.HQ.filtered.1.2)
+vcf.F1.HQ.filtered.1.2[,c("Ae_gt", "Ol_gt", "414F1_young_gt", "414F1_young_ref.depth", "414F1_young_alt.depth", "415F1_young_gt", "415F1_young_ref.depth", "415F1_young_alt.depth")]
+
+# calcualte how many SNPs are already counted as homozygous in F1 
+table(vcf.F1.HQ.filtered.1.2$`414F1_young_gt`)
+table(vcf.F1.HQ.filtered.1.2$`415F1_young_gt`)
+ftable(vcf.F1.HQ.filtered.1.2[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")])
+
+# count SNPs between 414F1 & 415F1 
+dim(vcf.F1.HQ.filtered.1.2) # 34394 
+vcf.F1.HQ.filtered.1.2.3 <- vcf.F1.HQ.filtered.1.2[!((vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="1/1")),]
+dim(vcf.F1.HQ.filtered.1.2.3) # 23589 
+
+ftable(vcf.F1.HQ.filtered.1.2.3[,c("414F1_young_gt", "415F1_young_gt")]) 
+
+```
+
+# header for flowering, early silique and late silique stage 
+```{r}
+vcf.header.F1 <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1_flowering_modified_2.vcf",intern = TRUE)
+vcf.header.F1
+```
+
+# flowering tissue: reformat vcf file  
+```{r}
+source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+# change 414F1_stage to 414F1; 415F1_stage to 415F1 in vim, keep the original vcf file in case sth is wrong...  
+# ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
+vcf.F1.flowering <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1_flowering_modified_2.vcf",as.is=T,na.strings = ".")
+
+vcf.F1.flowering <- reformat.vcf.F1(vcf.F1.flowering, vcf.header.F1) 
+head(vcf.F1.flowering) 
+```
+
+# flowering tissue analysis 
+```{r}
+######### 
+### 1) filter based on QUAl score 
+
+# make a histogram of QUAL scores 
+hist(vcf.F1.flowering$QUAL)
+
+length(vcf.F1$QUAL) # a total of 2543959 SNPs 
+sum(vcf.F1$QUAL>20) / length(vcf.F1$QUAL) # 73.1% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
+
+hist(vcf.F1[vcf.F1$QUAL<20,]$QUAL) 
+hist(vcf.F1[vcf.F1$QUAL<1,]$QUAL)
+
+# subset the data to keep positions where the quality score is 40 or higher 
+vcf.F1.HQ <- vcf.F1[vcf.F1$QUAL>40,]
+dim(vcf.F1.HQ) # 1628615      41  
+sum(vcf.F1$QUAL>40) / length(vcf.F1$QUAL) # 70% of SNPs were retained with QUAL > 40
+
+# count the number 
+table(vcf.F1.HQ$Ae_gt)
+table(vcf.F1.HQ$Ol_gt)
+table(vcf.F1$`414F1_young_gt`)
+table(vcf.F1$`415F1_young_gt`)
+
+head(vcf.F1)
+sum(is.na(vcf.F1$CHROM)) 
+
+# 1) filter based on read depth  
+# depth > 3 and < 501 in each one 
+vcf.F1.HQ.filtered <-
+vcf.F1.HQ[which(vcf.F1.HQ$Ae_tot.depth > 3 & vcf.F1.HQ$Ae_tot.depth < 501 & vcf.F1.HQ$Ol_tot.depth > 3 & vcf.F1.HQ$Ol_tot.depth < 501 & vcf.F1.HQ$`414F1_young_tot.depth` > 3 & vcf.F1.HQ$`414F1_young_tot.depth` < 501 & vcf.F1.HQ$`415F1_young_tot.depth` > 3 & vcf.F1.HQ$`415F1_young_tot.depth` < 501),]
+
+max(vcf.F1.HQ.filtered$`415F1_young_tot.depth`)
+
+dim(vcf.F1.HQ) # 1628615      41 
+dim(vcf.F1.HQ.filtered) # 459820     41 
+head(vcf.F1.HQ.filtered)
+vcf.F1.HQ.filtered$CHROM
+
+nrow(vcf.F1.HQ.filtered)/nrow(vcf.F1.HQ) # 28% 
+
+# 2) extract the most useful SNPs based on genotype 
+#1) SNPs between the two parents  
+vcf.F1.HQ.filtered.1 <- vcf.F1.HQ.filtered[((vcf.F1.HQ.filtered$Ae_gt=="1/1" & vcf.F1.HQ.filtered$Ol_gt=="0/0") | (vcf.F1.HQ.filtered$Ae_gt=="0/0" & vcf.F1.HQ.filtered$Ol_gt=="1/1")),] 
+dim(vcf.F1.HQ.filtered.1) # 127019 41 
+nrow(vcf.F1.HQ.filtered.1)/nrow(vcf.F1.HQ.filtered) # 54% 
+ftable(vcf.F1.HQ.filtered.1[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
+
+# 3) now take a look at the SNPs for F1s, firstly check the ones that were determined as homozygous in F1s 
+vcf.F1.HQ.filtered.1.2 <- vcf.F1.HQ.filtered.1[(vcf.F1.HQ.filtered.1$`414F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`414F1_young_gt`=="0/0" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="0/0"),]
+
+head(vcf.F1.HQ.filtered.1.2)
+vcf.F1.HQ.filtered.1.2[,c("Ae_gt", "Ol_gt", "414F1_young_gt", "414F1_young_ref.depth", "414F1_young_alt.depth", "415F1_young_gt", "415F1_young_ref.depth", "415F1_young_alt.depth")]
+
+# calcualte how many SNPs are already counted as homozygous in F1 
+table(vcf.F1.HQ.filtered.1.2$`414F1_young_gt`)
+table(vcf.F1.HQ.filtered.1.2$`415F1_young_gt`)
+ftable(vcf.F1.HQ.filtered.1.2[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")])
+
+# count SNPs between 414F1 & 415F1 
+dim(vcf.F1.HQ.filtered.1.2) # 34394 
+vcf.F1.HQ.filtered.1.2.3 <- vcf.F1.HQ.filtered.1.2[!((vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="1/1")),]
+dim(vcf.F1.HQ.filtered.1.2.3) # 23589 
+
+ftable(vcf.F1.HQ.filtered.1.2.3[,c("414F1_young_gt", "415F1_young_gt")])
+```
+
+# early silique tissue 
+```{r}
+# 1) filter based on read depth  
+# depth > 3 and < 501 in each one 
+vcf.F1.HQ.filtered <-
+vcf.F1.HQ[which(vcf.F1.HQ$Ae_tot.depth > 3 & vcf.F1.HQ$Ae_tot.depth < 501 & vcf.F1.HQ$Ol_tot.depth > 3 & vcf.F1.HQ$Ol_tot.depth < 501 & vcf.F1.HQ$`414F1_young_tot.depth` > 3 & vcf.F1.HQ$`414F1_young_tot.depth` < 501 & vcf.F1.HQ$`415F1_young_tot.depth` > 3 & vcf.F1.HQ$`415F1_young_tot.depth` < 501),]
+
+max(vcf.F1.HQ.filtered$`415F1_young_tot.depth`)
+
+dim(vcf.F1.HQ) # 1628615      41 
+dim(vcf.F1.HQ.filtered) # 459820     41 
+head(vcf.F1.HQ.filtered)
+vcf.F1.HQ.filtered$CHROM
+
+nrow(vcf.F1.HQ.filtered)/nrow(vcf.F1.HQ) # 28% 
+
+# 2) extract the most useful SNPs based on genotype 
+#1) SNPs between the two parents  
+vcf.F1.HQ.filtered.1 <- vcf.F1.HQ.filtered[((vcf.F1.HQ.filtered$Ae_gt=="1/1" & vcf.F1.HQ.filtered$Ol_gt=="0/0") | (vcf.F1.HQ.filtered$Ae_gt=="0/0" & vcf.F1.HQ.filtered$Ol_gt=="1/1")),] 
+dim(vcf.F1.HQ.filtered.1) # 127019 41 
+nrow(vcf.F1.HQ.filtered.1)/nrow(vcf.F1.HQ.filtered) # 54% 
+ftable(vcf.F1.HQ.filtered.1[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
+
+# 3) now take a look at the SNPs for F1s, firstly check the ones that were determined as homozygous in F1s 
+vcf.F1.HQ.filtered.1.2 <- vcf.F1.HQ.filtered.1[(vcf.F1.HQ.filtered.1$`414F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`414F1_young_gt`=="0/0" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="0/0"),]
+
+head(vcf.F1.HQ.filtered.1.2)
+vcf.F1.HQ.filtered.1.2[,c("Ae_gt", "Ol_gt", "414F1_young_gt", "414F1_young_ref.depth", "414F1_young_alt.depth", "415F1_young_gt", "415F1_young_ref.depth", "415F1_young_alt.depth")]
+
+# calcualte how many SNPs are already counted as homozygous in F1 
+table(vcf.F1.HQ.filtered.1.2$`414F1_young_gt`)
+table(vcf.F1.HQ.filtered.1.2$`415F1_young_gt`)
+ftable(vcf.F1.HQ.filtered.1.2[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")])
+
+# count SNPs between 414F1 & 415F1 
+dim(vcf.F1.HQ.filtered.1.2) # 34394 
+vcf.F1.HQ.filtered.1.2.3 <- vcf.F1.HQ.filtered.1.2[!((vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="1/1")),]
+dim(vcf.F1.HQ.filtered.1.2.3) # 23589 
+
+ftable(vcf.F1.HQ.filtered.1.2.3[,c("414F1_young_gt", "415F1_young_gt")])
+```
 
 
 

@@ -307,6 +307,66 @@ expression.pattern.Bn.parent <- function(ID){
   return(p)
 }
 
+###### process vcf file 
+reformat.vcf.F1 <- function(vcf.F1, vcf.header.F1){
+  vcf.header.F1 <- sub("#","",vcf.header.F1) #get rid of the pound sign
+
+  vcf.header.F1 <- unlist(strsplit(vcf.header.F1,split="\t"))
+  colnames(vcf.F1) <- vcf.header.F1
+
+  # Before splitting add NAs to blank cells
+  # Ae
+  vcf.F1$Ae[is.na(vcf.F1$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
+  Ae.tmp.unique <- matrix(
+    unlist(strsplit(vcf.F1$Ae,split = ":")),
+    nrow=nrow(vcf.F1),
+    byrow=TRUE
+  )
+  colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+  # Ol
+  vcf.F1$Ol[is.na(vcf.F1$Ol)] <- "NA:NA:NA:NA:NA:NA:NA"
+  Ol.tmp.unique <- matrix(
+    unlist(strsplit(vcf.F1$Ol,split = ":")),
+    nrow=nrow(vcf.F1),
+    byrow=TRUE
+  )
+  colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+
+  # 414
+  vcf.F1$`414F1`[is.na(vcf.F1$`414F1`)] <- "NA:NA:NA:NA:NA:NA:NA"
+  F1_414.tmp.unique <- matrix(
+    unlist(strsplit(vcf.F1$`414F1`,split = ":")),
+    nrow=nrow(vcf.F1),
+    byrow=TRUE
+  )
+  colnames(F1_414.tmp.unique) <- paste("414F1",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+
+  vcf.F1$`415F1`[is.na(vcf.F1$`415F1`)] <- "NA:NA:NA:NA:NA:NA:NA"
+
+  F1_415.tmp.unique <- matrix(
+    unlist(strsplit(vcf.F1$`415F1`,split = ":")),
+    nrow=nrow(vcf.F1),
+    byrow=TRUE
+  )
+  colnames(F1_415.tmp.unique) <- paste("415F1",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+
+  ######
+  vcf.F1 <- cbind(vcf.F1,Ae.tmp.unique,Ol.tmp.unique,F1_414.tmp.unique, F1_415.tmp.unique, stringsAsFactors=FALSE)
+
+  vcf.F1[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual",
+            "Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual",
+            "414F1_tot.depth","414F1_ref.depth","414F1_ref.qual","414F1_alt.depth","414F1_alt.qual",
+            "415F1_tot.depth","415F1_ref.depth","415F1_ref.qual","415F1_alt.depth","415F1_alt.qual")] <-
+    apply(vcf.F1[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual",
+                    "Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual",
+                    "414F1_tot.depth","414F1_ref.depth","414F1_ref.qual","414F1_alt.depth","414F1_alt.qual",
+                    "415F1_tot.depth","415F1_ref.depth","415F1_ref.qual","415F1_alt.depth","415F1_alt.qual")],
+          2,
+          as.numeric
+    )
+  return(vcf.F1)
+}
+
 
 
 
