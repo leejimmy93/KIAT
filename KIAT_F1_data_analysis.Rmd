@@ -813,8 +813,40 @@ sum(vcf.F1$QUAL>40) / length(vcf.F1$QUAL) # 70% of SNPs were retained with QUAL 
 # count the number 
 table(vcf.F1.HQ$Ae_gt)
 table(vcf.F1.HQ$Ol_gt)
-table(vcf.F1$`414F1_young_gt`)
-table(vcf.F1$`415F1_young_gt`)
+young.414 <- as.data.frame(table(vcf.F1.HQ.filtered.1$`414F1_young_gt`))
+young.414$type <- rep("414", nrow(young.414))
+young.414$class <- rep("young", nrow(young.414))
+young.415 <- as.data.frame(table(vcf.F1.HQ.filtered.1$`415F1_young_gt`))
+young.415$type <- rep("415", nrow(young.415))
+young.415$class <- rep("young", nrow(young.415))
+young.414
+
+early.silique.414 <- as.data.frame(table(vcf.F1.HQ.filtered.1.early.silique$`414F1_gt`))
+early.silique.414$type <- rep("414", length(early.silique.414)) 
+early.silique.414$class <- rep("early.silique", nrow(early.silique.414))
+early.silique.414
+early.silique.415 <- as.data.frame(table(vcf.F1.HQ.filtered.1.early.silique$`415F1_gt`))
+early.silique.415$type <- rep("415", nrow(early.silique.415))
+early.silique.415$class <- rep("early.silique", nrow(early.silique.415))
+
+flowering.414 <- as.data.frame(table(vcf.F1.HQ.filtered.1.flowering$`414F1_gt`))
+flowering.414$type <- rep("414", nrow(flowering.414))
+flowering.414$class <- rep("flowering", nrow(flowering.414))
+
+flowering.415 <- as.data.frame(table(vcf.F1.HQ.filtered.1.flowering$`415F1_gt`)) 
+flowering.415$type <- rep("415", nrow(flowering.415))
+flowering.415$class <- rep("flowering", nrow(flowering.415))
+
+F1.gt <- rbind(young.414, young.415, flowering.414, flowering.415, early.silique.414, early.silique.415)
+F1.gt.2 <- F1.gt[which(F1.gt$Var=="0/0" | F1.gt$Var=="0/1" | F1.gt$Var1=="1/1"),]
+
+# plot 
+plot.F1.gt <- ggplot(data=F1.gt.2)
+plot.F1.gt <- plot.F1.gt + geom_bar(mapping=aes(fill=Var1, x=factor(Var1), y=Freq), stat="identity")
+plot.F1.gt <- plot.F1.gt + facet_grid(class~type)
+plot.F1.gt <- plot.F1.gt + labs(y = "number of loci", x = "genotype") 
+plot.F1.gt 
+ggsave("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2017_winter/F1_SNP/figure/F1.gt.png", width = 6, height = 4)
 
 head(vcf.F1)
 sum(is.na(vcf.F1$CHROM)) 
@@ -1011,6 +1043,7 @@ dim(vcf.F1.HQ.filtered.1.early.silique) # 152315     41
 nrow(vcf.F1.HQ.filtered.1.early.silique)/nrow(vcf.F1.HQ.filtered.early.silique) # 27% 
 ftable(vcf.F1.HQ.filtered.1.early.silique[,c("414F1_gt","415F1_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
 
+
 # 3) now take a look at the SNPs for F1s, firstly check the ones that were determined as homozygous in F1s 
 vcf.F1.HQ.filtered.1.2.early.silique <- vcf.F1.HQ.filtered.1.early.silique[(vcf.F1.HQ.filtered.1.early.silique$`414F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.early.silique$`414F1_gt`=="0/0" | vcf.F1.HQ.filtered.1.early.silique$`415F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.early.silique$`415F1_gt`=="0/0"),]
 
@@ -1037,9 +1070,6 @@ dim(vcf.F1.HQ.filtered.early.silique) # 424545     41
 # young
 vcf.F1.HQ.filtered.young <- vcf.F1.HQ.filtered[!((vcf.F1.HQ.filtered$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered$`415F1_young_gt`=="1/1")),]
 dim(vcf.F1.HQ.filtered.young) # 424545     41  
-
-
-
 
 
 ```
