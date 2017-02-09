@@ -39,27 +39,6 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # 9) map to reference cds index and get read count file using bunchrun_kallisto.sh (using est_counts from Kallisto)
 ```
 
-```{r}
-##### STAR is only installed on coloma!!! 
-# 1) get B.napus reference genome: Brassica_napus_v4.1.chromosomes.fa 
-# make STAR reference index: STAR --runMode genomeGenerate --genomeDir star_nome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --runThreadN 2 
-# mapping using run_star.sh 
- 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/automate_transfer/F1/414F1-gea-1_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/automate_transfer/F1/414F1-gea-1_2.fq --runThreadN 6
-```
-
-
-```{r}
-### running stranded fr-secondstrand cufflinks 
-# screen -r 35026.ttys020.coloma (running cufflinks, stopped due to coloma shutdown, now running on screen -r 16004.pts-36.whitney for the remaining unassembleled libs)  
-
-### running my job using different parameters (suggested by Monica)
-# screens that I used for my job
-# screen -r 9923.ttys004.coloma
-# screen -r 9950.ttys004.coloma 
-
-```
-
 # data summary statisitics read count number & expressed genes 
 ```{r}
 F1.read.count.normalized <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/read.count.normalized.tsv", header = T, check.names = F)
@@ -197,7 +176,7 @@ dge.data.F1$sample
 hist(dge.data.F1$samples$norm.factors)
 
 # MDS to check sample seperation, also using dengrogram.  
-plotMDS(dge.data.F1, method = "bcv",labels = rownames(dge.data.F1$samples))
+# plotMDS(dge.data.F1, method = "bcv",labels = rownames(dge.data.F1$samples))
 mds.F1 <- plotMDS(dge.data.F1, method = "bcv",labels = dge.data.F1$samples$group)
 
 x.F1 <- as.data.frame(mds.F1$x)
@@ -212,12 +191,12 @@ head(distance_matrix.F1)
 
 # making color MDS figure 
 p <- ggplot(data = distance_matrix.F1)
-p <- p + geom_point(aes(x, y, color=factor(tissue)), size=3) 
+p <- p + geom_point(aes(x, y, color=factor(gt), shape=factor(tissue)), size=3) 
 p <- p + labs(y = "BCV distance 2", x="BCV distance 1")
 # p <- p + facet_grid(~gt)
 p
 
-# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/MDS_2.png", width = 11, height = 8)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/MDS_2.png", width = 6, height = 4)
 
 # clustering to check sample seperation 
 # install.packages("ggdendro")
@@ -300,6 +279,7 @@ rownames(DEGs_number_between_gt) <- c("down", "no", "up")
 DEGs_number_between_gt <- DEGs_number_between_gt[c("down", "up"),]
 DEGs_number_between_gt
 
+library(reshape2)
 DEGs_number_between_gt.melt <- melt(DEGs_number_between_gt)
 DEGs_number_between_gt.melt$DE <- rep(c("down", "up"), 4)
 colnames(DEGs_number_between_gt.melt) <- c("tissue", "number", "DE")
@@ -318,7 +298,7 @@ p.DEGs_number_between_gt <- p.DEGs_number_between_gt + facet_grid(~tissue)
 p.DEGs_number_between_gt <- p.DEGs_number_between_gt + labs(y = "number of differentially expressed genes", x = "")
 
 p.DEGs_number_between_gt
-# ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/DEGs_number_between_gt.png", width = 11, height = 8)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/DEGs_number_between_gt.png", width = 6, height = 4)
 
 colnames(fit.F1$design)
 # between developmental stages 
@@ -564,6 +544,36 @@ write.csv(DEgene.silique.415.GO.ORA, file = "/Users/ruijuanli/Desktop/Brassica_p
 
 ```
 
+# draw heatmap for GO term between 414 & 415 
+```{r}
+GO.young.F1 <- DEgene.young.GO.ORA.F1[,c("Term", "over_represented_padjust")] 
+GO.flowering.F1 <- DEgene.flowering.GO.ORA.F1[,c("Term", "over_represented_padjust")]
+GO.early.silique.F1 <- DEgene.early.silique.GO.ORA.F1[,c("Term", "over_represented_padjust")]
+GO.late.silique.F1 <- DEgene.late.silique.GO.ORA.F1[,c("Term", "over_represented_padjust")]
+GO.late.silique.F1
+
+GO.F1.gt.1 <- merge(GO.young.F1, GO.flowering.F1, by="Term", all=TRUE)
+GO.F1.gt.1
+GO.F1.gt.2 <- merge(GO.F1.gt.1, GO.early.silique.F1, by="Term", all=TRUE)
+GO.F1.gt.2
+names(GO.F1.gt.2)[c(2:4)] <- c("young", "flowering", "early_silique")
+GO.F1.gt <- merge(GO.F1.gt.2, GO.late.silique.F1, by="Term", all=TRUE)
+GO.F1.gt
+names(GO.F1.gt)[5] <- "late_silique"
+GO.F1.gt.melt <- melt(GO.F1.gt)
+GO.F1.gt.melt
+GO.F1.gt.melt$logPvalue <- -log10(GO.F1.gt.melt$value)
+
+# plot 
+pl.heatmap <- ggplot(data = GO.F1.gt.melt)
+pl.heatmap <- pl.heatmap + geom_tile(color = "black", aes(x = factor(variable), y = Term, fill=logPvalue)) + scale_fill_gradient2(low=muted("green"), high=muted("magenta")) 
+pl.heatmap <- pl.heatmap + labs(y = "GO term", x="", title=" ") 
+pl.heatmap
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/GO.F1.gt.png", width = 8, height = 15)
+
+```
+
+
 # draw figure for fatty acid genes expression over time for 414 & 415 
 ```{r}
 source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
@@ -701,6 +711,62 @@ FLC.2 <- expression.pattern.Bn.F1(FLC.like.act.through.DE.gt.F1)
 ggsave(FLC.2, filename = "~/Desktop/FLC_F1.png", width = 6, height = 7)
 ```
 
+# trimming & mapping 
+```{r}
+# using trimming_mapping_01_23_2017.sh
+mapping.result <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/Star_Stats_1.tab", header = T)
+colnames(mapping.result) 
+sample_des.F1.2 <- sample_des.F1[,c("Sample.ID","TotalReads","cultivar","Stage")] 
+
+colnames(sample_des.F1.2)[1] <- "Sample"
+sample_des.F1.2
+mapping.result.3
+mapping.result.3 <- merge(mapping.result, sample_des.F1.2, by="Sample")
+
+library(ggplot2) 
+p.uniq.mapping <- ggplot(data=mapping.result.3)
+p.uniq.mapping <- p.uniq.mapping + geom_histogram(aes(x=Percent_Unique_Mapped, fill=cultivar), binwidth = 2.5)
+p.uniq.mapping <- p.uniq.mapping + facet_wrap(~cultivar, nrow = 2)
+p.uniq.mapping <- p.uniq.mapping + labs(list(title = "", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping  
+ggsave(p.uniq.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.uniq.mapping.1.png", height = 8, width = 11)  
+
+library(ggplot2) 
+p.uniq.mapping <- ggplot(data=mapping.result.3)
+p.uniq.mapping <- p.uniq.mapping + geom_histogram(aes(x=Percent_Unique_Mapped, fill=cultivar), binwidth = 2.5)
+p.uniq.mapping <- p.uniq.mapping + facet_wrap(~cultivar, nrow = 2)
+p.uniq.mapping <- p.uniq.mapping + labs(list(title = "", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping  
+ggsave(p.uniq.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.uniq.mapping.1.png", height = 8, width = 11)   
+
+colnames(mapping.result.3)
+mapping.result.3$Reads <- mapping.result.3$TotalReads/2
+
+mapping.result.4 <- mapping.result.3[,c("Sample", "Number_Input_Reads", "Number_Unique_Mapped", "cultivar", "Stage", "Reads")]
+mapping.result.3$Percent_HQ_reads <- mapping.result.3$Number_Input_Reads/mapping.result.3$Reads
+mean(mapping.result.3$Percent_Unique_Mapped)
+mean(mapping.result.3$Percent_HQ_reads) 
+
+mapping.result.4$trimmed.off <- mapping.result.4$Reads- mapping.result.4$Number_Input_Reads
+mapping.result.4$multiple.mapped <- mapping.result.4$Number_Input_Reads - mapping.result.4$Number_Unique_Mapped
+mapping.result.5 <- mapping.result.4[,c("Sample", "trimmed.off", "multiple.mapped", "Number_Unique_Mapped", "cultivar", "Stage")]
+
+mapping.result.5.melt <- melt(mapping.result.5)
+mapping.result.5.melt
+
+mapping.result.4.1 <- mapping.result.3[,c("Sample", "Number_Input_Reads", "Number_Unique_Mapped", "cultivar", "Stage", "Reads")]
+colnames(mapping.result.4.1)[c(2,3,6)] <- c("HQ_reads", "uniquely_mapped_reaad", "raw_reads")
+mapping.result.4.1.melt <- melt(mapping.result.4.1)
+
+pl.mapping.rate <- ggplot(data = mapping.result.4.1.melt)
+pl.mapping.rate <- pl.mapping.rate + geom_bar(aes(x=Sample, y = value, fill=cultivar), stat = "identity")
+pl.mapping.rate <- pl.mapping.rate + labs(list(title = "", x = " ", y = "reads number")) + theme(axis.text.x=element_blank())
+pl.mapping.rate <- pl.mapping.rate + facet_wrap(~variable, ncol = 3)
+pl.mapping.rate
+
+ggsave(pl.mapping.rate, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F1/figure/mapping.rate.png", height = 6, width = 11) 
+```
+
 # call SNPs between 414 & 415 F1 population 
 ```{r}
 # using SNP_calling_F1_young.sh 
@@ -792,10 +858,12 @@ vcf.F1[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qua
 summary(vcf.F1) 
 head(vcf.F1)
 dim(vcf.F1) # 2543959      41  
+# save(vcf.F1, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F1/output/vcf.F1.young.Rdata")
 
 ######### 
-### 1) filter based on QUAl score 
 
+### 1) filter based on QUAl score 
+# load("~/Desktop/Brassica_project/KIAT_RNA_seq/F1/output/vcf.F1.young.Rdata")
 # make a histogram of QUAL scores 
 hist(vcf.F1$QUAL)
 
@@ -817,7 +885,8 @@ table(vcf.F1$`414F1_young_gt`)
 table(vcf.F1$`415F1_young_gt`)
 
 head(vcf.F1)
-sum(is.na(vcf.F1$CHROM)) 
+sum(is.na(vcf.F1$CHROM))
+# save(vcf.F1.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F1/output/vcf.F1.young.HQ.Rdata")
 ```
 
 # young tissue 
@@ -825,6 +894,8 @@ sum(is.na(vcf.F1$CHROM))
 ```{r}
 # 1) filter based on read depth  
 # depth > 3 and < 501 in each one 
+# load("~/Desktop/Brassica_project/KIAT_RNA_seq/F1/output/vcf.F1.young.HQ.Rdata")
+
 vcf.F1.HQ.filtered <-
 vcf.F1.HQ[which(vcf.F1.HQ$Ae_tot.depth > 3 & vcf.F1.HQ$Ae_tot.depth < 501 & vcf.F1.HQ$Ol_tot.depth > 3 & vcf.F1.HQ$Ol_tot.depth < 501 & vcf.F1.HQ$`414F1_young_tot.depth` > 3 & vcf.F1.HQ$`414F1_young_tot.depth` < 501 & vcf.F1.HQ$`415F1_young_tot.depth` > 3 & vcf.F1.HQ$`415F1_young_tot.depth` < 501),]
 
@@ -889,113 +960,146 @@ head(vcf.F1.flowering)
 # make a histogram of QUAL scores 
 hist(vcf.F1.flowering$QUAL)
 
-length(vcf.F1$QUAL) # a total of 2543959 SNPs 
-sum(vcf.F1$QUAL>20) / length(vcf.F1$QUAL) # 73.1% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
+length(vcf.F1.flowering$QUAL) # a total of 2559294 SNPs 
+sum(vcf.F1.flowering$QUAL>20) / length(vcf.F1.flowering$QUAL) # 72% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
 
-hist(vcf.F1[vcf.F1$QUAL<20,]$QUAL) 
-hist(vcf.F1[vcf.F1$QUAL<1,]$QUAL)
+hist(vcf.F1.flowering[vcf.F1.flowering$QUAL<20,]$QUAL) 
+hist(vcf.F1.flowering[vcf.F1.flowering$QUAL<1,]$QUAL)
 
 # subset the data to keep positions where the quality score is 40 or higher 
-vcf.F1.HQ <- vcf.F1[vcf.F1$QUAL>40,]
-dim(vcf.F1.HQ) # 1628615      41  
-sum(vcf.F1$QUAL>40) / length(vcf.F1$QUAL) # 70% of SNPs were retained with QUAL > 40
+vcf.F1.HQ.flowering <- vcf.F1.flowering[vcf.F1.flowering$QUAL>40,]
+dim(vcf.F1.HQ.flowering) # 1623025      41  
+sum(vcf.F1.flowering$QUAL>40) / length(vcf.F1.flowering$QUAL) # 63% of SNPs were retained with QUAL > 40
 
 # count the number 
-table(vcf.F1.HQ$Ae_gt)
-table(vcf.F1.HQ$Ol_gt)
-table(vcf.F1$`414F1_young_gt`)
-table(vcf.F1$`415F1_young_gt`)
+table(vcf.F1.HQ.flowering$Ae_gt)
+table(vcf.F1.HQ.flowering$Ol_gt)
+table(vcf.F1.flowering$`414F1_gt`)
+table(vcf.F1.flowering$`415F1_gt`)
 
-head(vcf.F1)
-sum(is.na(vcf.F1$CHROM)) 
+head(vcf.F1.flowering)
+sum(is.na(vcf.F1.flowering$CHROM)) 
 
 # 1) filter based on read depth  
 # depth > 3 and < 501 in each one 
-vcf.F1.HQ.filtered <-
-vcf.F1.HQ[which(vcf.F1.HQ$Ae_tot.depth > 3 & vcf.F1.HQ$Ae_tot.depth < 501 & vcf.F1.HQ$Ol_tot.depth > 3 & vcf.F1.HQ$Ol_tot.depth < 501 & vcf.F1.HQ$`414F1_young_tot.depth` > 3 & vcf.F1.HQ$`414F1_young_tot.depth` < 501 & vcf.F1.HQ$`415F1_young_tot.depth` > 3 & vcf.F1.HQ$`415F1_young_tot.depth` < 501),]
+vcf.F1.HQ.filtered.flowering <-
+vcf.F1.HQ.flowering[which(vcf.F1.HQ.flowering$Ae_tot.depth > 3 & vcf.F1.HQ.flowering$Ae_tot.depth < 501 & vcf.F1.HQ.flowering$Ol_tot.depth > 3 & vcf.F1.HQ.flowering$Ol_tot.depth < 501 & vcf.F1.HQ.flowering$`414F1_tot.depth` > 3 & vcf.F1.HQ.flowering$`414F1_tot.depth` < 501 & vcf.F1.HQ.flowering$`415F1_tot.depth` > 3 & vcf.F1.HQ.flowering$`415F1_tot.depth` < 501),]
 
-max(vcf.F1.HQ.filtered$`415F1_young_tot.depth`)
+max(vcf.F1.HQ.filtered.flowering$`415F1_tot.depth`)
 
-dim(vcf.F1.HQ) # 1628615      41 
-dim(vcf.F1.HQ.filtered) # 459820     41 
-head(vcf.F1.HQ.filtered)
-vcf.F1.HQ.filtered$CHROM
+dim(vcf.F1.HQ.flowering) # 1623025      41 
+dim(vcf.F1.HQ.filtered.flowering) # 442740     41
+head(vcf.F1.HQ.filtered.flowering)
+vcf.F1.HQ.filtered.flowering$CHROM
 
-nrow(vcf.F1.HQ.filtered)/nrow(vcf.F1.HQ) # 28% 
+nrow(vcf.F1.HQ.filtered.flowering)/nrow(vcf.F1.HQ.flowering) # 27% 
 
 # 2) extract the most useful SNPs based on genotype 
 #1) SNPs between the two parents  
-vcf.F1.HQ.filtered.1 <- vcf.F1.HQ.filtered[((vcf.F1.HQ.filtered$Ae_gt=="1/1" & vcf.F1.HQ.filtered$Ol_gt=="0/0") | (vcf.F1.HQ.filtered$Ae_gt=="0/0" & vcf.F1.HQ.filtered$Ol_gt=="1/1")),] 
-dim(vcf.F1.HQ.filtered.1) # 127019 41 
-nrow(vcf.F1.HQ.filtered.1)/nrow(vcf.F1.HQ.filtered) # 54% 
-ftable(vcf.F1.HQ.filtered.1[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
+vcf.F1.HQ.filtered.1.flowering <- vcf.F1.HQ.filtered.flowering[((vcf.F1.HQ.filtered.flowering$Ae_gt=="1/1" & vcf.F1.HQ.filtered.flowering$Ol_gt=="0/0") | (vcf.F1.HQ.filtered.flowering$Ae_gt=="0/0" & vcf.F1.HQ.filtered.flowering$Ol_gt=="1/1")),] 
+dim(vcf.F1.HQ.filtered.1.flowering) # 124314     41 
+nrow(vcf.F1.HQ.filtered.1.flowering)/nrow(vcf.F1.HQ.filtered.flowering) # 28%  
+ftable(vcf.F1.HQ.filtered.1.flowering[,c("414F1_gt","415F1_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
 
 # 3) now take a look at the SNPs for F1s, firstly check the ones that were determined as homozygous in F1s 
-vcf.F1.HQ.filtered.1.2 <- vcf.F1.HQ.filtered.1[(vcf.F1.HQ.filtered.1$`414F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`414F1_young_gt`=="0/0" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="0/0"),]
+vcf.F1.HQ.filtered.1.2.flowering <- vcf.F1.HQ.filtered.1.flowering[(vcf.F1.HQ.filtered.1.flowering$`414F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.flowering$`414F1_gt`=="0/0" | vcf.F1.HQ.filtered.1.flowering$`415F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.flowering$`415F1_gt`=="0/0"),]
 
-head(vcf.F1.HQ.filtered.1.2)
-vcf.F1.HQ.filtered.1.2[,c("Ae_gt", "Ol_gt", "414F1_young_gt", "414F1_young_ref.depth", "414F1_young_alt.depth", "415F1_young_gt", "415F1_young_ref.depth", "415F1_young_alt.depth")]
+head(vcf.F1.HQ.filtered.1.2.flowering)
+vcf.F1.HQ.filtered.1.2.flowering[,c("Ae_gt", "Ol_gt", "414F1_gt", "414F1_ref.depth", "414F1_alt.depth", "415F1_gt", "415F1_ref.depth", "415F1_alt.depth")]
 
 # calcualte how many SNPs are already counted as homozygous in F1 
-table(vcf.F1.HQ.filtered.1.2$`414F1_young_gt`)
-table(vcf.F1.HQ.filtered.1.2$`415F1_young_gt`)
-ftable(vcf.F1.HQ.filtered.1.2[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")])
+table(vcf.F1.HQ.filtered.1.2.flowering$`414F1_gt`)
+table(vcf.F1.HQ.filtered.1.2.flowering$`415F1_gt`)
+ftable(vcf.F1.HQ.filtered.1.2.flowering[,c("414F1_gt","415F1_gt", "Ae_gt", "Ol_gt")])
 
 # count SNPs between 414F1 & 415F1 
-dim(vcf.F1.HQ.filtered.1.2) # 34394 
-vcf.F1.HQ.filtered.1.2.3 <- vcf.F1.HQ.filtered.1.2[!((vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="1/1")),]
-dim(vcf.F1.HQ.filtered.1.2.3) # 23589 
+dim(vcf.F1.HQ.filtered.1.2.flowering) # 34453  
+vcf.F1.HQ.filtered.1.2.3.flowering <- vcf.F1.HQ.filtered.1.2.flowering[!((vcf.F1.HQ.filtered.1.2.flowering$`414F1_gt`=="0/0" & vcf.F1.HQ.filtered.1.2.flowering$`415F1_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2.flowering$`414F1_gt`=="1/1" & vcf.F1.HQ.filtered.1.2.flowering$`415F1_gt`=="1/1")),]
+dim(vcf.F1.HQ.filtered.1.2.3.flowering) # 24214 41  
 
-ftable(vcf.F1.HQ.filtered.1.2.3[,c("414F1_young_gt", "415F1_young_gt")])
+ftable(vcf.F1.HQ.filtered.1.2.3.flowering[,c("414F1_gt", "415F1_gt")])
 ```
 
-# early silique tissue 
+
+# early silique tissue: reformat vcf file  
 ```{r}
+source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+# change 414F1_stage to 414F1; 415F1_stage to 415F1 in vim, keep the original vcf file in case sth is wrong...  
+# ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
+vcf.F1.early.silique <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1_early_silique_modified.vcf",as.is=T,na.strings = ".")
+
+vcf.F1.early.silique <- reformat.vcf.F1(vcf.F1.early.silique, vcf.header.F1) 
+head(vcf.F1.early.silique) 
+```
+
+############ start working from here ################ 
+# flowering tissue analysis 
+```{r}
+######### 
+### 1) filter based on QUAl score 
+
+# make a histogram of QUAL scores 
+hist(vcf.F1.early.silique$QUAL)
+
+length(vcf.F1.early.silique$QUAL) # a total of 2559294 SNPs 
+sum(vcf.F1.early.silique$QUAL>20) / length(vcf.F1.early.silique$QUAL) # 72% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
+
+hist(vcf.F1.early.silique[vcf.F1.early.silique$QUAL<20,]$QUAL) 
+hist(vcf.F1.early.silique[vcf.F1.early.silique$QUAL<1,]$QUAL)
+
+# subset the data to keep positions where the quality score is 40 or higher 
+vcf.F1.HQ.early.silique <- vcf.F1.early.silique[vcf.F1.early.silique$QUAL>40,]
+dim(vcf.F1.HQ.early.silique) # 1623025      41  
+sum(vcf.F1.early.silique$QUAL>40) / length(vcf.F1.early.silique$QUAL) # 63% of SNPs were retained with QUAL > 40
+
+# count the number 
+table(vcf.F1.HQ.early.silique$Ae_gt)
+table(vcf.F1.HQ.early.silique$Ol_gt)
+table(vcf.F1.early.silique$`414F1_gt`)
+table(vcf.F1.ealry.silique$`415F1_gt`)
+
+head(vcf.F1.early.silique)
+sum(is.na(vcf.F1.ealry.silique$CHROM)) 
+
 # 1) filter based on read depth  
 # depth > 3 and < 501 in each one 
-vcf.F1.HQ.filtered <-
-vcf.F1.HQ[which(vcf.F1.HQ$Ae_tot.depth > 3 & vcf.F1.HQ$Ae_tot.depth < 501 & vcf.F1.HQ$Ol_tot.depth > 3 & vcf.F1.HQ$Ol_tot.depth < 501 & vcf.F1.HQ$`414F1_young_tot.depth` > 3 & vcf.F1.HQ$`414F1_young_tot.depth` < 501 & vcf.F1.HQ$`415F1_young_tot.depth` > 3 & vcf.F1.HQ$`415F1_young_tot.depth` < 501),]
+vcf.F1.HQ.filtered.early.silique <-
+vcf.F1.HQ.early.silique[which(vcf.F1.HQ.early.silique$Ae_tot.depth > 3 & vcf.F1.HQ.early.silique$Ae_tot.depth < 501 & vcf.F1.HQ.early.silique$Ol_tot.depth > 3 & vcf.F1.HQ.early.silique$Ol_tot.depth < 501 & vcf.F1.HQ.early.silique$`414F1_tot.depth` > 3 & vcf.F1.HQ.early.silique$`414F1_tot.depth` < 501 & vcf.F1.HQ.early.silique$`415F1_tot.depth` > 3 & vcf.F1.HQ.early.silique$`415F1_tot.depth` < 501),]
 
-max(vcf.F1.HQ.filtered$`415F1_young_tot.depth`)
+max(vcf.F1.HQ.filtered.early.silique$`415F1_tot.depth`)
 
-dim(vcf.F1.HQ) # 1628615      41 
-dim(vcf.F1.HQ.filtered) # 459820     41 
-head(vcf.F1.HQ.filtered)
-vcf.F1.HQ.filtered$CHROM
+dim(vcf.F1.HQ.early.silique) # 1623025      41 
+dim(vcf.F1.HQ.filtered.early.silique) # 442740     41
+head(vcf.F1.HQ.filtered.early.silique)
+vcf.F1.HQ.filtered.early.silique$CHROM
 
-nrow(vcf.F1.HQ.filtered)/nrow(vcf.F1.HQ) # 28% 
+nrow(vcf.F1.HQ.filtered.early.silique)/nrow(vcf.F1.HQ.early.silique) # 27% 
 
 # 2) extract the most useful SNPs based on genotype 
 #1) SNPs between the two parents  
-vcf.F1.HQ.filtered.1 <- vcf.F1.HQ.filtered[((vcf.F1.HQ.filtered$Ae_gt=="1/1" & vcf.F1.HQ.filtered$Ol_gt=="0/0") | (vcf.F1.HQ.filtered$Ae_gt=="0/0" & vcf.F1.HQ.filtered$Ol_gt=="1/1")),] 
-dim(vcf.F1.HQ.filtered.1) # 127019 41 
-nrow(vcf.F1.HQ.filtered.1)/nrow(vcf.F1.HQ.filtered) # 54% 
-ftable(vcf.F1.HQ.filtered.1[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
+vcf.F1.HQ.filtered.1.early.silique <- vcf.F1.HQ.filtered.early.silique[((vcf.F1.HQ.filtered.early.silique$Ae_gt=="1/1" & vcf.F1.HQ.filtered.early.silique$Ol_gt=="0/0") | (vcf.F1.HQ.filtered.early.silique$Ae_gt=="0/0" & vcf.F1.HQ.filtered.early.silique$Ol_gt=="1/1")),] 
+dim(vcf.F1.HQ.filtered.1.early.silique) # 124314     41 
+nrow(vcf.F1.HQ.filtered.1.early.silique)/nrow(vcf.F1.HQ.filtered.early.silique) # 28%  
+ftable(vcf.F1.HQ.filtered.1.early.silique[,c("414F1_gt","415F1_gt", "Ae_gt", "Ol_gt")]) # need stats for this... 
 
 # 3) now take a look at the SNPs for F1s, firstly check the ones that were determined as homozygous in F1s 
-vcf.F1.HQ.filtered.1.2 <- vcf.F1.HQ.filtered.1[(vcf.F1.HQ.filtered.1$`414F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`414F1_young_gt`=="0/0" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="1/1" | vcf.F1.HQ.filtered.1$`415F1_young_gt`=="0/0"),]
+vcf.F1.HQ.filtered.1.2.early.silique <- vcf.F1.HQ.filtered.1.early.silique[(vcf.F1.HQ.filtered.1.early.silique$`414F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.early.silique$`414F1_gt`=="0/0" | vcf.F1.HQ.filtered.1.early.silique$`415F1_gt`=="1/1" | vcf.F1.HQ.filtered.1.early.silique$`415F1_gt`=="0/0"),]
 
-head(vcf.F1.HQ.filtered.1.2)
-vcf.F1.HQ.filtered.1.2[,c("Ae_gt", "Ol_gt", "414F1_young_gt", "414F1_young_ref.depth", "414F1_young_alt.depth", "415F1_young_gt", "415F1_young_ref.depth", "415F1_young_alt.depth")]
+head(vcf.F1.HQ.filtered.1.2.early.silique)
+vcf.F1.HQ.filtered.1.2.early.silique[,c("Ae_gt", "Ol_gt", "414F1_gt", "414F1_ref.depth", "414F1_alt.depth", "415F1_gt", "415F1_ref.depth", "415F1_alt.depth")]
 
 # calcualte how many SNPs are already counted as homozygous in F1 
-table(vcf.F1.HQ.filtered.1.2$`414F1_young_gt`)
-table(vcf.F1.HQ.filtered.1.2$`415F1_young_gt`)
-ftable(vcf.F1.HQ.filtered.1.2[,c("414F1_young_gt","415F1_young_gt", "Ae_gt", "Ol_gt")])
+table(vcf.F1.HQ.filtered.1.2.flowering$`414F1_gt`)
+table(vcf.F1.HQ.filtered.1.2.flowering$`415F1_gt`)
+ftable(vcf.F1.HQ.filtered.1.2.flowering[,c("414F1_gt","415F1_gt", "Ae_gt", "Ol_gt")])
 
 # count SNPs between 414F1 & 415F1 
-dim(vcf.F1.HQ.filtered.1.2) # 34394 
-vcf.F1.HQ.filtered.1.2.3 <- vcf.F1.HQ.filtered.1.2[!((vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="0/0" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2$`414F1_young_gt`=="1/1" & vcf.F1.HQ.filtered.1.2$`415F1_young_gt`=="1/1")),]
-dim(vcf.F1.HQ.filtered.1.2.3) # 23589 
+dim(vcf.F1.HQ.filtered.1.2.flowering) # 34453  
+vcf.F1.HQ.filtered.1.2.3.flowering <- vcf.F1.HQ.filtered.1.2.flowering[!((vcf.F1.HQ.filtered.1.2.flowering$`414F1_gt`=="0/0" & vcf.F1.HQ.filtered.1.2.flowering$`415F1_gt`=="0/0") | (vcf.F1.HQ.filtered.1.2.flowering$`414F1_gt`=="1/1" & vcf.F1.HQ.filtered.1.2.flowering$`415F1_gt`=="1/1")),]
+dim(vcf.F1.HQ.filtered.1.2.3.flowering) # 24214 41  
 
-ftable(vcf.F1.HQ.filtered.1.2.3[,c("414F1_young_gt", "415F1_young_gt")])
+ftable(vcf.F1.HQ.filtered.1.2.3.flowering[,c("414F1_gt", "415F1_gt")])
 ```
-
-
-
-
-
-
 
 
 
