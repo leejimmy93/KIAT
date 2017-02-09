@@ -9,11 +9,11 @@ output:
 # using freebayes to call SNP 
 ```{r}
 # call as diploid 
-vcf.Ae.Ol.no.bolting.unique.diploid <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",as.is=T,na.strings = ".") 
+vcf.Ae.Ol.no.bolting.unique.diploid <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",as.is=T,na.strings = ".") 
 
 dim(vcf.Ae.Ol.no.bolting.unique.diploid) # 2102031      11  
 
-vcf.header.Ae.Ol.unique.diploid <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",intern = TRUE) 
+vcf.header.Ae.Ol.unique.diploid <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",intern = TRUE) 
 vcf.header.Ae.Ol.unique.diploid
 vcf.header.Ae.Ol.unique.diploid <- sub("#","",vcf.header.Ae.Ol.unique.diploid) #get rid of the pound sign
 vcf.header.Ae.Ol.unique.diploid
@@ -23,8 +23,8 @@ vcf.header.Ae.Ol.unique.diploid
 colnames(vcf.Ae.Ol.no.bolting.unique.diploid) <- vcf.header.Ae.Ol.unique.diploid
 head(vcf.Ae.Ol.no.bolting.unique.diploid) # why no print out??? 
 
-system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
-system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
+system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
+system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
 
 # Before splitting add NAs to blank cells
 vcf.Ae.Ol.no.bolting.unique.diploid$Ae
@@ -87,7 +87,6 @@ table(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt)
 
 head(vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"),], 20)
 
-
 tmp.unique <- ftable(vcf.Ae.Ol.no.bolting.unique.HQ[,c("Ae_gt","Ol_gt")])
 head(tmp.unique)
 write.table(vcf.Ae.Ol.no.bolting.unique.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/gt_Ae_Ol.vcf") 
@@ -137,6 +136,40 @@ dim(vcf.Ae.Ol.no.bolting.unique.HQ) # 1502350      25
 vcf.Ae.Ol.no.bolting.unique.HQ.export <- vcf.Ae.Ol.no.bolting.unique.HQ[,c(1:11)]
 
 write.table(vcf.Ae.Ol.no.bolting.unique.HQ.export, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.no.bolting.unique.HQ.vcf", row.names = F)
+
+# conclusion: 2,3,4,5 are caused by re-alignment problem
+
+# 0/1 suggested by Julin, might be caused re-alignment (this can be checked based on CIGAR score)
+# also check the ref/alt allele ratio for the het calls, distribution plot for Ae & Ol 
+vcf.Ae.Ol.no.bolting.unique.HQ.Ol.het <- vcf.Ae.Ol.no.bolting.unique.HQ[(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="0/1"),]
+
+p.Ol.het <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ.Ol.het) 
+p.Ol.het <- p.Ol.het + geom_histogram(aes(Ol_alt.depth/Ol_ref.depth)) + scale_x_log10() 
+p.Ol.het <- p.Ol.het + labs(list(x="log10(Ol_alt.depth/Ol_ref.depth)"))
+  
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+  
+p.Ol.het
+ggsave(p.Ol.het, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/p.Ol.het.png", height = 8, width = 11)
+
+vcf.Ae.Ol.no.bolting.unique.HQ.Ol.homo.alt <- vcf.Ae.Ol.no.bolting.unique.HQ[(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1"),]
+
+
+vcf.Ae.Ol.no.bolting.unique.HQ.Ol.homo.alt[vcf.Ae.Ol.no.bolting.unique.HQ.Ol.homo.alt$Ol_ref.depth==4128,] 
+
+
+vcf.Ae.Ol.no.bolting.unique.HQ.Ae.het <- vcf.Ae.Ol.no.bolting.unique.HQ[(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"),]
+
+p.Ae.het <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ.Ae.het) 
+p.Ae.het <- p.Ae.het + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
+p.Ae.het <- p.Ae.het +  
+p.Ae.het
+
+##### looks like 
+
+
+
+
 ```
 
 

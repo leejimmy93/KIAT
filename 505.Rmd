@@ -1,0 +1,12 @@
+---
+title: '505'
+author: "Ruijuan Li"
+date: "2/8/2017"
+output: html_document
+---
+
+# download, trimming, mapping 
+```{r}
+# in cabernet, using download.slurm 
+```
+
