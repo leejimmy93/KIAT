@@ -138,34 +138,104 @@ vcf.Ae.Ol.no.bolting.unique.HQ.export <- vcf.Ae.Ol.no.bolting.unique.HQ[,c(1:11)
 write.table(vcf.Ae.Ol.no.bolting.unique.HQ.export, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.no.bolting.unique.HQ.vcf", row.names = F)
 
 # conclusion: 2,3,4,5 are caused by re-alignment problem
+```
+
+# continue explore why many 0/1 in my inbred lines (arround 30%), already filtered by QUAL 
+```{r}
+# to further filter the SNPs, I only retain SNPs with read depth > 3 & < 501 in both Da-Ae & Da-Ol-1 
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered <- vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_tot.depth > 3 & vcf.Ae.Ol.no.bolting.unique.HQ$Ae_tot.depth < 501 & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_tot.depth > 3 & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_tot.depth < 501),] 
+
+dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered) # 834016     25 
+
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt) 
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt)
+
+# after filtered by read depth, high het problem still exist 
+
+######## below, work to figure the cause... 
+
+# 1) check the ref/alt allele ratio for the het calls, distribution plot for Ae & Ol 
+# get het & homo call for Ae & Ol 
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.het <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/1"),]
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/0"),]
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="1/1"),]
+
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt) 
+dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.het); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt)
+
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.het <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="0/1"),]
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.ref <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="0/0"),]
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.alt <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="1/1"),]
+
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt) 
+dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.het); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.ref); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.alt) 
+
+# function to draw plot
+pl.allele.ratio.Ae <- function(vcf.subset){
+  pl <- ggplot(data = vcf.subset) 
+  pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
+  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)")) 
+  return(pl)  
+} 
+pl.allele.ratio.Ol <- function(vcf.subset){
+  pl <- ggplot(data = vcf.subset) 
+  pl <- pl + geom_histogram(aes(Ol_alt.depth/Ol_ref.depth)) + scale_x_log10() 
+  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)")) 
+  return(pl)  
+} 
+
+pl.allele.ratio.Ae(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.het) 
+pl.allele.ratio.Ol(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.het) 
+
+## non-biallelic SNPs...oh, those are indels...(CIGAR score for them...)  
+# check CIGAR score 
+
+# 1) seperate CIGAR scores 
+head(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.het)
+info <- matrix(
+  unlist(strsplit(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$INFO,split = ";")),
+  nrow=nrow(vcf.Ae.Ol.no.bolting.unique.HQ.filtered),  
+  byrow=TRUE
+  )
+
+head(info)
+
+colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
+                    "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
+                    "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
+
+head(info)
+info <- as.data.frame(info)
+colnames(info)
+
+for (i in 1:ncol(info)){
+  info[,i] <- gsub("([[:print:]]+)(=)([[:print:]])","\\3",info[,i])
+}
+
+head(info)
+
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered <- cbind(vcf.Ae.Ol.no.bolting.unique.HQ.filtered,info,stringsAsFactors=FALSE)
+head(vcf.Ae.Ol.no.bolting.unique.HQ.filtered)
+unique(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$TYPE)
 
 # 0/1 suggested by Julin, might be caused re-alignment (this can be checked based on CIGAR score)
-# also check the ref/alt allele ratio for the het calls, distribution plot for Ae & Ol 
-vcf.Ae.Ol.no.bolting.unique.HQ.Ol.het <- vcf.Ae.Ol.no.bolting.unique.HQ[(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="0/1"),]
+# need to work on this...  
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered.SNP <- 
+  vcf.Ae.Ol.no.bolting.unique.HQ.filtered[vcf.Ae.Ol.no.bolting.unique.HQ.filtered$TYPE=="snp",]
 
-p.Ol.het <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ.Ol.het) 
-p.Ol.het <- p.Ol.het + geom_histogram(aes(Ol_alt.depth/Ol_ref.depth)) + scale_x_log10() 
-p.Ol.het <- p.Ol.het + labs(list(x="log10(Ol_alt.depth/Ol_ref.depth)"))
-  
-pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
-  
-p.Ol.het
-ggsave(p.Ol.het, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/p.Ol.het.png", height = 8, width = 11)
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.SNP$Ae_gt)
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.SNP$Ol_gt)
 
-vcf.Ae.Ol.no.bolting.unique.HQ.Ol.homo.alt <- vcf.Ae.Ol.no.bolting.unique.HQ[(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1"),]
+vcf.Ae.Ol.no.bolting.unique.HQ.filtered.other <- 
+  vcf.Ae.Ol.no.bolting.unique.HQ.filtered[vcf.Ae.Ol.no.bolting.unique.HQ.filtered$TYPE!="snp",]
 
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.other$Ae_gt)
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.other$Ol_gt)
 
-vcf.Ae.Ol.no.bolting.unique.HQ.Ol.homo.alt[vcf.Ae.Ol.no.bolting.unique.HQ.Ol.homo.alt$Ol_ref.depth==4128,] 
+## 
+unique(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$CIGAR)
 
-
-vcf.Ae.Ol.no.bolting.unique.HQ.Ae.het <- vcf.Ae.Ol.no.bolting.unique.HQ[(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"),]
-
-p.Ae.het <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ.Ae.het) 
-p.Ae.het <- p.Ae.het + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
-p.Ae.het <- p.Ae.het +  
-p.Ae.het
-
-##### looks like 
+unique(vcf.Ae.Ol.no.bolting.unique.HQ.filtered[vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/1",]$CIGAR)
 
 
 
