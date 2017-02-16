@@ -12,8 +12,7 @@ output:
 # using scripts /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/freebayes_SNP_calling.sh before add read group & freebayes 
 ``` 
 
-
-# using freebayes to call SNP 
+# using freebayes to call SNP (This result looks like is not from uniquely mapped data...)
 ```{r}
 # call as diploid 
 vcf.Ae.Ol.no.bolting.unique.diploid <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",as.is=T,na.strings = ".") 
@@ -458,7 +457,7 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 ```
 
 
-# using GATK to call SNP 
+# using GATK to call SNP (with bolting data)
 ```{r}
 # 0) get uniquely mapped reads --> from sam to bam --> sort bam file (Do we need to do this step? yes, this step should be done for polyploid, based on discussion with Julin...)
 # 0.1) get uniquely mapped reads  
@@ -526,107 +525,32 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 
 ```
 
-# SNP filtering from GATK (unfiltered) 
+# now rerun GATK SNP calling pipeline using no bolting data 
 ```{r}
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT_whitney/KIAT_whitney/parent_SNP/SNP_calling_GATK_pipeline.sh 
+```
+
+# data directory 
+```{r}
+# unfiltered & filtered SNPs from GATK on cabernet are stored under the directory of /share/malooflab/Ruijuan/parent_SNP/SNP_calling/GATK/output 
+# named as ${sample}.vcf & ${sample}.filtered.vcf 
+```
+
+# SNP filtering from GATK (filtered)  
+```{r} 
+# SNP.GATK.reformat(vcf, header) can be used to reformat vcf file from GATK 
+# SNP.GATK.basic.filter(vcf) can be used to filter based on snpcluster & QUAL, also give some stats on genotyping matrxi result, and filtering stats 
+
 ### import data and reformat 
-
-vcf.GATK.A01 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/xaa.intervals.vcf",as.is=T,na.strings = ".") 
-head(vcf.GATK.A01) 
-
-vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/xaa.intervals.vcf",intern = TRUE) 
-head(vcf.header.GATK)
-vcf.header.GATK <- sub("#","",vcf.header.GATK) #get rid of the pound sign
-vcf.header.GATK
-
-vcf.header.GATK <- unlist(strsplit(vcf.header.GATK,split="\t"))
-colnames(vcf.GATK.A01) <- vcf.header.GATK
-head(vcf.GATK.A01)
-tail(vcf.GATK.A01)
-dim(vcf.GATK.A01) # 68068   11
-
-system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/xaa.intervals.vcf")
-system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/xaa.intervals.vcf") 
-
-########## 
-# correct the file 
-which(vcf.GATK.A01$FORMAT=="GT:GQ:PL")
-class(vcf.GATK.A01)
-
-vcf.GATK.corrected <- vcf.GATK.A01[-c(2425, 10905, 17842, 17843, 18085, 41722, 43080, 59817),]
-sum(vcf.GATK.corrected$FORMAT=="GT:GQ:PL")
-dim(vcf.GATK.corrected)
-
-# Before splitting add NAs to blank cells
-vcf.GATK.corrected$Ae
-sum(vcf.GATK.corrected$Ae=="./.")
-
-vcf.GATK.corrected$Ae[vcf.GATK.corrected$Ae=="./."] <- "NA:NA:NA:NA:NA"
-sum(vcf.GATK.corrected$Ae=="NA:NA:NA:NA:NA") 
-
-Ae.tmp.unique.GATK <- matrix(
-  unlist(strsplit(vcf.GATK.corrected$Ae,split = ":")),
-  nrow=nrow(vcf.GATK.corrected),  
-  byrow=TRUE
-  ) 
-
-head(Ae.tmp.unique.GATK)
-tail(Ae.tmp.unique.GATK) 
-
-colnames(Ae.tmp.unique.GATK) <- paste("Ae",c("gt","ref.alt.depth","approx.depth","genotype.qual","Phred.score"),sep="_")
-
-vcf.GATK.corrected$Ol[vcf.GATK.corrected$Ol=="./."] <- "NA:NA:NA:NA:NA"
-
-Ol.tmp.unique.GATK <- matrix(
-  unlist(strsplit(vcf.GATK.corrected$Ol,split = ":")),
-  nrow=nrow(vcf.GATK.corrected),  
-  byrow=TRUE
-  ) 
-head(Ol.tmp.unique.GATK)
-tail(Ol.tmp.unique.GATK)
-dim(Ol.tmp.unique.GATK) # 68060   5 
-dim(Ae.tmp.unique.GATK) 
-
-colnames(Ol.tmp.unique.GATK) <- paste("Ol",c("gt","ref.alt.depth","approx.depth","genotype.qual","Phred.score"),sep="_")
-
-vcf.GATK.reform <- cbind(vcf.GATK.corrected, Ae.tmp.unique.GATK, Ol.tmp.unique.GATK,stringsAsFactors=FALSE) 
-
-summary(vcf.GATK.reform)
-head(vcf.GATK.reform)
-
-######## 
-vcf.GATK.reform[,c("Ae_approx.depth","Ae_genotype.qual",
-            "Ol_approx.depth","Ol_genotype.qual")] <-
-  apply(vcf.GATK.reform[,c("Ae_approx.depth","Ae_genotype.qual",
-            "Ol_approx.depth","Ol_genotype.qual")],
-        2,
-        as.numeric
-        )
-
-dim(vcf.GATK.reform) # 68060 21       
+vcf.GATK.A01.filtered <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/filtered/xaa.intervals.vcf.filtered.vcf",as.is=T,na.strings = ".") 
+vcf.GATK.filtered.reform <- SNP.GATK.reformat(vcf.GATK.A01.filtered, vcf.header.GATK)
+dim(vcf.GATK.filtered.reform) # 68060 21       
 
 #### filter (based on QUAL score and snpcluster)
-# 1) filter snpcluster 
-# vcf.GATK.reform.pass <- vcf.GATK.reform[vcf.GATK.reform$FILTER!="SnpCluster",]
-# nrow(vcf.GATK.reform.pass)/nrow(vcf.GATK.reform) # 50% 
-unique(vcf.GATK.reform$Ae_gt)
-unique(vcf.GATK.reform$Ol_gt)
-
-### 1) filter based on QUAl score 
-
-# make a histogram of QUAL scores 
-hist(vcf.GATK.reform$QUAL) 
-
-length(vcf.GATK.reform$QUAL) # a total of 76461 SNPs 
-sum(vcf.GATK.reform$QUAL>40) / length(vcf.GATK.reform$QUAL) # 91% are above QUAL score of 40, which means less than 0.0001 probability that it isn't polymorphic 
-
-# subset the data to keep positions where the quality score is 40 or higher  
-vcf.GATK.reform.HQ <- vcf.GATK.reform[vcf.GATK.reform$QUAL>40,]
-dim(vcf.GATK.reform.HQ) # 62247    21    
-
-# # count the number (for some reason this desn't work...)
-table(vcf.GATK.reform.HQ$Ae_gt)
-table(vcf.GATK.reform.HQ$Ol_gt)  
-```
+# basic filtering based on snpcluster & QUAL 
+vcf.GATK.HQ <- SNP.GATK.basic.filter(vcf.GATK.filtered.reform)
+dim(vcf.GATK.HQ) # 29962 21 
+``` 
 
 # figure out why many 0/1 
 ```{r} 
