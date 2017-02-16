@@ -367,6 +367,65 @@ reformat.vcf.F1 <- function(vcf.F1, vcf.header.F1){
   return(vcf.F1)
 }
 
+# function to generate basic stats for SNP analysis (GATK version)
+### import data and reformat 
+
+SNP.GATK.reformat <- function(vcf, vcf.header){ # input are vcf file from GATK after filtering & header of the vcf file 
+  colnames(vcf) <- vcf.header 
+  
+  # correct the file 
+  problem.row <- which(vcf$FORMAT=="GT:GQ:PL")
+  vcf.corrected <- vcf[-c(problem.row),]
+  
+  # Before splitting add NAs to blank cells 
+  vcf.corrected$Ae[vcf.corrected$Ae=="./."] <- "NA:NA:NA:NA:NA"
+  Ae.GATK <- matrix(
+    unlist(strsplit(vcf.corrected$Ae,split = ":")),
+    nrow=nrow(vcf.corrected),  
+    byrow=TRUE
+  ) 
+  colnames(Ae.GATK) <- paste("Ae",c("gt","ref.alt.depth","approx.depth","genotype.qual","Phred.score"),sep="_")
+  
+  vcf.corrected$Ol[vcf.corrected$Ol=="./."] <- "NA:NA:NA:NA:NA"
+  Ol.GATK <- matrix(
+    unlist(strsplit(vcf.corrected$Ol,split = ":")),
+    nrow=nrow(vcf.corrected),  
+    byrow=TRUE
+  ) 
+  colnames(Ol.GATK) <- paste("Ol",c("gt","ref.alt.depth","approx.depth","genotype.qual","Phred.score"),sep="_")
+  vcf.reform <- cbind(vcf.corrected, Ae.GATK, Ol.GATK,stringsAsFactors=FALSE) 
+  
+  vcf.reform[,c("Ae_approx.depth","Ae_genotype.qual",
+                              "Ol_approx.depth","Ol_genotype.qual")] <-
+    apply(vcf.reform[,c("Ae_approx.depth","Ae_genotype.qual",
+                                      "Ol_approx.depth","Ol_genotype.qual")],
+          2,
+          as.numeric
+    )
+  return(vcf.reform)  
+}   
+
+#### basic filter (based on QUAL score and snpcluster)
+SNP.GATK.basic.filter <- function(vcf){
+  # filter based on snpcluster 
+  vcf.pass <- vcf[vcf$FILTER!="SnpCluster",]
+  snpcluster.pass.ratio <- nrow(vcf.pass)/nrow(vcf)
+  
+  # filter based on QUAL score 
+  vcf.HQ <- vcf.pass[vcf.pass$QUAL>40,]
+  QUAL.40.pass.ratio <- nrow(vcf.HQ) / nrow(vcf.pass) 
+  Ae.gt.matrix <- table(vcf.HQ$Ae_gt)
+  Ol.gt.matrix <- table(vcf.HQ$Ol_gt)   
+  
+  cat("the percentage of SNPs that are not in snpcluster:", snpcluster.pass.ratio, "\n")
+  cat("The percentage of SNPs with QUAL > 40:", QUAL.40.pass.ratio, "\n")
+  cat("genotyping call matrix for Ae:", "\n")
+  print(Ae.gt.matrix)
+  cat("genotyping call matrix for Ol:", "\n")
+  print(Ol.gt.matrix)
+  
+  return(vcf.HQ)
+}
 
 
 
