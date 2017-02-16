@@ -154,8 +154,6 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 ### after talking to Richard group, we decide to stop Trinity and run cufflinks only on 14 cores to see whether this will speed up assembly. 
 # library, now still runs very slow, now I decide not to use --max-bundle-frags option to see whether this can speed up the assembly. 
 
-
-
 ```
 
 # cuffmerge 
@@ -166,6 +164,19 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # 3) the only difference Monica spotted is that my gtf file is unsorted, but as I know, many people are using unsorted gtf file, although I don't know whether they have successful experience with cufflinks --> cuffmerge pipeline. In addition, it is hard to get sorted gff file.... sorted by chromosome, by location, by type... can try this if my current try doesn't work... 
 # 4) when I only grep "transcripts" from my gtf file, cuffmerge works 
 # 5) some people mentioned it might because of duplicated gene_id, while I added gene_id column to my gff3 file when STAR mapping, this might be the problem? 
+
+######## So yes, this cuffmerge problem was caused by the extra gene_id column I added during STAR mapping. so now I am rerunning all the assembly with original gff3 files  
+
+# also test cufflinks --> cuffmerge pipeline ... save time!!!!!!! 
+
+
+
+
+
+
+
+
+
 ```
 
 
@@ -225,7 +236,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 ### add read group & SNP calling ... 
 # bamaddrg -b Ae_paired.star.trim.dir/Ae_no_bolting_rmdup.bam -s Ae -r Ae -b Ol_paired.star.trim.dir/Ol_no_bolting_rmdup.bam -s Ol -r Ol | freebayes_v0.9.21-7-g7dd41db --fasta-reference /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa --stdin --ploidy 4 --min-alternate-count 4 --min-alternate-fraction 0.4 --dont-left-align-indels > Ae_Ol_no_bolting.vcf (screen -r 35910.ttys009.coloma)  
-```
+``` 
 
 # Expression analysis 1) formatting data   
 ```{r}

@@ -6,6 +6,13 @@ output:
   html_document: 
     keep_md: yes
 ---
+
+# SNP calling   
+```{r}
+# using scripts /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/freebayes_SNP_calling.sh before add read group & freebayes 
+``` 
+
+
 # using freebayes to call SNP 
 ```{r}
 # call as diploid 
@@ -170,13 +177,15 @@ vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.alt <- vcf.Ae.Ol.no.bolting.unique.HQ
 table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt) 
 dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.het); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.ref); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.alt) 
 
-# function to draw plot
+# function to draw plot 
 pl.allele.ratio.Ae <- function(vcf.subset){
+  vcf.subset$tmp <- with(vcf.subset,Ae_alt.depth/Ae_ref.depth)
   pl <- ggplot(data = vcf.subset) 
-  pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
-  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)")) 
+  pl <- pl + geom_histogram(aes(x=tmp)) 
+  # pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
+  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))  + xlim(-1,5)
   return(pl)  
-} 
+}   
 pl.allele.ratio.Ol <- function(vcf.subset){
   pl <- ggplot(data = vcf.subset) 
   pl <- pl + geom_histogram(aes(Ol_alt.depth/Ol_ref.depth)) + scale_x_log10() 
@@ -235,10 +244,7 @@ table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.other$Ol_gt)
 ## 
 unique(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$CIGAR)
 
-unique(vcf.Ae.Ol.no.bolting.unique.HQ.filtered[vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/1",]$CIGAR)
-
-
-
+unique(vcf.Ae.Ol.no.bolting.unique.HQ.filtered[vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/1",]$CIGAR)  
 
 ```
 
@@ -455,9 +461,9 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 # using GATK to call SNP 
 ```{r}
 # 0) get uniquely mapped reads --> from sam to bam --> sort bam file (Do we need to do this step? yes, this step should be done for polyploid, based on discussion with Julin...)
-# 0.1) get uniquely mapped reads 
-# samtools view ../alignment_freebayes/Ae_paired.star.trim.dir/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' > Ae_unique_mapped.bam (screen -r 35901.ttys009.coloma)
-# samtools view ../alignment_freebayes/Ol_paired.star.trim.dir/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' > Ol_unique_mapped.bam (screen -r 35910.ttys009.coloma)
+# 0.1) get uniquely mapped reads  
+# samtools view ../alignment_freebayes/Ae_paired.star.trim.dir/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' > Ae_unique_mapped.sam 
+# samtools view ../alignment_freebayes/Ol_paired.star.trim.dir/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' > Ol_unique_mapped.sam
 # 0.2) from sam to bam for sam w/o headline 
 # samtools view -bT /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ae_unique_mapped.sam > Ae_test.bam
 # samtools view -bT /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ol_unique_mapped.sam > Ol_test.bam
@@ -520,7 +526,7 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 
 ```
 
-# SNP filtering from GATK 
+# SNP filtering from GATK (unfiltered) 
 ```{r}
 ### import data and reformat 
 
@@ -620,7 +626,118 @@ dim(vcf.GATK.reform.HQ) # 62247    21
 # # count the number (for some reason this desn't work...)
 table(vcf.GATK.reform.HQ$Ae_gt)
 table(vcf.GATK.reform.HQ$Ol_gt)  
+```
 
+# figure out why many 0/1 
+```{r} 
+head(vcf.GATK.reform.HQ) 
+
+# reformat to get seperate read depth for Ae & Ol 
+Ae.gt <- matrix(
+  unlist(strsplit(vcf.GATK.reform.HQ$Ae_ref.alt.depth,split = ",")),
+  nrow=nrow(vcf.GATK.reform.HQ),  
+  byrow=TRUE
+  ) 
+
+head(Ae.gt)
+
+colnames(Ae.gt) <- paste("Ae",c("ref.depth","alt.depth"),sep="_")
+
+Ol.gt <- matrix(
+  unlist(strsplit(vcf.GATK.reform.HQ$Ol_ref.alt.depth,split = ",")),
+  nrow=nrow(vcf.GATK.reform.HQ),  
+  byrow=TRUE
+  )
+
+head(Ol.gt)
+
+colnames(Ol.gt) <- paste("Ol",c("ref.depth","alt.depth"),sep="_")
+
+vcf.GATK.reform.HQ <- cbind(vcf.GATK.reform.HQ, Ae.gt, Ol.gt, stringsAsFactors=FALSE)
+
+vcf.GATK.reform.HQ$Ae_alt.depth <- as.numeric(vcf.GATK.reform.HQ$Ae_alt.depth)
+vcf.GATK.reform.HQ$Ae_ref.depth <- as.numeric(vcf.GATK.reform.HQ$Ae_ref.depth)
+vcf.GATK.reform.HQ$Ol_alt.depth <- as.numeric(vcf.GATK.reform.HQ$Ol_alt.depth)
+vcf.GATK.reform.HQ$Ol_ref.depth <- as.numeric(vcf.GATK.reform.HQ$Ol_ref.depth)
+
+
+head(vcf.GATK.reform.HQ)
+
+vcf.GATK.reform.HQ.filtered <- vcf.GATK.reform.HQ[which(vcf.GATK.reform.HQ$Ae_approx.depth > 3 & vcf.GATK.reform.HQ$Ae_approx.depth < 501 & vcf.GATK.reform.HQ$Ol_approx.depth > 3 & vcf.GATK.reform.HQ$Ol_approx.depth < 501),] 
+
+dim(vcf.GATK.reform.HQ.filtered) # 40272    25  
+
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt) 
+table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt)
+
+# after filtered by read depth, high het problem still exist 
+
+######## below, work to figure the cause... 
+
+# 1) check the ref/alt allele ratio for the het calls, distribution plot for Ae & Ol 
+# get het & homo call for Ae & Ol 
+vcf.GATK.reform.HQ.filtered.Ae.het <- vcf.GATK.reform.HQ.filtered[(vcf.GATK.reform.HQ.filtered$Ae_gt=="0/1"),]
+# vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/0"),]
+# vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="1/1"),]
+
+table(vcf.GATK.reform.HQ.filtered$Ae_gt) 
+# dim(vcf.GATK.reform.HQ.filtered.Ae.het); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt)
+
+vcf.GATK.reform.HQ.filtered.Ol.het <- vcf.GATK.reform.HQ.filtered[(vcf.GATK.reform.HQ.filtered$Ol_gt=="0/1"),]
+# vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.ref <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="0/0"),]
+# vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.alt <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="1/1"),]
+
+# table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt) 
+# dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.het); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.ref); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.alt) 
+
+# function to draw plot 
+pl.allele.ratio.Ae <- function(vcf.subset){
+  vcf.subset$tmp <- with(vcf.subset,Ae_alt.depth/Ae_ref.depth)
+  pl <- ggplot(data = vcf.subset) 
+  pl <- pl + geom_histogram(aes(x=tmp)) 
+  # pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
+  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))  + xlim(-1,5)
+  return(pl)  
+}   
+
+pl.allele.ratio.Ol <- function(vcf.subset){
+  pl <- ggplot(data = vcf.subset)
+  pl <- pl + geom_histogram(aes(Ol_alt.depth/Ol_ref.depth)) + scale_x_log10()
+  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))
+  return(pl)
+}
+
+pl <- ggplot(data = vcf.GATK.reform.HQ.filtered.Ae.het)
+pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10()
+pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))
+pl 
+
+pl.allele.ratio.Ae(vcf.GATK.reform.HQ.filtered.Ae.het) 
+pl.allele.ratio.Ol(vcf.GATK.reform.HQ.filtered.Ol.het)  
+
+
+### zero existed in my het? 
+# vcf.GATK.reform.HQ.filtered.Ae.het$Ae_alt.depth==0, 
+vcf.GATK.reform.HQ.filtered[vcf.GATK.reform.HQ.filtered$Ae_gt=="0/1",]$Ae_ref.alt.depth
+
+length(which(vcf.GATK.reform.HQ.filtered.Ae.het$Ae_alt.depth!="NA" & vcf.GATK.reform.HQ.filtered.Ae.het$Ae_alt.depth=="0")) / nrow(vcf.GATK.reform.HQ.filtered.Ae.het)
+
+head(vcf.GATK.reform.HQ.filtered.Ae.het)
+
+vcf.GATK.reform.HQ.filtered.Ae.het$Ae_alt.depth
+
+vcf.GATK.reform.HQ.filtered.Ae.het$Ae_alt.depth==0 
+vcf.Ae.Ol.no.bolting.unique.diploid.Ae.het <- vcf.Ae.Ol.no.bolting.unique.diploid[vcf.Ae.Ol.no.bolting.unique.diploid$Ae_gt=="0/1",]
+
+vcf.Ae.Ol.no.bolting.unique.diploid$Ae_alt.depth==0 
+
+
+
+```
+
+
+# downstream analysis of SNPs 
+```{r}
 # which SNPs would be most useful for a downstream QTL analysis between Ae & Ol? 
 
 # SNPs between Ae & ref
@@ -884,26 +1001,26 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 # snpEff # this version of annotated vcf file is not correct... because "ERROR_CHROMOSOME_NOT_FOUND" 
 ########### 1) 
 # build my own database ############### 
+# 1) download snpEff databse, unzip 
+# mkdir data 
 # cd data 
-# mkdir Bnv5
-# cd Bnv5 
+# mkdir napus 
+# cd napus  
 # wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus.annotation_v5.gff3.gz
-# mv Brassica_napus.annotation_v5.gff3.gz genes.gff.gz
-# wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus.annotation_v5.pep.fa.gz
-# wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus.annotation_v5.gff3.cds.fa.gz
-# mv Brassica_napus.annotation_v5.pep.fa.gz protein.fa.gz
-# mv Brassica_napus.annotation_v5.gff3.cds.fa.gz cds.fa.gz
+# mv Brassica_napus.annotation_v5.gff3.gz genes.gff.gz 
+# wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus_v4.1.chromosomes.fa.gz
+# mv Brassica_napus_v4.1.chromosomes.fa.gz sequences.fa.gz 
 # gunzip *.gz
 # cd ..
-# mkdir genomes 
+# mkdir genomes  
 # cd genomes/ 
 # wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus_v4.1.chromosomes.fa.gz
-# mv Brassica_napus_v4.1.chromosomes.fa.gz Bnv5.fa.gz 
-# gunzip Bnv5.fa.gz
+# mv Brassica_napus_v4.1.chromosomes.fa.gz sequences.fa.gz 
+# gunzip sequences.fa.gz
 # cd ..  (to snpEff home directory)
 # vim snpEff.config #### 
-# add "# Brassica_napus v5 (self-built) Bnv5.genome: Brassica_napus Bnv5.reference: ftp://brassicadb.org/Brassica_napus/" 
-# java -jar snpEff.jar build -gff3 -v Bnv5 
+# add "# Brassica napus genome  napus.genome: Brassica_napus" 
+# java -jar snpEff.jar build -gff3 -v napus 
 
 ### SNP annotation 
 

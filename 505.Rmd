@@ -7,6 +7,21 @@ output: html_document
 
 # download, trimming, mapping 
 ```{r}
-# in cabernet, using download.slurm 
+# 1) download 
+# in cabernet, using download.slurm & download_2.slurm
+# also download to whitney 
+
+# 2) trimming donw on whitney only 
+# trimming.sh
+
+# 3) check quality, doing 
+# before trimming, QC was done by company, so look at the result directly using /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2017_winter/505/data/bioftp.org/TBD170026_20170202/make_summary_report.sh  
+# after trimming, fastqc by QC.sh, then check quality 
+
+# 4) transfer all trimmed data to cabernet for mapping 
+# get file name: ls | grep "Sample" | sed 's/\///' | tr '\n' ' '
+# /share/malooflab/Ruijuan/505/trimmed_data/TBD170026_20170202/fetch_02_13_2017.slurm & 
+# /share/malooflab/Ruijuan/505/trimmed_data/TBD170001_1617/fetch_02_13_2017_2.slurm 
+
 ```
 
