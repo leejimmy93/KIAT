@@ -154,7 +154,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 ### after talking to Richard group, we decide to stop Trinity and run cufflinks only on 14 cores to see whether this will speed up assembly. 
 # library, now still runs very slow, now I decide not to use --max-bundle-frags option to see whether this can speed up the assembly. 
 
-```
+``` 
 
 # cuffmerge 
 ```{r}
@@ -179,64 +179,6 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 ```
 
-
-# SNP calling  
-```{r}
-# index reference genome fasta file 
-# samtools faidx Brapa_sequence_v1.5.fa  
-
-# 1) merge libarary for Da-Ae and Da-Ol-1 
-# cat Ae*1.fq 5_1.fq 6_1.fq 05-11-Final-8ul_1.fq 8_1.fq > Ae_1.fq
-# cat Ae*2.fq 5_2.fq 6_2.fq 05-11-Final-8ul_2.fq 8_2.fq > Ae_2.fq
-
-# cat All*1.fq 1_1.fq 2_1.fq 3_1.fq 4_1.fq > Ol_1.fq
-# cat All*2.fq 1_2.fq 2_2.fq 3_2.fq 4_2.fq > Ol_2.fq
-
-# trim Da-Ae & Da-Ol sample using: java -jar /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/bin/Trimmomatic-0.36/trimmomatic-0.36.jar PE ${i}_1.fq ${i}_2.fq ${i}_paired_1.fq ${i}_unpaired_1.fq ${i}_paired_2.fq ${i}_unpaired_2.fq ILLUMINACLIP:Bradseq_adapter.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 -threads 2 
-
-# 2) do STAR mapping for Da-Ae & Da-Ol-1 paired-end seq 
-
-### STAR mapping of merged data 
-# STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn *_1.fq *_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 2 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx 
-
-# (visualizing the MDS plot and hierachical plot, I found bolting are not mixed between genotypes, its that they are not clustering with themselve, which might because the two genotypes have different flowering time? Da_Ae's bolting is more similar to young whereas Da-Ol's bolting is more similar to flowering.)  
-
-### remove PCR duplicate 
-# samtools rmdup -s Aligned.sortedByCoord.out.bam Ae_rmdup.bam
-# samtools rmdup -s Aligned.sortedByCoord.out.bam Ol_rmdup.bam 
-
-### index bam file 
-# samtools index Ae_rmdup.bam
-# samtools index Ol_rmdup.bam
-
-### add read group & SNP calling ... 
-# bamaddrg -b Ae_paired.star.trim.dir/Ae_rmdup.bam -s Ae -r Ae -b Ol_paired.star.trim.dir/Ol_rmdup.bam -s Ol -r Ol | freebayes_v0.9.21-7-g7dd41db --fasta-reference /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa --stdin --ploidy 4 --min-alternate-count 4 --min-alternate-fraction 0.4 --dont-left-align-indels > Ae_Ol.vcf 
-
-############### 
-################### 
-# opps, forget that bolting data should not be included for SNP calling !!! 
-# mapping w/o bolting data 
-# 1) combine all trimmed reads for Da-Ae and Da-Ol-1 paired end reads 
-# cat Ae_Yeong_2_paired_1.fq Ae_Yeong_3_paired_1.fq Ae_Gae_2_paired_1.fq Ae_Gae_3_paired_1.fq Ae_Cho_2_paired_1.fq Ae_Cho_3_paired_1.fq Ae_Hu_2_paired_1.fq Ae_Hu_3_paired_1.fq 5_paired_1.fq 6_paired_1.fq 05-11-Final-8ul_paired_1.fq 8_paired_1.fq > Ae_no_bolting_1.fq
-
-# cat Ae_Yeong_2_paired_2.fq Ae_Yeong_3_paired_2.fq Ae_Gae_2_paired_2.fq Ae_Gae_3_paired_2.fq Ae_Cho_2_paired_2.fq Ae_Cho_3_paired_2.fq Ae_Hu_2_paired_2.fq Ae_Hu_3_paired_2.fq 5_paired_2.fq 6_paired_2.fq 05-11-Final-8ul_paired_2.fq 8_paired_2.fq > Ae_no_bolting_2.fq 
-
-# cat All1_Yeong2_160621_paired_1.fq All1_Yeong3_160621_paired_1.fq All1_Gae_2_paired_1.fq All1_Gae_3_paired_1.fq All1_Cho_2_paired_1.fq All1_Cho_3_paired_1.fq All1_Hu_2_paired_1.fq All1_Hu_3_paired_1.fq 1_paired_1.fq 2_paired_1.fq 3_paired_1.fq 4_paired_1.fq > Ol_no_bolting_1.fq 
-
-# cat All1_Yeong2_160621_paired_2.fq All1_Yeong3_160621_paired_2.fq All1_Gae_2_paired_2.fq All1_Gae_3_paired_2.fq All1_Cho_2_paired_2.fq All1_Cho_3_paired_2.fq All1_Hu_2_paired_2.fq All1_Hu_3_paired_2.fq 1_paired_2.fq 2_paired_2.fq 3_paired_2.fq 4_paired_2.fq > Ol_no_bolting_2.fq
-
-## STAR mapping 
-## remove PCR duplicate 
-# samtools rmdup -s Aligned.sortedByCoord.out.bam Ae_no_bolting_rmdup.bam 
-# samtools rmdup -s Aligned.sortedByCoord.out.bam Ol_no_bolting_rmdup.bam 
-
-### index bam file 
-# samtools index Ae_no_bolting_rmdup.bam 
-# samtools index Ol_no_bolting_rmdup.bam 
-
-### add read group & SNP calling ... 
-# bamaddrg -b Ae_paired.star.trim.dir/Ae_no_bolting_rmdup.bam -s Ae -r Ae -b Ol_paired.star.trim.dir/Ol_no_bolting_rmdup.bam -s Ol -r Ol | freebayes_v0.9.21-7-g7dd41db --fasta-reference /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa --stdin --ploidy 4 --min-alternate-count 4 --min-alternate-fraction 0.4 --dont-left-align-indels > Ae_Ol_no_bolting.vcf (screen -r 35910.ttys009.coloma)  
-``` 
 
 # Expression analysis 1) formatting data   
 ```{r}

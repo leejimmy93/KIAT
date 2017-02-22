@@ -128,7 +128,7 @@ ggsave(p.uniq.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_se
 p.multi.mapping.single <- ggplot(data=single.mapping.result)
 p.multi.mapping.single <- p.multi.mapping.single + geom_bar(aes(x=reorder(Sample_ID, Percent_Multi_Mapped), y=Percent_Multi_Mapped, fill=batch), stat = "identity") 
 p.multi.mapping.single <- p.multi.mapping.single + labs(list(title = "", x = "Percent of multi mapped reads", y = "number of samples"))
-p.multi.mapping.single 
+p.multi.mapping.single  
 ggsave(p.multi.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.multi.mapping.single.png", height = 8, width = 11)
 
 p.toomany.mapping.single <- ggplot(data=single.mapping.result)

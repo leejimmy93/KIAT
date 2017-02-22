@@ -4,6 +4,11 @@ author: "Ruijuan Li"
 date: "August 12, 2016"
 output: html_document
 ---
+######
+```{r}
+# reformat.vcf.F1(vcf) is the function I wrote to pre-process vcf files from F1 
+```
+######
 
 ```{r}
 # 1) download file from ftp using ftp_file_transfer.sh

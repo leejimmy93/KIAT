@@ -378,15 +378,15 @@ SNP.GATK.reformat <- function(vcf, vcf.header){ # input are vcf file from GATK a
   vcf.corrected <- vcf[-c(problem.row),]
   
   # Before splitting add NAs to blank cells 
-  vcf.corrected$Ae[vcf.corrected$Ae=="./."] <- "NA:NA:NA:NA:NA"
+  vcf.corrected$Ae[vcf.corrected$Ae=="./."] <- "NA:NA,NA:NA:NA:NA,NA,NA"
   Ae.GATK <- matrix(
-    unlist(strsplit(vcf.corrected$Ae,split = ":")),
+    unlist(strsplit(vcf.corrected$Ae,split = ":")), 
     nrow=nrow(vcf.corrected),  
     byrow=TRUE
   ) 
   colnames(Ae.GATK) <- paste("Ae",c("gt","ref.alt.depth","approx.depth","genotype.qual","Phred.score"),sep="_")
   
-  vcf.corrected$Ol[vcf.corrected$Ol=="./."] <- "NA:NA:NA:NA:NA"
+  vcf.corrected$Ol[vcf.corrected$Ol=="./."] <- "NA:NA,NA:NA:NA:NA,NA,NA" 
   Ol.GATK <- matrix(
     unlist(strsplit(vcf.corrected$Ol,split = ":")),
     nrow=nrow(vcf.corrected),  
@@ -427,7 +427,41 @@ SNP.GATK.basic.filter <- function(vcf){
   return(vcf.HQ)
 }
 
+###### # function to generate basic stats for SNP analysis (freebayes version)
+### import data and reformat
+SNP.freebayes.reformat <- function(vcf, vcf.header){ 
+  
+  colnames(vcf) <- vcf.header
+  
+  vcf$Ae[is.na(vcf$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
+  
+  Ae.tmp.unique <- matrix(
+    unlist(strsplit(vcf$Ae,split = ":")),
+    nrow=nrow(vcf),  
+    byrow=TRUE
+    )
 
+  colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+
+  vcf$Ol[is.na(vcf$Ol)] <- "NA:NA:NA:NA:NA:NA:NA"
+
+  Ol.tmp.unique <- matrix(
+    unlist(strsplit(vcf$Ol,split = ":")),
+    nrow=nrow(vcf),
+    )
+
+  colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+
+  vcf.reform <- cbind(vcf,Ae.tmp.unique,Ol.tmp.unique,stringsAsFactors=FALSE)
+
+  vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")] <- 
+    apply(vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")],
+          2,
+          as.numeric
+    )
+
+  return(vcf.reform)
+}
 
 
 

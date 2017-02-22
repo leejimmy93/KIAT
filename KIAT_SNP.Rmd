@@ -9,87 +9,85 @@ output:
 
 # SNP calling   
 ```{r}
-# using scripts /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/freebayes_SNP_calling.sh before add read group & freebayes 
+# remove PCR duplicate, add read group & freebayes 
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/freebayes_SNP_calling.sh 
+# call SNPs
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/run_freebayes.sh   
+# process raw vcf file
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/process_vcf.sh 
+# get only biallelic SNPs 
+# extract_biallelic.sh 
 ``` 
 
-# using freebayes to call SNP (This result looks like is not from uniquely mapped data...)
+# using freebayes to call SNP (now pretty sure is from no-bolting uniquely mapped result)
 ```{r}
-# call as diploid 
-vcf.Ae.Ol.no.bolting.unique.diploid <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",as.is=T,na.strings = ".") 
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+vcf.freebayes <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified.vcf",as.is=T,na.strings = ".") 
+dim(vcf.freebayes) # 1241165      11 
 
-dim(vcf.Ae.Ol.no.bolting.unique.diploid) # 2102031      11  
+# get header 
+vcf.header.freebayes <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified.vcf",intern = TRUE) 
+vcf.header.freebayes <- sub("#","",vcf.header.freebayes) #get rid of the pound sign
+vcf.header.freebayes <- unlist(strsplit(vcf.header.freebayes,split="\t"))
 
-vcf.header.Ae.Ol.unique.diploid <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf",intern = TRUE) 
-vcf.header.Ae.Ol.unique.diploid
-vcf.header.Ae.Ol.unique.diploid <- sub("#","",vcf.header.Ae.Ol.unique.diploid) #get rid of the pound sign
-vcf.header.Ae.Ol.unique.diploid
+# use function to reformat vcf file 
+vcf.freebayes.reform <- SNP.freebayes.reformat(vcf.freebayes, vcf.header.freebayes)
+dim(vcf.freebayes.reform) # 1241165      11  
+table(vcf.freebayes.reform$Ae_gt)
+table(vcf.freebayes.reform$Ol_gt)   
+```
 
-vcf.header.Ae.Ol.unique.diploid <- unlist(strsplit(vcf.header.Ae.Ol.unique.diploid,split="\t"))
-vcf.header.Ae.Ol.unique.diploid
-colnames(vcf.Ae.Ol.no.bolting.unique.diploid) <- vcf.header.Ae.Ol.unique.diploid
-head(vcf.Ae.Ol.no.bolting.unique.diploid) # why no print out??? 
+# test 
+```{r}
+vcf <- vcf.freebayes
+vcf.header <- vcf.header.freebayes
+ colnames(vcf) <- vcf.header
+ head(vcf)
+  
+  vcf$Ae[is.na(vcf$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
+  
+  Ae.tmp.unique <- matrix(
+    unlist(strsplit(vcf$Ae,split = ":")),
+    nrow=nrow(vcf),  
+    byrow=TRUE
+    )
 
-system("grep '##INFO' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
-system("grep '##FORMAT' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/Ae_Ol_unique_diploid_modified.vcf") 
+  colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
 
-# Before splitting add NAs to blank cells
-vcf.Ae.Ol.no.bolting.unique.diploid$Ae
+  vcf$Ol[is.na(vcf$Ol)] <- "NA:NA:NA:NA:NA:NA:NA"
 
-vcf.Ae.Ol.no.bolting.unique.diploid$Ae[is.na(vcf.Ae.Ol.no.bolting.unique.diploid$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
+  Ol.tmp.unique <- matrix(
+    unlist(strsplit(vcf$Ol,split = ":")),
+    nrow=nrow(vcf),
+    byrow = TRUE
+    )
 
-Ae.tmp.unique <- matrix(
-  unlist(strsplit(vcf.Ae.Ol.no.bolting.unique.diploid$Ae,split = ":")),
-  nrow=nrow(vcf.Ae.Ol.no.bolting.unique.diploid),  
-  byrow=TRUE
-  )
+  colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
 
-head(Ae.tmp.unique)
+  vcf.reform <- cbind(vcf,Ae.tmp.unique,Ol.tmp.unique,stringsAsFactors=FALSE)
 
-colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+  vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")] <- 
+    apply(vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")],
+          2,
+          as.numeric) 
+          
+table(vcf.reform$Ae_gt)
+table(vcf.reform$Ol_gt)           
+```
 
-vcf.Ae.Ol.no.bolting.unique.diploid$Ol[is.na(vcf.Ae.Ol.no.bolting.unique.diploid$Ol)] <- "NA:NA:NA:NA:NA:NA:NA"
 
-Ol.tmp.unique <- matrix(
-  unlist(strsplit(vcf.Ae.Ol.no.bolting.unique.diploid$Ol,split = ":")),
-  nrow=nrow(vcf.Ae.Ol.no.bolting.unique.diploid),
-  byrow=TRUE
-  )
-head(Ol.tmp.unique)
-colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
-
-vcf.Ae.Ol.no.bolting.unique.diploid <- cbind(vcf.Ae.Ol.no.bolting.unique.diploid,Ae.tmp.unique,Ol.tmp.unique,stringsAsFactors=FALSE)
-summary(vcf.Ae.Ol.no.bolting.unique.diploid)
-head(vcf.Ae.Ol.no.bolting.unique.diploid)
-
-vcf.Ae.Ol.no.bolting.unique.diploid[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")] <- 
-  apply(vcf.Ae.Ol.no.bolting.unique.diploid[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")],
-        2,
-        as.numeric
-        )
-summary(vcf.Ae.Ol.no.bolting.unique.diploid)
-head(vcf.Ae.Ol.no.bolting.unique.diploid)
-dim(vcf.Ae.Ol.no.bolting.unique.diploid) # 2102031      25   
-
+```{r}
 ######### 
 ### 1) filter based on QUAl score 
 
-# make a histogram of QUAL scores 
-hist(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL)
-
-length(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL) # a total of 21002031 SNPs 
-sum(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL>20) / length(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL) # 81% are above QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic 
-
-hist(vcf.Ae.Ol.no.bolting.unique.diploid[vcf.Ae.Ol.no.bolting.unique.diploid$QUAL<20,]$QUAL)
-hist(vcf.Ae.Ol.no.bolting.unique.diploid[vcf.Ae.Ol.no.bolting.unique.diploid$QUAL<1,]$QUAL)
-
 # subset the data to keep positions where the quality score is 40 or higher 
-vcf.Ae.Ol.no.bolting.unique.HQ <- vcf.Ae.Ol.no.bolting.unique.diploid[vcf.Ae.Ol.no.bolting.unique.diploid$QUAL>40,]
-dim(vcf.Ae.Ol.no.bolting.unique.HQ) # 1502350      25  
-sum(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL>40) / length(vcf.Ae.Ol.no.bolting.unique.diploid$QUAL) # 71% of SNPs were retained with QUAL > 40
+vcf.freebayes.HQ <- vcf.freebayes.reform[vcf.freebayes.reform$QUAL>40,] # QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic  
+dim(vcf.freebayes.HQ) # 1133952      25 
+nrow(vcf.freebayes.HQ) / nrow(vcf.freebayes.reform) # 91% of SNPs were retained with QUAL > 40
 
 # count the number 
-table(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt)
-table(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt)
+table(vcf.freebayes.reform$Ae_gt)
+table(vcf.freebayes.reform$Ol_gt) 
 
 head(vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"),], 20)
 
@@ -542,69 +540,118 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 # SNP.GATK.basic.filter(vcf) can be used to filter based on snpcluster & QUAL, also give some stats on genotyping matrxi result, and filtering stats 
 
 ### import data and reformat 
-vcf.GATK.A01.filtered <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/filtered/xaa.intervals.vcf.filtered.vcf",as.is=T,na.strings = ".") 
-vcf.GATK.filtered.reform <- SNP.GATK.reformat(vcf.GATK.A01.filtered, vcf.header.GATK)
-dim(vcf.GATK.filtered.reform) # 68060 21       
+vcf.GATK.A01.biallelic <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/filtered/xaa_biallelic.reformat.vcf",as.is=T,na.strings = ".") 
+
+head(vcf.GATK.A01.biallelic, 100) 
+vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/filtered/xaa_biallelic.reformat.vcf",intern = TRUE) 
+vcf.header.GATK <- sub("#","",vcf.header.GATK) #get rid of the pound sign
+vcf.header.GATK <- unlist(strsplit(vcf.header.GATK,split="\t"))
+
+vcf.GATK.reform <- SNP.GATK.reformat(vcf.GATK.A01.biallelic, vcf.header.GATK)
+dim(vcf.GATK.reform) # 67703    21       
 
 #### filter (based on QUAL score and snpcluster)
 # basic filtering based on snpcluster & QUAL 
-vcf.GATK.HQ <- SNP.GATK.basic.filter(vcf.GATK.filtered.reform)
-dim(vcf.GATK.HQ) # 29962 21 
+vcf.GATK.HQ <- SNP.GATK.basic.filter(vcf.GATK.reform)
+dim(vcf.GATK.HQ) # 29850    21 
 ``` 
+
+# 2nd round of filtering 
+```{r}
+### how to exclude NA records from the file... 
+# 1) max read depth, should not be much higher than average read depth 
+mean(vcf.GATK.HQ$Ae_approx.depth, na.rm=T)
+mean(vcf.GATK.HQ$Ol_approx.depth, na.rm=T)
+# use 100 as the max 
+
+vcf.GATK.HQ.1 <- vcf.GATK.HQ[(!is.na(vcf.GATK.HQ$Ae_approx.depth) & 
+                              !is.na(vcf.GATK.HQ$Ol_approx.depth) & 
+                              vcf.GATK.HQ$Ae_approx.depth > 5 & 
+                              vcf.GATK.HQ$Ol_approx.depth > 5 & 
+                              vcf.GATK.HQ$Ae_approx.depth < 120 & 
+                              vcf.GATK.HQ$Ol_approx.depth < 120),]
+dim(vcf.GATK.HQ.1) # 18823    21
+head(vcf.GATK.HQ.1) 
+
+# 2) genotype quality, greater than 60 maybe  
+hist(vcf.GATK.HQ.1$Ae_genotype.qual)
+hist(vcf.GATK.HQ.1$Ol_genotype.qual)
+
+vcf.GATK.HQ.2 <- vcf.GATK.HQ.1[(!is.na(vcf.GATK.HQ.1$Ae_genotype.qual) &
+                                !is.na(vcf.GATK.HQ.1$Ae_genotype.qual) & 
+                                vcf.GATK.HQ.1$Ae_genotype.qual > 60 & 
+                                vcf.GATK.HQ.1$Ol_genotype.qual > 60),]
+
+dim(vcf.GATK.HQ.2)
+table(vcf.GATK.HQ.2$Ae_gt)
+table(vcf.GATK.HQ.2$Ol_gt)
+vcf.GATK.HQ.2.Ae.het$Ae_ref.alt.depth
+
+# 3) based on allele balance, an arbitrary number 
+
+vcf.GATK.HQ$Ae_genotype.qual
+vcf.GATK.HQ$Ol_genotype.qual
+
+
+```
+
 
 # figure out why many 0/1 
 ```{r} 
-head(vcf.GATK.reform.HQ) 
+head(vcf.GATK.HQ.2) 
+vcf.GATK.HQ.2$Ae_ref.alt.depth 
 
 # reformat to get seperate read depth for Ae & Ol 
 Ae.gt <- matrix(
-  unlist(strsplit(vcf.GATK.reform.HQ$Ae_ref.alt.depth,split = ",")),
-  nrow=nrow(vcf.GATK.reform.HQ),  
-  byrow=TRUE
+  unlist(strsplit(vcf.GATK.HQ.2$Ae_ref.alt.depth,split = ",")),
+  nrow=nrow(vcf.GATK.HQ.2),  
+  byrow=TRUE 
   ) 
 
-head(Ae.gt)
+# check 
+# for (i in 1:length(strsplit(vcf.GATK.HQ$Ae_ref.alt.depth,split = ","))){
+#   if (length(strsplit(vcf.GATK.HQ$Ae_ref.alt.depth,split = ",")[[i]])!=2){
+#   print(i)    
+#   }
+# }
+# 
+# for (i in 1:length(strsplit(vcf.GATK.reform$Ae_ref.alt.depth,split = ","))){
+#   if (length(strsplit(vcf.GATK.reform$Ae_ref.alt.depth,split = ",")[[i]])!=2){
+#   print(i)    
+#   }
+# }
 
 colnames(Ae.gt) <- paste("Ae",c("ref.depth","alt.depth"),sep="_")
 
 Ol.gt <- matrix(
-  unlist(strsplit(vcf.GATK.reform.HQ$Ol_ref.alt.depth,split = ",")),
-  nrow=nrow(vcf.GATK.reform.HQ),  
+  unlist(strsplit(vcf.GATK.HQ.2$Ol_ref.alt.depth,split = ",")),
+  nrow=nrow(vcf.GATK.HQ.2),  
   byrow=TRUE
   )
 
-head(Ol.gt)
-
 colnames(Ol.gt) <- paste("Ol",c("ref.depth","alt.depth"),sep="_")
 
-vcf.GATK.reform.HQ <- cbind(vcf.GATK.reform.HQ, Ae.gt, Ol.gt, stringsAsFactors=FALSE)
+vcf.GATK.HQ.2 <- cbind(vcf.GATK.HQ.2, Ae.gt, Ol.gt, stringsAsFactors=FALSE)
 
-vcf.GATK.reform.HQ$Ae_alt.depth <- as.numeric(vcf.GATK.reform.HQ$Ae_alt.depth)
-vcf.GATK.reform.HQ$Ae_ref.depth <- as.numeric(vcf.GATK.reform.HQ$Ae_ref.depth)
-vcf.GATK.reform.HQ$Ol_alt.depth <- as.numeric(vcf.GATK.reform.HQ$Ol_alt.depth)
-vcf.GATK.reform.HQ$Ol_ref.depth <- as.numeric(vcf.GATK.reform.HQ$Ol_ref.depth)
+vcf.GATK.HQ.2$Ae_alt.depth <- as.numeric(vcf.GATK.HQ.2$Ae_alt.depth)
+vcf.GATK.HQ.2$Ae_ref.depth <- as.numeric(vcf.GATK.HQ.2$Ae_ref.depth)
+vcf.GATK.HQ.2$Ol_alt.depth <- as.numeric(vcf.GATK.HQ.2$Ol_alt.depth)
+vcf.GATK.HQ.2$Ol_ref.depth <- as.numeric(vcf.GATK.HQ.2$Ol_ref.depth)
 
+head(vcf.GATK.HQ.2)
 
-head(vcf.GATK.reform.HQ)
-
-vcf.GATK.reform.HQ.filtered <- vcf.GATK.reform.HQ[which(vcf.GATK.reform.HQ$Ae_approx.depth > 3 & vcf.GATK.reform.HQ$Ae_approx.depth < 501 & vcf.GATK.reform.HQ$Ol_approx.depth > 3 & vcf.GATK.reform.HQ$Ol_approx.depth < 501),] 
-
-dim(vcf.GATK.reform.HQ.filtered) # 40272    25  
-
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt) 
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt)
-
-# after filtered by read depth, high het problem still exist 
+# after filtered by max read depth & genotype quality, high het problem still exist 
 
 ######## below, work to figure the cause... 
 
 # 1) check the ref/alt allele ratio for the het calls, distribution plot for Ae & Ol 
 # get het & homo call for Ae & Ol 
-vcf.GATK.reform.HQ.filtered.Ae.het <- vcf.GATK.reform.HQ.filtered[(vcf.GATK.reform.HQ.filtered$Ae_gt=="0/1"),]
+vcf.GATK.HQ.2.Ae.het <- vcf.GATK.HQ.2[(vcf.GATK.HQ.2$Ae_gt=="0/1"),]
+sum(vcf.GATK.HQ.2.Ae.het$Ae_alt.depth=="0")
+sum(vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0") 
 # vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/0"),]
 # vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="1/1"),]
 
-table(vcf.GATK.reform.HQ.filtered$Ae_gt) 
 # dim(vcf.GATK.reform.HQ.filtered.Ae.het); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt)
 
 vcf.GATK.reform.HQ.filtered.Ol.het <- vcf.GATK.reform.HQ.filtered[(vcf.GATK.reform.HQ.filtered$Ol_gt=="0/1"),]
@@ -619,8 +666,8 @@ pl.allele.ratio.Ae <- function(vcf.subset){
   vcf.subset$tmp <- with(vcf.subset,Ae_alt.depth/Ae_ref.depth)
   pl <- ggplot(data = vcf.subset) 
   pl <- pl + geom_histogram(aes(x=tmp)) 
-  # pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
-  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))  + xlim(-1,5)
+  pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
+  # pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))  + xlim(-1,5)
   return(pl)  
 }   
 
@@ -629,15 +676,19 @@ pl.allele.ratio.Ol <- function(vcf.subset){
   pl <- pl + geom_histogram(aes(Ol_alt.depth/Ol_ref.depth)) + scale_x_log10()
   pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))
   return(pl)
-}
+} 
 
-pl <- ggplot(data = vcf.GATK.reform.HQ.filtered.Ae.het)
-pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10()
+colnames(vcf.GATK.HQ.2.Ae.het)
+vcf.GATK.HQ.2.Ae.het$Ae_alt.depth/vcf.GATK.HQ.2.Ae.het$Ae_ref.depth
+vcf.GATK.HQ.2.Ae.het
+
+pl <- ggplot(data = vcf.GATK.HQ.2.Ae.het)
+pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) 
 pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))
-pl 
+pl  
 
-pl.allele.ratio.Ae(vcf.GATK.reform.HQ.filtered.Ae.het) 
-pl.allele.ratio.Ol(vcf.GATK.reform.HQ.filtered.Ol.het)  
+pl.allele.ratio.Ae(vcf.GATK.HQ.2.Ae.het)  
+pl.allele.ratio.Ol(vcf.GATK.reform.HQ.filtered.Ol.het)   
 
 
 ### zero existed in my het? 
