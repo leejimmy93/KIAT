@@ -158,25 +158,17 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # cuffmerge 
 ```{r}
-# cannot get cuffmerge work.... "error message: could not execute gtf_to_sam"
-# 1) There is no problem with cufflinks tool installation, tried on both cluster & lab server. 
-# 2) checked the output gtf file, format looks similar to what people have. 
-# 3) the only difference Monica spotted is that my gtf file is unsorted, but as I know, many people are using unsorted gtf file, although I don't know whether they have successful experience with cufflinks --> cuffmerge pipeline. In addition, it is hard to get sorted gff file.... sorted by chromosome, by location, by type... can try this if my current try doesn't work... 
-# 4) when I only grep "transcripts" from my gtf file, cuffmerge works 
-# 5) some people mentioned it might because of duplicated gene_id, while I added gene_id column to my gff3 file when STAR mapping, this might be the problem? 
+# 1) cuffmerge 
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/cuffmerge/run_cuffmerge_Ae.sh 
 
-######## So yes, this cuffmerge problem was caused by the extra gene_id column I added during STAR mapping. so now I am rerunning all the assembly with original gff3 files  
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/cuffmerge/run_cuffmerge_Ol.sh
 
-# also test cufflinks --> cuffmerge pipeline ... save time!!!!!!! 
+# 2) cuffcompare 
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/cuffcompare/run_cuffcompare_Ae.sh 
 
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/cuffcompare/run_cuffcompare_Ol.sh 
 
-
-
-
-
-
-
-
+# investigate result & next step... 
 ```
 
 

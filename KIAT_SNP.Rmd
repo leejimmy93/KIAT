@@ -9,14 +9,16 @@ output:
 
 # SNP calling   
 ```{r}
-# remove PCR duplicate, add read group & freebayes 
+# 1) remove PCR duplicate, add read group & freebayes 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/freebayes_SNP_calling.sh 
-# call SNPs
+# 2) call SNPs
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/run_freebayes.sh   
-# process raw vcf file
+# 3) process raw vcf file
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/process_vcf.sh 
-# get only biallelic SNPs 
-# extract_biallelic.sh 
+# 4) extract only SNPs 
+
+# 5) get only biallelic SNPs 
+# extract_biallelic.sh input.vcf output.vcf 
 ``` 
 
 # using freebayes to call SNP (now pretty sure is from no-bolting uniquely mapped result)
