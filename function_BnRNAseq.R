@@ -428,27 +428,30 @@ SNP.GATK.basic.filter <- function(vcf){
 }
 
 ###### # function to generate basic stats for SNP analysis (freebayes version)
-### import data and reformat
+### import data and reformat 
 SNP.freebayes.reformat <- function(vcf, vcf.header){ 
-  
+  vcf <- vcf.freebayes
+  vcf.header <- vcf.header.freebayes
   colnames(vcf) <- vcf.header
-  
+  head(vcf)
+
   vcf$Ae[is.na(vcf$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
-  
+
   Ae.tmp.unique <- matrix(
     unlist(strsplit(vcf$Ae,split = ":")),
     nrow=nrow(vcf),  
     byrow=TRUE
-    )
+  )
 
   colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
 
   vcf$Ol[is.na(vcf$Ol)] <- "NA:NA:NA:NA:NA:NA:NA"
 
-  Ol.tmp.unique <- matrix(
+    Ol.tmp.unique <- matrix(
     unlist(strsplit(vcf$Ol,split = ":")),
     nrow=nrow(vcf),
-    )
+    byrow = TRUE
+  )
 
   colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
 
@@ -457,12 +460,12 @@ SNP.freebayes.reformat <- function(vcf, vcf.header){
   vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")] <- 
     apply(vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")],
           2,
-          as.numeric
-    )
+          as.numeric) 
 
-  return(vcf.reform)
+    return(vcf.reform)  
 }
-
+table(vcf.reform$Ae_gt) 
+table(vcf.reform$Ol_gt) 
 
 
 

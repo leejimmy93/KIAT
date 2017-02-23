@@ -24,57 +24,20 @@ output:
 # using freebayes to call SNP (now pretty sure is from no-bolting uniquely mapped result)
 ```{r}
 source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
-vcf.freebayes <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified.vcf",as.is=T,na.strings = ".") 
-dim(vcf.freebayes) # 1241165      11 
+vcf.freebayes <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified_SNPonly_biallelic.recode.vcf",as.is=T,na.strings = ".:.:.:.:.:.:.") 
+dim(vcf.freebayes) # 1678792      11
+vcf.freebayes$V11 
 
 # get header 
-vcf.header.freebayes <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified.vcf",intern = TRUE) 
+vcf.header.freebayes <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified_SNPonly_biallelic.recode.vcf",intern = TRUE) 
 vcf.header.freebayes <- sub("#","",vcf.header.freebayes) #get rid of the pound sign
 vcf.header.freebayes <- unlist(strsplit(vcf.header.freebayes,split="\t"))
 
 # use function to reformat vcf file 
 vcf.freebayes.reform <- SNP.freebayes.reformat(vcf.freebayes, vcf.header.freebayes)
-dim(vcf.freebayes.reform) # 1241165      11  
+dim(vcf.freebayes.reform) # 1678792      25  
 table(vcf.freebayes.reform$Ae_gt)
-table(vcf.freebayes.reform$Ol_gt)   
-```
-
-# test 
-```{r}
-vcf <- vcf.freebayes
-vcf.header <- vcf.header.freebayes
- colnames(vcf) <- vcf.header
- head(vcf)
-  
-  vcf$Ae[is.na(vcf$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
-  
-  Ae.tmp.unique <- matrix(
-    unlist(strsplit(vcf$Ae,split = ":")),
-    nrow=nrow(vcf),  
-    byrow=TRUE
-    )
-
-  colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
-
-  vcf$Ol[is.na(vcf$Ol)] <- "NA:NA:NA:NA:NA:NA:NA"
-
-  Ol.tmp.unique <- matrix(
-    unlist(strsplit(vcf$Ol,split = ":")),
-    nrow=nrow(vcf),
-    byrow = TRUE
-    )
-
-  colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
-
-  vcf.reform <- cbind(vcf,Ae.tmp.unique,Ol.tmp.unique,stringsAsFactors=FALSE)
-
-  vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")] <- 
-    apply(vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual","Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")],
-          2,
-          as.numeric) 
-          
-table(vcf.reform$Ae_gt)
-table(vcf.reform$Ol_gt)           
+table(vcf.freebayes.reform$Ol_gt)  
 ```
 
 
@@ -88,14 +51,14 @@ dim(vcf.freebayes.HQ) # 1133952      25
 nrow(vcf.freebayes.HQ) / nrow(vcf.freebayes.reform) # 91% of SNPs were retained with QUAL > 40
 
 # count the number 
-table(vcf.freebayes.reform$Ae_gt)
-table(vcf.freebayes.reform$Ol_gt) 
+table(vcf.freebayes.HQ$Ae_gt)
+table(vcf.freebayes.HQ$Ol_gt) 
 
-head(vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"),], 20)
+# head(vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"),], 20)
 
-tmp.unique <- ftable(vcf.Ae.Ol.no.bolting.unique.HQ[,c("Ae_gt","Ol_gt")])
-head(tmp.unique)
-write.table(vcf.Ae.Ol.no.bolting.unique.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/gt_Ae_Ol.vcf") 
+# tmp.unique <- ftable(vcf.Ae.Ol.no.bolting.unique.HQ[,c("Ae_gt","Ol_gt")])
+# head(tmp.unique) 
+# write.table(vcf.Ae.Ol.no.bolting.unique.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/gt_Ae_Ol.vcf") 
 ```
 
 # check why there are so many heterozygous and why 3, 4, 5... 
@@ -104,98 +67,107 @@ write.table(vcf.Ae.Ol.no.bolting.unique.HQ, file = "~/Desktop/Brassica_project/K
 # 2) also visualize SNPs in igv to spot the realignment problem, SNP calls from end of reads & intron-exon insertion is bad, don’t believe… 
 # 3) 3, 4, and 5 visualize them in IGV…  
 
-vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1" 
-vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"
-vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1" 
+vcf.freebayes.HQ$Ae_gt=="1/1" 
+vcf.freebayes.HQ$Ae_gt=="0/1"
+vcf.freebayes.HQ$Ae_gt=="0/1" 
 
-head(vcf.Ae.Ol.no.bolting.unique.HQ)
+head(vcf.freebayes.HQ)
 
 # plot QUAL by Ae_gt 
 library(ggplot2)
-p.QUAL.Ae <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ) 
+p.QUAL.Ae <- ggplot(data = vcf.freebayes.HQ) 
 p.QUAL.Ae <- p.QUAL.Ae + geom_histogram(aes(QUAL, fill=Ae_gt)) + scale_x_log10() 
 p.QUAL.Ae <- p.QUAL.Ae + facet_wrap(~Ae_gt, ncol = 1)
 p.QUAL.Ae
 
 # plot QUAL by Ol_gt 
-p.QUAL.Ol <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ) 
+p.QUAL.Ol <- ggplot(data = vcf.freebayes.HQ) 
 p.QUAL.Ol <- p.QUAL.Ol + geom_histogram(aes(QUAL, fill=Ol_gt)) + scale_x_log10() 
 p.QUAL.Ol <- p.QUAL.Ol + facet_wrap(~Ol_gt, ncol = 1)
 p.QUAL.Ol
 
 # plot total depth by Ae_gt 
-p.tot.depth.Ae <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ) 
-p.tot.depth.Ae <- p.tot.depth.Ae + geom_histogram(aes(Ae_tot.depth+Ol_tot.depth, fill=Ae_gt)) + scale_x_log10() 
+p.tot.depth.Ae <- ggplot(data = vcf.freebayes.HQ) 
+p.tot.depth.Ae <- p.tot.depth.Ae + geom_histogram(aes(Ae_tot.depth, fill=Ae_gt)) + scale_x_log10() 
 p.tot.depth.Ae <- p.tot.depth.Ae + facet_wrap(~Ae_gt, ncol = 1)
 p.tot.depth.Ae
 
 # plot total depth by Ol_gt 
-p.tot.depth.Ol <- ggplot(data = vcf.Ae.Ol.no.bolting.unique.HQ) 
-p.tot.depth.Ol <- p.tot.depth.Ol + geom_histogram(aes(Ae_tot.depth+Ol_tot.depth, fill=Ol_gt)) + scale_x_log10() 
+p.tot.depth.Ol <- ggplot(data = vcf.freebayes.HQ) 
+p.tot.depth.Ol <- p.tot.depth.Ol + geom_histogram(aes(Ol_tot.depth, fill=Ol_gt)) + scale_x_log10() 
 p.tot.depth.Ol <- p.tot.depth.Ol + facet_wrap(~Ol_gt, ncol = 1)
 p.tot.depth.Ol
 
 # no difference in mapping score, because we used only mapping score of 255 for SNP calling. mapping score of 255 means unique mapping, check stats didn't tell me anything... 
 
 #### export vcf file to igv for visulization 
-dim(vcf.Ae.Ol.no.bolting.unique.HQ) # 1502350      25 
-vcf.Ae.Ol.no.bolting.unique.HQ.export <- vcf.Ae.Ol.no.bolting.unique.HQ[,c(1:11)]
-
-write.table(vcf.Ae.Ol.no.bolting.unique.HQ.export, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.no.bolting.unique.HQ.vcf", row.names = F)
+# dim(vcf.Ae.Ol.no.bolting.unique.HQ) # 1502350      25 
+# vcf.Ae.Ol.no.bolting.unique.HQ.export <- vcf.Ae.Ol.no.bolting.unique.HQ[,c(1:11)]
+# 
+# write.table(vcf.Ae.Ol.no.bolting.unique.HQ.export, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.no.bolting.unique.HQ.vcf", row.names = F)
 
 # conclusion: 2,3,4,5 are caused by re-alignment problem
 ```
 
 # continue explore why many 0/1 in my inbred lines (arround 30%), already filtered by QUAL 
 ```{r}
-# to further filter the SNPs, I only retain SNPs with read depth > 3 & < 501 in both Da-Ae & Da-Ol-1 
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered <- vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_tot.depth > 3 & vcf.Ae.Ol.no.bolting.unique.HQ$Ae_tot.depth < 501 & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_tot.depth > 3 & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_tot.depth < 501),] 
+# 1) filter by max depth 
+mean(vcf.freebayes.HQ$Ae_tot.depth, na.rm=T) # 159 
+mean(vcf.freebayes.HQ$Ol_tot.depth, na.rm=T) # 156 
 
-dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered) # 834016     25 
+# use 200 as the max 
 
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt) 
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt)
+vcf.freebayes.HQ.1 <- vcf.freebayes.HQ[(!is.na(vcf.freebayes.HQ$Ae_tot.depth) & 
+                              !is.na(vcf.freebayes.HQ$Ol_tot.depth) & 
+                              vcf.freebayes.HQ$Ae_tot.depth > 5 & 
+                              vcf.freebayes.HQ$Ol_tot.depth > 5 & 
+                              vcf.freebayes.HQ$Ae_tot.depth < 200 & 
+                              vcf.freebayes.HQ$Ol_tot.depth < 200),]
+dim(vcf.freebayes.HQ.1) # 18823    21
+head(vcf.freebayes.HQ.1)  
 
-# after filtered by read depth, high het problem still exist 
+# 2) filter by genotype quality (figure genotype quality in freebayes vcf file)
+# ... need to figure this out... 
 
-######## below, work to figure the cause... 
+table(vcf.freebayes.HQ.1$Ae_gt)
+table(vcf.freebayes.HQ.1$Ol_gt)
 
 # 1) check the ref/alt allele ratio for the het calls, distribution plot for Ae & Ol 
 # get het & homo call for Ae & Ol 
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.het <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/1"),]
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/0"),]
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="1/1"),]
+vcf.freebayes.HQ.1.Ae.het <- vcf.freebayes.HQ.1[(vcf.freebayes.HQ.1$Ae_gt=="0/1"),]
+sum(vcf.freebayes.HQ.1.Ae.het$Ae_ref.depth=="0")
+sum(vcf.freebayes.HQ.1.Ae.het$Ae_alt.depth=="0") # great that no 0 anymore... 
 
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt) 
-dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.het); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt)
-
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.het <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="0/1"),]
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.ref <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="0/0"),]
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.alt <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="1/1"),]
-
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt) 
-dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.het); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.ref); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.alt) 
+vcf.freebayes.HQ.1.Ol.het <- vcf.freebayes.HQ.1[(vcf.freebayes.HQ.1$Ol_gt=="0/1"),]
+sum(vcf.freebayes.HQ.1.Ol.het$Ol_ref.depth=="0")
+sum(vcf.freebayes.HQ.1.Ol.het$Ol_alt.depth=="0") # great that no 0 anymore... 
 
 # function to draw plot 
 pl.allele.ratio.Ae <- function(vcf.subset){
   vcf.subset$tmp <- with(vcf.subset,Ae_alt.depth/Ae_ref.depth)
   pl <- ggplot(data = vcf.subset) 
   pl <- pl + geom_histogram(aes(x=tmp)) 
-  # pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
-  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))  + xlim(-1,5)
+  pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) + scale_x_log10() 
+  # pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))  + xlim(-1,5)
   return(pl)  
 }   
+
 pl.allele.ratio.Ol <- function(vcf.subset){
-  pl <- ggplot(data = vcf.subset) 
-  pl <- pl + geom_histogram(aes(Ol_alt.depth/Ol_ref.depth)) + scale_x_log10() 
-  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)")) 
-  return(pl)  
+  pl <- ggplot(data = vcf.subset)
+  pl <- pl + geom_histogram(aes(Ol_alt.depth/Ol_ref.depth)) + scale_x_log10()
+  pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))
+  return(pl)
 } 
 
-pl.allele.ratio.Ae(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.het) 
-pl.allele.ratio.Ol(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.het) 
+pl <- ggplot(data = vcf.GATK.HQ.2.Ae.het)
+pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) 
+pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))
+pl  
 
-## non-biallelic SNPs...oh, those are indels...(CIGAR score for them...)  
+pl.allele.ratio.Ae(vcf.freebayes.HQ.1.Ae.het)  
+pl.allele.ratio.Ol(vcf.freebayes.HQ.1.Ol.het)   
+
+# function to draw plot 
 # check CIGAR score 
 
 # 1) seperate CIGAR scores 
