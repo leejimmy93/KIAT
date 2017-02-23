@@ -37,7 +37,12 @@ vcf.header.freebayes <- unlist(strsplit(vcf.header.freebayes,split="\t"))
 vcf.freebayes.reform <- SNP.freebayes.reformat(vcf.freebayes, vcf.header.freebayes)
 dim(vcf.freebayes.reform) # 1678792      25  
 table(vcf.freebayes.reform$Ae_gt)
-table(vcf.freebayes.reform$Ol_gt)  
+#    0/0    0/1    1/1     NA 
+# 423018 531949 522721 201104 
+
+table(vcf.freebayes.reform$Ol_gt)
+#    0/0    0/1    1/1     NA 
+# 459651 517580 518072 183489 
 ```
 
 
@@ -47,12 +52,17 @@ table(vcf.freebayes.reform$Ol_gt)
 
 # subset the data to keep positions where the quality score is 40 or higher 
 vcf.freebayes.HQ <- vcf.freebayes.reform[vcf.freebayes.reform$QUAL>40,] # QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic  
-dim(vcf.freebayes.HQ) # 1133952      25 
-nrow(vcf.freebayes.HQ) / nrow(vcf.freebayes.reform) # 91% of SNPs were retained with QUAL > 40
+dim(vcf.freebayes.HQ) # 1174345      25  
+nrow(vcf.freebayes.HQ) / nrow(vcf.freebayes.reform) # 70% of SNPs were retained with QUAL > 40
 
 # count the number 
 table(vcf.freebayes.HQ$Ae_gt)
+#    0/0    0/1    1/1     NA 
+# 229905 314228 473435 156777
+
 table(vcf.freebayes.HQ$Ol_gt) 
+#    0/0    0/1    1/1     NA 
+# 253687 300596 474418 145644 
 
 # head(vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"),], 20)
 
@@ -61,7 +71,7 @@ table(vcf.freebayes.HQ$Ol_gt)
 # write.table(vcf.Ae.Ol.no.bolting.unique.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/gt_Ae_Ol.vcf") 
 ```
 
-# check why there are so many heterozygous and why 3, 4, 5... 
+# check why there are so many heterozygous
 ```{r}
 # 1) Julin suggested plot by mapping score, total depth, and QUAL score... 
 # 2) also visualize SNPs in igv to spot the realignment problem, SNP calls from end of reads & intron-exon insertion is bad, don’t believe… 
@@ -114,6 +124,11 @@ p.tot.depth.Ol
 # 1) filter by max depth 
 mean(vcf.freebayes.HQ$Ae_tot.depth, na.rm=T) # 159 
 mean(vcf.freebayes.HQ$Ol_tot.depth, na.rm=T) # 156 
+
+# distribution of depth 
+?hist
+hist(log10(vcf.freebayes.HQ$Ae_tot.depth))
+hist(log10(vcf.freebayes.HQ$Ol_tot.depth))
 
 # use 200 as the max 
 
@@ -514,15 +529,20 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 # SNP.GATK.basic.filter(vcf) can be used to filter based on snpcluster & QUAL, also give some stats on genotyping matrxi result, and filtering stats 
 
 ### import data and reformat 
-vcf.GATK.A01.biallelic <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/filtered/xaa_biallelic.reformat.vcf",as.is=T,na.strings = ".") 
+vcf.GATK.A01.biallelic <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/xab.intervals.vcf.filtered.SNP.biallelic.recode.vcf",as.is=T,na.strings = ".") 
 
 head(vcf.GATK.A01.biallelic, 100) 
-vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/filtered/xaa_biallelic.reformat.vcf",intern = TRUE) 
+vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/xab.intervals.vcf.filtered.SNP.biallelic.recode.vcf",intern = TRUE) 
 vcf.header.GATK <- sub("#","",vcf.header.GATK) #get rid of the pound sign
 vcf.header.GATK <- unlist(strsplit(vcf.header.GATK,split="\t"))
 
 vcf.GATK.reform <- SNP.GATK.reformat(vcf.GATK.A01.biallelic, vcf.header.GATK)
-dim(vcf.GATK.reform) # 67703    21       
+dim(vcf.GATK.reform) # 67703    21 
+head(vcf.GATK.reform)
+vcf.GATK.reform$Ae_gt
+
+table(vcf.GATK.reform$Ae_gt)
+
 
 #### filter (based on QUAL score and snpcluster)
 # basic filtering based on snpcluster & QUAL 
@@ -540,8 +560,8 @@ mean(vcf.GATK.HQ$Ol_approx.depth, na.rm=T)
 
 vcf.GATK.HQ.1 <- vcf.GATK.HQ[(!is.na(vcf.GATK.HQ$Ae_approx.depth) & 
                               !is.na(vcf.GATK.HQ$Ol_approx.depth) & 
-                              vcf.GATK.HQ$Ae_approx.depth > 5 & 
-                              vcf.GATK.HQ$Ol_approx.depth > 5 & 
+                              vcf.GATK.HQ$Ae_approx.depth > 10 & 
+                              vcf.GATK.HQ$Ol_approx.depth > 10 & 
                               vcf.GATK.HQ$Ae_approx.depth < 120 & 
                               vcf.GATK.HQ$Ol_approx.depth < 120),]
 dim(vcf.GATK.HQ.1) # 18823    21
@@ -572,6 +592,20 @@ vcf.GATK.HQ$Ol_genotype.qual
 
 # figure out why many 0/1 
 ```{r} 
+# plot the distribution of genotype quality for Ae & Ol 
+# plot total depth by Ae_gt 
+p.gtqual.Ae <- ggplot(data = vcf.GATK.HQ.2) 
+p.gtqual.Ae <- p.gtqual.Ae + geom_histogram(aes(Ae_genotype.qual, fill=Ae_gt))  
+p.gtqual.Ae <- p.gtqual.Ae + facet_wrap(~Ae_gt, ncol = 1)
+p.gtqual.Ae
+
+# plot total depth by Ol_gt 
+p.gtqual.Ol <- ggplot(data = vcf.GATK.HQ.2) 
+p.gtqual.Ol <- p.gtqual.Ol + geom_histogram(aes(Ol_genotype.qual, fill=Ol_gt))  
+p.gtqual.Ol <- p.gtqual.Ol + facet_wrap(~Ol_gt, ncol = 1)
+p.gtqual.Ol
+
+
 head(vcf.GATK.HQ.2) 
 vcf.GATK.HQ.2$Ae_ref.alt.depth 
 
@@ -621,8 +655,11 @@ head(vcf.GATK.HQ.2)
 # 1) check the ref/alt allele ratio for the het calls, distribution plot for Ae & Ol 
 # get het & homo call for Ae & Ol 
 vcf.GATK.HQ.2.Ae.het <- vcf.GATK.HQ.2[(vcf.GATK.HQ.2$Ae_gt=="0/1"),]
-sum(vcf.GATK.HQ.2.Ae.het$Ae_alt.depth=="0")
-sum(vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0") 
+sum(vcf.GATK.HQ.2.Ae.het$Ae_alt.depth=="0") 
+sum(vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0")  
+
+
+vcf.GATK.HQ.2.Ae.het[vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0",]
 # vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/0"),]
 # vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="1/1"),]
 

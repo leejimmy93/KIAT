@@ -84,12 +84,12 @@ mapping_result_505_sub.long.b <- mapping_result_505_sub.long[mapping_result_505_
 
 pl.mapping.indi.a <- ggplot(data = mapping_result_505_sub.long.a)
 pl.mapping.indi.a <- pl.mapping.indi.a + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
-pl.mapping.indi.a <- pl.mapping.indi.a + labs(list(title = "", x = " ", y = "reads number")) + theme(axis.text.x=element_blank()) + ylim(0, 4.5e+7) 
+pl.mapping.indi.a <- pl.mapping.indi.a + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_blank()) + ylim(0, 4.5e+7) 
 pl.mapping.indi.a
 
 pl.mapping.indi.b <- ggplot(data = mapping_result_505_sub.long.b)
 pl.mapping.indi.b <- pl.mapping.indi.b + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
-pl.mapping.indi.b <- pl.mapping.indi.b + labs(list(title = "", x = " ", y = "reads number")) + theme(axis.text.x=element_blank()) + ylim(0, 4.5e+7)
+pl.mapping.indi.b <- pl.mapping.indi.b + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_blank()) + ylim(0, 4.5e+7)
 pl.mapping.indi.b
  
 library(cowplot)
