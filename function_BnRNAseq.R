@@ -430,8 +430,6 @@ SNP.GATK.basic.filter <- function(vcf){
 ###### # function to generate basic stats for SNP analysis (freebayes version)
 ### import data and reformat 
 SNP.freebayes.reformat <- function(vcf, vcf.header){ 
-  vcf <- vcf.freebayes
-  vcf.header <- vcf.header.freebayes
   colnames(vcf) <- vcf.header
   head(vcf)
 
@@ -464,8 +462,7 @@ SNP.freebayes.reformat <- function(vcf, vcf.header){
 
     return(vcf.reform)  
 }
-table(vcf.reform$Ae_gt) 
-table(vcf.reform$Ol_gt) 
+
 
 
 

@@ -168,7 +168,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/cuffcompare/run_cuffcompare_Ol.sh 
 
-# investigate result & next step... 
+# investigate result & next step...  
 ```
 
 

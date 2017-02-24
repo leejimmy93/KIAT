@@ -9,7 +9,7 @@ output:
 
 # SNP calling   
 ```{r}
-# 1) remove PCR duplicate, add read group & freebayes 
+# 1) uniquely mapped reads, remove PCR duplicate, add read group & freebayes 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/freebayes_SNP_calling.sh 
 # 2) call SNPs
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/run_freebayes.sh   
@@ -20,6 +20,41 @@ output:
 # 5) get only biallelic SNPs 
 # extract_biallelic.sh input.vcf output.vcf 
 ``` 
+
+###### data from non-biallielic 
+```{r}
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+vcf.freebayes.non.biallelic <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified.vcf",as.is=T,na.strings = ".")  
+dim(vcf.freebayes.non.biallelic) # 2053680      11
+vcf.freebayes.non.biallelic$V11 
+
+# get header 
+vcf.header.freebayes <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified.vcf",intern = TRUE) 
+vcf.header.freebayes <- sub("#","",vcf.header.freebayes) #get rid of the pound sign
+vcf.header.freebayes <- unlist(strsplit(vcf.header.freebayes,split="\t"))
+
+# use function to reformat vcf file 
+vcf.freebayes.non.biallelic.reform <- SNP.freebayes.reformat(vcf.freebayes.non.biallelic, vcf.header.freebayes) 
+dim(vcf.freebayes.non.biallelic.reform) # 2053680      25  
+table(vcf.freebayes.non.biallelic.reform$Ae_gt)
+#  0/0    0/1    0/2    0/3    0/4    1/1    1/2    1/3    1/4    2/2    2/3    2/4    3/3    3/4     NA 
+# 502869 627633   6202     49      3 648030  18445    500      6   5202    115      2    150      6 244468 
+
+table(vcf.freebayes.non.biallelic.reform$Ol_gt)
+#  0/0    0/1    0/2    0/3    0/4    1/1    1/2    1/3    1/4    2/2    2/3    2/4    3/3    3/4    4/4 
+# 546937 611663   6275     63      1 640782  17448    523      4   4504     98      2    144      5      1 
+#    4/5     NA 
+#      1 225229 
+
+vcf.freebayes.non.biallelic.reform.Ae.het <- vcf.freebayes.non.biallelic.reform[vcf.freebayes.non.biallelic.reform$Ae_gt=="0/1",]
+sum(vcf.freebayes.non.biallelic.reform.Ae.het$Ae_alt.depth==0, na.rm = T)
+sum(vcf.freebayes.non.biallelic.reform.Ae.het$Ae_ref.depth==0, na.rm = T) 
+
+head(vcf.freebayes.non.biallelic.reform.Ae.het)
+head(vcf.freebayes.non.biallelic.reform.Ae.het[which(vcf.freebayes.non.biallelic.reform.Ae.het$Ae_alt.depth==0),], 100)
+
+```
+
 
 # using freebayes to call SNP (now pretty sure is from no-bolting uniquely mapped result)
 ```{r}
@@ -43,6 +78,11 @@ table(vcf.freebayes.reform$Ae_gt)
 table(vcf.freebayes.reform$Ol_gt)
 #    0/0    0/1    1/1     NA 
 # 459651 517580 518072 183489 
+
+vcf.freebayes.reform.Ae.het <- vcf.freebayes.reform[vcf.freebayes.reform$Ae_gt=="0/1",]
+sum(vcf.freebayes.HQ.1.Ae.het$Ae_alt.depth==0)
+sum(vcf.freebayes.HQ.1.Ae.het$Ae_ref.depth==0) 
+
 ```
 
 
@@ -76,6 +116,10 @@ table(vcf.freebayes.HQ$Ol_gt)
 # 1) Julin suggested plot by mapping score, total depth, and QUAL score... 
 # 2) also visualize SNPs in igv to spot the realignment problem, SNP calls from end of reads & intron-exon insertion is bad, don’t believe… 
 # 3) 3, 4, and 5 visualize them in IGV…  
+
+# vcf.freebayes.HQ.Ae.het <- vcf.freebayes.HQ[vcf.freebayes.HQ$Ae_gt=="0/1",]
+# vcf.freebayes.HQ
+
 
 vcf.freebayes.HQ$Ae_gt=="1/1" 
 vcf.freebayes.HQ$Ae_gt=="0/1"
@@ -128,7 +172,7 @@ mean(vcf.freebayes.HQ$Ol_tot.depth, na.rm=T) # 156
 # distribution of depth 
 ?hist
 hist(log10(vcf.freebayes.HQ$Ae_tot.depth))
-hist(log10(vcf.freebayes.HQ$Ol_tot.depth))
+hist(log10(vcf.freebayes.HQ$Ol_tot.depth)) 
 
 # use 200 as the max 
 
@@ -141,6 +185,7 @@ vcf.freebayes.HQ.1 <- vcf.freebayes.HQ[(!is.na(vcf.freebayes.HQ$Ae_tot.depth) &
 dim(vcf.freebayes.HQ.1) # 18823    21
 head(vcf.freebayes.HQ.1)  
 
+####### 
 # 2) filter by genotype quality (figure genotype quality in freebayes vcf file)
 # ... need to figure this out... 
 
@@ -529,7 +574,7 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 # SNP.GATK.basic.filter(vcf) can be used to filter based on snpcluster & QUAL, also give some stats on genotyping matrxi result, and filtering stats 
 
 ### import data and reformat 
-vcf.GATK.A01.biallelic <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/xab.intervals.vcf.filtered.SNP.biallelic.recode.vcf",as.is=T,na.strings = ".") 
+vcf.GATK.A01.biallelic <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/xaa.intervals.SNP.biallelic.recode.vcf",as.is=T,na.strings = ".") 
 
 head(vcf.GATK.A01.biallelic, 100) 
 vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/xab.intervals.vcf.filtered.SNP.biallelic.recode.vcf",intern = TRUE) 
@@ -541,13 +586,15 @@ dim(vcf.GATK.reform) # 67703    21
 head(vcf.GATK.reform)
 vcf.GATK.reform$Ae_gt
 
+vcf.GATK.reform[which(vcf.GATK.reform$Ol_gt=="NA"),]
 table(vcf.GATK.reform$Ae_gt)
-
+table(vcf.GATK.reform$Ol_gt)
 
 #### filter (based on QUAL score and snpcluster)
 # basic filtering based on snpcluster & QUAL 
 vcf.GATK.HQ <- SNP.GATK.basic.filter(vcf.GATK.reform)
 dim(vcf.GATK.HQ) # 29850    21 
+
 ``` 
 
 # 2nd round of filtering 
@@ -583,10 +630,6 @@ vcf.GATK.HQ.2.Ae.het$Ae_ref.alt.depth
 
 # 3) based on allele balance, an arbitrary number 
 
-vcf.GATK.HQ$Ae_genotype.qual
-vcf.GATK.HQ$Ol_genotype.qual
-
-
 ```
 
 
@@ -607,6 +650,7 @@ p.gtqual.Ol
 
 
 head(vcf.GATK.HQ.2) 
+dim(vcf.GATK.HQ.2)
 vcf.GATK.HQ.2$Ae_ref.alt.depth 
 
 # reformat to get seperate read depth for Ae & Ol 
@@ -656,7 +700,8 @@ head(vcf.GATK.HQ.2)
 # get het & homo call for Ae & Ol 
 vcf.GATK.HQ.2.Ae.het <- vcf.GATK.HQ.2[(vcf.GATK.HQ.2$Ae_gt=="0/1"),]
 sum(vcf.GATK.HQ.2.Ae.het$Ae_alt.depth=="0") 
-sum(vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0")  
+sum(vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0") 
+vcf.GATK.HQ.2.Ae.het[vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0",]
 
 
 vcf.GATK.HQ.2.Ae.het[vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0",]
@@ -665,7 +710,12 @@ vcf.GATK.HQ.2.Ae.het[vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0",]
 
 # dim(vcf.GATK.reform.HQ.filtered.Ae.het); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.ref); dim(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.alt)
 
-vcf.GATK.reform.HQ.filtered.Ol.het <- vcf.GATK.reform.HQ.filtered[(vcf.GATK.reform.HQ.filtered$Ol_gt=="0/1"),]
+vcf.GATK.HQ.2.Ol.het <- vcf.GATK.HQ.2[(vcf.GATK.HQ.2$Ol_gt=="0/1"),]
+sum(vcf.GATK.HQ.2.Ol.het$Ol_alt.depth=="0") 
+sum(vcf.GATK.HQ.2.Ol.het$Ol_ref.depth=="0") 
+vcf.GATK.HQ.2.Ol.het[vcf.GATK.HQ.2.Ol.het$Ol_ref.depth=="0",]
+
+vcf.GATK.HQ.2.Ae.het[vcf.GATK.HQ.2.Ae.het$Ae_ref.depth=="0",]
 # vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.ref <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="0/0"),]
 # vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ol.alt <- vcf.Ae.Ol.no.bolting.unique.HQ.filtered[(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ol_gt=="1/1"),]
 
