@@ -168,9 +168,22 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/cuffcompare/run_cuffcompare_Ol.sh 
 
-# investigate result & next step...  
-```
+# 3) investigate result 
+# cat Ae.tracking | awk '{print $4}' | sort | uniq -c > Ae_class_code
+# cat Ol.tracking | awk '{print $4}' | sort | uniq -c > Ol_class_code
 
+Ae_class_code <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/assembly/Ae_class_code", header = F)
+Ol_class_code <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/assembly/Ol_class_code", header = F)
+
+Ae_class_code$percentage <- round(Ae_class_code$V1/sum(Ae_class_code$V1), digits = 2)
+Ae_class_code
+
+Ol_class_code$percentage <- round(Ol_class_code$V1/sum(Ol_class_code$V1), digits = 2)
+Ol_class_code
+
+
+
+```
 
 # Expression analysis 1) formatting data   
 ```{r}
