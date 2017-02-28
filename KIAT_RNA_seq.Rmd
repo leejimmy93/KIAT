@@ -181,6 +181,14 @@ Ae_class_code
 Ol_class_code$percentage <- round(Ol_class_code$V1/sum(Ol_class_code$V1), digits = 2)
 Ol_class_code
 
+# get only transcripts with "u" classcode
+# cat Ae.combined.gtf | grep "\"u\"" > Ae.combined_u.gtf
+# cat Ol.combined.gtf | grep "\"u\"" > Ol.combined_u.gtf 
+
+# extract fasta sequence of transcripts with "u" classcode 
+# gffread -w Ae.u.fa -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ae.combined_u.gtf
+# gffread -w Ol.u.fa -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ol.combined_u.gtf 
+
 
 
 ```
