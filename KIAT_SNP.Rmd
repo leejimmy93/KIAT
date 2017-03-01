@@ -7,7 +7,7 @@ output:
     keep_md: yes
 ---
 
-# SNP calling   
+# SNP calling freebayes 
 ```{r}
 # 1) uniquely mapped reads, remove PCR duplicate, add read group & freebayes 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/freebayes_SNP_calling.sh 
@@ -805,6 +805,27 @@ dim(vcf.Ae.Ol.GATK) # 8491 21
 # read depth > 3 and read depth < 501  
    
 ```  
+
+
+# SNP from no bolting data GATK 
+```{r}
+# 1) prepare for SNP calling using SNP_calling_GATK_pipeline.sh (on github https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/SNP_calling_GATK_pipeline.sh)  
+
+# 2) call SNPs using SNP_calling_array_no_bolting.slurm (on github https://github.com/leejimmy93/KIAT_cabernet/blob/master/parent_SNP/SNP_calling_array_no_bolting.slurm) 
+
+# 3) SNP filtering based on no more than 3 SNPs within a cluster 35nt 
+# SNP_filter_array_02_09_2017.slurm (https://github.com/leejimmy93/KIAT_cabernet/blob/master/parent_SNP/SNP_filter_array_02_09_2017.slurm) 
+
+# 4) combine SNPs from different chromosomes 
+# GATK_combine.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/GATK_combine.sh)
+
+# import into R for late analysis  
+
+
+
+```
+
+
 
 # compare SNPs from freebayes & GATK 
 ```{r}

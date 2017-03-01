@@ -167,8 +167,10 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/cuffcompare/run_cuffcompare_Ae.sh 
 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/cuffcompare/run_cuffcompare_Ol.sh 
+```
 
-# 3) investigate result 
+# investigate assembly result 
+```{r}
 # cat Ae.tracking | awk '{print $4}' | sort | uniq -c > Ae_class_code
 # cat Ol.tracking | awk '{print $4}' | sort | uniq -c > Ol_class_code
 
@@ -188,6 +190,37 @@ Ol_class_code
 # extract fasta sequence of transcripts with "u" classcode 
 # gffread -w Ae.u.fa -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ae.combined_u.gtf
 # gffread -w Ol.u.fa -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ol.combined_u.gtf 
+
+# next step: generate protein sequence from these new genes, and blastp against nr database to see what they are ... but 1stly I need to get protein sequence, however, in the gtf file I have, there is no CDS feature, which prohibit me from making protein sequences out of it, so now need to figure this out, get the protein sequence! 
+
+####### try this on Brassica rapa 
+# get protein sequence from Brassica rapa V2.1 
+# gffread BrapaV2.1PacBio.Chr.gene.gff -T -o BrapaV2.1PacBio.Chr.gene.gtf
+# gffread -y test_tr_cds.fa -g BrapaV2.1PacBio.Chr.fa BrapaV2.1PacBio.Chr.gene.gtf
+####### 
+
+# way 1) I can get protein sequence using transdecoder in this way: 
+# TransDecoder.LongOrfs -t Ae.u.fa 
+# TransDecoder.LongOrfs -t Ol.u.fa 
+### difference between transDecoder.LongOrfs & transDecoder.Predict: predict can predict all the orfs and many stats but long Orfs gives the longest orfs, here uisng longOrfs is OK. 
+
+# way 2) Starting from a genome-based transcript structure GTF file (eg. cufflinks) (update gff wait & come back to see)
+
+# blastp long orfs against nr databaset to see what these protein hit... 
+# using script blast_nr.sh 
+
+# also want to blastx transcript fasta sequence against nr database on cabernet. 
+# 1) download nr prebuilt blast database 
+# wget ftp://ftp.ncbi.nih.gov/blast/db/nr*.tar.gz  
+# gunzip nr*.tar.gz (do this after download is finished) 
+# split transcript fasta sequence into smaller pieces (100 seqs per file) using fasta_splitter.pl (version 0.1.1) 
+# --> blastx smaller fasta files against nr database using slurm shedular array  
+
+
+# more stats on the transcriptome assembly 0) total # of transcripts 1) # of transcripts after removing isoform 2) average size of transcript 3) max transcript length 4) min transcript length 5) N50 6) # of transcripts in N50 7) percent of transcripts annotated 8) # of novel transcripts detected   
+
+# PASA annotation..., fianl result is what? updated cds.fa? 
+
 
 
 
