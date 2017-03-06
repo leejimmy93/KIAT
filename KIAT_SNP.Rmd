@@ -623,6 +623,9 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 # extract_SNP.sh & extract_biallelic.sh (https://github.com/leejimmy93/KIAT_whitney/tree/master/parent_SNP)
 
 # 6) import into R for analysis 
+
+
+######## still need to get data from chr_unn 
 ```
 
 # SNP filtering from GATK (filtered)  
