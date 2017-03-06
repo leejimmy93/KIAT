@@ -58,7 +58,7 @@ mapping_result_505$batch
 mapping_result_505$Number_Input_Reads/(mapping_result_505$TotalReads/2)
 
 # number of total reads 
-library(ggplot2)
+library(ggplot2) 
 p.total.reads <- ggplot(data=mapping_result_505)
 p.total.reads <- p.total.reads + geom_bar(aes(x=reorder(Sample.ID, TotalReads/2), y=TotalReads/2, fill=batch), stat = "identity")
 p.total.reads <- p.total.reads + labs(list(title = "", x = "", y = "Number of raw reads"))
@@ -114,7 +114,7 @@ legend <- get_legend(pl.mapping.indi.a)
 pl.mapping.indi.final <- plot_grid(pl.mapping.indi, legend, rel_widths = c(3, 1))
 
 pl.mapping.indi.final
-# save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/505/figure/pl_mapping_indi.png", pl.mapping.indi.final, base_aspect_ratio = 1, base_width = 12)  
+save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/505/figure/pl_mapping_indi.png", pl.mapping.indi.final, base_aspect_ratio = 1, base_width = 12)  
 
 
 # look at histogram of HQ reads 

@@ -85,6 +85,14 @@ sum(vcf.freebayes.HQ.1.Ae.het$Ae_ref.depth==0)
 
 ```
 
+# calculate genotype quality as what we get from GATK... 
+```{r}
+head(vcf.freebayes.reform)
+head(vcf.GATK.reform)
+
+
+``` 
+
 
 ```{r}
 ######### 
@@ -178,16 +186,19 @@ hist(log10(vcf.freebayes.HQ$Ol_tot.depth))
 
 vcf.freebayes.HQ.1 <- vcf.freebayes.HQ[(!is.na(vcf.freebayes.HQ$Ae_tot.depth) & 
                               !is.na(vcf.freebayes.HQ$Ol_tot.depth) & 
-                              vcf.freebayes.HQ$Ae_tot.depth > 5 & 
-                              vcf.freebayes.HQ$Ol_tot.depth > 5 & 
-                              vcf.freebayes.HQ$Ae_tot.depth < 200 & 
-                              vcf.freebayes.HQ$Ol_tot.depth < 200),]
-dim(vcf.freebayes.HQ.1) # 18823    21
+                              vcf.freebayes.HQ$Ae_tot.depth > 10 & 
+                              vcf.freebayes.HQ$Ol_tot.depth > 10 & 
+                              vcf.freebayes.HQ$Ae_tot.depth < 1000 & 
+                              vcf.freebayes.HQ$Ol_tot.depth < 1000),]
+dim(vcf.freebayes.HQ.1) # 493019     25 
 head(vcf.freebayes.HQ.1)  
 
 ####### 
 # 2) filter by genotype quality (figure genotype quality in freebayes vcf file)
 # ... need to figure this out... 
+
+
+
 
 table(vcf.freebayes.HQ.1$Ae_gt)
 table(vcf.freebayes.HQ.1$Ol_gt)
@@ -227,8 +238,110 @@ pl
 pl.allele.ratio.Ae(vcf.freebayes.HQ.1.Ae.het)  
 pl.allele.ratio.Ol(vcf.freebayes.HQ.1.Ol.het)   
 
-# function to draw plot 
-# check CIGAR score 
+######
+pl.allele.ratio.Ae.orginal <- function(vcf.subset){
+  vcf.subset$tmp <- with(vcf.subset,Ae_alt.depth/Ae_ref.depth)
+  pl <- ggplot(data = vcf.subset) 
+  pl <- pl + geom_histogram(aes(x=tmp)) 
+  pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) 
+  pl <- pl +labs(list(x="(alt.depth/ref.depth)"))  + xlim(0,3)
+  return(pl)  
+}   
+  
+allele.ratio.Ae.het <- pl.allele.ratio.Ae.orginal(vcf.freebayes.HQ.1)
+allele.ratio <- pl.allele.ratio.Ae.orginal(vcf.freebayes.HQ.1.Ae.het)
+
+ggsave(allele.ratio.Ae.het, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio_Ae_het.png", height = 8, width = 11)
+ggsave(allele.ratio, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio.png", height = 8, width = 11)
+
+allele.ratio.Ae.het
+allele.ratio
+
+# very similar to what we see from the review paper... 
+#######
+
+# a lot of het calls for Ae & Ol, also there is skewed distribution for the allele depth ratio, is this a result of allele specific expression? If yes, SNPs from the same gene will have skewness. So to test this hypothesis, check the correlation of SNP position & allele depth ratio. 
+library(IRanges)
+library(GenomicRanges)
+
+# gff3 file 
+library(GenomicFeatures)
+library("rtracklayer")
+# get only mRNA from gff3: cat Brassica_napus.annotation_v5.gff3 | awk '$3=="mRNA"' > Brassica_napus.annotation_v5_mRNAonly.gff3 
+
+gffRangeData <- import.gff("~/Desktop/Brassica_project/IGV_file/Brassica_napus.annotation_v5.gff3") 
+gff<-as(gffRangeData, "GRanges")
+
+length(gff)
+head(gff, 3)
+
+# get only mRNA 
+gff.mRNA <- gff[elementMetadata(gff)[,2] == "mRNA"] 
+gff.mRNA.df <- as.data.frame(disjoin(gff.mRNA))
+dim(gff.mRNA.df) # 101040 5
+head(gff.mRNA.df)
+
+gff.mRNA.df$Name <- elementMetadata(gff[elementMetadata(gff)[,2] == "mRNA"])$Name
+head(gff.mRNA.df)
+
+vcf.freebayes.HQ.1.Ae.het.tmp <- vcf.freebayes.HQ.1.Ae.het[c("CHROM", "POS", "Ae_gt", "Ae_ref.depth", "Ae_alt.depth")]
+head(vcf.freebayes.HQ.1.Ae.het.tmp)
+
+vcf.freebayes.HQ.1.Ae.het.tmp.chrA01 <- 
+vcf.freebayes.HQ.1.Ae.het.tmp[vcf.freebayes.HQ.1.Ae.het.tmp$CHROM=="chrA01",]
+dim(vcf.freebayes.HQ.1.Ae.het.tmp[vcf.freebayes.HQ.1.Ae.het.tmp$CHROM=="chrA01",])
+gff.mRNA.df.chrA01 <- 
+gff.mRNA.df[gff.mRNA.df$seqnames=="chrA01",]
+
+# assign gene name to each SNP based on range... 
+for (i in 1:nrow(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)){
+  for (j in 1:nrow(gff.mRNA.df.chrA01)){
+  if (
+      (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$CHROM[i]==gff.mRNA.df.chrA01$seqnames[j]) &  
+      (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$POS[i] <= gff.mRNA.df.chrA01$end[j]) & 
+      (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$POS[i] >= gff.mRNA.df.chrA01$start[j])
+      ){
+    vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Name[i] <- gff.mRNA.df.chrA01$Name[j]
+    }
+  }
+}
+
+vcf.freebayes.HQ.1.Ae.het.tmp.chrA01
+dim(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
+
+save(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdata")
+
+# check the corrleation between gene name & allele ratio 
+# library(brms)
+# library(rstan)
+# 
+# rstan_options(auto_write = TRUE) 
+# options(mc.cores = parallel::detectCores())
+# 
+# vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele.ratio <- vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_alt.depth/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_ref.depth
+# 
+# m.allele.ratio <- brm(allele.ratio ~ as.factor(Name),
+#                       data = vcf.freebayes.HQ.1.Ae.het.tmp.chrA01, 
+#                       prior = set_prior("normal(0, 10)", class = "b")
+#                       )
+# 
+# summary(m.allele.ratio)
+
+# visually check whether there is association between gene and allele freqeuncy 
+# pick ratio == 0.1 
+vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.0.5 <- vcf.freebayes.HQ.1.Ae.het.tmp.chrA01[vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele.ratio <"0.5",]
+View(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.0.1)
+
+# pick ratio == 10 
+vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.5 <- vcf.freebayes.HQ.1.Ae.het.tmp.chrA01[vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele.ratio >"5",]
+View(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.5)
+
+
+
+
+
+
+# check CIGAR score: corrlelation between CIGAR score... 
 
 # 1) seperate CIGAR scores 
 head(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.het)
@@ -491,81 +604,25 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 
 # using GATK to call SNP (with bolting data)
 ```{r}
-# 0) get uniquely mapped reads --> from sam to bam --> sort bam file (Do we need to do this step? yes, this step should be done for polyploid, based on discussion with Julin...)
-# 0.1) get uniquely mapped reads  
-# samtools view ../alignment_freebayes/Ae_paired.star.trim.dir/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' > Ae_unique_mapped.sam 
-# samtools view ../alignment_freebayes/Ol_paired.star.trim.dir/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' > Ol_unique_mapped.sam
-# 0.2) from sam to bam for sam w/o headline 
-# samtools view -bT /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ae_unique_mapped.sam > Ae_test.bam
-# samtools view -bT /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ol_unique_mapped.sam > Ol_test.bam
-# 0.3) sort bam file 
-# samtools sort Ae_test.bam -o Ae_unique_sorted
-# samtools sort Ol_test.bam -o Ol_unique_sorted 
+# 1) prepare for SNP calling on whitney using 
+# SNP_calling_GATK_pipeline.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/SNP_calling_GATK_pipeline.sh)
 
-# 1.1) mark PCR duplicate (for the 1st time, stay with non unique reads and start from this step *** need more understanding of this step)
-# picard MarkDuplicates I=../alignment_freebayes/Ae_paired.star.trim.dir/Aligned.sortedByCoord.out.bam O=Ae_marked_duplicates.bam M=marked_dup_metrics.txt 
-# picard MarkDuplicates I=../alignment_freebayes/Ol_paired.star.trim.dir/Aligned.sortedByCoord.out.bam O=Ol_marked_duplicates.bam M=marked_dup_metrics.txt 
+# 2) SNP calling on cabernet 
+# SNP_calling_array_no_bolting.slurm (https://github.com/leejimmy93/KIAT_cabernet/tree/master/parent_SNP)
 
-# 1.2) index bam file.. (don't need this? )
-# samtools index Ae_marked_duplicates.bam 
-# samtools index Ol_marked_duplicates.bam
+# 3) combine vcf from different chromosomes 
+# GATK_combine.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/GATK_combine.sh)
 
-# 1.3) add readgroup 
-# picard AddOrReplaceReadGroups I=Ae_marked_duplicates.bam O=Ae_marked_duplicates_addrg.bam RGID=Ae RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=Ae
-# picard AddOrReplaceReadGroups I=Ol_marked_duplicates.bam O=Ol_marked_duplicates_addrg.bam RGID=Ol RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=Ol
-
-# 1.4) index 
-# samtools index Ol_marked_duplicates_addrg.bam
-# samtools index Ae_marked_duplicates_addrg.bam
-
-# 2.1) create fastq sequence dictionary file 
-# picard CreateSequenceDictionary R=Brassica_napus_v4.1.chromosomes.fa O=Brassica_napus_v4.1.chromosomes.dict
-
-# 2.2) split 'N' trim (visualize bam alignment before & after alignment in IGV)
-# GATK -T SplitNCigarReads -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_marked_duplicates_addrg.bam -o Ae_marked_duplicates_addrg_split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
-# GATK -T SplitNCigarReads -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_marked_duplicates_addrg.bam -o Ol_marked_duplicates_addrg_split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS 
-
-# 3.1) determine suspicious intervals which are likely in need of realignment 
-# GATK -T RealignerTargetCreator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_marked_duplicates_addrg_split.bam -o Ae_forIndelRealigner.intervals
-# GATK -T RealignerTargetCreator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_marked_duplicates_addrg_split.bam -o Ol_forIndelRealigner.intervals
-
-# 3.2) running realigner over those intervals 
-# GATK -T IndelRealigner -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_marked_duplicates_addrg_split.bam -targetIntervals Ae_forIndelRealigner.intervals -o Ae_realignedBam.bam 
-# GATK -T IndelRealigner -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_marked_duplicates_addrg_split.bam -targetIntervals Ol_forIndelRealigner.intervals -o Ol_realignedBam.bam
-
-# 3-4) Base Recalibration (command line: BaseRecalibrator & PrintReads) 
-# GATK -T BaseRecalibrator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ae_realignedBam.bam -o Ae_recal_data.table
-# GATK -T BaseRecalibrator -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I Ol_realignedBam.bam -o Ol_recal_data.table  
-
-# This step is recommanded, but I don't have a SNP set which I have confidence to use as a reference for calibration now, so decide to run SNP calling w/o this step, and after I get SNP set from freebayes and GATK, check the overlaps between those two, that overlapped set can be used as a reference. (Zhongxu suggested that this step is not necessary when there is no refernece set of SNP... however I should understand and talk to different poeple...) 
-
-# 4) Variant calling 
-# ran with chromosome splitted (use script GATK.sh), parallel computing, and get SNP for Ae and Ol at the same time.     
-# GATK -T HaplotypeCaller -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -I in_Ae.bam -I in_Ol.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -stand_emit_conf 20.0 -ploidy 4 -o out.vcf 
-
-# 5) variant filtering (use script GATK_filter.sh) 
-# GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V in.vcf -window 35 -cluster 3 -o filtered.vcf
-
-##### GATK -T VariantFiltration -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ae.vcf -filterName FS -filter "FS > 30.0" -filterName QD -filter "QD < 2.0" -o Ae_filtered.vcf (doesn't work) 
-
-# 6) merge SNPs from two genotypes seperately (use GATK_combine_Ae.sh and GATK_combine_Ol.sh)
-# done 
-
-# VCF format check/validate 
+# 4) VCF format check/validate 
 # GATK -T ValidateVariants -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ae.vcf --validationTypeToExclude ALL
 # GATK -T ValidateVariants -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ol.vcf --validationTypeToExclude ALL  
 
-```
+# data location: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/ 
 
-# now rerun GATK SNP calling pipeline using no bolting data 
-```{r}
-# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT_whitney/KIAT_whitney/parent_SNP/SNP_calling_GATK_pipeline.sh 
-```
+# 5) extract only biallelic SNPs from vcf files 
+# extract_SNP.sh & extract_biallelic.sh (https://github.com/leejimmy93/KIAT_whitney/tree/master/parent_SNP)
 
-# data directory 
-```{r}
-# unfiltered & filtered SNPs from GATK on cabernet are stored under the directory of /share/malooflab/Ruijuan/parent_SNP/SNP_calling/GATK/output 
-# named as ${sample}.vcf & ${sample}.filtered.vcf 
+# 6) import into R for analysis 
 ```
 
 # SNP filtering from GATK (filtered)  
@@ -1017,7 +1074,7 @@ ggsave(p.reads_mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/mapp
 
 ### SNP filtering inside linux using script (see /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_fall/SNP_calling/alignment_freebayes/vcf_file/log file in whitney)
 
-### alignment score can also be taken into consideration for filtering before SNP calling, because there are multiple possible causes of false-positive SNPs: 1) sequencing error [Phred score] 2) alignment error [mapping score inside bam file] 3) incompleness of ref genome (ref: Wang et al. 2015; )
+### alignment score can also be taken into consideration for filtering before SNP calling, because there are multiple possible causes of false-positive SNPs: 1) sequencing error [Phred score] 2) alignment error [mapping score inside bam file] 3) incompleness of ref genome (ref: Wang et al. 2015; )  
 
 ### filter based on read depth (DP)? alternate allele observation count (AO)? QA (sum of quality of the alternate observation count)  
 
@@ -1063,8 +1120,10 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 # cd data 
 # mkdir napus 
 # cd napus  
-# wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus.annotation_v5.gff3.gz
-# mv Brassica_napus.annotation_v5.gff3.gz genes.gff.gz 
+# use the gff3 file in 
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 
+#########
+# mv Brassica_napus.annotation_v5_modified_modified.gff3 genes.gff 
 # wget ftp://bradata:zhl410ivf@brassicadb.org/Brassica_napus/Brassica_napus_v4.1.chromosomes.fa.gz
 # mv Brassica_napus_v4.1.chromosomes.fa.gz sequences.fa.gz 
 # gunzip *.gz
@@ -1079,15 +1138,11 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 # add "# Brassica napus genome  napus.genome: Brassica_napus" 
 # java -jar snpEff.jar build -gff3 -v napus 
 
-### SNP annotation 
-
-
-
-
-
+### SNP annotation  
+# java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.ann.vcf 
 ``` 
 
-# final output 
+# final output  
 ```{r}
 # 1) summary of identified SNPs (table3, synnomynous & non synnomymous SNPs requires SNP annotation, exonic, intergenic, intronic...)
 
