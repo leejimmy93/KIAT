@@ -45,6 +45,7 @@ table(vcf.freebayes.non.biallelic.reform$Ol_gt)
 # 546937 611663   6275     63      1 640782  17448    523      4   4504     98      2    144      5      1 
 #    4/5     NA 
 #      1 225229 
+# save(vcf.freebayes.non.biallelic.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.non.biallelic.reform.Rdata")
 
 vcf.freebayes.non.biallelic.reform.Ae.het <- vcf.freebayes.non.biallelic.reform[vcf.freebayes.non.biallelic.reform$Ae_gt=="0/1",]
 sum(vcf.freebayes.non.biallelic.reform.Ae.het$Ae_alt.depth==0, na.rm = T)
@@ -80,22 +81,31 @@ table(vcf.freebayes.reform$Ol_gt)
 # 459651 517580 518072 183489 
 
 vcf.freebayes.reform.Ae.het <- vcf.freebayes.reform[vcf.freebayes.reform$Ae_gt=="0/1",]
-sum(vcf.freebayes.HQ.1.Ae.het$Ae_alt.depth==0)
-sum(vcf.freebayes.HQ.1.Ae.het$Ae_ref.depth==0) 
+sum(vcf.freebayes.reform.Ae.het$Ae_alt.depth==0)
+sum(vcf.freebayes.reform.Ae.het$Ae_ref.depth==0) 
+
+# save(vcf.freebayes.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
+save(vcf.freebayes.reform.Ae.het, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Ae.het.Rdata")
 
 ```
 
 # calculate genotype quality as what we get from GATK... 
 ```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
 head(vcf.freebayes.reform)
 head(vcf.GATK.reform)
+
+
 
 
 ``` 
 
 
 ```{r}
-######### 
+#########
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Ae.het.Rdata")
+
 ### 1) filter based on QUAl score 
 
 # subset the data to keep positions where the quality score is 40 or higher 
@@ -173,6 +183,9 @@ p.tot.depth.Ol
 
 # continue explore why many 0/1 in my inbred lines (arround 30%), already filtered by QUAL 
 ```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Ae.het.Rdata")
+
 # 1) filter by max depth 
 mean(vcf.freebayes.HQ$Ae_tot.depth, na.rm=T) # 159 
 mean(vcf.freebayes.HQ$Ol_tot.depth, na.rm=T) # 156 
@@ -182,7 +195,7 @@ mean(vcf.freebayes.HQ$Ol_tot.depth, na.rm=T) # 156
 hist(log10(vcf.freebayes.HQ$Ae_tot.depth))
 hist(log10(vcf.freebayes.HQ$Ol_tot.depth)) 
 
-# use 200 as the max 
+# use 1000 as the max, 10 as min 
 
 vcf.freebayes.HQ.1 <- vcf.freebayes.HQ[(!is.na(vcf.freebayes.HQ$Ae_tot.depth) & 
                               !is.na(vcf.freebayes.HQ$Ol_tot.depth) & 
@@ -244,21 +257,21 @@ pl.allele.ratio.Ae.orginal <- function(vcf.subset){
   pl <- ggplot(data = vcf.subset) 
   pl <- pl + geom_histogram(aes(x=tmp)) 
   pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) 
-  pl <- pl +labs(list(x="(alt.depth/ref.depth)"))  + xlim(0,3)
+  pl <- pl +labs(list(x="(alt.depth/ref.depth)"))  + xlim(0,3) + ylim(0,40000)
   return(pl)  
 }   
   
-allele.ratio.Ae.het <- pl.allele.ratio.Ae.orginal(vcf.freebayes.HQ.1)
-allele.ratio <- pl.allele.ratio.Ae.orginal(vcf.freebayes.HQ.1.Ae.het)
+allele.ratio.Ae.het <- pl.allele.ratio.Ae.orginal(vcf.freebayes.HQ.1.Ae.het)
+allele.ratio <- pl.allele.ratio.Ae.orginal(vcf.freebayes.HQ.1)
 
-ggsave(allele.ratio.Ae.het, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio_Ae_het.png", height = 8, width = 11)
+# ggsave(allele.ratio.Ae.het, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio_Ae_het.png", height = 8, width = 11)
 ggsave(allele.ratio, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio.png", height = 8, width = 11)
 
 allele.ratio.Ae.het
 allele.ratio
 
 # very similar to what we see from the review paper... 
-#######
+####### 
 
 # a lot of het calls for Ae & Ol, also there is skewed distribution for the allele depth ratio, is this a result of allele specific expression? If yes, SNPs from the same gene will have skewness. So to test this hypothesis, check the correlation of SNP position & allele depth ratio. 
 library(IRanges)
@@ -310,6 +323,15 @@ vcf.freebayes.HQ.1.Ae.het.tmp.chrA01
 dim(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
 
 save(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdata")
+View(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
+vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele_ratio <- round(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_alt.depth/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_ref.depth, digits = 2)
+
+cor.test(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Name, vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele_ratio)
+
+
+
+
 
 # check the corrleation between gene name & allele ratio 
 # library(brms)
@@ -602,7 +624,7 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 ```
 
 
-# using GATK to call SNP (with bolting data)
+# using GATK to call SNP (with bolting data) 
 ```{r}
 # 1) prepare for SNP calling on whitney using 
 # SNP_calling_GATK_pipeline.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/SNP_calling_GATK_pipeline.sh)
