@@ -120,7 +120,7 @@ table(vcf.freebayes.HQ$Ae_gt)
 
 table(vcf.freebayes.HQ$Ol_gt) 
 #    0/0    0/1    1/1     NA 
-# 253687 300596 474418 145644 
+# 253687 300596 474418 145644  
 
 # head(vcf.Ae.Ol.no.bolting.unique.HQ[which(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/1"),], 20)
 
@@ -290,77 +290,51 @@ head(gff, 3)
 
 # get only mRNA 
 gff.mRNA <- gff[elementMetadata(gff)[,2] == "mRNA"] 
+?disjoin # ordered by range position
 gff.mRNA.df <- as.data.frame(disjoin(gff.mRNA))
 dim(gff.mRNA.df) # 101040 5
 head(gff.mRNA.df)
+gff.mRNA.df.chrA01 <- gff.mRNA.df[gff.mRNA.df$seqnames=="chrA01",] 
+head(gff.mRNA.df.chrA01)
+tail(gff.mRNA.df.chrA01)
 
 gff.mRNA.df$Name <- elementMetadata(gff[elementMetadata(gff)[,2] == "mRNA"])$Name
 head(gff.mRNA.df)
 
-vcf.freebayes.HQ.1.Ae.het.tmp <- vcf.freebayes.HQ.1.Ae.het[c("CHROM", "POS", "Ae_gt", "Ae_ref.depth", "Ae_alt.depth")]
-head(vcf.freebayes.HQ.1.Ae.het.tmp)
+#######
+# something wrong here .... disjoin gives me sorted data based on ranges, whereas metadata was not sorted...
+# combing the two dataset gave me wrong result... 
+#######
 
-vcf.freebayes.HQ.1.Ae.het.tmp.chrA01 <- 
-vcf.freebayes.HQ.1.Ae.het.tmp[vcf.freebayes.HQ.1.Ae.het.tmp$CHROM=="chrA01",]
-dim(vcf.freebayes.HQ.1.Ae.het.tmp[vcf.freebayes.HQ.1.Ae.het.tmp$CHROM=="chrA01",])
-gff.mRNA.df.chrA01 <- 
-gff.mRNA.df[gff.mRNA.df$seqnames=="chrA01",]
-
-# assign gene name to each SNP based on range... 
-for (i in 1:nrow(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)){
-  for (j in 1:nrow(gff.mRNA.df.chrA01)){
-  if (
-      (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$CHROM[i]==gff.mRNA.df.chrA01$seqnames[j]) &  
-      (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$POS[i] <= gff.mRNA.df.chrA01$end[j]) & 
-      (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$POS[i] >= gff.mRNA.df.chrA01$start[j])
-      ){
-    vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Name[i] <- gff.mRNA.df.chrA01$Name[j]
-    }
-  }
-}
-
-vcf.freebayes.HQ.1.Ae.het.tmp.chrA01
-dim(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
-
-save(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdata")
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdata")
-View(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
-vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele_ratio <- round(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_alt.depth/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_ref.depth, digits = 2)
-
-cor.test(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Name, vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele_ratio)
-
-
-
-
-
-# check the corrleation between gene name & allele ratio 
-# library(brms)
-# library(rstan)
+# vcf.freebayes.HQ.1.Ae.het.tmp <- vcf.freebayes.HQ.1.Ae.het[c("CHROM", "POS", "Ae_gt", "Ae_ref.depth", "Ae_alt.depth")]
+# head(vcf.freebayes.HQ.1.Ae.het.tmp)
 # 
-# rstan_options(auto_write = TRUE) 
-# options(mc.cores = parallel::detectCores())
+# vcf.freebayes.HQ.1.Ae.het.tmp.chrA01 <- 
+# vcf.freebayes.HQ.1.Ae.het.tmp[vcf.freebayes.HQ.1.Ae.het.tmp$CHROM=="chrA01",]
+# dim(vcf.freebayes.HQ.1.Ae.het.tmp[vcf.freebayes.HQ.1.Ae.het.tmp$CHROM=="chrA01",])
+# gff.mRNA.df.chrA01 <- 
+# gff.mRNA.df[gff.mRNA.df$seqnames=="chrA01",]
 # 
-# vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele.ratio <- vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_alt.depth/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_ref.depth
+# # assign gene name to each SNP based on range... 
+# for (i in 1:nrow(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)){
+#   for (j in 1:nrow(gff.mRNA.df.chrA01)){
+#   if (
+#       (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$CHROM[i]==gff.mRNA.df.chrA01$seqnames[j]) &  
+#       (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$POS[i] <= gff.mRNA.df.chrA01$end[j]) & 
+#       (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$POS[i] >= gff.mRNA.df.chrA01$start[j])
+#       ){
+#     vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Name[i] <- gff.mRNA.df.chrA01$Name[j]
+#     }
+#   }
+# }
 # 
-# m.allele.ratio <- brm(allele.ratio ~ as.factor(Name),
-#                       data = vcf.freebayes.HQ.1.Ae.het.tmp.chrA01, 
-#                       prior = set_prior("normal(0, 10)", class = "b")
-#                       )
+# vcf.freebayes.HQ.1.Ae.het.tmp.chrA01
+# dim(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
 # 
-# summary(m.allele.ratio)
-
-# visually check whether there is association between gene and allele freqeuncy 
-# pick ratio == 0.1 
-vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.0.5 <- vcf.freebayes.HQ.1.Ae.het.tmp.chrA01[vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele.ratio <"0.5",]
-View(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.0.1)
-
-# pick ratio == 10 
-vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.5 <- vcf.freebayes.HQ.1.Ae.het.tmp.chrA01[vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele.ratio >"5",]
-View(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.5)
-
-
-
-
+# save(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdata")
+# load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdata")
+# View(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
+# vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele_ratio <- round(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_alt.depth/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_ref.depth, digits = 2) 
 
 
 # check CIGAR score: corrlelation between CIGAR score... 

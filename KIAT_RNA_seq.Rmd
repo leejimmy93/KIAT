@@ -233,10 +233,11 @@ Ol_class_code <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/assembly/Ol
 
 Ae_class_code$percentage <- round(Ae_class_code$V1/sum(Ae_class_code$V1), digits = 2)
 Ae_class_code
+sum(Ae_class_code$V1)
 
 Ol_class_code$percentage <- round(Ol_class_code$V1/sum(Ol_class_code$V1), digits = 2)
 Ol_class_code
-
+sum(Ol_class_code$V1)  
 
 # get only transcripts with "u" classcode
 # cat Ae.combined.gtf | grep "\"u\"" > Ae.combined_u.gtf
