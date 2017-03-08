@@ -613,22 +613,46 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 # GATK -T ValidateVariants -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ae.vcf --validationTypeToExclude ALL
 # GATK -T ValidateVariants -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ol.vcf --validationTypeToExclude ALL  
 
-# data location: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/ 
-
 # 5) extract only biallelic SNPs from vcf files 
 # extract_SNP.sh & extract_biallelic.sh (https://github.com/leejimmy93/KIAT_whitney/tree/master/parent_SNP)
 
+# data location: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.ann.vcf  
+
 # 6) import into R for analysis 
-
-
-######## still need to get data from chr_unn 
-```
-
-# SNP filtering from GATK (filtered)  
-```{r} 
 # SNP.GATK.reformat(vcf, header) can be used to reformat vcf file from GATK 
 # SNP.GATK.basic.filter(vcf) can be used to filter based on snpcluster & QUAL, also give some stats on genotyping matrxi result, and filtering stats 
 
+######## still need to get data from chr_unn (waiting on cabernet now)
+```
+
+# SNP filtering from GATK (filtered based on sliding window & annotated)
+```{r}
+### import data and reformat 
+vcf.GATK <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/GATK_SNP_biallelic.recode.ann.vcf",as.is=T,na.strings = ".") 
+
+head(vcf.GATK, c(300)) 
+vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/GATK_SNP_biallelic.recode.ann.vcf",intern = TRUE) 
+vcf.header.GATK <- sub("#","",vcf.header.GATK) #get rid of the pound sign
+vcf.header.GATK <- unlist(strsplit(vcf.header.GATK,split="\t"))
+
+vcf.GATK.reform <- SNP.GATK.reformat(vcf.GATK, vcf.header.GATK)
+dim(vcf.GATK.reform) # 1368924      21
+head(vcf.GATK.reform)
+vcf.GATK.reform$Ae_gt
+
+vcf.GATK.reform[which(vcf.GATK.reform$Ol_gt=="NA"),]
+table(vcf.GATK.reform$Ae_gt)
+table(vcf.GATK.reform$Ol_gt)
+
+#### filter (based on QUAL score and snpcluster)
+# basic filtering based on snpcluster & QUAL 
+vcf.GATK.HQ <- SNP.GATK.basic.filter(vcf.GATK.reform)
+dim(vcf.GATK.HQ) # 614586     21  
+##### what is "NA" & ./. ??? 
+``` 
+
+# SNP filtering from GATK (filtered)  
+```{r} 
 ### import data and reformat 
 vcf.GATK.A01.biallelic <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/xaa.intervals.SNP.biallelic.recode.vcf",as.is=T,na.strings = ".") 
 
@@ -825,8 +849,7 @@ vcf.Ae.Ol.no.bolting.unique.diploid$Ae_alt.depth==0
 
 
 
-```
-
+``` 
 
 # downstream analysis of SNPs 
 ```{r}
