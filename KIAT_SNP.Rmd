@@ -23,6 +23,57 @@ output:
 # data location: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/freebayes/Ae_Ol_modified_SNPonly_biallelic.recode.ann.vcf 
 ``` 
 
+### import non-annotated data to check diverse CIGAR scores 
+```{r}
+# source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+# vcf.freebayes.no.ANN <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified_SNPonly_biallelic.recode.vcf",as.is=T,na.strings = ".:.:.:.:.:.:.") 
+# dim(vcf.freebayes.no.ANN) # 1678792      11
+# # save(vcf.freebayes, file ="~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.no.ANN.Rdata")
+# load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.Rdata")
+# 
+# vcf.header.freebayes <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified_SNPonly_biallelic.recode.vcf",intern = TRUE) 
+# vcf.header.freebayes <- sub("#","",vcf.header.freebayes) #get rid of the pound sign
+# vcf.header.freebayes <- unlist(strsplit(vcf.header.freebayes,split="\t"))
+# 
+# # use function to reformat vcf file 
+# vcf.freebayes.no.ANN.reform <- SNP.freebayes.reformat(vcf.freebayes.no.ANN, vcf.header.freebayes)
+# dim(vcf.freebayes.no.ANN.reform) # 1678792      25  
+# table(vcf.freebayes.no.ANN.reform$Ae_gt)
+# #    0/0    0/1    1/1     NA 
+# # 423018 531949 522721 201104 
+# 
+# table(vcf.freebayes.no.ANN.reform$Ol_gt)
+# #    0/0    0/1    1/1     NA 
+# # 459651 517580 518072 183489 
+# 
+# # 1) seperate INFO column  
+# info <- matrix(
+#   unlist(strsplit(vcf.freebayes.no.ANN.reform$INFO,split = ";")),
+#   nrow=nrow(vcf.freebayes.no.ANN.reform),  
+#   byrow=TRUE
+#   )
+# 
+# head(info)
+# 
+# colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
+#                     "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
+#                     "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
+# 
+# info <- as.data.frame(info)
+# colnames(info)
+# 
+# for (i in 1:ncol(info)){
+#   info[,i] <- gsub("([[:print:]]+)(=)([[:print:]])","\\3",info[,i])
+# }
+# 
+# vcf.freebayes.no.ANN.reform <- cbind(vcf.freebayes.no.ANN,info,stringsAsFactors=FALSE)
+# unique(vcf.freebayes.no.ANN.reform$CIGAR) 
+# 
+# save(vcf.freebayes.no.ANN.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.no.ANN.reform.Rdata")
+
+# It turns out SNPs all get CIGAR score of "1X". 
+```
+
 # using freebayes to call SNP (now pretty sure is from no-bolting uniquely mapped result)
 # import data 
 ```{r}
@@ -83,15 +134,6 @@ table(vcf.freebayes.HQ$Ol_gt)
 # write.table(vcf.Ae.Ol.no.bolting.unique.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/gt_Ae_Ol.vcf") 
 # save(vcf.freebayes.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.Rdata")
 ```
-
-# calculate genotype quality as what we get from GATK... 
-```{r}
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
-head(vcf.freebayes.reform)
-head(vcf.GATK.reform)
-
-
-```  
 
 # check why there are so many heterozygous, plot by read depth & QUAL score 
 ```{r}
@@ -336,51 +378,51 @@ head(info)
 vcf.freebayes.HQ.1 <- cbind(vcf.freebayes.HQ.1,info,stringsAsFactors=FALSE)
 head(vcf.freebayes.HQ.1)
 dim(vcf.freebayes.HQ.1) # 493019     67 
+tail(vcf.freebayes.HQ.1)
 vcf.freebayes.HQ.1.reform <- vcf.freebayes.HQ.1
 save(vcf.freebayes.HQ.1.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.reform.Rdata")
 
 write.csv(vcf.freebayes.HQ.1$ANN, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/ANN.csv")
+# cat ANN.csv | tail -493019 | awk 'BEGIN{FS="|"}{print $4}' | sed 's/^$/intergenic/g' > ANN_gene_ID
 
 ANN_gene_ID <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/ANN_gene_ID")
 
 head(ANN_gene_ID)
-############ start from here tonight 
-dim(ANN_gene_ID) # 492993      1 ###### why??? 
+tail(ANN_gene_ID) 
+dim(ANN_gene_ID) # 493019 
+
+vcf.freebayes.HQ.1.reform$gene_ID <- ANN_gene_ID
+head(vcf.freebayes.HQ.1.reform)
+tail(vcf.freebayes.HQ.1.reform)
+dim(vcf.freebayes.HQ.1.reform) # 493019     68 
+
+# save(vcf.freebayes.HQ.1.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.reform.Rdata") 
+
+## check correlation between gene ID and allele ratio 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.reform.Rdata")
+
+# get MAF 
+vcf.freebayes.HQ.1.reform$MAF_Ae <- round(pmin(vcf.freebayes.HQ.1.reform$Ae_alt.depth, vcf.freebayes.HQ.1.reform$Ae_ref.depth)/vcf.freebayes.HQ.1.reform$Ae_tot.depth, digits = 2) 
+
+vcf.freebayes.HQ.1.reform$MAF_Ol <- round(pmin(vcf.freebayes.HQ.1.reform$Ol_alt.depth, vcf.freebayes.HQ.1.reform$Ol_ref.depth)/vcf.freebayes.HQ.1.reform$Ol_tot.depth, digits = 2) 
+
+hist(vcf.freebayes.HQ.1.reform$MAF_Ae)
+hist(vcf.freebayes.HQ.1.reform$MAF_Ol)
+
+# extract specific columns for better visualization 
+colnames(vcf.freebayes.HQ.1.reform)
+for_allele_specific_expression <- vcf.freebayes.HQ.1.reform[,c("CHROM", "POS", "gene_ID", "MAF_Ae", "Ae_tot.depth", "MAF_Ol", "Ol_tot.depth")] 
+View(for_allele_specific_expression) 
+save(for_allele_specific_expression, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/for_allele_specific_expression.Rdata")
+
+### calcualte genotype quality for freebayes 
+unique(vcf.freebayes.HQ.1.reform$CIGAR) # 1X 
+```
+
+# more sophisticated filtering (SNP tail bias, position bias, strand bias, genotype quality...)
+```{r}
 
 
-
-# get gene name for each SNP
-head(strsplit(vcf.freebayes.HQ.1$ANN,split = "|"))
-
-vcf.freebayes.HQ.1$tmp <-  gsub("([[:print:]]+)(,)([[:print:]])", "\\1", vcf.freebayes.HQ.1$ANN) 
-
-head(vcf.freebayes.HQ.1$tmp, 100)
-dim(vcf.freebayes.HQ.1)
-
-vcf.freebayes.HQ.1$gene_ID <- gsub("(A|T|C|G)(|)([[:print:]]+)(|)(MODIFIER|MODERATE|HIGH|LOW)(|)([[:print:]]+)(|)([[:print:]])", "\\7", vcf.freebayes.HQ.1$tmp) 
-
-# vcf.freebayes.HQ.1$tmp <- gsub("(A|T|C|G)(|)([[:print:]]+)(|)(MODIFIER|MODERATE|HIGH|LOW)(|)([[:print:]]+)(|)([[:print:]]+)(|)(intergenic_region|transcript)(|)([[:print:]])", "\\1", vcf.freebayes.HQ.1$ANN) 
-
-tail(vcf.freebayes.HQ.1$gene_ID, 100)
-
-# 0/1 suggested by Julin, might be caused re-alignment (this can be checked based on CIGAR score)
-# need to work on this...  
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered.SNP <- 
-  vcf.Ae.Ol.no.bolting.unique.HQ.filtered[vcf.Ae.Ol.no.bolting.unique.HQ.filtered$TYPE=="snp",]
-
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.SNP$Ae_gt)
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.SNP$Ol_gt)
-
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered.other <- 
-  vcf.Ae.Ol.no.bolting.unique.HQ.filtered[vcf.Ae.Ol.no.bolting.unique.HQ.filtered$TYPE!="snp",]
-
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.other$Ae_gt)
-table(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.other$Ol_gt)
-
-## 
-unique(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$CIGAR)
-
-unique(vcf.Ae.Ol.no.bolting.unique.HQ.filtered[vcf.Ae.Ol.no.bolting.unique.HQ.filtered$Ae_gt=="0/1",]$CIGAR)  
 
 ```
 
