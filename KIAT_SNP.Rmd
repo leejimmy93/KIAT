@@ -19,53 +19,25 @@ output:
 
 # 5) get only biallelic SNPs 
 # extract_biallelic.sh input.vcf output.vcf 
+
+# data location: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/freebayes/Ae_Ol_modified_SNPonly_biallelic.recode.ann.vcf 
 ``` 
 
-###### data from non-biallielic 
-```{r}
-source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
-vcf.freebayes.non.biallelic <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified.vcf",as.is=T,na.strings = ".")  
-dim(vcf.freebayes.non.biallelic) # 2053680      11
-vcf.freebayes.non.biallelic$V11 
-
-# get header 
-vcf.header.freebayes <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified.vcf",intern = TRUE) 
-vcf.header.freebayes <- sub("#","",vcf.header.freebayes) #get rid of the pound sign
-vcf.header.freebayes <- unlist(strsplit(vcf.header.freebayes,split="\t"))
-
-# use function to reformat vcf file 
-vcf.freebayes.non.biallelic.reform <- SNP.freebayes.reformat(vcf.freebayes.non.biallelic, vcf.header.freebayes) 
-dim(vcf.freebayes.non.biallelic.reform) # 2053680      25  
-table(vcf.freebayes.non.biallelic.reform$Ae_gt)
-#  0/0    0/1    0/2    0/3    0/4    1/1    1/2    1/3    1/4    2/2    2/3    2/4    3/3    3/4     NA 
-# 502869 627633   6202     49      3 648030  18445    500      6   5202    115      2    150      6 244468 
-
-table(vcf.freebayes.non.biallelic.reform$Ol_gt)
-#  0/0    0/1    0/2    0/3    0/4    1/1    1/2    1/3    1/4    2/2    2/3    2/4    3/3    3/4    4/4 
-# 546937 611663   6275     63      1 640782  17448    523      4   4504     98      2    144      5      1 
-#    4/5     NA 
-#      1 225229 
-# save(vcf.freebayes.non.biallelic.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.non.biallelic.reform.Rdata")
-
-vcf.freebayes.non.biallelic.reform.Ae.het <- vcf.freebayes.non.biallelic.reform[vcf.freebayes.non.biallelic.reform$Ae_gt=="0/1",]
-sum(vcf.freebayes.non.biallelic.reform.Ae.het$Ae_alt.depth==0, na.rm = T)
-sum(vcf.freebayes.non.biallelic.reform.Ae.het$Ae_ref.depth==0, na.rm = T) 
-
-head(vcf.freebayes.non.biallelic.reform.Ae.het)
-head(vcf.freebayes.non.biallelic.reform.Ae.het[which(vcf.freebayes.non.biallelic.reform.Ae.het$Ae_alt.depth==0),], 100)
-
-```
-
-
 # using freebayes to call SNP (now pretty sure is from no-bolting uniquely mapped result)
+# import data 
 ```{r}
 source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
-vcf.freebayes <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified_SNPonly_biallelic.recode.vcf",as.is=T,na.strings = ".:.:.:.:.:.:.") 
+vcf.freebayes <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified_SNPonly_biallelic.recode.ann.vcf",as.is=T,na.strings = ".:.:.:.:.:.:.") 
 dim(vcf.freebayes) # 1678792      11
 vcf.freebayes$V11 
+# save(vcf.freebayes, file ="~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.Rdata")
+```
 
+# analysis 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.Rdata")
 # get header 
-vcf.header.freebayes <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified_SNPonly_biallelic.recode.vcf",intern = TRUE) 
+vcf.header.freebayes <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified_SNPonly_biallelic.recode.ann.vcf",intern = TRUE) 
 vcf.header.freebayes <- sub("#","",vcf.header.freebayes) #get rid of the pound sign
 vcf.header.freebayes <- unlist(strsplit(vcf.header.freebayes,split="\t"))
 
@@ -80,31 +52,13 @@ table(vcf.freebayes.reform$Ol_gt)
 #    0/0    0/1    1/1     NA 
 # 459651 517580 518072 183489 
 
-vcf.freebayes.reform.Ae.het <- vcf.freebayes.reform[vcf.freebayes.reform$Ae_gt=="0/1",]
-sum(vcf.freebayes.reform.Ae.het$Ae_alt.depth==0)
-sum(vcf.freebayes.reform.Ae.het$Ae_ref.depth==0) 
-
-# save(vcf.freebayes.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
-save(vcf.freebayes.reform.Ae.het, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Ae.het.Rdata")
-
+# save(vcf.freebayes.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.reform.Rdata") 
 ```
 
-# calculate genotype quality as what we get from GATK... 
-```{r}
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
-head(vcf.freebayes.reform)
-head(vcf.GATK.reform)
-
-
-
-
-``` 
-
-
+# 1st round of filtering 
 ```{r}
 #########
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Ae.het.Rdata")
 
 ### 1) filter based on QUAl score 
 
@@ -127,21 +81,27 @@ table(vcf.freebayes.HQ$Ol_gt)
 # tmp.unique <- ftable(vcf.Ae.Ol.no.bolting.unique.HQ[,c("Ae_gt","Ol_gt")])
 # head(tmp.unique) 
 # write.table(vcf.Ae.Ol.no.bolting.unique.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/gt_Ae_Ol.vcf") 
+# save(vcf.freebayes.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.Rdata")
 ```
 
-# check why there are so many heterozygous
+# calculate genotype quality as what we get from GATK... 
 ```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
+head(vcf.freebayes.reform)
+head(vcf.GATK.reform)
+
+
+```  
+
+# check why there are so many heterozygous, plot by read depth & QUAL score 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.Rdata")
 # 1) Julin suggested plot by mapping score, total depth, and QUAL score... 
 # 2) also visualize SNPs in igv to spot the realignment problem, SNP calls from end of reads & intron-exon insertion is bad, don’t believe… 
 # 3) 3, 4, and 5 visualize them in IGV…  
 
 # vcf.freebayes.HQ.Ae.het <- vcf.freebayes.HQ[vcf.freebayes.HQ$Ae_gt=="0/1",]
 # vcf.freebayes.HQ
-
-
-vcf.freebayes.HQ$Ae_gt=="1/1" 
-vcf.freebayes.HQ$Ae_gt=="0/1"
-vcf.freebayes.HQ$Ae_gt=="0/1" 
 
 head(vcf.freebayes.HQ)
 
@@ -178,13 +138,12 @@ p.tot.depth.Ol
 # 
 # write.table(vcf.Ae.Ol.no.bolting.unique.HQ.export, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.no.bolting.unique.HQ.vcf", row.names = F)
 
-# conclusion: 2,3,4,5 are caused by re-alignment problem
+# conclusion: 2,3,4,5 are caused by re-alignment problem, they are not SNPs
 ```
 
 # continue explore why many 0/1 in my inbred lines (arround 30%), already filtered by QUAL 
 ```{r}
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Ae.het.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.Rdata")
 
 # 1) filter by max depth 
 mean(vcf.freebayes.HQ$Ae_tot.depth, na.rm=T) # 159 
@@ -196,7 +155,6 @@ hist(log10(vcf.freebayes.HQ$Ae_tot.depth))
 hist(log10(vcf.freebayes.HQ$Ol_tot.depth)) 
 
 # use 1000 as the max, 10 as min 
-
 vcf.freebayes.HQ.1 <- vcf.freebayes.HQ[(!is.na(vcf.freebayes.HQ$Ae_tot.depth) & 
                               !is.na(vcf.freebayes.HQ$Ol_tot.depth) & 
                               vcf.freebayes.HQ$Ae_tot.depth > 10 & 
@@ -210,21 +168,8 @@ head(vcf.freebayes.HQ.1)
 # 2) filter by genotype quality (figure genotype quality in freebayes vcf file)
 # ... need to figure this out... 
 
-
-
-
 table(vcf.freebayes.HQ.1$Ae_gt)
 table(vcf.freebayes.HQ.1$Ol_gt)
-
-# 1) check the ref/alt allele ratio for the het calls, distribution plot for Ae & Ol 
-# get het & homo call for Ae & Ol 
-vcf.freebayes.HQ.1.Ae.het <- vcf.freebayes.HQ.1[(vcf.freebayes.HQ.1$Ae_gt=="0/1"),]
-sum(vcf.freebayes.HQ.1.Ae.het$Ae_ref.depth=="0")
-sum(vcf.freebayes.HQ.1.Ae.het$Ae_alt.depth=="0") # great that no 0 anymore... 
-
-vcf.freebayes.HQ.1.Ol.het <- vcf.freebayes.HQ.1[(vcf.freebayes.HQ.1$Ol_gt=="0/1"),]
-sum(vcf.freebayes.HQ.1.Ol.het$Ol_ref.depth=="0")
-sum(vcf.freebayes.HQ.1.Ol.het$Ol_alt.depth=="0") # great that no 0 anymore... 
 
 # function to draw plot 
 pl.allele.ratio.Ae <- function(vcf.subset){
@@ -264,13 +209,16 @@ pl.allele.ratio.Ae.orginal <- function(vcf.subset){
 allele.ratio.Ae.het <- pl.allele.ratio.Ae.orginal(vcf.freebayes.HQ.1.Ae.het)
 allele.ratio <- pl.allele.ratio.Ae.orginal(vcf.freebayes.HQ.1)
 
-# ggsave(allele.ratio.Ae.het, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio_Ae_het.png", height = 8, width = 11)
-ggsave(allele.ratio, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio.png", height = 8, width = 11)
-
 allele.ratio.Ae.het
 allele.ratio
 
+# ggsave(allele.ratio.Ae.het, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio_Ae_het.png", height = 8, width = 11)
+# ggsave(allele.ratio, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio.png", height = 8, width = 11)
+
 # very similar to what we see from the review paper... 
+
+save(vcf.freebayes.HQ.1, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.Rdata")
+
 ####### 
 
 # a lot of het calls for Ae & Ol, also there is skewed distribution for the allele depth ratio, is this a result of allele specific expression? If yes, SNPs from the same gene will have skewness. So to test this hypothesis, check the correlation of SNP position & allele depth ratio. 
@@ -336,14 +284,36 @@ head(gff.mRNA.df)
 # View(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
 # vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele_ratio <- round(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_alt.depth/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_ref.depth, digits = 2) 
 
-
 # check CIGAR score: corrlelation between CIGAR score... 
+# only keep 42 columns of INFO, 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.Rdata")
 
-# 1) seperate CIGAR scores 
-head(vcf.Ae.Ol.no.bolting.unique.HQ.filtered.Ae.het)
+tmp.list <- strsplit(vcf.freebayes.HQ.1$INFO,split = ";")
+length(tmp.list) # 493019 
+length(tmp.list[[1]]) 
+
+# check before modify 
+for (i in 1:length(tmp.list)){
+    if(length(tmp.list[[i]]) != 42){
+      print(i) 
+    }
+} 
+
+for (i in 1:length(tmp.list)){
+    tmp.list[[i]] <- tmp.list[[i]][c(1:42)] 
+}
+
+for (i in 1:length(tmp.list)){
+    if(length(tmp.list[[i]]) != 42){
+      print(i) 
+    }
+} 
+
+# 1) seperate INFO column  
+head(vcf.freebayes.HQ.1)
 info <- matrix(
-  unlist(strsplit(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$INFO,split = ";")),
-  nrow=nrow(vcf.Ae.Ol.no.bolting.unique.HQ.filtered),  
+  unlist(tmp.list),
+  nrow=nrow(vcf.freebayes.HQ.1),  
   byrow=TRUE
   )
 
@@ -351,7 +321,7 @@ head(info)
 
 colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
                     "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
-                    "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
+                    "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE", "ANN")
 
 head(info)
 info <- as.data.frame(info)
@@ -363,9 +333,35 @@ for (i in 1:ncol(info)){
 
 head(info)
 
-vcf.Ae.Ol.no.bolting.unique.HQ.filtered <- cbind(vcf.Ae.Ol.no.bolting.unique.HQ.filtered,info,stringsAsFactors=FALSE)
-head(vcf.Ae.Ol.no.bolting.unique.HQ.filtered)
-unique(vcf.Ae.Ol.no.bolting.unique.HQ.filtered$TYPE)
+vcf.freebayes.HQ.1 <- cbind(vcf.freebayes.HQ.1,info,stringsAsFactors=FALSE)
+head(vcf.freebayes.HQ.1)
+dim(vcf.freebayes.HQ.1) # 493019     67 
+vcf.freebayes.HQ.1.reform <- vcf.freebayes.HQ.1
+save(vcf.freebayes.HQ.1.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.reform.Rdata")
+
+write.csv(vcf.freebayes.HQ.1$ANN, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/ANN.csv")
+
+ANN_gene_ID <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/ANN_gene_ID")
+
+head(ANN_gene_ID)
+############ start from here tonight 
+dim(ANN_gene_ID) # 492993      1 ###### why??? 
+
+
+
+# get gene name for each SNP
+head(strsplit(vcf.freebayes.HQ.1$ANN,split = "|"))
+
+vcf.freebayes.HQ.1$tmp <-  gsub("([[:print:]]+)(,)([[:print:]])", "\\1", vcf.freebayes.HQ.1$ANN) 
+
+head(vcf.freebayes.HQ.1$tmp, 100)
+dim(vcf.freebayes.HQ.1)
+
+vcf.freebayes.HQ.1$gene_ID <- gsub("(A|T|C|G)(|)([[:print:]]+)(|)(MODIFIER|MODERATE|HIGH|LOW)(|)([[:print:]]+)(|)([[:print:]])", "\\7", vcf.freebayes.HQ.1$tmp) 
+
+# vcf.freebayes.HQ.1$tmp <- gsub("(A|T|C|G)(|)([[:print:]]+)(|)(MODIFIER|MODERATE|HIGH|LOW)(|)([[:print:]]+)(|)([[:print:]]+)(|)(intergenic_region|transcript)(|)([[:print:]])", "\\1", vcf.freebayes.HQ.1$ANN) 
+
+tail(vcf.freebayes.HQ.1$gene_ID, 100)
 
 # 0/1 suggested by Julin, might be caused re-alignment (this can be checked based on CIGAR score)
 # need to work on this...  
@@ -627,91 +623,135 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 
 # SNP filtering from GATK (filtered based on sliding window & annotated)
 ```{r}
-### import data and reformat 
+### import data 
 vcf.GATK <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/GATK_SNP_biallelic.recode.ann.vcf",as.is=T,na.strings = ".") 
 
-head(vcf.GATK, c(300)) 
+head(vcf.GATK, 100)
+# save(vcf.GATK, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/vcf.GATK.Rdata")
+```
+
+# analysis 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/vcf.GATK.Rdata") 
+dim(vcf.GATK) # 1375360      11 
 vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/GATK_SNP_biallelic.recode.ann.vcf",intern = TRUE) 
 vcf.header.GATK <- sub("#","",vcf.header.GATK) #get rid of the pound sign
 vcf.header.GATK <- unlist(strsplit(vcf.header.GATK,split="\t"))
 
 vcf.GATK.reform <- SNP.GATK.reformat(vcf.GATK, vcf.header.GATK)
-dim(vcf.GATK.reform) # 1368924      21
+dim(vcf.GATK.reform) # 1375116      21 
 head(vcf.GATK.reform)
-vcf.GATK.reform$Ae_gt
 
-vcf.GATK.reform[which(vcf.GATK.reform$Ol_gt=="NA"),]
 table(vcf.GATK.reform$Ae_gt)
 table(vcf.GATK.reform$Ol_gt)
 
 #### filter (based on QUAL score and snpcluster)
 # basic filtering based on snpcluster & QUAL 
 vcf.GATK.HQ <- SNP.GATK.basic.filter(vcf.GATK.reform)
-dim(vcf.GATK.HQ) # 614586     21  
-##### what is "NA" & ./. ??? 
-``` 
+dim(vcf.GATK.HQ) # 617141     21   
 
-# SNP filtering from GATK (filtered)  
-```{r} 
-### import data and reformat 
-vcf.GATK.A01.biallelic <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/xaa.intervals.SNP.biallelic.recode.vcf",as.is=T,na.strings = ".") 
-
-head(vcf.GATK.A01.biallelic, 100) 
-vcf.header.GATK <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/GATK/as_diploid/no_bolting/xab.intervals.vcf.filtered.SNP.biallelic.recode.vcf",intern = TRUE) 
-vcf.header.GATK <- sub("#","",vcf.header.GATK) #get rid of the pound sign
-vcf.header.GATK <- unlist(strsplit(vcf.header.GATK,split="\t"))
-
-vcf.GATK.reform <- SNP.GATK.reformat(vcf.GATK.A01.biallelic, vcf.header.GATK)
-dim(vcf.GATK.reform) # 67703    21 
-head(vcf.GATK.reform)
-vcf.GATK.reform$Ae_gt
-
-vcf.GATK.reform[which(vcf.GATK.reform$Ol_gt=="NA"),]
-table(vcf.GATK.reform$Ae_gt)
-table(vcf.GATK.reform$Ol_gt)
-
-#### filter (based on QUAL score and snpcluster)
-# basic filtering based on snpcluster & QUAL 
-vcf.GATK.HQ <- SNP.GATK.basic.filter(vcf.GATK.reform)
-dim(vcf.GATK.HQ) # 29850    21 
-
+# save(vcf.GATK.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/GATK/vcf.GATK.reform.Rdata")
+# save(vcf.GATK.HQ, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/GATK/vcf.GATK.HQ.Rdata")
 ``` 
 
 # 2nd round of filtering 
 ```{r}
-### how to exclude NA records from the file... 
+# load data 
+# load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/GATK/vcf.GATK.HQ.Rdata")
+
 # 1) max read depth, should not be much higher than average read depth 
-mean(vcf.GATK.HQ$Ae_approx.depth, na.rm=T)
-mean(vcf.GATK.HQ$Ol_approx.depth, na.rm=T)
-# use 100 as the max 
+mean(vcf.GATK.HQ$Ae_approx.depth, na.rm=T) # 80.38611 
+mean(vcf.GATK.HQ$Ol_approx.depth, na.rm=T) # 82.96372 
+
+# plot read depth 
+hist(log10(vcf.GATK.HQ$Ae_approx.depth))
+hist(log10(vcf.GATK.HQ$Ol_approx.depth))
+# based on the distribution, choose 10-1000 as the threshold 
+
+# use 10-1000 as the depth range  
 
 vcf.GATK.HQ.1 <- vcf.GATK.HQ[(!is.na(vcf.GATK.HQ$Ae_approx.depth) & 
                               !is.na(vcf.GATK.HQ$Ol_approx.depth) & 
                               vcf.GATK.HQ$Ae_approx.depth > 10 & 
                               vcf.GATK.HQ$Ol_approx.depth > 10 & 
-                              vcf.GATK.HQ$Ae_approx.depth < 120 & 
-                              vcf.GATK.HQ$Ol_approx.depth < 120),]
-dim(vcf.GATK.HQ.1) # 18823    21
-head(vcf.GATK.HQ.1) 
+                              vcf.GATK.HQ$Ae_approx.depth < 1000 & 
+                              vcf.GATK.HQ$Ol_approx.depth < 1000),]
+dim(vcf.GATK.HQ.1) # 252439     21 
+unique(vcf.GATK.HQ.1$CHROM)
 
-# 2) genotype quality, greater than 60 maybe  
+# 2) genotype quality, greater than 30 maybe  
 hist(vcf.GATK.HQ.1$Ae_genotype.qual)
 hist(vcf.GATK.HQ.1$Ol_genotype.qual)
 
 vcf.GATK.HQ.2 <- vcf.GATK.HQ.1[(!is.na(vcf.GATK.HQ.1$Ae_genotype.qual) &
                                 !is.na(vcf.GATK.HQ.1$Ae_genotype.qual) & 
-                                vcf.GATK.HQ.1$Ae_genotype.qual > 60 & 
-                                vcf.GATK.HQ.1$Ol_genotype.qual > 60),]
+                                vcf.GATK.HQ.1$Ae_genotype.qual > 30 & 
+                                vcf.GATK.HQ.1$Ol_genotype.qual > 30),]
 
-dim(vcf.GATK.HQ.2)
+dim(vcf.GATK.HQ.2) # 232294     21 
 table(vcf.GATK.HQ.2$Ae_gt)
 table(vcf.GATK.HQ.2$Ol_gt)
-vcf.GATK.HQ.2.Ae.het$Ae_ref.alt.depth
 
-# 3) based on allele balance, an arbitrary number 
+# 3) based on MAF ???  
+#### reformat get seperate depth for alt & ref alleles 
+Ae.gt <- matrix(
+  unlist(strsplit(vcf.GATK.HQ.2$Ae_ref.alt.depth,split = ",")),
+  nrow=nrow(vcf.GATK.HQ.2),  
+  byrow=TRUE 
+  ) 
 
-```
+colnames(Ae.gt) <- paste("Ae",c("ref.depth","alt.depth"),sep="_")
 
+Ol.gt <- matrix(
+  unlist(strsplit(vcf.GATK.HQ.2$Ol_ref.alt.depth,split = ",")),
+  nrow=nrow(vcf.GATK.HQ.2),  
+  byrow=TRUE
+  )
+
+colnames(Ol.gt) <- paste("Ol",c("ref.depth","alt.depth"),sep="_")
+
+vcf.GATK.HQ.2 <- cbind(vcf.GATK.HQ.2, Ae.gt, Ol.gt, stringsAsFactors=FALSE)
+
+vcf.GATK.HQ.2$Ae_alt.depth <- as.numeric(vcf.GATK.HQ.2$Ae_alt.depth)
+vcf.GATK.HQ.2$Ae_ref.depth <- as.numeric(vcf.GATK.HQ.2$Ae_ref.depth)
+vcf.GATK.HQ.2$Ol_alt.depth <- as.numeric(vcf.GATK.HQ.2$Ol_alt.depth)
+vcf.GATK.HQ.2$Ol_ref.depth <- as.numeric(vcf.GATK.HQ.2$Ol_ref.depth)
+
+head(vcf.GATK.HQ.2)
+
+# calculate MAF for each allele # total read depth or specific to Da-Ae and Da-Ol-1??? 
+vcf.GATK.HQ.2$Ae_MAF <- round(pmin(vcf.GATK.HQ.2$Ae_alt.depth, vcf.GATK.HQ.2$Ae_ref.depth)/vcf.GATK.HQ.2$Ae_approx.depth, digits = 2)
+
+vcf.GATK.HQ.2$Ol_MAF <- round(pmin(vcf.GATK.HQ.2$Ol_alt.depth, vcf.GATK.HQ.2$Ol_ref.depth)/vcf.GATK.HQ.2$Ol_approx.depth, digits = 2)
+
+hist(vcf.GATK.HQ.2$Ae_MAF)
+hist(vcf.GATK.HQ.2$Ol_MAF)
+
+####### gene correlation with MAF
+# need to reformat data to disset INFO column 
+head(vcf.GATK.HQ.2) 
+info <- matrix(
+  unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")),
+  nrow=nrow(vcf.GATK.HQ.2),  
+  byrow=TRUE
+  ) 
+
+head(info)
+head(unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")), 100)
+length(unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")))/nrow(vcf.GATK.HQ.2)
+
+
+colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
+                    "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
+                    "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
+
+
+
+
+
+
+
+``` 
 
 # figure out why many 0/1 
 ```{r} 
@@ -727,7 +767,6 @@ p.gtqual.Ol <- ggplot(data = vcf.GATK.HQ.2)
 p.gtqual.Ol <- p.gtqual.Ol + geom_histogram(aes(Ol_genotype.qual, fill=Ol_gt))  
 p.gtqual.Ol <- p.gtqual.Ol + facet_wrap(~Ol_gt, ncol = 1)
 p.gtqual.Ol
-
 
 head(vcf.GATK.HQ.2) 
 dim(vcf.GATK.HQ.2)
@@ -845,10 +884,7 @@ vcf.GATK.reform.HQ.filtered.Ae.het$Ae_alt.depth
 vcf.GATK.reform.HQ.filtered.Ae.het$Ae_alt.depth==0 
 vcf.Ae.Ol.no.bolting.unique.diploid.Ae.het <- vcf.Ae.Ol.no.bolting.unique.diploid[vcf.Ae.Ol.no.bolting.unique.diploid$Ae_gt=="0/1",]
 
-vcf.Ae.Ol.no.bolting.unique.diploid$Ae_alt.depth==0 
-
-
-
+vcf.Ae.Ol.no.bolting.unique.diploid$Ae_alt.depth==0  
 ``` 
 
 # downstream analysis of SNPs 
@@ -898,10 +934,7 @@ dim(vcf.Ae.Ol.GATK) # 8491 21
 # 4) combine SNPs from different chromosomes 
 # GATK_combine.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/GATK_combine.sh)
 
-# import into R for late analysis  
-
-
-
+# import into R for late analysis ... 
 ```
 
 
@@ -1125,11 +1158,6 @@ sum(Ae_Ol_after_filter.main.unique$Ae_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.unique) # 207.3724 
 # 
 
-# people use different cutoff values for max read depth, eg: 
-# 1) average read depth + 3*sqrt(average read depth) 2) average read depth + 3 * stdv of read depth ... 
-# based on all these different information, I decided to use less than 500 for both Ae and Ol as the cutoff value. 
-# In summary, alternate allele count > 4, min read depth of 4, and max read depth of 500 for both genotypes  
-
 ```
 
 # SNP annotation 
@@ -1161,7 +1189,11 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 # java -jar snpEff.jar build -gff3 -v napus 
 
 ### SNP annotation  
-# java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.ann.vcf 
+# cd cd ~/bin/snpEff/
+# (GATK version) java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.ann.vcf 
+
+# (freebayes version) java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.ann.vcf 
+
 ``` 
 
 # final output  

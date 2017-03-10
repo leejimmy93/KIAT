@@ -374,11 +374,11 @@ SNP.GATK.reformat <- function(vcf, vcf.header){ # input are vcf file from GATK a
   colnames(vcf) <- vcf.header 
   
   # correct the file 
-  problem.row <- which(vcf$FORMAT=="GT:GQ:PL")
+  problem.row <- which(vcf$FORMAT!="GT:AD:DP:GQ:PL")
   vcf.corrected <- vcf[-c(problem.row),]
   
   # Before splitting add NAs to blank cells 
-  vcf.corrected$Ae[vcf.corrected$Ae=="./."] <- "NA:NA,NA:NA:NA:NA,NA,NA"
+  vcf.corrected$Ae[vcf.corrected$Ae=="./.:.:.:.:."] <- "NA:NA,NA:NA:NA:NA,NA,NA"
   Ae.GATK <- matrix(
     unlist(strsplit(vcf.corrected$Ae,split = ":")), 
     nrow=nrow(vcf.corrected),  
@@ -386,7 +386,7 @@ SNP.GATK.reformat <- function(vcf, vcf.header){ # input are vcf file from GATK a
   ) 
   colnames(Ae.GATK) <- paste("Ae",c("gt","ref.alt.depth","approx.depth","genotype.qual","Phred.score"),sep="_")
   
-  vcf.corrected$Ol[vcf.corrected$Ol=="./."] <- "NA:NA,NA:NA:NA:NA,NA,NA" 
+  vcf.corrected$Ol[vcf.corrected$Ol=="./.:.:.:.:."] <- "NA:NA,NA:NA:NA:NA,NA,NA" 
   Ol.GATK <- matrix(
     unlist(strsplit(vcf.corrected$Ol,split = ":")),
     nrow=nrow(vcf.corrected),  
