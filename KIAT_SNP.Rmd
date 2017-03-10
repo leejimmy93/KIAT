@@ -635,32 +635,30 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref"
 
 ```
 
-
 # using GATK to call SNP (with bolting data) 
+# SNP from no bolting data GATK 
 ```{r}
-# 1) prepare for SNP calling on whitney using 
-# SNP_calling_GATK_pipeline.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/SNP_calling_GATK_pipeline.sh)
+# 1) prepare for SNP calling using SNP_calling_GATK_pipeline.sh (on github https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/SNP_calling_GATK_pipeline.sh)  
 
-# 2) SNP calling on cabernet 
-# SNP_calling_array_no_bolting.slurm (https://github.com/leejimmy93/KIAT_cabernet/tree/master/parent_SNP)
+# 2) call SNPs using SNP_calling_array_no_bolting.slurm (on github https://github.com/leejimmy93/KIAT_cabernet/blob/master/parent_SNP/SNP_calling_array_no_bolting.slurm) 
 
-# 3) combine vcf from different chromosomes 
+# 3) SNP filtering based on no more than 3 SNPs within a cluster 35nt 
+# SNP_filter_array_02_09_2017.slurm (https://github.com/leejimmy93/KIAT_cabernet/blob/master/parent_SNP/SNP_filter_array_02_09_2017.slurm) 
+
+# 4) combine SNPs from different chromosomes 
 # GATK_combine.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/GATK_combine.sh)
 
-# 4) VCF format check/validate 
+# 5) VCF format check/validate 
 # GATK -T ValidateVariants -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ae.vcf --validationTypeToExclude ALL
-# GATK -T ValidateVariants -R ~/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa -V Ol.vcf --validationTypeToExclude ALL  
-
-# 5) extract only biallelic SNPs from vcf files 
+ 
+# 6) extract only biallelic SNPs from vcf files 
 # extract_SNP.sh & extract_biallelic.sh (https://github.com/leejimmy93/KIAT_whitney/tree/master/parent_SNP)
 
 # data location: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/GATK/raw_vcf/vcf_split_by_chr/GATK_SNP_biallelic.recode.ann.vcf  
 
-# 6) import into R for analysis 
+# 7) import into R for analysis 
 # SNP.GATK.reformat(vcf, header) can be used to reformat vcf file from GATK 
 # SNP.GATK.basic.filter(vcf) can be used to filter based on snpcluster & QUAL, also give some stats on genotyping matrxi result, and filtering stats 
-
-######## still need to get data from chr_unn (waiting on cabernet now)
 ```
 
 # SNP filtering from GATK (filtered based on sliding window & annotated)
@@ -699,7 +697,7 @@ dim(vcf.GATK.HQ) # 617141     21
 # 2nd round of filtering 
 ```{r}
 # load data 
-# load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/GATK/vcf.GATK.HQ.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/GATK/vcf.GATK.HQ.Rdata")
 
 # 1) max read depth, should not be much higher than average read depth 
 mean(vcf.GATK.HQ$Ae_approx.depth, na.rm=T) # 80.38611 
@@ -769,29 +767,26 @@ vcf.GATK.HQ.2$Ol_MAF <- round(pmin(vcf.GATK.HQ.2$Ol_alt.depth, vcf.GATK.HQ.2$Ol_
 hist(vcf.GATK.HQ.2$Ae_MAF)
 hist(vcf.GATK.HQ.2$Ol_MAF)
 
-####### gene correlation with MAF
+vcf.GATK.HQ.2.reform <- vcf.GATK.HQ.2
+save(vcf.GATK.HQ.2.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.GATK.HQ.2.reform.Rdata")
+
+####### gene correlation with MAF (non uniform format make this not easy...)
 # need to reformat data to disset INFO column 
-head(vcf.GATK.HQ.2) 
-info <- matrix(
-  unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")),
-  nrow=nrow(vcf.GATK.HQ.2),  
-  byrow=TRUE
-  ) 
-
-head(info)
-head(unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")), 100)
-length(unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")))/nrow(vcf.GATK.HQ.2)
-
-
-colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
-                    "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
-                    "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
-
-
-
-
-
-
+# head(vcf.GATK.HQ.2) 
+# info <- matrix(
+#   unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")),
+#   nrow=nrow(vcf.GATK.HQ.2),  
+#   byrow=TRUE
+#   ) 
+# 
+# head(info)
+# head(unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")), 100)
+# length(unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")))/nrow(vcf.GATK.HQ.2)
+# 
+# 
+# colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
+#                     "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
+#                     "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
 
 ``` 
 
@@ -963,26 +958,14 @@ dim(vcf.Ae.Ol.GATK) # 8491 21
    
 ```  
 
-
-# SNP from no bolting data GATK 
-```{r}
-# 1) prepare for SNP calling using SNP_calling_GATK_pipeline.sh (on github https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/SNP_calling_GATK_pipeline.sh)  
-
-# 2) call SNPs using SNP_calling_array_no_bolting.slurm (on github https://github.com/leejimmy93/KIAT_cabernet/blob/master/parent_SNP/SNP_calling_array_no_bolting.slurm) 
-
-# 3) SNP filtering based on no more than 3 SNPs within a cluster 35nt 
-# SNP_filter_array_02_09_2017.slurm (https://github.com/leejimmy93/KIAT_cabernet/blob/master/parent_SNP/SNP_filter_array_02_09_2017.slurm) 
-
-# 4) combine SNPs from different chromosomes 
-# GATK_combine.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_SNP/GATK_combine.sh)
-
-# import into R for late analysis ... 
-```
-
-
-
 # compare SNPs from freebayes & GATK 
 ```{r}
+# load data 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.reform.Rdata")
+load("")
+
+
+
 vcf.Ae.Ol.freebayes <- Ae_Ol_after_filter.unique[Ae_Ol_after_filter.unique$CHROM=="chrA01",]
 nrow(vcf.Ae.Ol.freebayes)  # 11379  
 dim(vcf.Ae.Ol.GATK) # 8491   
@@ -1040,7 +1023,8 @@ venn.freebayes_GATK.Ol_ref <-
 draw.pairwise.venn(nrow(vcf.Ol.ref.freebayes), nrow(Ol_ref.GATK), length(intersect(vcf.Ol.ref.GATK.SNP, vcf.Ol.ref.freebayes.SNP)), 
                  category = c("freebayes (11379)", "GATK (8491)"), 
                  lty = "blank", 
-                 fill = c("skyblue", "pink1"))
+                 fill = c("skyblue", "pink1")) 
+
 
 ``` 
 
