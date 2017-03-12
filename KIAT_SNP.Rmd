@@ -421,6 +421,62 @@ unique(vcf.freebayes.HQ.1.reform$CIGAR) # 1X
 
 # more sophisticated filtering (SNP tail bias, position bias, strand bias, genotype quality...)
 ```{r}
+# based on tail bias and strand bias 
+vcf.freebayes.HQ.1.reform$SAF <- as.numeric(vcf.freebayes.HQ.1.reform$SAF)
+vcf.freebayes.HQ.1.reform$SAR <- as.numeric(vcf.freebayes.HQ.1.reform$SAR)
+vcf.freebayes.HQ.1.reform$RPR <- as.numeric(vcf.freebayes.HQ.1.reform$RPR)
+vcf.freebayes.HQ.1.reform$RPL <- as.numeric(vcf.freebayes.HQ.1.reform$RPL)
+
+# strand bias, present on both strands 
+
+hist(log10(vcf.freebayes.HQ.1.reform$SAF))
+hist(log10(vcf.freebayes.HQ.1.reform$SAR))
+
+vcf.freebayes.HQ.2.tmp <- 
+vcf.freebayes.HQ.1.reform[(vcf.freebayes.HQ.1.reform$SAF>0 & 
+                           vcf.freebayes.HQ.1.reform$SAR>0) ,] 
+
+min(vcf.freebayes.HQ.1.reform$SAR); min(vcf.freebayes.HQ.1.reform$SAF)
+min(vcf.freebayes.HQ.2$SAR); min(vcf.freebayes.HQ.2$SAF)
+
+dim(vcf.freebayes.HQ.2.tmp) # 460336     68
+dim(vcf.freebayes.HQ.1.reform) # 493019     68 
+
+## tail bias 
+hist(log10(vcf.freebayes.HQ.2.tmp$RPR))
+hist(log10(vcf.freebayes.HQ.2.tmp$RPL))
+min(vcf.freebayes.HQ.2.tmp$RPR)
+min(vcf.freebayes.HQ.2.tmp$RPL)
+
+vcf.freebayes.HQ.2 <- 
+vcf.freebayes.HQ.2.tmp[(vcf.freebayes.HQ.2.tmp$RPR>1 & 
+                           vcf.freebayes.HQ.2.tmp$RPL>1),]  
+
+min(as.numeric(vcf.freebayes.HQ.2$RPL))
+min(as.numeric(vcf.freebayes.HQ.2$RPR))
+
+dim(vcf.freebayes.HQ.2) # 354820     68 
+
+table(vcf.freebayes.HQ.2$Ae_gt) 
+ #   0/0    0/1    1/1 
+ # 96721 112112 145987 
+
+table(vcf.freebayes.HQ.2$Ol_gt)
+#    0/0    0/1    1/1 
+# 100508 109057 145255
+
+# find filtered SNPs because of tail bias, and visulize them in IGV 
+test1 <- vcf.freebayes.HQ.2.tmp[,c("CHROM", "POS")]
+test2 <- vcf.freebayes.HQ.2[,c("CHROM", "POS")]
+library(dplyr)
+filtered_out_snp_tail_bias <- anti_join(test1, test2)
+head(filtered_out_snp_tail_bias[filtered_out_snp_tail_bias$CHROM=="chrA01",], 30)
+
+###### export the filtered dataset as VCF for IGV visualization 
+
+
+
+
 
 
 
@@ -960,12 +1016,65 @@ dim(vcf.Ae.Ol.GATK) # 8491 21
 
 # compare SNPs from freebayes & GATK 
 ```{r}
+# compare all SNPs w/o consideration on genotypes of the two parents 
 # load data 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.reform.Rdata")
-load("")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.GATK.HQ.2.reform.Rdata") 
+dim(vcf.freebayes.HQ.1.reform) # 493019     70
+dim(vcf.GATK.HQ.2.reform) # 232294     27 
+dim(intersection.test) # 160740      3 
+table(intersection.test$Ae_gt)
+#   0/0   0/1   1/1 
+# 47500 43180 70060
+table(intersection.test$Ol_gt)
+#   0/0   0/1   1/1 
+# 50324 40827 69589 
+
+colnames(vcf.freebayes.HQ.1.reform) 
+colnames(vcf.GATK.HQ.2.reform)
+head(vcf.GATK.HQ.2.reform)
+
+vcf.freebayes.for.compare <- vcf.freebayes.HQ.1.reform[,c("CHROM", "POS", "REF", "ALT", "Ae_gt", "Ol_gt", "Ae_tot.depth", "Ol_tot.depth", "Ae_ref.depth", "Ae_alt.depth", "Ol_ref.depth", "Ol_alt.depth")]
+vcf.GATK.for.compare <- vcf.GATK.HQ.2.reform[, c("CHROM", "POS", "REF", "ALT", "Ae_gt", "Ol_gt", "Ae_approx.depth", "Ol_approx.depth", "Ae_genotype.qual", "Ol_genotype.qual", "Ae_ref.depth", "Ae_alt.depth", "Ol_ref.depth", "Ol_alt.depth")]  
+
+head(vcf.freebayes.for.compare)
+head(vcf.GATK.for.compare)
+
+vcf.freebayes.for.compare$feature <- paste(vcf.freebayes.for.compare$CHROM, vcf.freebayes.for.compare$POS, vcf.freebayes.for.compare$Ae_gt, vcf.freebayes.for.compare$Ol_gt, sep = ":")
+
+vcf.GATK.for.compare$feature <- paste(vcf.GATK.for.compare$CHROM, vcf.GATK.for.compare$POS, vcf.GATK.for.compare$Ae_gt, vcf.GATK.for.compare$Ol_gt, sep = ":")
+
+intersection.test <- as.data.frame(intersect(vcf.freebayes.for.compare$feature, vcf.GATK.for.compare$feature))
+head(intersection.test)
+colnames(intersection.test) <- "feature"
+intersection.test$Ae_gt <- gsub("([[:print:]]+)(:)([[:digit:]]+)(:)(1/1|0/0|0/1)(:)(1/1|0/0|0/1)", "\\5", intersection.test$feature)
+intersection.test$Ol_gt <- gsub("([[:print:]]+)(:)([[:digit:]]+)(:)(1/1|0/0|0/1)(:)(1/1|0/0|0/1)", "\\7", intersection.test$feature)
+
+table(intersection.test$Ae_gt)
+table(intersection.test$Ol_gt)
+# the intersect also get very high proportion of het, so this can prove that the biological material is not highly homozyougs... 
+
+
+colnames(vcf.freebayes.for.compare) <- paste("freebayes", c("CHROM", "POS", "REF", "ALT", "Ae_gt", "Ol_gt", "Ae_tot.depth", "Ol_tot.depth", "Ae_ref.depth", "Ae_alt.depth", "Ol_ref.depth", "Ol_alt.depth"),  sep = "|") 
+colnames(vcf.GATK.for.compare) <- paste("GATK", c("CHROM", "POS", "REF", "ALT", "Ae_gt", "Ol_gt", "Ae_approx.depth", "Ol_approx.depth", "Ae_genotype.qual", "Ol_genotype.qual", "Ae_ref.depth", "Ae_alt.depth", "Ol_ref.depth", "Ol_alt.depth"), sep = "|")
 
 
 
+### find intersection between freebayes & GATK based on CHROM, POS, Ae_gt, and Ol_gt
+compare(vcf.freebayes.for.compare, vcf.free)
+
+
+
+View(vcf.freebayes.for.compare)
+View(vcf.GATK.for.compare) # even not same read count as ref and alt... 
+
+
+# quick test of the intersect between freebayes & 
+# vcf.freebayes.test <- paste(vcf.freebayes.HQ.1.reform$CHROM, vcf.freebayes.HQ.1.reform$POS, sep = "_")
+# vcf.GATK.test <- paste(vcf.GATK.HQ.2.reform$CHROM, vcf.GATK.HQ.2.reform$POS, sep = "_") 
+# length(intersect(vcf.freebayes.test, vcf.GATK.test)) # 170670 same SNP positions between freebayes & GATK 
+
+####### compare SNPs between Da-Ae & Da-Ol-1 
 vcf.Ae.Ol.freebayes <- Ae_Ol_after_filter.unique[Ae_Ol_after_filter.unique$CHROM=="chrA01",]
 nrow(vcf.Ae.Ol.freebayes)  # 11379  
 dim(vcf.Ae.Ol.GATK) # 8491   
