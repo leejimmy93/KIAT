@@ -6,6 +6,7 @@ output:
   html_document: 
     keep_md: yes
 ---
+# vcfR is another tool to work with VCF file. 
 
 # SNP calling freebayes 
 ```{r}
@@ -109,7 +110,7 @@ table(vcf.freebayes.reform$Ol_gt)
 # 1st round of filtering 
 ```{r}
 #########
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.reform.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.reform.Rdata")
 
 ### 1) filter based on QUAl score 
 
@@ -427,7 +428,8 @@ vcf.freebayes.HQ.1.reform$SAR <- as.numeric(vcf.freebayes.HQ.1.reform$SAR)
 vcf.freebayes.HQ.1.reform$RPR <- as.numeric(vcf.freebayes.HQ.1.reform$RPR)
 vcf.freebayes.HQ.1.reform$RPL <- as.numeric(vcf.freebayes.HQ.1.reform$RPL)
 
-# strand bias, present on both strands 
+# strand bias, present on both strands
+head(vcf.freebayes.HQ.1.reform)
 
 hist(log10(vcf.freebayes.HQ.1.reform$SAF))
 hist(log10(vcf.freebayes.HQ.1.reform$SAR))
@@ -472,13 +474,26 @@ library(dplyr)
 filtered_out_snp_tail_bias <- anti_join(test1, test2)
 head(filtered_out_snp_tail_bias[filtered_out_snp_tail_bias$CHROM=="chrA01",], 30)
 
-###### export the filtered dataset as VCF for IGV visualization 
+save(vcf.freebayes.HQ.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.2.Rdata")
+```
 
+# export the filtered dataset as VCF for IGV visualization
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.2.Rdata")
+ 
+head(vcf.freebayes.HQ.2)
+colnames(vcf.freebayes.reform) 
+tmp <- c("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Ae", "Ol")
 
+vcf.freebayes.HQ.2.reform <- vcf.freebayes.HQ.2[,tmp]
+colnames(vcf.freebayes.HQ.2.reform)
+head(vcf.freebayes.HQ.2.reform) 
 
+write.table(vcf.freebayes.HQ.2.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.2.reform.txt")
 
-
-
+# get header from original vcf file 
+# run ./reconstruct_vcf.sh (https://github.com/leejimmy93/KIAT_whitney/tree/master/parent_SNP) 
+# import into IGV for better visualization... 
 
 ```
 
