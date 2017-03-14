@@ -95,7 +95,7 @@ vcf.header.freebayes <- unlist(strsplit(vcf.header.freebayes,split="\t"))
 
 # use function to reformat vcf file 
 vcf.freebayes.reform <- SNP.freebayes.reformat(vcf.freebayes, vcf.header.freebayes)
-dim(vcf.freebayes.reform) # 1678792      25  
+dim(vcf.freebayes.reform) # 1678792      25   
 table(vcf.freebayes.reform$Ae_gt)
 #    0/0    0/1    1/1     NA 
 # 423018 531949 522721 201104 
@@ -450,6 +450,7 @@ unique(vcf.freebayes.HQ.1.reform$CIGAR) # 1X
 
 # more sophisticated filtering (SNP tail bias, position bias, strand bias, genotype quality...)
 ```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.reform.Rdata")
 # based on tail bias and strand bias 
 vcf.freebayes.HQ.1.reform$SAF <- as.numeric(vcf.freebayes.HQ.1.reform$SAF)
 vcf.freebayes.HQ.1.reform$SAR <- as.numeric(vcf.freebayes.HQ.1.reform$SAR)
@@ -459,7 +460,7 @@ vcf.freebayes.HQ.1.reform$RPL <- as.numeric(vcf.freebayes.HQ.1.reform$RPL)
 # strand bias, present on both strands
 head(vcf.freebayes.HQ.1.reform)
 
-hist(log10(vcf.freebayes.HQ.1.reform$SAF)) 
+hist(log10(vcf.freebayes.HQ.1.reform$SAF))    
 hist(log10(vcf.freebayes.HQ.1.reform$SAR))
 
 # don't need to filter based on strand bias because 
@@ -558,46 +559,50 @@ write.table(vcf.freebayes.HQ.2.reform, file = "~/Desktop/Brassica_project/KIAT_R
 
 ```
 
-
+# SNPs between Da-Ae & Da-Ol-1 
 ```{r}
-# which SNPs would be most useful for a downstream QTL analysis between Ae & Ol? 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.reform.Rdata")
 
-# SNPs between Ae & ref
-sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1") # 595704   
-Ae_ref.unique <- vcf.Ae.Ol.no.bolting.unique.HQ[vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1",]
-# read depth > 3 and read depth < 501  
-Ae_ref_after_filter.unique <- Ae_ref.unique[Ae_ref.unique$Ae_tot.depth > 3 &Ae_ref.unique$Ae_tot.depth <  501,] 
-dim(Ae_ref_after_filter.unique) # 394737     25   
-head(Ae_ref_after_filter.unique)
+vcf.tmp <- vcf.freebayes.HQ.1.reform # assign a variable so I don't have to change the name every time... 
 
-# SNPs between Ol & ref 
-sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1") # 421125  
-Ol_ref.unique <- vcf.Ae.Ol.no.bolting.unique.HQ[vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1",]
-# read depth > 3 and read depth < 501  
-Ol_ref_after_filter.unique <- Ol_ref.unique[Ol_ref.unique$Ol_tot.depth > 3 &Ol_ref.unique$Ol_tot.depth <  501,] 
-dim(Ol_ref_after_filter.unique) # 391944     25   
+dim(vcf.tmp) # 137069     68    
 
 # SNPs between Ae & Ol 
-sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="0/0") +  sum(vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/0" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1") # 314046 SNPs between Ae & Ol 
+sum(vcf.tmp$Ae_gt=="1/1" & vcf.tmp$Ol_gt=="0/0") +  sum(vcf.tmp$Ae_gt=="0/0" & vcf.tmp$Ol_gt=="1/1") # 137069 SNPs between Ae & Ol 
 
-314046/length(vcf.Ae.Ol.no.bolting.unique.HQ$CHROM) # 21% of the total SNPs 
+(sum(vcf.tmp$Ae_gt=="1/1" & vcf.tmp$Ol_gt=="0/0") +  sum(vcf.tmp$Ae_gt=="0/0" & vcf.tmp$Ol_gt=="1/1"))/length(vcf.freebayes.HQ.1.reform$CHROM) # 27% of the total SNPs 
 # subset SNPs between Ae & Ol 
-vcf.Ae.Ol.no.bolting.unique.HQ.new <- vcf.Ae.Ol.no.bolting.unique.HQ[((vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="1/1" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="0/0") | (vcf.Ae.Ol.no.bolting.unique.HQ$Ae_gt=="0/0" & vcf.Ae.Ol.no.bolting.unique.HQ$Ol_gt=="1/1")),] 
+vcf.Ae.Ol.freebayes <- vcf.tmp[((vcf.tmp$Ae_gt=="1/1" & vcf.tmp$Ol_gt=="0/0") | (vcf.tmp$Ae_gt=="0/0" & vcf.tmp$Ol_gt=="1/1")),] 
 
-dim(vcf.Ae.Ol.no.bolting.unique.HQ.new) # 314046     25  
-# read depth > 3 and read depth < 501  
+dim(vcf.Ae.Ol.freebayes) # 137069     68 
+table()
 
-Ae_Ol_after_filter.unique  <- 
-vcf.Ae.Ol.no.bolting.unique.HQ.new[(vcf.Ae.Ol.no.bolting.unique.HQ.new$Ae_tot.depth > 3 & vcf.Ae.Ol.no.bolting.unique.HQ.new$Ae_tot.depth < 501 & vcf.Ae.Ol.no.bolting.unique.HQ.new$Ol_tot.depth > 3 & vcf.Ae.Ol.no.bolting.unique.HQ.new$Ol_tot.depth < 501),]  
-dim(Ae_Ol_after_filter.unique)  # 232477     25    
-  
 ######### using IGV to check SNP 
-  
+tmp <- c("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Ae", "Ol")
 
-#########
+vcf.Ae.Ol.freebayes <- vcf.Ae.Ol.freebayes[,tmp]
+colnames(vcf.freebayes.HQ.2.reform)
+head(vcf.freebayes.HQ.2.reform) 
+
+save(vcf.Ae.Ol.freebayes, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.Ae.Ol.freebayes.Rdata")
+write.table(vcf.Ae.Ol.freebayes, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.Ae.Ol.freebayes.txt")
+
+# scp to whitney & run it on whitney
+# scp vcf.Ae.Ol.freebayes.txt ruijuanli@whitney.plb.ucdavis.edu:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/freebayes 
+# get header from original vcf file 
+
+# run ./reconstruct_vcf.sh (https://github.com/leejimmy93/KIAT_whitney/tree/master/parent_SNP) 
+# import into IGV for visualization... 
+
+head(vcf.Ae.Ol.freebayes[,c("CHROM", "POS")], 50)
+```
+
+
+# stats on SNPs between Da-Ae & Da-Ol-1 
+```{r}
 # number of SNPs on per chromosome # subgenome group/chr ID/main or random chromosome 
 chr_ID <- unique(Ae_Ol_after_filter.unique$CHROM)
-number.unique <- list()
+number.unique <- list() 
 
 for (chr in chr_ID) {
   number.unique[chr] <- sum(sum(Ae_Ol_after_filter.unique$CHROM==chr))
@@ -851,7 +856,7 @@ vcf.GATK.HQ.1 <- vcf.GATK.HQ[(!is.na(vcf.GATK.HQ$Ae_approx.depth) &
 dim(vcf.GATK.HQ.1) # 252439     21 
 unique(vcf.GATK.HQ.1$CHROM)
 
-# 2) genotype quality, greater than 30 maybe  
+# 2) genotype quality, greater than 30   
 hist(vcf.GATK.HQ.1$Ae_genotype.qual)
 hist(vcf.GATK.HQ.1$Ol_genotype.qual)
 
@@ -863,6 +868,7 @@ vcf.GATK.HQ.2 <- vcf.GATK.HQ.1[(!is.na(vcf.GATK.HQ.1$Ae_genotype.qual) &
 dim(vcf.GATK.HQ.2) # 232294     21 
 table(vcf.GATK.HQ.2$Ae_gt)
 table(vcf.GATK.HQ.2$Ol_gt)
+save(vcf.GATK.HQ.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/GATK/vcf.GATK.HQ.2.Rdata")
 
 # 3) check MAF 
 #### reformat get seperate depth for alt & ref alleles 
@@ -900,45 +906,25 @@ hist(vcf.GATK.HQ.2$Ae_MAF)
 hist(vcf.GATK.HQ.2$Ol_MAF)
 
 vcf.GATK.HQ.2.reform <- vcf.GATK.HQ.2
-save(vcf.GATK.HQ.2.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.GATK.HQ.2.reform.Rdata")
-
-####### gene correlation with MAF (non uniform format make this not easy...)
-# need to reformat data to disset INFO column 
-# head(vcf.GATK.HQ.2) 
-# info <- matrix(
-#   unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")),
-#   nrow=nrow(vcf.GATK.HQ.2),  
-#   byrow=TRUE
-#   ) 
-# 
-# head(info)
-# head(unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")), 100)
-# length(unlist(strsplit(vcf.GATK.HQ.2$INFO,split = ";")))/nrow(vcf.GATK.HQ.2)
-# 
-# 
-# colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
-#                     "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
-#                     "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
-
+save(vcf.GATK.HQ.2.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.GATK.HQ.2.reform.Rdata") 
 ``` 
 
 # figure out why many 0/1 
 ```{r} 
 # plot the distribution of genotype quality for Ae & Ol 
-# plot total depth by Ae_gt 
+library(ggplot2)
 p.gtqual.Ae <- ggplot(data = vcf.GATK.HQ.2) 
 p.gtqual.Ae <- p.gtqual.Ae + geom_histogram(aes(Ae_genotype.qual, fill=Ae_gt))  
 p.gtqual.Ae <- p.gtqual.Ae + facet_wrap(~Ae_gt, ncol = 1)
 p.gtqual.Ae
 
-# plot total depth by Ol_gt 
 p.gtqual.Ol <- ggplot(data = vcf.GATK.HQ.2) 
 p.gtqual.Ol <- p.gtqual.Ol + geom_histogram(aes(Ol_genotype.qual, fill=Ol_gt))  
 p.gtqual.Ol <- p.gtqual.Ol + facet_wrap(~Ol_gt, ncol = 1)
 p.gtqual.Ol
 
 head(vcf.GATK.HQ.2) 
-dim(vcf.GATK.HQ.2)
+dim(vcf.GATK.HQ.2) # 232294     21 
 vcf.GATK.HQ.2$Ae_ref.alt.depth 
 
 # reformat to get seperate read depth for Ae & Ol 
@@ -971,14 +957,15 @@ Ol.gt <- matrix(
 
 colnames(Ol.gt) <- paste("Ol",c("ref.depth","alt.depth"),sep="_")
 
-vcf.GATK.HQ.2 <- cbind(vcf.GATK.HQ.2, Ae.gt, Ol.gt, stringsAsFactors=FALSE)
+vcf.GATK.HQ.2.reform <- cbind(vcf.GATK.HQ.2, Ae.gt, Ol.gt, stringsAsFactors=FALSE)
 
-vcf.GATK.HQ.2$Ae_alt.depth <- as.numeric(vcf.GATK.HQ.2$Ae_alt.depth)
-vcf.GATK.HQ.2$Ae_ref.depth <- as.numeric(vcf.GATK.HQ.2$Ae_ref.depth)
-vcf.GATK.HQ.2$Ol_alt.depth <- as.numeric(vcf.GATK.HQ.2$Ol_alt.depth)
-vcf.GATK.HQ.2$Ol_ref.depth <- as.numeric(vcf.GATK.HQ.2$Ol_ref.depth)
+vcf.GATK.HQ.2.reform$Ae_alt.depth <- as.numeric(vcf.GATK.HQ.2.reform$Ae_alt.depth)
+vcf.GATK.HQ.2.reform$Ae_ref.depth <- as.numeric(vcf.GATK.HQ.2.reform$Ae_ref.depth)
+vcf.GATK.HQ.2.reform$Ol_alt.depth <- as.numeric(vcf.GATK.HQ.2.reform$Ol_alt.depth)
+vcf.GATK.HQ.2.reform$Ol_ref.depth <- as.numeric(vcf.GATK.HQ.2.reform$Ol_ref.depth)
 
-head(vcf.GATK.HQ.2)
+head(vcf.GATK.HQ.2.reform)
+save(vcf.GATK.HQ.2.reform, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.GATK.HQ.2.reform.Rdata")
 
 # after filtered by max read depth & genotype quality, high het problem still exist 
 
@@ -1028,8 +1015,6 @@ pl.allele.ratio.Ol <- function(vcf.subset){
 } 
 
 colnames(vcf.GATK.HQ.2.Ae.het)
-vcf.GATK.HQ.2.Ae.het$Ae_alt.depth/vcf.GATK.HQ.2.Ae.het$Ae_ref.depth
-vcf.GATK.HQ.2.Ae.het
 
 pl <- ggplot(data = vcf.GATK.HQ.2.Ae.het)
 pl <- pl + geom_histogram(aes(Ae_alt.depth/Ae_ref.depth)) 
@@ -1037,8 +1022,6 @@ pl <- pl +labs(list(x="log10(alt.depth/ref.depth)"))
 pl  
 
 pl.allele.ratio.Ae(vcf.GATK.HQ.2.Ae.het)  
-pl.allele.ratio.Ol(vcf.GATK.reform.HQ.filtered.Ol.het)   
-
 
 ### zero existed in my het? 
 # vcf.GATK.reform.HQ.filtered.Ae.het$Ae_alt.depth==0, 
@@ -1056,41 +1039,26 @@ vcf.Ae.Ol.no.bolting.unique.diploid.Ae.het <- vcf.Ae.Ol.no.bolting.unique.diploi
 vcf.Ae.Ol.no.bolting.unique.diploid$Ae_alt.depth==0  
 ``` 
 
-# downstream analysis of SNPs 
-```{r}
-# which SNPs would be most useful for a downstream QTL analysis between Ae & Ol? 
-
 # SNPs between Ae & ref
-vcf.GATK.reform.pass.HQ$Ae_gt
-sum(vcf.GATK.reform.pass.HQ$Ae_gt=="1/1/1/1") # 12502     
-Ae_ref.GATK <- vcf.GATK.reform.pass.HQ[vcf.GATK.reform.pass.HQ$Ae_gt=="1/1/1/1",]
-# read depth > 3 and read depth < 501  
-# as.numeric(Ae_ref.GATK$Ae_approx.depth)
-# Ae_ref_filter.GATK <- Ae_ref.GATK[Ae_ref.GATK$Ae_approx.depth > 3 &Ae_ref.GATK$Ae_approx.depth <  501,] 
-dim(Ae_ref.GATK) # 12502  21  
-head(Ae_ref.GATK) 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.GATK.HQ.2.reform.Rdata")
 
-# SNPs between Ol & ref 
-sum(vcf.GATK.reform.pass.HQ$Ol_gt=="1/1/1/1") # 11352    
-Ol_ref.GATK <- vcf.GATK.reform.pass.HQ[vcf.GATK.reform.pass.HQ$Ol_gt=="1/1/1/1",]
-# read depth > 3 and read depth < 501  
-# as.numeric(Ae_ref.GATK$Ae_approx.depth)
-# Ae_ref_filter.GATK <- Ae_ref.GATK[Ae_ref.GATK$Ae_approx.depth > 3 &Ae_ref.GATK$Ae_approx.depth <  501,] 
-dim(Ol_ref.GATK) # 11352  21  
-head(Ol_ref.GATK) 
-
-# SNPs between Ae & Ol 
-sum(vcf.GATK.reform.pass.HQ$Ae_gt=="1/1/1/1" & vcf.GATK.reform.pass.HQ$Ol_gt=="0/0/0/0") +  sum(vcf.GATK.reform.pass.HQ$Ae_gt=="0/0/0/0" & vcf.GATK.reform.pass.HQ$Ol_gt=="1/1/1/1") # 8491 SNPs between Ae & Ol 
+dim(vcf.GATK.HQ.2.reform) # 232294     25 
+vcf.tmp <- vcf.GATK.HQ.2.reform 
 
 # subset SNPs between Ae & Ol 
-vcf.Ae.Ol.GATK <- vcf.GATK.reform.pass.HQ[((vcf.GATK.reform.pass.HQ$Ae_gt=="1/1/1/1" & vcf.GATK.reform.pass.HQ$Ol_gt=="0/0/0/0") | (vcf.GATK.reform.pass.HQ$Ae_gt=="0/0/0/0" & vcf.GATK.reform.pass.HQ$Ol_gt=="1/1/1/1")),] 
+vcf.Ae.Ol.GATK <- vcf.tmp[((vcf.tmp$Ae_gt=="1/1" & vcf.tmp$Ol_gt=="0/0") | (vcf.tmp$Ae_gt=="0/0" & vcf.tmp$Ol_gt=="1/1")),] 
 
-dim(vcf.Ae.Ol.GATK) # 8491 21   
-# read depth > 3 and read depth < 501  
-   
+dim(vcf.Ae.Ol.GATK) # 78555    25
+
+
+
+### 
+
+
 ```  
 
-# compare SNPs from freebayes & GATK 
+# compare SNPs from freebayes & GATK (all SNPs)
 ```{r}
 # compare all SNPs w/o consideration on genotypes of the two parents 
 # load data 
@@ -1130,22 +1098,22 @@ table(intersection.test$Ae_gt)
 table(intersection.test$Ol_gt)
 # the intersect also get very high proportion of het, so this can prove that the biological material is not highly homozyougs... 
 
-
 colnames(vcf.freebayes.for.compare) <- paste("freebayes", c("CHROM", "POS", "REF", "ALT", "Ae_gt", "Ol_gt", "Ae_tot.depth", "Ol_tot.depth", "Ae_ref.depth", "Ae_alt.depth", "Ol_ref.depth", "Ol_alt.depth"),  sep = "|") 
 colnames(vcf.GATK.for.compare) <- paste("GATK", c("CHROM", "POS", "REF", "ALT", "Ae_gt", "Ol_gt", "Ae_approx.depth", "Ol_approx.depth", "Ae_genotype.qual", "Ol_genotype.qual", "Ae_ref.depth", "Ae_alt.depth", "Ol_ref.depth", "Ol_alt.depth"), sep = "|")
-
-
 
 ### find intersection between freebayes & GATK based on CHROM, POS, Ae_gt, and Ol_gt
 compare(vcf.freebayes.for.compare, vcf.free)
 
-
-
 View(vcf.freebayes.for.compare)
 View(vcf.GATK.for.compare) # even not same read count as ref and alt... 
+```
 
+# intersection between freebayes & GATK (SNPs between Da-Ae & Da-Ol-1)
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.Ae.Ol.freebayes.Rdata") 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/GATK/vcf.GATK.HQ.2.Rdata") 
+dmultinom()
 
-# quick test of the intersect between freebayes & 
 # vcf.freebayes.test <- paste(vcf.freebayes.HQ.1.reform$CHROM, vcf.freebayes.HQ.1.reform$POS, sep = "_")
 # vcf.GATK.test <- paste(vcf.GATK.HQ.2.reform$CHROM, vcf.GATK.HQ.2.reform$POS, sep = "_") 
 # length(intersect(vcf.freebayes.test, vcf.GATK.test)) # 170670 same SNP positions between freebayes & GATK 
