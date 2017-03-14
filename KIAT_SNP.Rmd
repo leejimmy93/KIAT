@@ -529,12 +529,8 @@ save(vcf.freebayes.HQ.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_
 
 # correlation between minor read balance ratio & MAF, because the assumption is that read balance ratio measures the tail bias, the small the ratio is, the more probable that SNPs from that site is not a true SNP,  
 ```{r} 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.2.Rdata")
 head(vcf.freebayes.HQ.2) 
-
-
-
-
-
 
 
 ```
@@ -565,7 +561,7 @@ load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.fr
 
 vcf.tmp <- vcf.freebayes.HQ.1.reform # assign a variable so I don't have to change the name every time... 
 
-dim(vcf.tmp) # 137069     68    
+dim(vcf.tmp) # 493019     68  
 
 # SNPs between Ae & Ol 
 sum(vcf.tmp$Ae_gt=="1/1" & vcf.tmp$Ol_gt=="0/0") +  sum(vcf.tmp$Ae_gt=="0/0" & vcf.tmp$Ol_gt=="1/1") # 137069 SNPs between Ae & Ol 
@@ -575,17 +571,19 @@ sum(vcf.tmp$Ae_gt=="1/1" & vcf.tmp$Ol_gt=="0/0") +  sum(vcf.tmp$Ae_gt=="0/0" & v
 vcf.Ae.Ol.freebayes <- vcf.tmp[((vcf.tmp$Ae_gt=="1/1" & vcf.tmp$Ol_gt=="0/0") | (vcf.tmp$Ae_gt=="0/0" & vcf.tmp$Ol_gt=="1/1")),] 
 
 dim(vcf.Ae.Ol.freebayes) # 137069     68 
-table()
-
-######### using IGV to check SNP 
-tmp <- c("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Ae", "Ol")
-
-vcf.Ae.Ol.freebayes <- vcf.Ae.Ol.freebayes[,tmp]
-colnames(vcf.freebayes.HQ.2.reform)
-head(vcf.freebayes.HQ.2.reform) 
+table(vcf.Ae.Ol.freebayes$Ae_gt)
+table(vcf.Ae.Ol.freebayes$Ol_gt)
 
 save(vcf.Ae.Ol.freebayes, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.Ae.Ol.freebayes.Rdata")
-write.table(vcf.Ae.Ol.freebayes, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.Ae.Ol.freebayes.txt")
+
+######### using IGV to check SNP 
+# tmp <- c("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Ae", "Ol")
+# 
+# vcf.Ae.Ol.freebayes <- vcf.Ae.Ol.freebayes[,tmp]
+# colnames(vcf.freebayes.HQ.2.reform)
+# head(vcf.freebayes.HQ.2.reform) 
+# 
+# write.table(vcf.Ae.Ol.freebayes, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.Ae.Ol.freebayes.txt")
 
 # scp to whitney & run it on whitney
 # scp vcf.Ae.Ol.freebayes.txt ruijuanli@whitney.plb.ucdavis.edu:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/freebayes 
@@ -1050,12 +1048,9 @@ vcf.tmp <- vcf.GATK.HQ.2.reform
 vcf.Ae.Ol.GATK <- vcf.tmp[((vcf.tmp$Ae_gt=="1/1" & vcf.tmp$Ol_gt=="0/0") | (vcf.tmp$Ae_gt=="0/0" & vcf.tmp$Ol_gt=="1/1")),] 
 
 dim(vcf.Ae.Ol.GATK) # 78555    25
-
-
-
-### 
-
-
+table(vcf.Ae.Ol.GATK$Ae_gt)
+table(vcf.Ae.Ol.GATK$Ol_gt)
+save(vcf.Ae.Ol.GATK, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.GATK.Rdata")
 ```  
 
 # compare SNPs from freebayes & GATK (all SNPs)
@@ -1111,73 +1106,141 @@ View(vcf.GATK.for.compare) # even not same read count as ref and alt...
 # intersection between freebayes & GATK (SNPs between Da-Ae & Da-Ol-1)
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.Ae.Ol.freebayes.Rdata") 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/GATK/vcf.GATK.HQ.2.Rdata") 
-dmultinom()
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.GATK.Rdata") 
+dim(vcf.Ae.Ol.freebayes) # 137069     68
+dim(vcf.Ae.Ol.GATK) # 78555    25
 
-# vcf.freebayes.test <- paste(vcf.freebayes.HQ.1.reform$CHROM, vcf.freebayes.HQ.1.reform$POS, sep = "_")
-# vcf.GATK.test <- paste(vcf.GATK.HQ.2.reform$CHROM, vcf.GATK.HQ.2.reform$POS, sep = "_") 
-# length(intersect(vcf.freebayes.test, vcf.GATK.test)) # 170670 same SNP positions between freebayes & GATK 
+head(vcf.Ae.Ol.freebayes)
+head(vcf.Ae.Ol.GATK)
 
-####### compare SNPs between Da-Ae & Da-Ol-1 
-vcf.Ae.Ol.freebayes <- Ae_Ol_after_filter.unique[Ae_Ol_after_filter.unique$CHROM=="chrA01",]
-nrow(vcf.Ae.Ol.freebayes)  # 11379  
-dim(vcf.Ae.Ol.GATK) # 8491   
+vcf.Ae.Ol.freebayes.tmp <- vcf.Ae.Ol.freebayes
+vcf.Ae.Ol.GATK.tmp <- vcf.Ae.Ol.GATK
 
-vcf.Ae.Ol.freebayes.SNP <- paste(vcf.Ae.Ol.freebayes$CHROM, vcf.Ae.Ol.freebayes$POS, sep = "_")
-vcf.Ae.Ol.GATK.SNP <- paste(vcf.Ae.Ol.GATK$CHROM, vcf.Ae.Ol.GATK$POS, sep = "_") 
+# goal: get intersections where there SNP calls for both Da-Ae & Da-Ol-1 are the same. 
 
-intersect(vcf.Ae.Ol.GATK.SNP, vcf.Ae.Ol.freebayes.SNP) 
+vcf.freebayes <- paste(vcf.Ae.Ol.freebayes.tmp$CHROM, vcf.Ae.Ol.freebayes.tmp$POS, 
+                       vcf.Ae.Ol.freebayes.tmp$REF, vcf.Ae.Ol.freebayes.tmp$ALT,
+                       vcf.Ae.Ol.freebayes.tmp$Ae_gt, vcf.Ae.Ol.freebayes.tmp$Ol_gt, 
+                       sep = "_")
 
-#### plot of venn diagram 
-library(gplots)
-library(VennDiagram)
+vcf.GATK <- paste(vcf.Ae.Ol.GATK.tmp$CHROM, vcf.Ae.Ol.GATK.tmp$POS, 
+                  vcf.Ae.Ol.GATK.tmp$REF, vcf.Ae.Ol.GATK.tmp$ALT,
+                  vcf.Ae.Ol.GATK.tmp$Ae_gt, vcf.Ae.Ol.GATK.tmp$Ol_gt,
+                  sep = "_")  
 
-grid.newpage() 
-venn.freebayes_GATK <- 
-draw.pairwise.venn(nrow(vcf.Ae.Ol.freebayes), nrow(vcf.Ae.Ol.GATK), length(intersect(vcf.Ae.Ol.GATK.SNP, vcf.Ae.Ol.freebayes.SNP)), 
-                 # category = c("freebayes (11379)", "GATK (8491)"), 
-                 lty = "blank", 
-                 fill = c("skyblue", "pink1"))
-save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/venn_freebayes_GATK.png", venn.freebayes_GATK,ncol = 1, nrow = 1,base_aspect_ratio = 1.5, base_height = 2) 
+length(intersect(vcf.freebayes, vcf.GATK)) # 62365 same SNP positions between freebayes & GATK 
+
+vcf.Ae.Ol.intersect <- intersect(vcf.freebayes, vcf.GATK)
+length(vcf.Ae.Ol.intersect)
+
+vcf.Ae.Ol.intersect.df <- data.frame(row.names = 1:length(vcf.Ae.Ol.intersect),
+                                     CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\1", vcf.Ae.Ol.intersect), 
+                                     POS = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\3", vcf.Ae.Ol.intersect), 
+                                     REF = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\5", vcf.Ae.Ol.intersect), 
+                                     ALT = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\7", vcf.Ae.Ol.intersect),
+                                     Ae.gt = gsub("([[:print:]]+)(_)(0/0|1/1)(_)((0/0|1/1))", "\\3", vcf.Ae.Ol.intersect),
+                                     Ol.gt = gsub("([[:print:]]+)(_)(0/0|1/1)(_)((0/0|1/1))", "\\5", vcf.Ae.Ol.intersect))
+
+head(vcf.Ae.Ol.intersect.df)
+ftable(vcf.Ae.Ol.intersect.df$Ae.gt, vcf.Ae.Ol.intersect.df$Ol.gt)  
+save(vcf.Ae.Ol.intersect.df, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.Rdata")
+write.csv(vcf.Ae.Ol.intersect.df, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.csv")
+
+########### check SNP distribution by subgenome & chromosome ################
+data <- vcf.Ae.Ol.freebayes
+
+# below the block of code should go into function... 
+chr_ID <- unique(data$CHROM)
+number.unique <- list() 
+
+for (chr in chr_ID) {
+  number.unique[chr] <- sum(sum(data$CHROM==chr))
+  print(number.unique[chr])
+}
+
+SNP_chr.unique <- as.data.frame(t(as.data.frame(number.unique)))
+SNP_chr.unique$ID <- rownames(SNP_chr.unique)
+head(SNP_chr.unique)
+# split to main & random chromosomes 
+# main 
+SNP_chr_main.unique <- SNP_chr.unique[!grepl("random", SNP_chr.unique$ID),]  
+SNP_chr_main.unique$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID)   
+SNP_chr_main.unique$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", SNP_chr_main.unique$ID) 
+
+# do a little calculation: how many SNPs on main & random chromosomes? 
+sum(SNP_chr_main.unique$V1) # 200317    
+sum(SNP_chr_random.unique$V1) # 32160    
+sum(SNP_chr_main.unique$V1)/sum(sum(SNP_chr_main.unique$V1),sum(SNP_chr_random.unique$V1)) # 86.2% 
+
+# make a plot to see how many SNPs on each chromosome 
+library(ggplot2)
+pl.SNP.main.1.unique <- ggplot(data = SNP_chr_main.unique) 
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + geom_bar(aes(x=factor(chr_ID), y = V1, fill=subgenome), stat = "identity")
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + facet_wrap(~subgenome, ncol = 1)
+# pl.SNP.main.1 <- pl.SNP.main.1 + geom_text(aes(x=factor(chr_ID), y = number, label=factor(number), size=1)) 
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + theme(legend.position = "none")
+pl.SNP.main.1.unique 
+
+# ####### compare SNPs between Da-Ae & Da-Ol-1 
+# vcf.Ae.Ol.freebayes <- Ae_Ol_after_filter.unique[Ae_Ol_after_filter.unique$CHROM=="chrA01",]
+# nrow(vcf.Ae.Ol.freebayes)  # 11379  
+# dim(vcf.Ae.Ol.GATK) # 8491   
+# 
+# vcf.Ae.Ol.freebayes.SNP <- paste(vcf.Ae.Ol.freebayes$CHROM, vcf.Ae.Ol.freebayes$POS, sep = "_")
+# vcf.Ae.Ol.GATK.SNP <- paste(vcf.Ae.Ol.GATK$CHROM, vcf.Ae.Ol.GATK$POS, sep = "_") 
+# 
+# intersect(vcf.Ae.Ol.GATK.SNP, vcf.Ae.Ol.freebayes.SNP) 
+# 
+# #### plot of venn diagram 
+# library(gplots)
+# library(VennDiagram)
+# 
+# grid.newpage() 
+# venn.freebayes_GATK <- 
+# draw.pairwise.venn(nrow(vcf.Ae.Ol.freebayes), nrow(vcf.Ae.Ol.GATK), length(intersect(vcf.Ae.Ol.GATK.SNP, vcf.Ae.Ol.freebayes.SNP)), 
+#                  # category = c("freebayes (11379)", "GATK (8491)"), 
+#                  lty = "blank", 
+#                  fill = c("skyblue", "pink1"))
+# save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/venn_freebayes_GATK.png", venn.freebayes_GATK,ncol = 1, nrow = 1,base_aspect_ratio = 1.5, base_height = 2) 
 
 ######### Ae_ref 
-vcf.Ae.ref.freebayes <- Ae_ref_after_filter.unique[Ae_ref_after_filter.unique$CHROM=="chrA01",]
-nrow(vcf.Ae.ref.freebayes)  # 18059  
-dim(Ae_ref.GATK) # 12502 
-
-vcf.Ae.ref.freebayes.SNP <- paste(vcf.Ae.ref.freebayes$CHROM, vcf.Ae.ref.freebayes$POS, sep = "_")
-vcf.Ae.ref.GATK.SNP <- paste(Ae_ref.GATK$CHROM, Ae_ref.GATK$POS, sep = "_") 
-
-intersect(vcf.Ae.ref.GATK.SNP, vcf.Ae.ref.freebayes.SNP) 
-
-#### plot of venn diagram 
-
-grid.newpage() 
-venn.freebayes_GATK.Ae_ref <- 
-draw.pairwise.venn(nrow(vcf.Ae.ref.freebayes), nrow(Ae_ref.GATK), length(intersect(vcf.Ae.ref.GATK.SNP, vcf.Ae.ref.freebayes.SNP)), 
-                 category = c("freebayes (11379)", "GATK (8491)"), 
-                 lty = "blank", 
-                 fill = c("skyblue", "pink1"))
-
-######### Ol_ref 
-vcf.Ol.ref.freebayes <- Ol_ref_after_filter.unique[Ol_ref_after_filter.unique$CHROM=="chrA01",]
-nrow(vcf.Ol.ref.freebayes)  # 16225   
-dim(Ol_ref.GATK) # 11352  
-
-vcf.Ol.ref.freebayes.SNP <- paste(vcf.Ol.ref.freebayes$CHROM, vcf.Ol.ref.freebayes$POS, sep = "_")
-vcf.Ol.ref.GATK.SNP <- paste(Ol_ref.GATK$CHROM, Ol_ref.GATK$POS, sep = "_") 
-
-intersect(vcf.Ol.ref.GATK.SNP, vcf.Ol.ref.freebayes.SNP) 
-
-#### plot of venn diagram 
-
-grid.newpage() 
-venn.freebayes_GATK.Ol_ref <- 
-draw.pairwise.venn(nrow(vcf.Ol.ref.freebayes), nrow(Ol_ref.GATK), length(intersect(vcf.Ol.ref.GATK.SNP, vcf.Ol.ref.freebayes.SNP)), 
-                 category = c("freebayes (11379)", "GATK (8491)"), 
-                 lty = "blank", 
-                 fill = c("skyblue", "pink1")) 
-
+# vcf.Ae.ref.freebayes <- Ae_ref_after_filter.unique[Ae_ref_after_filter.unique$CHROM=="chrA01",]
+# nrow(vcf.Ae.ref.freebayes)  # 18059  
+# dim(Ae_ref.GATK) # 12502 
+# 
+# vcf.Ae.ref.freebayes.SNP <- paste(vcf.Ae.ref.freebayes$CHROM, vcf.Ae.ref.freebayes$POS, sep = "_")
+# vcf.Ae.ref.GATK.SNP <- paste(Ae_ref.GATK$CHROM, Ae_ref.GATK$POS, sep = "_") 
+# 
+# intersect(vcf.Ae.ref.GATK.SNP, vcf.Ae.ref.freebayes.SNP) 
+# 
+# #### plot of venn diagram 
+# 
+# grid.newpage() 
+# venn.freebayes_GATK.Ae_ref <- 
+# draw.pairwise.venn(nrow(vcf.Ae.ref.freebayes), nrow(Ae_ref.GATK), length(intersect(vcf.Ae.ref.GATK.SNP, vcf.Ae.ref.freebayes.SNP)), 
+#                  category = c("freebayes (11379)", "GATK (8491)"), 
+#                  lty = "blank", 
+#                  fill = c("skyblue", "pink1"))
+# 
+# ######### Ol_ref 
+# vcf.Ol.ref.freebayes <- Ol_ref_after_filter.unique[Ol_ref_after_filter.unique$CHROM=="chrA01",]
+# nrow(vcf.Ol.ref.freebayes)  # 16225   
+# dim(Ol_ref.GATK) # 11352  
+# 
+# vcf.Ol.ref.freebayes.SNP <- paste(vcf.Ol.ref.freebayes$CHROM, vcf.Ol.ref.freebayes$POS, sep = "_")
+# vcf.Ol.ref.GATK.SNP <- paste(Ol_ref.GATK$CHROM, Ol_ref.GATK$POS, sep = "_") 
+# 
+# intersect(vcf.Ol.ref.GATK.SNP, vcf.Ol.ref.freebayes.SNP) 
+# 
+# #### plot of venn diagram 
+# 
+# grid.newpage() 
+# venn.freebayes_GATK.Ol_ref <- 
+# draw.pairwise.venn(nrow(vcf.Ol.ref.freebayes), nrow(Ol_ref.GATK), length(intersect(vcf.Ol.ref.GATK.SNP, vcf.Ol.ref.freebayes.SNP)), 
+#                  category = c("freebayes (11379)", "GATK (8491)"), 
+#                  lty = "blank", 
+#                  fill = c("skyblue", "pink1")) 
 
 ``` 
 
