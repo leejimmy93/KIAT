@@ -12,7 +12,7 @@ output:
 ```{r}
 # 1) uniquely mapped reads, remove PCR duplicate, add read group & freebayes 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/freebayes_SNP_calling.sh 
-# 2) call SNPs
+# 2) call SNPs (found that to filter based on RPL & RPR, I need to call SNPs from Da-Ae & Da-Ol-1 seperately...)
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/run_freebayes.sh   
 # 3) process raw vcf file
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/process_vcf.sh 
@@ -414,7 +414,35 @@ hist(vcf.freebayes.HQ.1.reform$MAF_Ol)
 colnames(vcf.freebayes.HQ.1.reform)
 for_allele_specific_expression <- vcf.freebayes.HQ.1.reform[,c("CHROM", "POS", "gene_ID", "MAF_Ae", "Ae_tot.depth", "MAF_Ol", "Ol_tot.depth")] 
 View(for_allele_specific_expression) 
-save(for_allele_specific_expression, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/for_allele_specific_expression.Rdata")
+
+for_allele_specific_expression.Ae.het <- 
+  vcf.freebayes.HQ.1.reform[vcf.freebayes.HQ.1.reform$Ae_gt=="0/1",][,c("CHROM", "POS", "gene_ID", "MAF_Ae", "Ae_tot.depth")]
+
+for_allele_specific_expression.Ol.het <- 
+  vcf.freebayes.HQ.1.reform[vcf.freebayes.HQ.1.reform$Ol_gt=="0/1",][,c("CHROM", "POS", "gene_ID", "MAF_Ol", "Ol_tot.depth")]
+
+for_allele_specific_expression.Ae.homo <- 
+  vcf.freebayes.HQ.1.reform[vcf.freebayes.HQ.1.reform$Ae_gt!="0/1",][,c("CHROM", "POS", "gene_ID", "MAF_Ae", "Ae_tot.depth")]
+
+for_allele_specific_expression.Ol.homo <- 
+  vcf.freebayes.HQ.1.reform[vcf.freebayes.HQ.1.reform$Ol_gt!="0/1",][,c("CHROM", "POS", "gene_ID", "MAF_Ol", "Ol_tot.depth")]
+
+hist(for_allele_specific_expression.Ae.het$MAF_Ae)
+hist(for_allele_specific_expression.Ae.homo$MAF_Ae)
+hist(for_allele_specific_expression.Ol.homo$MAF_Ol)
+
+min(for_allele_specific_expression.Ae.het$MAF_Ae)
+min(for_allele_specific_expression.Ol.het$MAF_Ol)
+max(for_allele_specific_expression.Ae.homo$MAF_Ae)
+max(for_allele_specific_expression.Ol.homo$MAF_Ol)
+
+View(for_allele_specific_expression.Ae.het)
+
+save(for_allele_specific_expression, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/for_allele_specific_expression.Rdata") 
+
+save(for_allele_specific_expression, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/for_allele_specific_expression_Ae.het.Rdata")
+
+save(for_allele_specific_expression, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/for_allele_specific_expression.Ol.het.Rdata") 
 
 ### calcualte genotype quality for freebayes 
 unique(vcf.freebayes.HQ.1.reform$CIGAR) # 1X 
@@ -431,9 +459,10 @@ vcf.freebayes.HQ.1.reform$RPL <- as.numeric(vcf.freebayes.HQ.1.reform$RPL)
 # strand bias, present on both strands
 head(vcf.freebayes.HQ.1.reform)
 
-hist(log10(vcf.freebayes.HQ.1.reform$SAF))
+hist(log10(vcf.freebayes.HQ.1.reform$SAF)) 
 hist(log10(vcf.freebayes.HQ.1.reform$SAR))
 
+# don't need to filter based on strand bias because 
 vcf.freebayes.HQ.2.tmp <- 
 vcf.freebayes.HQ.1.reform[(vcf.freebayes.HQ.1.reform$SAF>0 & 
                            vcf.freebayes.HQ.1.reform$SAR>0) ,] 
@@ -454,8 +483,28 @@ vcf.freebayes.HQ.2 <-
 vcf.freebayes.HQ.2.tmp[(vcf.freebayes.HQ.2.tmp$RPR>1 & 
                            vcf.freebayes.HQ.2.tmp$RPL>1),]  
 
+
+vcf.freebayes.HQ.2.test1 <- 
+vcf.freebayes.HQ.2.tmp[(vcf.freebayes.HQ.2.tmp$RPR>0 & 
+                           vcf.freebayes.HQ.2.tmp$RPL>=0),]
+
+vcf.freebayes.HQ.2.test2 <- 
+vcf.freebayes.HQ.2.tmp[(vcf.freebayes.HQ.2.tmp$RPR>=0 & 
+                           vcf.freebayes.HQ.2.tmp$RPL>0),]
+
+
 min(as.numeric(vcf.freebayes.HQ.2$RPL))
 min(as.numeric(vcf.freebayes.HQ.2$RPR))
+
+min(as.numeric(vcf.freebayes.HQ.2.test1$RPL))
+min(as.numeric(vcf.freebayes.HQ.2.test1$RPR))
+
+min(as.numeric(vcf.freebayes.HQ.2.test2$RPL))
+min(as.numeric(vcf.freebayes.HQ.2.test2$RPR))
+
+########
+# need to do one way ANOVA OR auto-correlation to test for correlation between gene & MAF... 
+########
 
 dim(vcf.freebayes.HQ.2) # 354820     68 
 
@@ -475,6 +524,18 @@ filtered_out_snp_tail_bias <- anti_join(test1, test2)
 head(filtered_out_snp_tail_bias[filtered_out_snp_tail_bias$CHROM=="chrA01",], 30)
 
 save(vcf.freebayes.HQ.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.2.Rdata")
+```
+
+# correlation between minor read balance ratio & MAF, because the assumption is that read balance ratio measures the tail bias, the small the ratio is, the more probable that SNPs from that site is not a true SNP,  
+```{r} 
+head(vcf.freebayes.HQ.2) 
+
+
+
+
+
+
+
 ```
 
 # export the filtered dataset as VCF for IGV visualization
@@ -803,7 +864,7 @@ dim(vcf.GATK.HQ.2) # 232294     21
 table(vcf.GATK.HQ.2$Ae_gt)
 table(vcf.GATK.HQ.2$Ol_gt)
 
-# 3) based on MAF ???  
+# 3) check MAF 
 #### reformat get seperate depth for alt & ref alleles 
 Ae.gt <- matrix(
   unlist(strsplit(vcf.GATK.HQ.2$Ae_ref.alt.depth,split = ",")),
