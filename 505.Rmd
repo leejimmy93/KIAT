@@ -182,6 +182,12 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 
 ```
 
+# get stats on 505 SNP calls 
+```{r}
+
+
+
+```
 
 
 
