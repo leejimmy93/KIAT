@@ -179,26 +179,25 @@ p.average.mapping <- p.average.mapping + theme(axis.text.x = element_text(angle 
 p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long, aes(x=variable, y=value, label=factor(round(value,0)))) 
 p.average.mapping
 ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/figure/average_mapping.png", height = 6, width = 9) 
-
 ```
 
-# get stats on 505 SNP calls 
+# SNP calling on cabernet
 ```{r}
 
 
 
+
 ```
 
 
+# get stats on 505 SNP calls 
+```{r}
+# using vcfR for 505 data analysis 
 
 
 
 
-
-
-
-
-
+```
 
 
 
