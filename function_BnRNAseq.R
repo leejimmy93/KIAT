@@ -463,9 +463,55 @@ SNP.freebayes.reformat <- function(vcf, vcf.header){
     return(vcf.reform)  
 }
 
+###### # function to generate basic stats for SNP analysis (freebayes version for single sample)
+### import data and reformat 
+SNP.freebayes.reformat.Ae <- function(vcf, vcf.header){ 
+  colnames(vcf) <- vcf.header
+  head(vcf)
+  
+  vcf$Ae[is.na(vcf$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
+  
+  Ae.tmp.unique <- matrix(
+    unlist(strsplit(vcf$Ae,split = ":")),
+    nrow=nrow(vcf),  
+    byrow=TRUE
+  )
+  
+  colnames(Ae.tmp.unique) <- paste("Ae",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+  
+  vcf.reform <- cbind(vcf,Ae.tmp.unique,stringsAsFactors=FALSE)
+  
+  vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual")] <- 
+    apply(vcf.reform[,c("Ae_tot.depth","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual")],
+          2,
+          as.numeric) 
+  
+  return(vcf.reform)  
+}
 
-
-
+SNP.freebayes.reformat.Ol <- function(vcf, vcf.header){ 
+  colnames(vcf) <- vcf.header
+  head(vcf)
+  
+  vcf$Ol[is.na(vcf$Ol)] <- "NA:NA:NA:NA:NA:NA:NA"
+  
+  Ol.tmp.unique <- matrix(
+    unlist(strsplit(vcf$Ol,split = ":")),
+    nrow=nrow(vcf),  
+    byrow=TRUE
+  )
+  
+  colnames(Ol.tmp.unique) <- paste("Ol",c("gt","tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+  
+  vcf.reform <- cbind(vcf,Ol.tmp.unique,stringsAsFactors=FALSE)
+  
+  vcf.reform[,c("Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")] <- 
+    apply(vcf.reform[,c("Ol_tot.depth","Ol_ref.depth","Ol_ref.qual","Ol_alt.depth","Ol_alt.qual")],
+          2,
+          as.numeric) 
+  
+  return(vcf.reform)  
+}
 
 
 
