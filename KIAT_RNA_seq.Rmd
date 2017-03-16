@@ -104,6 +104,14 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 ```
 
+# calculate mapping ratio for Da-Ae & Da-Ol, plotting 
+```{r}
+
+
+
+
+```
+
 # assemble unmapped reads to see what they hit 
 ```{r}
 # 1) get unmapped reads by running STAR again for Da-Ol-1 young tissue 
