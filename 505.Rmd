@@ -189,10 +189,17 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 
 ```
 
-
 # get stats on 505 SNP calls 
 ```{r}
-# using vcfR for 505 data analysis 
+mean.depth <- read.table("~/505/vcf/combined/505_filtered_MAF_missingrate_Q.ldepth.mean", header=T)
+head(mean.depth)
+mean(mean.depth$MEAN_DEPTH) # 40
+
+hist(log10(mean.depth$MEAN_DEPTH)) 
+hist(mean.depth$MEAN_DEPTH, xlim=c(0, 20), breaks=1000000)
+
+dim(mean.depth) # 519543
+# decide to use 5 to 500 as the threshold for depth 
 
 
 
