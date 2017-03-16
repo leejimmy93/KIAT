@@ -181,7 +181,7 @@ p.average.mapping
 ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/figure/average_mapping.png", height = 6, width = 9) 
 ```
 
-# SNP calling on cabernet
+# SNP calling on cabernet & filtering 
 ```{r}
 # 1) prepare data for SNP calling 
 # Prep4Freebayes.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Prep4Freebayes.sh)
@@ -200,21 +200,31 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # concat.sh
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/concat.sh)
 
-# filter using vcftool to get only biallelic SNPs
+# 6) filter using vcftool to get only biallelic SNPs
 # extract_SNP.sh & extract_biallelic.sh 
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/extract_SNP.sh)  
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/extract_biallelic.sh) 
 
+# 7) filter based on MAF, missingness, and Q 
+# filtering_MAF_missingrate_Q.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filtering_MAF_missingrate_Q.sh)
 
-<<<<<<< HEAD
-# get stats on 505 SNP calls 
-=======
+# 8) calcaulate mean read depth across individuals
+# calc_depth.sh
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc_depth.sh) calculate in R
 
+# 9) filter based on read depth 
+# filtering_depth.sh
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filtering_depth.sh)
 
+# 10) calculate MAF, missing rate, depth, and LD... 
+# calc.sh
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc.sh)
 ```
 
->>>>>>> 405f2c53e181d1baba621014a0a550c2bc9f77ff
+# stats 
 ```{r}
+# mean read depth before read depth trimming 
 mean.depth <- read.table("~/505/vcf/combined/505_filtered_MAF_missingrate_Q.ldepth.mean", header=T)
 head(mean.depth)
 mean(mean.depth$MEAN_DEPTH) # 40
@@ -223,13 +233,13 @@ hist(log10(mean.depth$MEAN_DEPTH))
 hist(mean.depth$MEAN_DEPTH, xlim=c(0, 20), breaks=1000000)
 
 dim(mean.depth) # 519543
-# decide to use 5 to 500 as the threshold for depth 
+# decide to use 5 to 500 as the threshold for depth
 
-
+# MAF calculation before filtering 
+MAF <- read.table("~/505/vcf/combined/505.frq")
 
 
 ```
-
 
 
 
