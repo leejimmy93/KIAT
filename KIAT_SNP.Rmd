@@ -12,7 +12,7 @@ output:
 ```{r}
 # 1) uniquely mapped reads, remove PCR duplicate, add read group & freebayes 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/freebayes_SNP_calling.sh 
-# 2) call SNPs (found that to filter based on RPL & RPR, I need to call SNPs from Da-Ae & Da-Ol-1 seperately...)
+# 2) call SNPs (found that to filter based on RPL & RPR, I need to call SNPs from Da-Ae & Da-Ol-1 seperately...) 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/run_freebayes.sh   
 # 3) process raw vcf file
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/process_vcf.sh 
@@ -24,7 +24,323 @@ output:
 # data location: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/freebayes/Ae_Ol_modified_SNPonly_biallelic.recode.ann.vcf 
 ``` 
 
-### import non-annotated data to check diverse CIGAR scores 
+# work on Da-Ae & Da-Ol-1 seperately... 
+```{r}
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+
+# import 
+vcf.freebayes.Ae <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_SNP_biallelic.recode.vcf",as.is=T,na.strings = ".:.:.:.:.:.:.") 
+dim(vcf.freebayes.Ae) # 1019803      10
+# save(vcf.freebayes.Ae, file ="~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.Ae.Rdata")
+
+vcf.freebayes.Ol <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ol_SNP_biallelic.recode.vcf",as.is=T,na.strings = ".:.:.:.:.:.:.") 
+dim(vcf.freebayes.Ol) # 997209     10
+save(vcf.freebayes.Ol, file  ="~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.Ol.Rdata")
+
+# reformat 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.Ae.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.Ol.Rdata")
+
+# Da-Ae 
+# get header 
+vcf.header.freebayes.Ae <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_SNP_biallelic.recode.vcf",intern = TRUE) 
+vcf.header.freebayes.Ae <- sub("#","",vcf.header.freebayes.Ae) #get rid of the pound sign
+vcf.header.freebayes.Ae <- unlist(strsplit(vcf.header.freebayes.Ae,split="\t"))
+
+# use function to reformat vcf file 
+vcf.freebayes.reform.Ae <- SNP.freebayes.reformat.Ae(vcf.freebayes.Ae, vcf.header.freebayes.Ae)
+dim(vcf.freebayes.reform.Ae) # 1019803      17   
+table(vcf.freebayes.reform.Ae$Ae_gt)
+#    0/0    0/1    1/1     NA 
+# 423018 531949 522721 201104 
+
+save(vcf.freebayes.reform.Ae, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.reform.Ae.Rdata")
+
+# this way doesn't work because then I get very few 0/0.... but still this can be used to understand RPL & RLR... 
+# filter based on QUAL 
+vcf.freebayes.HQ.Ae <- vcf.freebayes.reform.Ae[vcf.freebayes.reform.Ae$QUAL>40,] # QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic  
+dim(vcf.freebayes.HQ.Ae) # 1174345      25  
+nrow(vcf.freebayes.HQ.Ae) / nrow(vcf.freebayes.reform.Ae) # 70% of SNPs were retained with QUAL > 40
+
+# count the number 
+table(vcf.freebayes.HQ.Ae$Ae_gt)
+
+mean(vcf.freebayes.HQ.Ae$Ae_tot.depth, na.rm=T) # 146
+
+# distribution of depth 
+hist(log10(vcf.freebayes.HQ.Ae$Ae_tot.depth))
+
+# use 1000 as the max, 10 as min 
+vcf.freebayes.HQ.1.Ae <- vcf.freebayes.HQ.Ae[(!is.na(vcf.freebayes.HQ.Ae$Ae_tot.depth) & 
+                              vcf.freebayes.HQ.Ae$Ae_tot.depth > 10 & 
+                              vcf.freebayes.HQ.Ae$Ae_tot.depth < 1000),]
+dim(vcf.freebayes.HQ.1.Ae) # 441950     17  
+head(vcf.freebayes.HQ.1)  
+
+table(vcf.freebayes.HQ.1.Ae$Ae_gt)
+
+tmp.list <- strsplit(vcf.freebayes.HQ.1.Ae$INFO,split = ";")
+length(tmp.list) # 493019 
+length(tmp.list[[1]]) 
+
+for (i in 1:length(tmp.list)){
+    tmp.list[[i]] <- tmp.list[[i]][c(1:41)] 
+}
+
+# 1) seperate INFO column  
+head(vcf.freebayes.HQ.1.Ae)
+info <- matrix(
+  unlist(tmp.list),
+  nrow=nrow(vcf.freebayes.HQ.1.Ae),  
+  byrow=TRUE
+  )
+
+head(info)
+
+colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
+                    "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
+                    "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
+
+head(info)
+info <- as.data.frame(info)
+colnames(info)
+
+for (i in 1:ncol(info)){
+  info[,i] <- gsub("([[:print:]]+)(=)([[:print:]])","\\3",info[,i])
+}
+
+head(info)
+
+vcf.freebayes.HQ.1.Ae <- cbind(vcf.freebayes.HQ.1.Ae,info,stringsAsFactors=FALSE)
+head(vcf.freebayes.HQ.1.Ae)
+dim(vcf.freebayes.HQ.1.Ae) # 493019     67 
+vcf.freebayes.HQ.1.reform.Ae <- vcf.freebayes.HQ.1.Ae
+
+vcf.freebayes.HQ.1.reform.Ae$MAF_Ae <- round(pmin(vcf.freebayes.HQ.1.reform.Ae$Ae_alt.depth, vcf.freebayes.HQ.1.reform.Ae$Ae_ref.depth)/vcf.freebayes.HQ.1.reform.Ae$Ae_tot.depth, digits = 2) 
+
+hist(vcf.freebayes.HQ.1.reform.Ae$MAF_Ae)
+
+vcf.freebayes.HQ.1.reform.Ae$RPR <- as.numeric(vcf.freebayes.HQ.1.reform.Ae$RPR)
+vcf.freebayes.HQ.1.reform.Ae$RPL <- as.numeric(vcf.freebayes.HQ.1.reform.Ae$RPL)
+
+## tail bias 
+hist(log10(vcf.freebayes.HQ.1.reform.Ae$RPR))
+hist(log10(vcf.freebayes.HQ.1.reform.Ae$RPL))
+min(vcf.freebayes.HQ.1.reform.Ae$RPR)
+min(vcf.freebayes.HQ.1.reform.Ae$RPL)
+max(vcf.freebayes.HQ.1.reform.Ae$RPR + vcf.freebayes.HQ.1.reform.Ae$RPL)
+
+vcf.freebayes.HQ.1.reform.Ae$MBR <- round(pmin(vcf.freebayes.HQ.1.reform.Ae$RPR, vcf.freebayes.HQ.1.reform.Ae$RPL)/(vcf.freebayes.HQ.1.reform.Ae$RPR + vcf.freebayes.HQ.1.reform.Ae$RPL), digits = 2) 
+
+hist(vcf.freebayes.HQ.1.reform.Ae$MBR, xlim = c(0, 0.1), breaks = 50)
+
+# cor(vcf.freebayes.HQ.1.reform.Ae$MBR, vcf.freebayes.HQ.1.reform.Ae$MAF_Ae)
+# vcf.freebayes.HQ.1.reform.Ae.het <- vcf.freebayes.HQ.1.reform.Ae[vcf.freebayes.HQ.1.reform.Ae$Ae_gt=="1/1",]
+# 
+# cor(vcf.freebayes.HQ.1.reform.Ae.het$MBR, vcf.freebayes.HQ.1.reform.Ae.het$MAF_Ae)
+
+vcf.freebayes.HQ.2.tmp.Ae <- vcf.freebayes.HQ.1.reform.Ae
+
+vcf.freebayes.HQ.2.test1.Ae <- 
+vcf.freebayes.HQ.2.tmp.Ae[(vcf.freebayes.HQ.2.tmp.Ae$MBR>0.01),]
+
+# vcf.freebayes.HQ.2.test2 <- 
+# vcf.freebayes.HQ.2.tmp[(vcf.freebayes.HQ.2.tmp$RPR>=0 & 
+#                            vcf.freebayes.HQ.2.tmp$RPL>0),]
+
+min(as.numeric(vcf.freebayes.HQ.2.test1.Ae$RPL))
+min(as.numeric(vcf.freebayes.HQ.2.test1.Ae$RPR))
+
+table(vcf.freebayes.HQ.2.test1.Ae$Ae_gt) 
+ #   0/0    0/1    1/1 
+ # 96721 112112 145987 
+
+head(vcf.freebayes.HQ.1.reform.Ae) 
+save(vcf.freebayes.HQ.1.reform.Ae, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.1.reform.Ae.Rdata")
+
+# Da-Ol-1 
+# get header 
+vcf.header.freebayes.Ol <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ol_SNP_biallelic.recode.vcf",intern = TRUE) 
+vcf.header.freebayes.Ol <- sub("#","",vcf.header.freebayes.Ol) #get rid of the pound sign
+vcf.header.freebayes.Ol <- unlist(strsplit(vcf.header.freebayes.Ol,split="\t"))
+
+# use function to reformat vcf file 
+vcf.freebayes.reform.Ol <- SNP.freebayes.reformat.Ol(vcf.freebayes.Ol, vcf.header.freebayes.Ol)
+dim(vcf.freebayes.reform.Ol) # 1019803      17   
+table(vcf.freebayes.reform.Ol$Ol_gt)
+#    0/0    0/1    1/1     NA 
+# 423018 531949 522721 201104 
+
+save(vcf.freebayes.reform.Ol, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.reform.Ol.Rdata")
+
+# filter based on QUAL 
+vcf.freebayes.HQ.Ol <- vcf.freebayes.reform.Ol[vcf.freebayes.reform.Ol$QUAL>40,] # QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic  
+dim(vcf.freebayes.HQ.Ol) # 1174345      25  
+nrow(vcf.freebayes.HQ.Ol) / nrow(vcf.freebayes.reform.Ol) # 70% of SNPs were retained with QUAL > 40
+
+# count the number 
+table(vcf.freebayes.HQ.Ol$Ol_gt)
+
+mean(vcf.freebayes.HQ.Ol$Ol_tot.depth, na.rm=T) # 146
+
+# distribution of depth 
+hist(log10(vcf.freebayes.HQ.Ol$Ol_tot.depth))
+
+# use 1000 as the max, 10 as min 
+vcf.freebayes.HQ.1.Ol <- vcf.freebayes.HQ.Ol[(!is.na(vcf.freebayes.HQ.Ol$Ol_tot.depth) & 
+                              vcf.freebayes.HQ.Ol$Ol_tot.depth > 10 & 
+                              vcf.freebayes.HQ.Ol$Ol_tot.depth < 1000),]
+dim(vcf.freebayes.HQ.1.Ol) # 441950     17  
+
+table(vcf.freebayes.HQ.1.Ol$Ol_gt)
+
+tmp.list <- strsplit(vcf.freebayes.HQ.1.Ol$INFO,split = ";")
+length(tmp.list) # 493019 
+length(tmp.list[[1]]) 
+
+for (i in 1:length(tmp.list)){
+    tmp.list[[i]] <- tmp.list[[i]][c(1:41)] 
+}
+
+# 1) seperate INFO column  
+head(vcf.freebayes.HQ.1.Ol)
+info <- matrix(
+  unlist(tmp.list),
+  nrow=nrow(vcf.freebayes.HQ.1.Ol),  
+  byrow=TRUE
+  )
+
+head(info)
+
+colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
+                    "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
+                    "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
+
+head(info)
+info <- as.data.frame(info)
+colnames(info)
+
+for (i in 1:ncol(info)){
+  info[,i] <- gsub("([[:print:]]+)(=)([[:print:]])","\\3",info[,i])
+}
+
+head(info)
+
+vcf.freebayes.HQ.1.Ol <- cbind(vcf.freebayes.HQ.1.Ol,info,stringsAsFactors=FALSE)
+head(vcf.freebayes.HQ.1.Ol)
+dim(vcf.freebayes.HQ.1.Ol) # 493019     67 
+vcf.freebayes.HQ.1.reform.Ol <- vcf.freebayes.HQ.1.Ol
+
+vcf.freebayes.HQ.1.reform.Ol$MAF_Ol <- round(pmin(vcf.freebayes.HQ.1.reform.Ol$Ol_alt.depth, vcf.freebayes.HQ.1.reform.Ol$Ol_ref.depth)/vcf.freebayes.HQ.1.reform.Ol$Ol_tot.depth, digits = 2) 
+
+hist(vcf.freebayes.HQ.1.reform.Ol$MAF_Ol)
+
+vcf.freebayes.HQ.1.reform.Ol$RPR <- as.numeric(vcf.freebayes.HQ.1.reform.Ol$RPR)
+vcf.freebayes.HQ.1.reform.Ol$RPL <- as.numeric(vcf.freebayes.HQ.1.reform.Ol$RPL)
+
+## tail bias 
+hist(log10(vcf.freebayes.HQ.1.reform.Ol$RPR)) 
+hist(log10(vcf.freebayes.HQ.1.reform.Ol$RPL))
+min(vcf.freebayes.HQ.1.reform.Ol$RPR)
+min(vcf.freebayes.HQ.1.reform.Ol$RPL)
+
+vcf.freebayes.HQ.1.reform.Ol$MBR <- round(pmin(vcf.freebayes.HQ.1.reform.Ol$RPR, vcf.freebayes.HQ.1.reform.Ol$RPL)/(vcf.freebayes.HQ.1.reform.Ol$RPR + vcf.freebayes.HQ.1.reform.Ol$RPL), digits = 2) 
+
+hist(vcf.freebayes.HQ.1.reform.Ol$MBR, xlim = c(0, 0.1), breaks = 50)
+
+# cor(vcf.freebayes.HQ.1.reform.Ae$MBR, vcf.freebayes.HQ.1.reform.Ae$MAF_Ae)
+# vcf.freebayes.HQ.1.reform.Ae.het <- vcf.freebayes.HQ.1.reform.Ae[vcf.freebayes.HQ.1.reform.Ae$Ae_gt=="1/1",]
+# 
+# cor(vcf.freebayes.HQ.1.reform.Ae.het$MBR, vcf.freebayes.HQ.1.reform.Ae.het$MAF_Ae)
+
+vcf.freebayes.HQ.2.tmp.Ol <- vcf.freebayes.HQ.1.reform.Ol
+
+vcf.freebayes.HQ.2.test1.Ol <- 
+vcf.freebayes.HQ.2.tmp.Ol[(vcf.freebayes.HQ.2.tmp.Ol$MBR>0.01),] 
+
+min(as.numeric(vcf.freebayes.HQ.2.test1.Ol$RPL))
+min(as.numeric(vcf.freebayes.HQ.2.test1.Ol$RPR))
+
+table(vcf.freebayes.reform.Ol$Ol_gt)
+table(vcf.freebayes.HQ.2.test1.Ol$Ol_gt) 
+ #   0/0    0/1    1/1 
+ # 96721 112112 145987 
+ 
+save(vcf.freebayes.HQ.1.reform.Ol, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.1.reform.Ol.Rdata") 
+save(vcf.freebayes.HQ.2.test1.Ol, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.2.test1.Ol")
+save(vcf.freebayes.HQ.2.test1.Ae, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.2.test1.Ae")
+
+head(vcf.freebayes.HQ.1.reform.Ae[,c("CHROM", "POS", "RPL", "RPR")])
+
+######## visualize in IGV ###################################### 
+vcf.freebayes.HQ.2.test3.Ae <-
+vcf.freebayes.HQ.2.tmp.Ae[(vcf.freebayes.HQ.2.tmp.Ae$RPL>0),] 
+
+# find filtered SNPs because of tail bias, and visulize them in IGV 
+test1 <- vcf.freebayes.HQ.2.tmp.Ae[,c("CHROM", "POS")]
+test2 <- vcf.freebayes.HQ.2.test3.Ae[,c("CHROM", "POS")]
+library(dplyr)
+filtered_out_snp_tail_bias <- anti_join(test1, test2)
+head(filtered_out_snp_tail_bias[filtered_out_snp_tail_bias$CHROM=="chrA01",], 50)
+```  
+
+# combine Da-Ae & Da-Ol data  
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.2.test1.Ae.Rdata"); load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.2.test1.Ol.Rdata")
+
+dim(vcf.freebayes.HQ.2.test1.Ae) 
+dim(vcf.freebayes.HQ.2.test1.Ol)
+
+table(vcf.freebayes.HQ.2.test1.Ae$Ae_gt)
+table(vcf.freebayes.HQ.2.test1.Ol$Ol_gt)
+
+# double check QUAL, depth, and MBR
+min(vcf.freebayes.HQ.2.test1.Ae$QUAL)
+min(vcf.freebayes.HQ.2.test1.Ae$Ae_tot.depth)
+max(vcf.freebayes.HQ.2.test1.Ae$Ae_tot.depth)
+min(vcf.freebayes.HQ.2.test1.Ae$MBR)
+
+min(vcf.freebayes.HQ.2.test1.Ol$QUAL)
+min(vcf.freebayes.HQ.2.test1.Ol$Ol_tot.depth)
+max(vcf.freebayes.HQ.2.test1.Ol$Ol_tot.depth)
+min(vcf.freebayes.HQ.2.test1.Ol$MBR)
+
+# combine 
+colnames(vcf.freebayes.HQ.2.test1.Ol)
+
+Ae <- vcf.freebayes.HQ.2.test1.Ae[,c("CHROM", "POS", "REF", "ALT", "Ae_gt")]
+Ol <- vcf.freebayes.HQ.2.test1.Ol[,c("CHROM", "POS", "REF", "ALT", "Ol_gt")]
+
+head(Ae)
+Ae$feature <- paste(Ae$CHROM, Ae$POS, Ae$REF, Ae$ALT, sep = "_")
+Ol$feature <- paste(Ol$CHROM, Ol$POS, Ol$REF, Ol$ALT, sep = "_")
+
+freebayes_result <- merge(Ae, Ol, by="feature", all=T)
+?merge
+dim(freebayes_result)
+head(freebayes_result) 
+
+freebayes_result_reform <- freebayes_result[,c("feature", "Ae_gt", "Ol_gt")]
+head(freebayes_result_reform)  
+freebayes_result_reform$Ae_gt <- gsub("NA", "1/1", freebayes_result_reform$Ae_gt)
+freebayes_result_reform[is.na(freebayes_result_reform$Ae_gt)] <- "0/0"
+
+freebayes_result_reform[which(is.na(freebayes_result_reform$Ae_gt)),]$Ae_gt <- "0/0"
+freebayes_result_reform[which(is.na(freebayes_result_reform$Ol_gt)),]$Ol_gt <- "0/0"
+head(freebayes_result_reform)  
+
+freebayes_result_1 <- freebayes_result_reform[freebayes_result_reform$Ae_gt!=freebayes_result_reform$Ol_gt & freebayes_result_reform$Ae_gt!="0/1" & freebayes_result_reform$Ol_gt!="0/1",]  
+
+dim(freebayes_result_1) # 215702
+head(freebayes_result_1, 100)
+table(freebayes_result_1$Ae_gt)
+table(freebayes_result_1$Ol_gt)
+
+save(freebayes_result_1, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/freebayes_result_1.Rdata")
+###### save each step afterwards... 
+```
+
+### analyze combined Da-Ae & Da-Ol-1 data  
 ```{r}
 # source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 # vcf.freebayes.no.ANN <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/as_diploid/no_bolting_unique_mapped/Ae_Ol_modified_SNPonly_biallelic.recode.vcf",as.is=T,na.strings = ".:.:.:.:.:.:.") 
@@ -403,7 +719,7 @@ dim(vcf.freebayes.HQ.1.reform) # 493019     68
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.reform.Rdata")
 
 # get MAF 
-vcf.freebayes.HQ.1.reform$MAF_Ae <- round(pmin(vcf.freebayes.HQ.1.reform$Ae_alt.depth, vcf.freebayes.HQ.1.reform$Ae_ref.depth)/vcf.freebayes.HQ.1.reform$Ae_tot.depth, digits = 2) 
+vcf.freebayes.HQ.1.reform$MAF_Ol <- round(pmin(vcf.freebayes.HQ.1.reform$Ol_alt.depth, vcf.freebayes.HQ.1.reform$Ae_ref.depth)/vcf.freebayes.HQ.1.reform$Ae_tot.depth, digits = 2) 
 
 vcf.freebayes.HQ.1.reform$MAF_Ol <- round(pmin(vcf.freebayes.HQ.1.reform$Ol_alt.depth, vcf.freebayes.HQ.1.reform$Ol_ref.depth)/vcf.freebayes.HQ.1.reform$Ol_tot.depth, digits = 2) 
 
@@ -1105,6 +1421,7 @@ View(vcf.GATK.for.compare) # even not same read count as ref and alt...
 
 # intersection between freebayes & GATK (SNPs between Da-Ae & Da-Ol-1)
 ```{r}
+########### freebayes with Ae & Ol combined 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.Ae.Ol.freebayes.Rdata") 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.GATK.Rdata") 
 dim(vcf.Ae.Ol.freebayes) # 137069     68
@@ -1131,7 +1448,7 @@ vcf.GATK <- paste(vcf.Ae.Ol.GATK.tmp$CHROM, vcf.Ae.Ol.GATK.tmp$POS,
 length(intersect(vcf.freebayes, vcf.GATK)) # 62365 same SNP positions between freebayes & GATK 
 
 vcf.Ae.Ol.intersect <- intersect(vcf.freebayes, vcf.GATK)
-length(vcf.Ae.Ol.intersect)
+length(vcf.Ae.Ol.intersect) #  62365 
 
 vcf.Ae.Ol.intersect.df <- data.frame(row.names = 1:length(vcf.Ae.Ol.intersect),
                                      CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\1", vcf.Ae.Ol.intersect), 
@@ -1181,6 +1498,71 @@ pl.SNP.main.1.unique <- pl.SNP.main.1.unique + facet_wrap(~subgenome, ncol = 1)
 pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
 pl.SNP.main.1.unique <- pl.SNP.main.1.unique + theme(legend.position = "none")
 pl.SNP.main.1.unique 
+
+########## freebayes with Ae & Ol seperate ######### 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/freebayes_result_1.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.GATK.Rdata") 
+dim(freebayes_result_1) #  215702      
+dim(vcf.Ae.Ol.GATK) # 78555    25
+
+head(freebayes_result_1)
+head(vcf.Ae.Ol.GATK)
+
+freebayes_result_1$CHROM <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]])", "\\1", freebayes_result_1$feature)
+freebayes_result_1$POS <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]])", "\\3", freebayes_result_1$feature)
+freebayes_result_1$REF <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]])", "\\5", freebayes_result_1$feature)
+freebayes_result_1$ALT <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]])", "\\7", freebayes_result_1$feature)
+
+vcf.Ae.Ol.freebayes.tmp <- freebayes_result_1
+vcf.Ae.Ol.GATK.tmp <- vcf.Ae.Ol.GATK
+
+# goal: get intersections where there SNP calls for both Da-Ae & Da-Ol-1 are the same. 
+
+vcf.freebayes <- paste(vcf.Ae.Ol.freebayes.tmp$CHROM, vcf.Ae.Ol.freebayes.tmp$POS, 
+                       vcf.Ae.Ol.freebayes.tmp$REF, vcf.Ae.Ol.freebayes.tmp$ALT,
+                       vcf.Ae.Ol.freebayes.tmp$Ae_gt, vcf.Ae.Ol.freebayes.tmp$Ol_gt, 
+                       sep = "_")
+
+vcf.GATK <- paste(vcf.Ae.Ol.GATK.tmp$CHROM, vcf.Ae.Ol.GATK.tmp$POS, 
+                  vcf.Ae.Ol.GATK.tmp$REF, vcf.Ae.Ol.GATK.tmp$ALT,
+                  vcf.Ae.Ol.GATK.tmp$Ae_gt, vcf.Ae.Ol.GATK.tmp$Ol_gt,
+                  sep = "_")  
+head(vcf.freebayes)
+head(vcf.GATK)
+
+length(intersect(vcf.freebayes, vcf.GATK)) # 63981 same SNP positions between freebayes & GATK 
+
+vcf.Ae.Ol.intersect.2 <- intersect(vcf.freebayes, vcf.GATK)
+length(vcf.Ae.Ol.intersect.2) # 63981
+head(vcf.Ae.Ol.intersect.2)
+
+vcf.Ae.Ol.intersect.df.2 <- data.frame(row.names = 1:length(vcf.Ae.Ol.intersect.2),
+                                     CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\1", vcf.Ae.Ol.intersect.2), 
+                                     POS = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\3", vcf.Ae.Ol.intersect.2), 
+                                     REF = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\5", vcf.Ae.Ol.intersect.2), 
+                                     ALT = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\7", vcf.Ae.Ol.intersect.2),
+                                     Ae.gt = gsub("([[:print:]]+)(_)(0/0|1/1)(_)((0/0|1/1))", "\\3", vcf.Ae.Ol.intersect.2),
+                                     Ol.gt = gsub("([[:print:]]+)(_)(0/0|1/1)(_)((0/0|1/1))", "\\5", vcf.Ae.Ol.intersect.2))
+
+head(vcf.Ae.Ol.intersect.df.2)
+head(vcf.Ae.Ol.intersect.df)
+
+ftable(vcf.Ae.Ol.intersect.df.2$Ae.gt, vcf.Ae.Ol.intersect.df.2$Ol.gt)  
+save(vcf.Ae.Ol.intersect.df.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.2.Rdata")
+write.csv(vcf.Ae.Ol.intersect.df.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.2.csv") 
+
+######## compare the two intersect dataset... 
+tmp <- intersect(vcf.Ae.Ol.intersect.2, vcf.Ae.Ol.intersect)
+length(tmp) # 59343 # common between combined & sepereate freebayes call 
+
+test.combined <- vcf.Ae.Ol.intersect.df.2[,c("CHROM", "POS")]
+test.sep <- vcf.Ae.Ol.intersect.df[,c("CHROM", "POS")]
+
+tmp2 <- anti_join(test.combined, test.sep)
+dim(tmp2)
+
+tmp3 <- anti_join(test.sep, test.combined)
+dim(tmp3) 
 
 # ####### compare SNPs between Da-Ae & Da-Ol-1 
 # vcf.Ae.Ol.freebayes <- Ae_Ol_after_filter.unique[Ae_Ol_after_filter.unique$CHROM=="chrA01",]
