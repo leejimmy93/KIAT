@@ -183,14 +183,33 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 
 # SNP calling on cabernet
 ```{r}
+# 1) prepare data for SNP calling 
+# Prep4Freebayes.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Prep4Freebayes.sh)
+
+# 2) split bam file by chromosome 
+# Bam_Split_By_Chrom.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Bam_Split_By_Chrom.sh)
+
+# 3) call SNPs 
+# Freebayes_Array_2_22_2017.slurm (https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Freebayes_Array_2_22_2017.slurm)
+
+# 4) compress & index 
+# compress_index_vcf.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/compress_index_vcf.sh)
+
+# 5) combine into one big vcf file 
+# concat.sh
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/concat.sh)
+
+# filter using vcftool to get only biallelic SNPs
+# extract_SNP.sh & extract_biallelic.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/extract_SNP.sh)  
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/extract_biallelic.sh) 
 
 
 
 
 ```
 
-
-# get stats on 505 SNP calls 
 ```{r}
 # using vcfR for 505 data analysis 
 
