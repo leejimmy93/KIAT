@@ -56,6 +56,8 @@ table(vcf.freebayes.reform.Ae$Ae_gt)
 
 save(vcf.freebayes.reform.Ae, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.reform.Ae.Rdata")
 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.reform.Ae.Rdata")
+
 # this way doesn't work because then I get very few 0/0.... but still this can be used to understand RPL & RLR... 
 # filter based on QUAL 
 vcf.freebayes.HQ.Ae <- vcf.freebayes.reform.Ae[vcf.freebayes.reform.Ae$QUAL>40,] # QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic  
@@ -67,9 +69,14 @@ table(vcf.freebayes.HQ.Ae$Ae_gt)
 
 mean(vcf.freebayes.HQ.Ae$Ae_tot.depth, na.rm=T) # 146
 
-# distribution of depth 
-hist(log10(vcf.freebayes.HQ.Ae$Ae_tot.depth))
+# distribution of depth
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/read.depth.png", width=4, height=3, units="in", res=300)
+hist(log10(vcf.freebayes.HQ.Ae$Ae_tot.depth), xlab = "log10(read depth)", ylab="Number of SNPs", main="read depth")  
+abline(v=c(1,3), col="red")
+dev.off()
+```
 
+```{r}
 # use 1000 as the max, 10 as min 
 vcf.freebayes.HQ.1.Ae <- vcf.freebayes.HQ.Ae[(!is.na(vcf.freebayes.HQ.Ae$Ae_tot.depth) & 
                               vcf.freebayes.HQ.Ae$Ae_tot.depth > 10 & 
@@ -1190,6 +1197,7 @@ mean(vcf.GATK.HQ$Ol_approx.depth, na.rm=T) # 82.96372
 # plot read depth 
 hist(log10(vcf.GATK.HQ$Ae_approx.depth))
 hist(log10(vcf.GATK.HQ$Ol_approx.depth))
+
 # based on the distribution, choose 10-1000 as the threshold 
 
 # use 10-1000 as the depth range  
@@ -1204,8 +1212,19 @@ dim(vcf.GATK.HQ.1) # 252439     21
 unique(vcf.GATK.HQ.1$CHROM)
 
 # 2) genotype quality, greater than 30   
-hist(vcf.GATK.HQ.1$Ae_genotype.qual)
-hist(vcf.GATK.HQ.1$Ol_genotype.qual)
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/genotype.quality.png", width=4, height=3, units="in", res=300)
+hist(vcf.GATK.HQ.1$Ae_genotype.qual, xlab = "genotype quality", ylab="number of SNPs", main="genotype quality")
+abline(v=c(30), col="red")
+dev.off() 
+
+hist(vcf.GATK.HQ.1$Ol_genotype.qual) 
+head(vcf.GATK.HQ.1)
+
+## figure 
+p.gtqual.Ae <- ggplot(data = vcf.GATK.HQ.1) 
+p.gtqual.Ae <- p.gtqual.Ae + geom_histogram(aes(Ae_genotype.qual))  
+# p.gtqual.Ae <- p.gtqual.Ae + facet_wrap(~Ae_gt, ncol = 1)
+p.gtqual.Ae
 
 vcf.GATK.HQ.2 <- vcf.GATK.HQ.1[(!is.na(vcf.GATK.HQ.1$Ae_genotype.qual) &
                                 !is.na(vcf.GATK.HQ.1$Ae_genotype.qual) & 
@@ -1496,42 +1515,6 @@ ftable(vcf.Ae.Ol.intersect.df$Ae.gt, vcf.Ae.Ol.intersect.df$Ol.gt)
 save(vcf.Ae.Ol.intersect.df, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.Rdata")
 write.csv(vcf.Ae.Ol.intersect.df, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.csv")
 
-########### check SNP distribution by subgenome & chromosome ################
-data <- vcf.Ae.Ol.freebayes
-
-# below the block of code should go into function... 
-chr_ID <- unique(data$CHROM)
-number.unique <- list() 
-
-for (chr in chr_ID) {
-  number.unique[chr] <- sum(sum(data$CHROM==chr))
-  print(number.unique[chr])
-}
-
-SNP_chr.unique <- as.data.frame(t(as.data.frame(number.unique)))
-SNP_chr.unique$ID <- rownames(SNP_chr.unique)
-head(SNP_chr.unique)
-# split to main & random chromosomes 
-# main 
-SNP_chr_main.unique <- SNP_chr.unique[!grepl("random", SNP_chr.unique$ID),]  
-SNP_chr_main.unique$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID)   
-SNP_chr_main.unique$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", SNP_chr_main.unique$ID) 
-
-# do a little calculation: how many SNPs on main & random chromosomes? 
-sum(SNP_chr_main.unique$V1) # 200317    
-sum(SNP_chr_random.unique$V1) # 32160    
-sum(SNP_chr_main.unique$V1)/sum(sum(SNP_chr_main.unique$V1),sum(SNP_chr_random.unique$V1)) # 86.2% 
-
-# make a plot to see how many SNPs on each chromosome 
-library(ggplot2)
-pl.SNP.main.1.unique <- ggplot(data = SNP_chr_main.unique) 
-pl.SNP.main.1.unique <- pl.SNP.main.1.unique + geom_bar(aes(x=factor(chr_ID), y = V1, fill=subgenome), stat = "identity")
-pl.SNP.main.1.unique <- pl.SNP.main.1.unique + facet_wrap(~subgenome, ncol = 1)
-# pl.SNP.main.1 <- pl.SNP.main.1 + geom_text(aes(x=factor(chr_ID), y = number, label=factor(number), size=1)) 
-pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
-pl.SNP.main.1.unique <- pl.SNP.main.1.unique + theme(legend.position = "none")
-pl.SNP.main.1.unique 
-
 ########## freebayes with Ae & Ol seperate ######### 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/freebayes_result_1.Rdata")
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.GATK.Rdata") 
@@ -1584,57 +1567,95 @@ ftable(vcf.Ae.Ol.intersect.df.2$Ae.gt, vcf.Ae.Ol.intersect.df.2$Ol.gt)
 save(vcf.Ae.Ol.intersect.df.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.2.Rdata")
 write.csv(vcf.Ae.Ol.intersect.df.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.2.csv") 
 
-######## compare the two intersect dataset... use the intersect...  
-vcf.Ae.Ol.intersect.final <- intersect(vcf.Ae.Ol.intersect.2, vcf.Ae.Ol.intersect)
-length(vcf.Ae.Ol.intersect.final) # 59343 # common between combined & sepereate freebayes call 
-head(vcf.Ae.Ol.intersect.final) 
+####### make venn diagram between freebayes & GATK
+length(vcf.freebayes)  # 215702 
+length(vcf.GATK) # 78555    
 
-test.combined <- vcf.Ae.Ol.intersect.df.2[,c("CHROM", "POS")]
-test.sep <- vcf.Ae.Ol.intersect.df[,c("CHROM", "POS")]
+length(intersect(vcf.GATK, vcf.freebayes)) # 63981  
 
-tmp2 <- anti_join(test.combined, test.sep)
-dim(tmp2)
-
-tmp3 <- anti_join(test.sep, test.combined)
-dim(tmp3) 
-
-vcf.Ae.Ol.intersect.df.final <- data.frame(row.names = 1:length(vcf.Ae.Ol.intersect.final),
-                                     CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\1", vcf.Ae.Ol.intersect.final), 
-                                     POS = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\3", vcf.Ae.Ol.intersect.final), 
-                                     REF = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\5", vcf.Ae.Ol.intersect.final), 
-                                     ALT = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\7", vcf.Ae.Ol.intersect.final),
-                                     Ae.gt = gsub("([[:print:]]+)(_)(0/0|1/1)(_)((0/0|1/1))", "\\3", vcf.Ae.Ol.intersect.final),
-                                     Ol.gt = gsub("([[:print:]]+)(_)(0/0|1/1)(_)((0/0|1/1))", "\\5", vcf.Ae.Ol.intersect.final))
-
-dim(vcf.Ae.Ol.intersect.df.final) # 59343     6 
-
-head(vcf.Ae.Ol.intersect.df.final)
-ftable(vcf.Ae.Ol.intersect.df.final$Ae.gt, vcf.Ae.Ol.intersect.df.final$Ol.gt)  
-save(vcf.Ae.Ol.intersect.df.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.final.Rdata")
-write.csv(vcf.Ae.Ol.intersect.df.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.final.csv") 
-
-
-# ####### compare SNPs between Da-Ae & Da-Ol-1 
-# vcf.Ae.Ol.freebayes <- Ae_Ol_after_filter.unique[Ae_Ol_after_filter.unique$CHROM=="chrA01",]
-# nrow(vcf.Ae.Ol.freebayes)  # 11379  
-# dim(vcf.Ae.Ol.GATK) # 8491   
-# 
-# vcf.Ae.Ol.freebayes.SNP <- paste(vcf.Ae.Ol.freebayes$CHROM, vcf.Ae.Ol.freebayes$POS, sep = "_")
-# vcf.Ae.Ol.GATK.SNP <- paste(vcf.Ae.Ol.GATK$CHROM, vcf.Ae.Ol.GATK$POS, sep = "_") 
-# 
-# intersect(vcf.Ae.Ol.GATK.SNP, vcf.Ae.Ol.freebayes.SNP) 
-# 
 # #### plot of venn diagram 
-# library(gplots)
-# library(VennDiagram)
-# 
-# grid.newpage() 
-# venn.freebayes_GATK <- 
-# draw.pairwise.venn(nrow(vcf.Ae.Ol.freebayes), nrow(vcf.Ae.Ol.GATK), length(intersect(vcf.Ae.Ol.GATK.SNP, vcf.Ae.Ol.freebayes.SNP)), 
-#                  # category = c("freebayes (11379)", "GATK (8491)"), 
-#                  lty = "blank", 
-#                  fill = c("skyblue", "pink1"))
-# save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/venn_freebayes_GATK.png", venn.freebayes_GATK,ncol = 1, nrow = 1,base_aspect_ratio = 1.5, base_height = 2) 
+library(gplots)
+library(VennDiagram)
+
+grid.newpage()
+venn.freebayes_GATK <-
+draw.pairwise.venn(length(vcf.freebayes), length(vcf.GATK), length(intersect(vcf.GATK, vcf.freebayes)),
+                 # category = c("Freebayes:215702", "GATK:78555"),
+                 lty = "blank",
+                 fill = c("skyblue", "pink1"))
+save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/venn_freebayes_GATK.png", venn.freebayes_GATK,ncol = 1, nrow = 1,base_aspect_ratio = 1, base_height = 4)
+
+#### plot of distribution of final dataset per subgenome per Mb 
+########### check SNP distribution by subgenome & chromosome ################
+data <- vcf.Ae.Ol.intersect.df.2
+
+# below the block of code should go into function... 
+chr_ID <- unique(data$CHROM)
+number.unique <- list() 
+
+for (chr in chr_ID) {
+  number.unique[chr] <- sum(sum(data$CHROM==chr))
+  print(number.unique[chr])
+}
+
+SNP_chr.unique <- as.data.frame(t(as.data.frame(number.unique)))
+SNP_chr.unique$ID <- rownames(SNP_chr.unique)
+head(SNP_chr.unique)
+# split to main & random chromosomes 
+# main 
+SNP_chr_main.unique <- SNP_chr.unique[!grepl("random", SNP_chr.unique$ID),]  
+head(SNP_chr_main.unique)
+SNP_chr_main.unique$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID)   
+SNP_chr_main.unique$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", SNP_chr_main.unique$ID) 
+
+# do a little calculation: how many SNPs on main & random chromosomes? 
+sum(SNP_chr_main.unique$V1) # 62958     
+head(SNP_chr_main.unique) # 200317    
+
+sum(SNP_chr_main.unique[SNP_chr_main.unique$subgenome=="A",]$V1)/sum(SNP_chr_main.unique$V1)
+
+
+# make a plot to see how many SNPs on each chromosome 
+library(ggplot2)
+pl.SNP.main.1.unique <- ggplot(data = SNP_chr_main.unique) 
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + geom_bar(aes(x=factor(chr_ID), y = V1, fill=subgenome), stat = "identity")
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + facet_wrap(~subgenome, ncol = 1)
+# pl.SNP.main.1 <- pl.SNP.main.1 + geom_text(aes(x=factor(chr_ID), y = number, label=factor(number), size=1)) 
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + theme(legend.position = "none")
+pl.SNP.main.1.unique 
+
+########## Per Mb ... 
+head(vcf.Ae.Ol.intersect.df.2)
+vcf.Ae.Ol.intersect.df.2 <- vcf.Ae.Ol.intersect.df.2[!grepl("random", vcf.Ae.Ol.intersect.df.2$CHROM),]  
+vcf.Ae.Ol.intersect.df.2$subgenome <-  gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", vcf.Ae.Ol.intersect.df.2$CHROM) 
+vcf.Ae.Ol.intersect.df.2$Chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", vcf.Ae.Ol.intersect.df.2$CHROM) 
+head(vcf.Ae.Ol.intersect.df.2) 
+
+write.csv(vcf.Ae.Ol.intersect.df.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.2.csv") # sort in excel manually 
+
+vcf.Ae.Ol.intersect.df.2.sorted <-  read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.2.csv")
+head(vcf.Ae.Ol.intersect.df.2.sorted) 
+
+library(ggplot2)
+pl.SNP.main.2.unique <- ggplot(data = vcf.Ae.Ol.intersect.df.2.sorted)
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + geom_histogram(aes(x=POS, fill=subgenome), binwidth = 1000000) 
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + facet_grid(Chr_ID ~subgenome)
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + theme(legend.position = "none")
+pl.SNP.main.2.unique 
+
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP.main.PerMb.png", width = 13, height = 7) 
+
+######
+# library(ggplot2)
+# pl.SNP.main.2.unique <- ggplot(data = Ae_Ol_after_filter.main.unique)
+# pl.SNP.main.2.unique <- pl.SNP.main.2.unique + geom_histogram(aes(x=POS, fill=subgenome), binwidth = 1000000) 
+# pl.SNP.main.2.unique <- pl.SNP.main.2.unique + facet_grid(chr_ID ~subgenome)
+# pl.SNP.main.2.unique <- pl.SNP.main.2.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+# pl.SNP.main.2.unique <- pl.SNP.main.2.unique + theme(legend.position = "none")
+# pl.SNP.main.2.unique 
+######
 
 ######### Ae_ref 
 # vcf.Ae.ref.freebayes <- Ae_ref_after_filter.unique[Ae_ref_after_filter.unique$CHROM=="chrA01",]
@@ -1673,6 +1694,36 @@ write.csv(vcf.Ae.Ol.intersect.df.final, file = "~/Desktop/Brassica_project/KIAT_
 #                  category = c("freebayes (11379)", "GATK (8491)"), 
 #                  lty = "blank", 
 #                  fill = c("skyblue", "pink1")) 
+
+
+######## compare the two intersect dataset... use the intersect...  
+vcf.Ae.Ol.intersect.final <- intersect(vcf.Ae.Ol.intersect.2, vcf.Ae.Ol.intersect)
+length(vcf.Ae.Ol.intersect.final) # 59343 # common between combined & sepereate freebayes call 
+head(vcf.Ae.Ol.intersect.final) 
+
+test.combined <- vcf.Ae.Ol.intersect.df.2[,c("CHROM", "POS")]
+test.sep <- vcf.Ae.Ol.intersect.df[,c("CHROM", "POS")]
+
+tmp2 <- anti_join(test.combined, test.sep)
+dim(tmp2)
+
+tmp3 <- anti_join(test.sep, test.combined)
+dim(tmp3) 
+
+vcf.Ae.Ol.intersect.df.final <- data.frame(row.names = 1:length(vcf.Ae.Ol.intersect.final),
+                                     CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\1", vcf.Ae.Ol.intersect.final), 
+                                     POS = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\3", vcf.Ae.Ol.intersect.final), 
+                                     REF = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\5", vcf.Ae.Ol.intersect.final), 
+                                     ALT = gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)", "\\7", vcf.Ae.Ol.intersect.final),
+                                     Ae.gt = gsub("([[:print:]]+)(_)(0/0|1/1)(_)((0/0|1/1))", "\\3", vcf.Ae.Ol.intersect.final),
+                                     Ol.gt = gsub("([[:print:]]+)(_)(0/0|1/1)(_)((0/0|1/1))", "\\5", vcf.Ae.Ol.intersect.final))
+
+dim(vcf.Ae.Ol.intersect.df.final) # 59343     6 
+
+head(vcf.Ae.Ol.intersect.df.final)
+ftable(vcf.Ae.Ol.intersect.df.final$Ae.gt, vcf.Ae.Ol.intersect.df.final$Ol.gt)  
+save(vcf.Ae.Ol.intersect.df.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.final.Rdata")
+write.csv(vcf.Ae.Ol.intersect.df.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.final.csv") 
 
 ``` 
 
