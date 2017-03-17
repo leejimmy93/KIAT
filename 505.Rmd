@@ -229,14 +229,88 @@ mean.depth <- read.table("~/505/vcf/combined/505_filtered_MAF_missingrate_Q.ldep
 head(mean.depth)
 mean(mean.depth$MEAN_DEPTH) # 40
 
-hist(log10(mean.depth$MEAN_DEPTH)) 
-hist(mean.depth$MEAN_DEPTH, xlim=c(0, 20), breaks=1000000)
+png("~/505/output/figure/read.depth.png", width=4, height=3, units="in", res=300) 
+hist(log10(mean.depth$MEAN_DEPTH), xlab = "log10(read depth)", ylab="Number of SNPs", main="read depth", breaks=1000)
+abline(v=c(log10(5),log10(500)), col="red", lwd=2)
+dev.off()
 
 dim(mean.depth) # 519543
 # decide to use 5 to 500 as the threshold for depth
 
 # MAF calculation before filtering 
-MAF <- read.table("~/505/vcf/combined/505.frq")
+MAF <- read.table("~/505/vcf/combined/505_freq.txt")
+head(MAF)
+dim(MAF) 
+
+class(MAF$V3)
+
+MAF$MAF<- round(pmin(MAF$V2, MAF$V3)/(MAF$V2+MAF$V3), digits = 2) 
+head(MAF$MAF)
+hist(MAF$MAF)
+
+png("~/505/output/figure/MAF.all.png", width=4, height=3, units="in", res=300) 
+hist(MAF$MAF, xlab = "Minor allele frequency", ylab="Number of SNPs", main="Minor allele frequency distribution", breaks=50)
+abline(v=c(0.01), col="red", lwd=2)
+dev.off()
+
+# stats after filtering 
+# MAF 
+MAF.2 <- read.table("~/505/vcf/combined/505_filtered_freq.txt")
+head(MAF.2)
+dim(MAF.2)
+
+class(MAF.2$V3)
+
+MAF.2$MAF<- round(pmin(MAF.2$V2, MAF.2$V3)/(MAF.2$V2+MAF.2$V3), digits = 2) 
+head(MAF.2$MAF)
+hist(MAF.2$MAF)
+
+png("~/505/output/figure/MAF.filterd.png", width=4, height=3, units="in", res=300) 
+hist(MAF.2$MAF, xlab = "Minor allele frequency", ylab="Number of SNPs", main="Minor allele frequency distribution", breaks=50)
+abline(v=c(0.01), col="red", lwd=2)
+dev.off()
+
+# missing rate 
+missing.individual <- read.table("~/505/vcf/combined/505_filtered_MAF_missingrate_Q_depth.imiss", header=T)
+
+head(missing.individual) 
+hist(missing.individual$F_MISS, breaks=100)
+
+png("~/505/output/figure/missing.individual.png", width=4, height=3, units="in", res=300) 
+hist(missing.individual$F_MISS, xlab = "missing rate at taxa level", ylab="Number of individuals", main="Missing rate at taxa level", breaks=100)
+dev.off()
+
+# pull out the individuals with high missing rate 
+missing.individual[missing.individual$F_MISS > 0.2,]
+
+
+missing.site <- read.table("~/505/vcf/combined/505_filtered_MAF_missingrate_Q_depth.lmiss", header=T)
+head(missing.site)
+
+hist(missing.site$F_MISS, breaks=20)
+
+png("~/505/output/figure/missing.locus.png", width=4, height=3, units="in", res=300) 
+hist(missing.site$F_MISS, xlab = "missing rate at locus level", ylab="Number of SNPs", main="Missing rate at locus level", breaks=20)
+dev.off()
+```
+
+# analyze data 
+```{r}
+# install.packages("vcfR")
+library("vcfR")
+vcf.505 <- read.vcfR("~/505/vcf/combined/505_filtered_MAF_missingrate_Q_depth.gz", limit = 1e+07, skip = 0, cols = NULL, convertNA = TRUE, verbose = TRUE)
+
+save(vcf.505, file="~/505/output/vcf.505.R") 
+class(vcf.505)
+
+vcfR_505 <- addID(vcf.505, sep="_")
+head(vcfR_505)
+
+gt <- extract_gt_tidy(vcf.505, format_fields = NULL, format_types = TRUE,
+dot_is_NA = TRUE, alleles = TRUE, allele.sep = "/",
+gt_column_prepend = "gt_") 
+
+dim(gt)
 
 
 ```
