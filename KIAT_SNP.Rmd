@@ -1612,8 +1612,7 @@ SNP_chr_main.unique$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", 
 sum(SNP_chr_main.unique$V1) # 62958     
 head(SNP_chr_main.unique) # 200317    
 
-sum(SNP_chr_main.unique[SNP_chr_main.unique$subgenome=="A",]$V1)/sum(SNP_chr_main.unique$V1)
-
+sum(SNP_chr_main.unique[SNP_chr_main.unique$subgenome=="A",]$V1)/sum(SNP_chr_main.unique$V1) 
 
 # make a plot to see how many SNPs on each chromosome 
 library(ggplot2)
@@ -1624,6 +1623,7 @@ pl.SNP.main.1.unique <- pl.SNP.main.1.unique + facet_wrap(~subgenome, ncol = 1)
 pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
 pl.SNP.main.1.unique <- pl.SNP.main.1.unique + theme(legend.position = "none")
 pl.SNP.main.1.unique 
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP.main.png", width = 9, height = 7) 
 
 ########## Per Mb ... 
 head(vcf.Ae.Ol.intersect.df.2)
@@ -1645,7 +1645,7 @@ pl.SNP.main.2.unique <- pl.SNP.main.2.unique + labs(list(title = "", x = "chromo
 pl.SNP.main.2.unique <- pl.SNP.main.2.unique + theme(legend.position = "none")
 pl.SNP.main.2.unique 
 
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP.main.PerMb.png", width = 13, height = 7) 
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP.main.PerMb.png", width = 9, height = 7) 
 
 ######
 # library(ggplot2)

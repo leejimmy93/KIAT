@@ -311,7 +311,76 @@ dot_is_NA = TRUE, alleles = TRUE, allele.sep = "/",
 gt_column_prepend = "gt_") 
 
 dim(gt)
+```
 
+
+```{r}
+# chromosome distribution 
+distri <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/CHROM_POS")
+head(distri)
+colnames(distri) <- c("number", "CHROM", "POS")
+
+class(distri)
+data <- distri
+head(data)
+
+# below the block of code should go into function... 
+chr_ID <- unique(data$CHROM)
+number.unique <- list() 
+
+for (chr in chr_ID) {
+  number.unique[chr] <- sum(sum(data$CHROM==chr))
+  print(number.unique[chr])
+}
+
+SNP_chr.unique <- as.data.frame(t(as.data.frame(number.unique)))
+SNP_chr.unique$ID <- rownames(SNP_chr.unique)
+head(SNP_chr.unique)
+# split to main & random chromosomes 
+# main 
+SNP_chr_main.unique <- SNP_chr.unique[!grepl("random", SNP_chr.unique$ID),]  
+head(SNP_chr_main.unique)
+SNP_chr_main.unique$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID)   
+SNP_chr_main.unique$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", SNP_chr_main.unique$ID) 
+
+# do a little calculation: how many SNPs on main & random chromosomes? 
+sum(SNP_chr_main.unique$V1) # 62958     
+head(SNP_chr_main.unique) # 200317    
+
+sum(SNP_chr_main.unique[SNP_chr_main.unique$subgenome=="A",]$V1)/sum(SNP_chr_main.unique$V1)
+
+# make a plot to see how many SNPs on each chromosome 
+library(ggplot2)
+pl.SNP.main.1.unique <- ggplot(data = SNP_chr_main.unique) 
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + geom_bar(aes(x=factor(chr_ID), y = V1, fill=subgenome), stat = "identity")
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + facet_wrap(~subgenome, ncol = 1)
+# pl.SNP.main.1 <- pl.SNP.main.1 + geom_text(aes(x=factor(chr_ID), y = number, label=factor(number), size=1)) 
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+pl.SNP.main.1.unique <- pl.SNP.main.1.unique + theme(legend.position = "none")
+pl.SNP.main.1.unique 
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/SNP.main.png", width = 9, height = 7) 
+
+########## Per Mb ... 
+head(data)
+data <- data[!grepl("random", data$CHROM),]  
+data$subgenome <-  gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", data$CHROM) 
+data$Chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", data$CHROM) 
+head(data) 
+
+# write.csv(vcf.Ae.Ol.intersect.df.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.2.csv") # sort in excel manually 
+
+# cf.Ae.Ol.intersect.df.2.sorted <-  read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.2.csv")
+head(vcf.Ae.Ol.intersect.df.2.sorted) 
+
+library(ggplot2)
+pl.SNP.main.2.unique <- ggplot(data = data)
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + geom_histogram(aes(x=POS, fill=subgenome), binwidth = 1000000) 
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + facet_grid(Chr_ID ~subgenome)
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + theme(legend.position = "none")
+pl.SNP.main.2.unique 
+
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/SNP.main.PerMb.png", width = 9, height = 7) 
 
 ```
 
