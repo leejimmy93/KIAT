@@ -178,7 +178,37 @@ p.average.mapping <- p.average.mapping + labs(list(title = "mapping stats of 505
 p.average.mapping <- p.average.mapping + theme(axis.text.x = element_text(angle = 90), legend.position = "none")
 p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long, aes(x=variable, y=value, label=factor(round(value,0)))) 
 p.average.mapping
-ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/figure/average_mapping.png", height = 6, width = 9) 
+# ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/figure/average_mapping.png", height = 6, width = 9) 
+
+### split this figure to HQ ratio & mapping ratio (two plots)
+average.mapping.long.HQ <- 
+  average.mapping.long[average.mapping.long$variable=="Percent_HQ",]
+
+average.mapping.long.HQ
+
+p.average.HQ <- ggplot(data = average.mapping.long.HQ)
+p.average.HQ <- p.average.HQ + geom_bar(aes(x=Group.1, y=value, fill=variable), stat = "identity")
+# p.average.mapping <- p.average.mapping + facet_wrap(~Group.1, ncol = 2)
+p.average.HQ <- p.average.HQ + labs(list(title = "", x = "", y = "percentage of total raw reads"))
+p.average.HQ <- p.average.HQ + theme(legend.position = "none")
+p.average.HQ <- p.average.HQ + geom_text(data = average.mapping.long.HQ, aes(x=Group.1, y=value, label=factor(round(value,0)))) 
+p.average.HQ
+
+ggsave(p.average.HQ, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_HQ.png", height = 4, width = 2) 
+
+average.mapping.long.mapping <- 
+  average.mapping.long[average.mapping.long$variable!="Percent_HQ",]
+
+p.average.mapping <- ggplot(data = average.mapping.long.mapping)
+p.average.mapping <- p.average.mapping + geom_bar(aes(x=variable, y=value, fill=variable), stat = "identity")
+p.average.mapping <- p.average.mapping + facet_wrap(~Group.1, ncol = 2)
+p.average.mapping <- p.average.mapping + labs(list(title = "", x = "", y = "percentage of HQ reads"))
+p.average.mapping <- p.average.mapping + theme(axis.text.x = element_text(angle = 90), legend.position = "none")
+p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long.mapping, aes(x=variable, y=value, label=factor(round(value,0)))) 
+p.average.mapping 
+
+ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_mapping.png", height = 6, width = 5) 
+
 ```
 
 # SNP calling on cabernet & filtering 
