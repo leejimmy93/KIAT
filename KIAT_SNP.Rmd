@@ -58,17 +58,19 @@ save(vcf.freebayes.reform.Ae, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/pa
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.reform.Ae.Rdata")
 
-# this way doesn't work because then I get very few 0/0.... but still this can be used to understand RPL & RLR... 
+# this way no 0/0.... but still this can be used to understand RPL & RLR... 
 # filter based on QUAL 
 vcf.freebayes.HQ.Ae <- vcf.freebayes.reform.Ae[vcf.freebayes.reform.Ae$QUAL>40,] # QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic  
 dim(vcf.freebayes.HQ.Ae) # 798423     17  
-nrow(vcf.freebayes.HQ.Ae) / nrow(vcf.freebayes.reform.Ae) # 70% of SNPs were retained with QUAL > 40
+nrow(vcf.freebayes.HQ.Ae) / nrow(vcf.freebayes.reform.Ae) # 0.7829189 of SNPs were retained with QUAL > 40
 
 min(vcf.freebayes.HQ.Ae[vcf.freebayes.HQ.Ae$Ae_gt=="0/1",]$QUAL)
 min(vcf.freebayes.HQ.Ae[vcf.freebayes.HQ.Ae$Ae_gt=="1/1",]$QUAL)
 
 # count the number 
 table(vcf.freebayes.HQ.Ae$Ae_gt)
+#    0/1    1/1 
+# 285815 512608 
 
 mean(vcf.freebayes.HQ.Ae$Ae_tot.depth, na.rm=T) # 146
 
@@ -77,9 +79,12 @@ png("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/read.depth
 hist(log10(vcf.freebayes.HQ.Ae$Ae_tot.depth), xlab = "log10(read depth)", ylab="Number of SNPs", main="read depth")  
 abline(v=c(1,3), col="red")
 dev.off()
+
+save(vcf.freebayes.HQ.Ae, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.Ae.Rdata")
 ```
 
 ```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.Ae.Rdata")
 # use 1000 as the max, 10 as min 
 vcf.freebayes.HQ.1.Ae <- vcf.freebayes.HQ.Ae[(!is.na(vcf.freebayes.HQ.Ae$Ae_tot.depth) & 
                               vcf.freebayes.HQ.Ae$Ae_tot.depth > 10 & 
@@ -87,34 +92,38 @@ vcf.freebayes.HQ.1.Ae <- vcf.freebayes.HQ.Ae[(!is.na(vcf.freebayes.HQ.Ae$Ae_tot.
 dim(vcf.freebayes.HQ.1.Ae) # 441950     17  
 
 table(vcf.freebayes.HQ.1.Ae$Ae_gt)
+#    0/1    1/1 
+# 224945 217005 
 
-# #####
-# # get genotype quality score 
-# head(vcf.freebayes.Ol.reform)
+# # get genotype quality score, Freebayes has its own way to calculate GQ, it uses population info as the prior, different from GATK. 
+# head(vcf.freebayes.HQ.1.Ae)
 # gen.lik <- matrix(
-#   unlist(strsplit(vcf.freebayes.HQ.1.Ae$Ae_gen.lik,split = ";")),
-#   nrow=nrow(vcf.freebayes.HQ.1.Ae),  
+#   unlist(strsplit(vcf.freebayes.HQ.1.Ae$Ae_gen.lik,split = ",")),
+#   nrow=nrow(vcf.freebayes.HQ.1.Ae),
 #   byrow=TRUE
 #   )
 # 
 # head(gen.lik)
 # 
-# colnames(gen.lik) <- c("AB","ABP","AC")
+# colnames(gen.lik) <- c("ref.lik","het.lik","alt.lik")
 # 
-# head(info)
-# info <- as.data.frame(info)
-# colnames(info)
+# head(gen.lik)
+# gen.lik <- as.data.frame(gen.lik)
+# colnames(gen.lik)
 # 
-# for (i in 1:ncol(info)){
-#   info[,i] <- gsub("([[:print:]]+)(=)([[:print:]])","\\3",info[,i])
+# vcf.freebayes.HQ.1.Ae <- cbind(vcf.freebayes.HQ.1.Ae,gen.lik,stringsAsFactors=FALSE)
+# head(vcf.freebayes.HQ.1.Ae)
+# dim(vcf.freebayes.HQ.1.Ae) # 441950     20 
+# 
+# for (i in 1:nrow(vcf.freebayes.HQ.1.Ae)){
+#   if (median(c(vcf.freebayes.HQ.1.Ae[i,]$ref.lik, vcf.freebayes.HQ.1.Ae[i,]$het.lik, vcf.freebayes.HQ.1.Ae[i,]$alt.lik)) * (-10) >= 99) {
+#     vcf.freebayes.HQ.1.Ae[i,]$Ae_GQ = 99
+#   } else { 
+#     vcf.freebayes.HQ.1.Ae[i,]$Ae_GQ = median(c(vcf.freebayes.HQ.1.Ae[i,]$ref.lik, vcf.freebayes.HQ.1.Ae[i,]$het.lik, vcf.freebayes.HQ.1.Ae[i,]$alt.lik) * (-10))
+#   }
 # }
 # 
-# head(info)
-# 
-# vcf.freebayes.HQ.1.Ae <- cbind(vcf.freebayes.HQ.1.Ae,info,stringsAsFactors=FALSE)
-# head(vcf.freebayes.HQ.1.Ae)
-# dim(vcf.freebayes.HQ.1.Ae) # 493019     67 
-# vcf.freebayes.HQ.1.reform.Ae <- vcf.freebayes.HQ.1.Ae
+# vcf.freebayes.HQ.1.Ae$alt.lik[1]
 
 #####
 
@@ -428,7 +437,8 @@ head(filtered_out_snp_tail_bias[filtered_out_snp_tail_bias$CHROM=="chrA01",], 50
 
 # combine Da-Ae & Da-Ol data  
 ```{r}
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.2.test1.Ae.Rdata"); load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.2.test1.Ol.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.2.test1.Ae")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.2.test1.Ol")
 
 dim(vcf.freebayes.HQ.2.test1.Ae) 
 dim(vcf.freebayes.HQ.2.test1.Ol)
