@@ -210,7 +210,7 @@ table(vcf.freebayes.HQ.2.test1.Ae$Ae_gt)
 # 127827 187049 
 
 head(vcf.freebayes.HQ.1.reform.Ae) 
-save(vcf.freebayes.HQ.1.reform.Ae, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.1.reform.Ae.Rdata")
+# save(vcf.freebayes.HQ.1.reform.Ae, file = "~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.HQ.1.reform.Ae.Rdata")
 
 ### het problem 
 ### compare QUAL, read depth, between 0/1 and 1/1
@@ -239,7 +239,7 @@ p.QUAL.Ol
 
 # plot QUAL by Ae_gt  
 library(ggplot2) 
-p.QUAL.Ae <- ggplot(data = vcf.freebayes.HQ.Ae) 
+p.QUAL.Ae <- ggplot(data = vcf.freebayes.HQ.2.test1.Ae) 
 p.QUAL.Ae <- p.QUAL.Ae + geom_histogram(aes(log10(QUAL), fill=Ae_gt)) 
 p.QUAL.Ae <- p.QUAL.Ae + facet_wrap(~Ae_gt, ncol = 1) 
 p.QUAL.Ae <- p.QUAL.Ae +labs(list(x="log10(QUAL)", y="Number of SNPs"))  
@@ -255,11 +255,22 @@ p.tot.depth.Ae <- p.tot.depth.Ae + facet_wrap(~Ae_gt, ncol = 1)
 p.tot.depth.Ae
 
 # plot MBR
-p.MBR.Ae <- ggplot(data = vcf.freebayes.HQ.1.reform.Ae) 
+p.MBR.Ae <- ggplot(data = vcf.freebayes.HQ.2.test1.Ae) 
 p.MBR.Ae <- p.MBR.Ae + geom_histogram(aes(MBR, fill=Ae_gt))  
 p.MBR.Ae <- p.MBR.Ae + facet_wrap(~Ae_gt, ncol = 1)
 p.MBR.Ae  
 ggsave(p.MBR.Ae, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.MBR.Ae.png", height = 4, width = 6)
+
+# plot GQ
+p.GQ.Ae <- ggplot(data = vcf.freebayes.HQ.1.reform.Ae) 
+p.GQ.Ae <- p.GQ.Ae + geom_histogram(aes(Ae_gt.qual, fill=Ae_gt))  
+p.GQ.Ae <- p.GQ.Ae + facet_wrap(~Ae_gt, ncol = 1)
+p.GQ.Ae 
+
+### check GQ 
+head(vcf.freebayes.HQ.1.reform.Ae[vcf.freebayes.HQ.1.reform.Ae$Ae_gt.qual<10,])[,c("Ae_gt.qual","Ae_gen.lik")]
+max(vcf.freebayes.HQ.1.reform.Ae$Ae_gt.qual)
+
 
 # alt/ref allele ratio
 vcf.freebayes.HQ.2.test1.Ae.het <- 
@@ -560,6 +571,277 @@ hist(vcf.freebayes.HQ.1.reform.Ae.homo$MBR, ylim = c(1, 1e+5))
 
 # It turns out SNPs all get CIGAR score of "1X". 
 ```
+
+### Freebayes w/ reported 
+```{r}
+# data location: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/freebayes/from_cabernet_call_separately 
+``` 
+
+# work on Da-Ae & Da-Ol-1 seperately... 
+```{r}
+source("~/KIAT/function_BnRNAseq.R")
+
+# import 
+vcf.freebayes.Ae <- read.table("~/SNP_parent/result/freebayes/from_cabernet_call_separately/Ae_SNP_bi.recode.vcf",as.is=T,na.strings = ".") 
+dim(vcf.freebayes.Ae) # 1019617      10
+# save(vcf.freebayes.Ae, file ="~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.Ae.Rdata")
+
+vcf.freebayes.Ol <- read.table("~/SNP_parent/result/freebayes/from_cabernet_call_separately/Ol_SNP_bi.recode.vcf",as.is=T,na.strings = ".") 
+dim(vcf.freebayes.Ol) # 997357     10
+# save(vcf.freebayes.Ol, file  ="~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.Ol.Rdata")
+
+# reformat 
+# load("~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.Ae.Rdata")
+# load("~/SNP_parent/result/freebayes/from_cabernet_call_separately/output//vcf.freebayes.Ol.Rdata")
+
+# Da-Ae 
+# get header 
+vcf.header.freebayes.Ae <- system("grep '#C' ~/SNP_parent/result/freebayes/from_cabernet_call_separately/Ae_SNP_bi.recode.vcf",intern = TRUE) 
+vcf.header.freebayes.Ae <- sub("#","",vcf.header.freebayes.Ae) #get rid of the pound sign
+vcf.header.freebayes.Ae <- unlist(strsplit(vcf.header.freebayes.Ae,split="\t"))
+
+# use function to reformat vcf file 
+vcf.freebayes.reform.Ae <- SNP.freebayes.reformat.Ae.GQ(vcf.freebayes.Ae, vcf.header.freebayes.Ae)
+dim(vcf.freebayes.reform.Ae) # 1019617      19 
+table(vcf.freebayes.reform.Ae$Ae_gt)
+#    0/0    0/1    1/1     NA 
+# 423018 531949 522721 201104 
+
+save(vcf.freebayes.reform.Ae, file = "~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.reform.Ae.Rdata")
+
+load("~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.reform.Ae.Rdata")
+
+# this way no 0/0.... but still this can be used to understand RPL & RLR... 
+# filter based on QUAL 
+vcf.freebayes.HQ.Ae <- vcf.freebayes.reform.Ae[vcf.freebayes.reform.Ae$QUAL>40,] # QUAL score of 20, which means less than 0.01 probability that it isn't polymorphic  
+dim(vcf.freebayes.HQ.Ae) # 798730     19  
+nrow(vcf.freebayes.HQ.Ae) / nrow(vcf.freebayes.reform.Ae) # 0.7829189 of SNPs were retained with QUAL > 40
+
+min(vcf.freebayes.HQ.Ae[vcf.freebayes.HQ.Ae$Ae_gt=="0/1",]$QUAL)
+min(vcf.freebayes.HQ.Ae[vcf.freebayes.HQ.Ae$Ae_gt=="1/1",]$QUAL)
+
+# count the number 
+table(vcf.freebayes.HQ.Ae$Ae_gt)
+#    0/1    1/1 
+# 285815 512608 
+
+mean(vcf.freebayes.HQ.Ae$Ae_tot.depth, na.rm=T) # 146
+
+# distribution of depth
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/read.depth.png", width=4, height=3, units="in", res=300)
+hist(log10(vcf.freebayes.HQ.Ae$Ae_tot.depth), xlab = "log10(read depth)", ylab="Number of SNPs", main="read depth")  
+abline(v=c(1,3), col="red")
+dev.off()
+
+save(vcf.freebayes.HQ.Ae, file = "~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.HQ.Ae.Rdata")
+```
+
+```{r}
+load("~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.HQ.Ae.Rdata")
+# use 1000 as the max, 10 as min 
+vcf.freebayes.HQ.1.Ae <- vcf.freebayes.HQ.Ae[(!is.na(vcf.freebayes.HQ.Ae$Ae_tot.depth) & 
+                              vcf.freebayes.HQ.Ae$Ae_tot.depth > 10 & 
+                              vcf.freebayes.HQ.Ae$Ae_tot.depth < 1000),]
+dim(vcf.freebayes.HQ.1.Ae) # 442050     19
+
+table(vcf.freebayes.HQ.1.Ae$Ae_gt)
+#    0/1    1/1 
+# 224945 217005 
+
+# # get genotype quality score, Freebayes has its own way to calculate GQ, it uses population info as the prior, different from GATK. 
+# head(vcf.freebayes.HQ.1.Ae)
+# gen.lik <- matrix(
+#   unlist(strsplit(vcf.freebayes.HQ.1.Ae$Ae_gen.lik,split = ",")),
+#   nrow=nrow(vcf.freebayes.HQ.1.Ae),
+#   byrow=TRUE
+#   )
+# 
+# head(gen.lik)
+# 
+# colnames(gen.lik) <- c("ref.lik","het.lik","alt.lik")
+# 
+# head(gen.lik)
+# gen.lik <- as.data.frame(gen.lik)
+# colnames(gen.lik)
+# 
+# vcf.freebayes.HQ.1.Ae <- cbind(vcf.freebayes.HQ.1.Ae,gen.lik,stringsAsFactors=FALSE)
+# head(vcf.freebayes.HQ.1.Ae)
+# dim(vcf.freebayes.HQ.1.Ae) # 441950     20 
+# 
+# for (i in 1:nrow(vcf.freebayes.HQ.1.Ae)){
+#   if (median(c(vcf.freebayes.HQ.1.Ae[i,]$ref.lik, vcf.freebayes.HQ.1.Ae[i,]$het.lik, vcf.freebayes.HQ.1.Ae[i,]$alt.lik)) * (-10) >= 99) {
+#     vcf.freebayes.HQ.1.Ae[i,]$Ae_GQ = 99
+#   } else { 
+#     vcf.freebayes.HQ.1.Ae[i,]$Ae_GQ = median(c(vcf.freebayes.HQ.1.Ae[i,]$ref.lik, vcf.freebayes.HQ.1.Ae[i,]$het.lik, vcf.freebayes.HQ.1.Ae[i,]$alt.lik) * (-10))
+#   }
+# }
+# 
+# vcf.freebayes.HQ.1.Ae$alt.lik[1]
+
+#####
+
+tmp.list <- strsplit(vcf.freebayes.HQ.1.Ae$INFO,split = ";")
+length(tmp.list) # 442050
+length(tmp.list[[1]]) 
+
+for (i in 1:length(tmp.list)){
+    tmp.list[[i]] <- tmp.list[[i]][c(1:41)] 
+}
+
+# 1) seperate INFO column  
+head(vcf.freebayes.HQ.1.Ae)
+info <- matrix(
+  unlist(tmp.list),
+  nrow=nrow(vcf.freebayes.HQ.1.Ae),  
+  byrow=TRUE
+  )
+
+head(info)
+
+colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EPP","EPPR","GTI","LEN","MEANALT",
+                    "MQM","MQMR","NS","NUMALT","ODDS","PAIRED","PAIREDR","PAO","PQA","PQR","PRO","QA","QR","RO",
+                    "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
+
+head(info)
+info <- as.data.frame(info)
+colnames(info)
+
+for (i in 1:ncol(info)){
+  info[,i] <- gsub("([[:print:]]+)(=)([[:print:]])","\\3",info[,i])
+}
+
+head(info)
+
+vcf.freebayes.HQ.1.Ae <- cbind(vcf.freebayes.HQ.1.Ae,info,stringsAsFactors=FALSE)
+head(vcf.freebayes.HQ.1.Ae)
+dim(vcf.freebayes.HQ.1.Ae) # 442050     60 
+vcf.freebayes.HQ.1.reform.Ae <- vcf.freebayes.HQ.1.Ae
+
+vcf.freebayes.HQ.1.reform.Ae$MAF_Ae <- round(pmin(vcf.freebayes.HQ.1.reform.Ae$Ae_alt.depth, vcf.freebayes.HQ.1.reform.Ae$Ae_ref.depth)/vcf.freebayes.HQ.1.reform.Ae$Ae_tot.depth, digits = 2) 
+
+hist(vcf.freebayes.HQ.1.reform.Ae$MAF_Ae)
+
+vcf.freebayes.HQ.1.reform.Ae$RPR <- as.numeric(vcf.freebayes.HQ.1.reform.Ae$RPR)
+vcf.freebayes.HQ.1.reform.Ae$RPL <- as.numeric(vcf.freebayes.HQ.1.reform.Ae$RPL)
+
+## tail bias 
+hist(log10(vcf.freebayes.HQ.1.reform.Ae$RPR))
+hist(log10(vcf.freebayes.HQ.1.reform.Ae$RPL))
+min(vcf.freebayes.HQ.1.reform.Ae$RPR)
+min(vcf.freebayes.HQ.1.reform.Ae$RPL)
+max(vcf.freebayes.HQ.1.reform.Ae$RPR + vcf.freebayes.HQ.1.reform.Ae$RPL)
+
+vcf.freebayes.HQ.1.reform.Ae$MBR <- round(pmin(vcf.freebayes.HQ.1.reform.Ae$RPR, vcf.freebayes.HQ.1.reform.Ae$RPL)/(vcf.freebayes.HQ.1.reform.Ae$RPR + vcf.freebayes.HQ.1.reform.Ae$RPL), digits = 2) 
+
+
+hist(vcf.freebayes.HQ.1.reform.Ae$MBR, breaks = 50)
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/MBR_Ae.png", width=4, height=3, units="in", res=300)
+hist(vcf.freebayes.HQ.1.reform.Ae$MBR, breaks = 50, xlab = "minor reads balance ratio (MBR)", ylab="number of SNPs", main="")
+abline(v=c(0.01), col="red")
+dev.off() 
+
+# cor(vcf.freebayes.HQ.1.reform.Ae$MBR, vcf.freebayes.HQ.1.reform.Ae$MAF_Ae)
+# vcf.freebayes.HQ.1.reform.Ae.het <- vcf.freebayes.HQ.1.reform.Ae[vcf.freebayes.HQ.1.reform.Ae$Ae_gt=="1/1",]
+# 
+# cor(vcf.freebayes.HQ.1.reform.Ae.het$MBR, vcf.freebayes.HQ.1.reform.Ae.het$MAF_Ae)
+
+vcf.freebayes.HQ.2.tmp.Ae <- vcf.freebayes.HQ.1.reform.Ae
+
+vcf.freebayes.HQ.2.test1.Ae <- 
+vcf.freebayes.HQ.2.tmp.Ae[(vcf.freebayes.HQ.2.tmp.Ae$MBR>0.01),]
+
+# vcf.freebayes.HQ.2.test2 <- 
+# vcf.freebayes.HQ.2.tmp[(vcf.freebayes.HQ.2.tmp$RPR>=0 & 
+#                            vcf.freebayes.HQ.2.tmp$RPL>0),]
+
+min(as.numeric(vcf.freebayes.HQ.2.test1.Ae$RPL))
+min(as.numeric(vcf.freebayes.HQ.2.test1.Ae$RPR))
+
+table(vcf.freebayes.HQ.2.test1.Ae$Ae_gt) 
+#     0/1    1/1 
+# 127827 187049 
+
+head(vcf.freebayes.HQ.1.reform.Ae) 
+save(vcf.freebayes.HQ.1.reform.Ae, file = "~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.HQ.1.reform.Ae.Rdata")
+
+### het problem 
+### compare QUAL, read depth, between 0/1 and 1/1
+
+head(vcf.freebayes.HQ.1.Ae)
+
+min(vcf.freebayes.HQ.1.Ae[vcf.freebayes.reform.Ae$Ae_gt=="0/1",]$QUAL)
+min(vcf.freebayes.HQ.1.Ae[vcf.freebayes.HQ.1.Ae$Ae_gt=="1/1",]$QUAL)
+
+min(vcf.freebayes.HQ.1.Ae[vcf.freebayes.HQ.1.Ae$Ae_gt=="0/1",]$QUAL)
+min(vcf.freebayes.HQ.1.Ae[vcf.freebayes.HQ.1.Ae$Ae_gt=="1/1",]$QUAL)
+
+min(vcf.freebayes.HQ.1.Ae[vcf.freebayes.HQ.1.Ol$Ol_gt=="0/1",]$QUAL)
+min(vcf.freebayes.HQ.1.Ae[vcf.freebayes.HQ.1.Ol$Ol_gt=="1/1",]$QUAL)
+
+min(vcf.freebayes.HQ.2.test1.Ol[vcf.freebayes.HQ.2.test1.Ol$Ol_gt=="0/1",]$QUAL)
+min(vcf.freebayes.HQ.2.test1.Ol[vcf.freebayes.HQ.2.test1.Ol$Ol_gt=="1/1",]$QUAL) 
+
+library(ggplot2) 
+p.QUAL.Ol <- ggplot(data = vcf.freebayes.HQ.2.test1.Ol) 
+p.QUAL.Ol <- p.QUAL.Ol + geom_histogram(aes(log10(QUAL), fill=Ol_gt)) 
+p.QUAL.Ol <- p.QUAL.Ol + facet_wrap(~Ol_gt, ncol = 1) 
+p.QUAL.Ol <- p.QUAL.Ol +labs(list(x="log10(QUAL)", y="Number of SNPs"))  
+p.QUAL.Ol <- p.QUAL.Ol + theme(legend.position = "none") 
+p.QUAL.Ol 
+
+# plot QUAL by Ae_gt  
+library(ggplot2) 
+p.QUAL.Ae <- ggplot(data = vcf.freebayes.HQ.Ae) 
+p.QUAL.Ae <- p.QUAL.Ae + geom_histogram(aes(log10(QUAL), fill=Ae_gt)) 
+p.QUAL.Ae <- p.QUAL.Ae + facet_wrap(~Ae_gt, ncol = 1) 
+p.QUAL.Ae <- p.QUAL.Ae +labs(list(x="log10(QUAL)", y="Number of SNPs"))  
+p.QUAL.Ae <- p.QUAL.Ae + theme(legend.position = "none")
+p.QUAL.Ae 
+
+ggsave(p.QUAL.Ae, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.QUAL.Ae.png", height = 4, width = 6)
+
+# plot total depth by Ae_gt 
+p.tot.depth.Ae <- ggplot(data = vcf.freebayes.HQ.2.test1.Ae) 
+p.tot.depth.Ae <- p.tot.depth.Ae + geom_histogram(aes(Ae_tot.depth, fill=Ae_gt)) + scale_x_log10() 
+p.tot.depth.Ae <- p.tot.depth.Ae + facet_wrap(~Ae_gt, ncol = 1)
+p.tot.depth.Ae
+
+# plot MBR
+p.MBR.Ae <- ggplot(data = vcf.freebayes.HQ.1.reform.Ae) 
+p.MBR.Ae <- p.MBR.Ae + geom_histogram(aes(MBR, fill=Ae_gt))  
+p.MBR.Ae <- p.MBR.Ae + facet_wrap(~Ae_gt, ncol = 1)
+p.MBR.Ae  
+ggsave(p.MBR.Ae, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.MBR.Ae.png", height = 4, width = 6)
+
+# alt/ref allele ratio
+vcf.freebayes.HQ.2.test1.Ae.het <- 
+vcf.freebayes.HQ.2.test1.Ae[vcf.freebayes.HQ.2.test1.Ae$Ae_gt=="0/1",]
+
+vcf.freebayes.HQ.2.test1.Ae.het$allele_ratio <- round(vcf.freebayes.HQ.2.test1.Ae.het$Ae_alt.depth/vcf.freebayes.HQ.2.test1.Ae.het$Ae_ref.depth, digits = 2)
+
+hist(log10(vcf.freebayes.HQ.2.test1.Ae.het$allele_ratio), breaks= 150) 
+
+
+nrow(vcf.freebayes.HQ.2.test1.Ae.het[vcf.freebayes.HQ.2.test1.Ae.het$allele_ratio>0,])
+nrow(vcf.freebayes.HQ.2.test1.Ae.het) 
+
+pl <- ggplot(data = vcf.freebayes.HQ.2.test1.Ae.het) 
+pl <- pl + geom_histogram(aes(allele_ratio)) 
+pl <- pl +labs(list(x="alt.depth/ref.depth", y="nunber of SNPs"))
+pl
+
+# didn't see correlation between MAF & MBR... 
+cor.test(vcf.freebayes.HQ.2.test1.Ae.het)
+cor.test(vcf.freebayes.HQ.2.test1.Ae.het$MAF_Ae, vcf.freebayes.HQ.2.test1.Ae.het$MBR)
+cor.test(vcf.freebayes.HQ.2.test1.Ae$MAF_Ae, vcf.freebayes.HQ.2.test1.Ae$MBR)
+
+cor.test(vcf.freebayes.HQ.2.test1.Ae.het$MAF_Ae, vcf.freebayes.HQ.2.test1.Ae.het$QUAL)
+cor.test(vcf.freebayes.HQ.2.test1.Ae$MAF_Ae, vcf.freebayes.HQ.2.test1.Ae$QUAL) 
+
+hist(vcf.freebayes.HQ.2.test1.Ae.het$Ae_alt.depth/vcf.freebayes.HQ.2.test1.Ae.het$Ae_ref.depth, breaks = 50) 
+```
+
 
 # using freebayes to call SNP (now pretty sure is from no-bolting uniquely mapped result)
 # import data 
