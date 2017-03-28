@@ -428,4 +428,84 @@ ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/SNP.main.PerMb.png", 
 
 ```
 
+# late silique data
+```{r}
+# compare late silique & young leaf samples 
+sample_des_late_silique <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/late_silique/505 collection_Sequencing_Statistics_Result.csv", header = T)
+
+sample_des_a <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/Sequencing_Statistics_Result_TBD170001_1617.csv", header = T)
+
+sample_des_b <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/Sequencing_Statistics_Result_TBD170026.csv", header = T)
+
+sample_des_a$X_1 <- as.character(sample_des_a$X_1)
+sample_des_b$Name <- as.character(sample_des_b$Name)
+
+name_young_leaf <- c(sample_des_a$X_1, sample_des_b$Name)
+sample_des_late_silique$Name <- as.character(sample_des_late_silique$Name)
+name_late_silique <- sample_des_late_silique$Name
+
+common <- intersect(name_late_silique, name_young_leaf) # only 29 samples have exactly the same ID between young leaf & late silique data... 
+common
+
+# get the unique ones in late silique, are they having slightly differnet names in young leaf??? 
+name_late_silique
+common
+
+setdiff(name_late_silique, common) # setdiff will discard duplicated values, so 3 DG5 lines were discarded here... 
+?setdiff
+
+name_young_leaf # 94
+name_late_silique # 47 
+
+unique(name_young_leaf) # 90 unqiue 
+unique(name_late_silique) # 45 unique ### DG5 winter type... 
+
+name_late_silique[duplicated(name_late_silique)]
+name_young_leaf[duplicated(name_young_leaf)]
+
+### add * to duplicated items
+sample_des_c <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/late_silique/batch_C.csv", header = T, na.strings = "")
+tail(sample_des_c)
+
+sample_des_b <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/late_silique/batch_B.csv", header = T,na.strings = "")
+
+sample_des_a <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/late_silique/batch_A.csv", header = T,na.strings = "")
+tail(sample_des_a)
+
+sample_des_a$feature <- paste(sample_des_a$Name, sample_des_a$Sample.Description.Origin...Type., sample_des_a$X, sep = ";")
+sample_des_b$feature <- paste(sample_des_b$Name, sample_des_b$Sample.Description.Origin...Type., sample_des_b$X, sep = ";")
+sample_des_c$feature <- paste(sample_des_c$Name, sample_des_c$Sample.Description.Origin...Type., sample_des_c$X, sep = ";")
+
+all.new <- c(sample_des_a$feature, sample_des_b$feature, sample_des_c$feature)
+all.new.2 <- all.new[which(!is.na(all.new))]
+
+dup.new <- all.new.2[duplicated(all.new.2)]
+dup.new # duplicated lines 
+dup
+
+sample_des_a$Name <- as.character(sample_des_a$Name)
+sample_des_b$Name <- as.character(sample_des_b$Name)
+sample_des_c$Name <- as.character(sample_des_c$Name)
+
+all <- c(sample_des_a$Name, sample_des_b$Name, sample_des_c$Name)
+all.2 <- all[which(!is.na(all))]
+
+dup <- all.2[duplicated(all.2)]
+dup # duplicated lines 
+
+sample_des_a$dup <- sample_des_a$Name %in% dup
+sample_des_b$dup <- sample_des_b$Name %in% dup
+sample_des_c$dup <- sample_des_c$Name %in% dup
+
+write.csv(sample_des_a, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_a.csv")
+write.csv(sample_des_b, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_b.csv")
+write.csv(sample_des_c, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_c.csv")
+```
+
+
+
+
+
+
+
 

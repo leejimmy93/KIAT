@@ -367,7 +367,7 @@ colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EP
 
 head(info)
 info <- as.data.frame(info)
-colnames(info)
+colnames(info) 
 
 for (i in 1:ncol(info)){
   info[,i] <- gsub("([[:print:]]+)(=)([[:print:]])","\\3",info[,i])
