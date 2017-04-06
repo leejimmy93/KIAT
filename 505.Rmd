@@ -490,7 +490,7 @@ sample_des_c$Name <- as.character(sample_des_c$Name)
 all <- c(sample_des_a$Name, sample_des_b$Name, sample_des_c$Name)
 all.2 <- all[which(!is.na(all))]
 
-dup <- all.2[duplicated(all.2)]
+dup <- all.2[duplicated(all.2)] 
 dup # duplicated lines 
 
 sample_des_a$dup <- sample_des_a$Name %in% dup

@@ -2348,17 +2348,53 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 
 ``` 
 
-# final output  
+# randomly pick SNPs that can be confirmed in F2 VS. not found in F2 
 ```{r}
-# 1) summary of identified SNPs (table3, synnomynous & non synnomymous SNPs requires SNP annotation, exonic, intergenic, intronic...)
+library(Biostrings)
 
-# 2) SNP distribution on sub A and sub C genome 
+# get SNP data
+all <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/vcf.Ae.Ol.intersect.final.csv",row.names = 1)
+head(all)
+tail(all)
 
-# 3) SNP distribution across chromosome (normalized by gene number, mapping rate...)
+all.revised <- paste(all$CHROM, all$POS, sep = "_")
 
-# 4) Ka/Ks... (looks like only available after annotaiton) 
+# randomly sample data... 
+set.seed(1) 
+test <- sample(all.revised, size = 96, replace = F)
+test
 
-# 5) if GATK result is available, add result, venn diagram show overlaps... 
+# get 150bp position info flanking the candidate SNPs 
+test.2 <- data.frame(CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", test),
+                     POS = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", test) 
+                     )
+test.2$start <- as.numeric(as.character(test.2$POS))-150
+test.2$end <- as.numeric(as.character(test.2$POS))+150
+
+test.2
+
+# get genome fasta sequence
+napus <-readDNAStringSet("~/Desktop/Brassica_project/IGV_file/Brassica_napus_v4.1.chromosomes.fa")
+napus[[1]]
+napus$chrA01
+names(napus)[[1]] 
+length(napus)
+
+# extract 150bp flanking sequence in fasta format 
+seq <- list()
+
+for (i in 1:length(napus)){
+ test.i <- test.2[test.2$CHROM == names(napus)[i],]
+ seq[[i]] <- DNAStringSet(napus[[i]], start = test.i$start, end = test.i$end, use.names = T) 
+ names(seq[[i]]) <- paste(test.i$CHROM, test.i$POS, test.i$start, test.i$end, sep = "_")
+}
+
+seq[[1]]
+# merge DNAstringset into a large one 
+
+seq.final <- do.call("c", seq)
+
+writeXStringSet(seq.final, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/seq.final.fa")
 
 ```
 

@@ -565,6 +565,40 @@ SNP.freebayes.reformat.Ol <- function(vcf, vcf.header){
 }
 
 
+##### get fastq sequence for lab test
+library(Biostrings) 
+get.fasta <- function(SNP.csv, genome.ref.DNAbiostring){
+  # get SNP data
+  SNP.revised <- paste(SNP.csv$CHROM, SNP.csv$POS, sep = "_")
+  # get randomly SNPs ... 
+  set.seed(1) 
+  test <- sample(SNP.revised, size = 96, replace = F) # for 96 plate
+  # get 150bp position info flanking the candidate SNPs 
+  test.2 <- data.frame(CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", test),
+                       POS = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", test) 
+  )
+  test.2$start <- as.numeric(as.character(test.2$POS))-150 # 150bp flanking the candidate SNPs
+  test.2$end <- as.numeric(as.character(test.2$POS))+150
+  # extract 150bp flanking sequence in fasta format 
+  seq <- list()
+  
+  for (i in 1:length(genome.ref.DNAbiostring)){
+    test.i <- test.2[test.2$CHROM == names(genome.ref.DNAbiostring)[i],]
+    seq[[i]] <- DNAStringSet(napus[[i]], start = test.i$start, end = test.i$end, use.names = T) 
+    names(seq[[i]]) <- paste(test.i$CHROM, test.i$POS, test.i$start, test.i$end, sep = "_")
+  }
+  # merge DNAstringset into a large one 
+  seq.final <- do.call("c", seq) 
+  return(seq.final)
+}
+
+
+
+
+
+
+
+
 
 
 
