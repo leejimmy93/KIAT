@@ -7,15 +7,33 @@ output:
     keep_md: yes 
 ---
 
+### data description
+```{r}
+# RNA seq data from late silique, batch C: 47 lines; batch D: 41 lines, more lines will come... 
+```
+
 # preprocess 
 ```{r}
-# download 
-# trimming on whitney 
-# https://github.com/leejimmy93/KIAT_whitney/blob/master/505/trimming_batchD.sh
+# 1) download 
+
+# 2) trimming 
+# batch C: https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/trimming.slurm
+# batch D: https://github.com/leejimmy93/KIAT_whitney/blob/master/505/trimming_batchD.sh
+
+# 3) mapping using STAR 
+# batch C: https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array.slurm (sometimes there is error: could not load STAR module, for this case, load STAR module in the environment before sbatch)
+# 
+
+
+```
+
+# analyze mapping result 
+```{r}
+
 ```
 
 # SNP calling 
-```{r}
+```{r} 
 
 ```
 
