@@ -2352,27 +2352,6 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 ```{r}
 library(Biostrings)
 
-# get SNP data
-all <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/vcf.Ae.Ol.intersect.final.csv",row.names = 1)
-head(all)
-tail(all)
-
-all.revised <- paste(all$CHROM, all$POS, sep = "_")
-
-# randomly sample data... 
-set.seed(1) 
-test <- sample(all.revised, size = 96, replace = F)
-test
-
-# get 150bp position info flanking the candidate SNPs 
-test.2 <- data.frame(CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", test),
-                     POS = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", test) 
-                     )
-test.2$start <- as.numeric(as.character(test.2$POS))-150
-test.2$end <- as.numeric(as.character(test.2$POS))+150
-
-test.2
-
 # get genome fasta sequence
 napus <-readDNAStringSet("~/Desktop/Brassica_project/IGV_file/Brassica_napus_v4.1.chromosomes.fa")
 napus[[1]]
@@ -2380,23 +2359,36 @@ napus$chrA01
 names(napus)[[1]] 
 length(napus)
 
-# extract 150bp flanking sequence in fasta format 
-seq <- list()
+# get SNP data
+all <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/vcf.Ae.Ol.intersect.final.csv",row.names = 1)
+head(all)
+tail(all) 
 
-for (i in 1:length(napus)){
- test.i <- test.2[test.2$CHROM == names(napus)[i],]
- seq[[i]] <- DNAStringSet(napus[[i]], start = test.i$start, end = test.i$end, use.names = T) 
- names(seq[[i]]) <- paste(test.i$CHROM, test.i$POS, test.i$start, test.i$end, sep = "_")
-}
-
-seq[[1]]
-# merge DNAstringset into a large one 
-
-seq.final <- do.call("c", seq)
+seq.final <- get.fasta(all, napus)
 
 writeXStringSet(seq.final, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/seq.final.fa")
 
+# get SNP present in F2 
+F2.Y <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/Final_F2_SNP_Sites.csv")
+head(F2.Y)
+get.fasta(F2.Y, napus)
+
+# need to get GQ distribution for all the picked SNPs... make plot... 
+
+
+
+
 ```
+
+
+
+
+
+
+
+
+
+
 
 
 
