@@ -378,7 +378,7 @@ colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EP
 
 head(info)
 info <- as.data.frame(info)
-colnames(info)
+colnames(info) 
 
 for (i in 1:ncol(info)){
   info[,i] <- gsub("([[:print:]]+)(=)([[:print:]])","\\3",info[,i])
@@ -2348,19 +2348,47 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 
 ``` 
 
-# final output  
+# randomly pick SNPs that can be confirmed in F2 VS. not found in F2 
 ```{r}
-# 1) summary of identified SNPs (table3, synnomynous & non synnomymous SNPs requires SNP annotation, exonic, intergenic, intronic...)
+library(Biostrings)
 
-# 2) SNP distribution on sub A and sub C genome 
+# get genome fasta sequence
+napus <-readDNAStringSet("~/Desktop/Brassica_project/IGV_file/Brassica_napus_v4.1.chromosomes.fa")
+napus[[1]]
+napus$chrA01
+names(napus)[[1]] 
+length(napus)
 
-# 3) SNP distribution across chromosome (normalized by gene number, mapping rate...)
+# get SNP data
+all <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/vcf.Ae.Ol.intersect.final.csv",row.names = 1)
+head(all)
+tail(all) 
 
-# 4) Ka/Ks... (looks like only available after annotaiton) 
+seq.final <- get.fasta(all, napus)
 
-# 5) if GATK result is available, add result, venn diagram show overlaps... 
+writeXStringSet(seq.final, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/seq.final.fa")
+
+# get SNP present in F2 
+F2.Y <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/Final_F2_SNP_Sites.csv")
+head(F2.Y)
+get.fasta(F2.Y, napus)
+
+# need to get GQ distribution for all the picked SNPs... make plot... 
+
+
+
 
 ```
+
+
+
+
+
+
+
+
+
+
 
 
 
