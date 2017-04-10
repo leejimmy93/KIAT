@@ -229,43 +229,59 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # 5) combine into one big vcf file 
 # concat.sh
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/concat.sh)
+# output: 505.vcf.gz 
 
 # 6) filter using vcftool to get only biallelic SNPs
 # extract_SNP.sh & extract_biallelic.sh 
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/extract_SNP.sh)  
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/extract_biallelic.sh) 
+# output: 505_SNP_biallelic.gz 
 
-# 7) filter based on MAF, missingness, and Q 
-# filtering_MAF_missingrate_Q.sh 
-# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filtering_MAF_missingrate_Q.sh)
+# 7) filter based on MAF and Q 
+# filtering_MAF_Q.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filtering_MAF_Q.sh)
+# output: 505_filtered_MAF_Q.gz 
 
 # 8) calcaulate mean read depth across individuals
 # calc_depth.sh
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc_depth.sh) calculate in R
+# output: 505_filtered_MAF_Q.ldepth.mean 
 
-# 9) filter based on read depth 
+# 9) filter based on read depth (after check mean and distribution of read depth, decide to use 5-500 as the threshold)
 # filtering_depth.sh
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filtering_depth.sh)
+# output: 505_filtered_MAF_Q_depth.gz 
 
-# 10) calculate MAF, missing rate, depth, and LD... 
+# 10) calculate missing rate (SNPs with less than median of missing rate should be filtered out) 
+# calc_missingness.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc_missingness.sh)
+# output: 505_filtered_MAF_Q_depth.imiss; 505_filtered_MAF_Q_depth.lmiss 
+
+# 11) filter based on missing rate 
+# filter_missingness.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filtering_missingrate.sh)
+# output: 505_filtered_MAF_Q_depth_missingness.gz 
+
+# 12) calculate MAF, missing rate, depth, and LD... 
 # calc.sh
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc.sh)
+# output: a lot of stats start with 505_filtered_MAF_Q_depth_missingness prefix 
 ```
 
-# stats 
+# stats mainly for filtered dataset 
 ```{r}
 # mean read depth before read depth trimming 
-mean.depth <- read.table("~/505/vcf/combined/505_filtered_MAF_missingrate_Q.ldepth.mean", header=T)
+mean.depth <- read.table("~/505/vcf/combined/505_filtered_MAF_Q_depth_missingness.ldepth.mean", header=T)
 head(mean.depth)
-mean(mean.depth$MEAN_DEPTH) # 40
+mean(mean.depth$MEAN_DEPTH) # 34.53817 
 
 png("~/505/output/figure/read.depth.png", width=4, height=3, units="in", res=300) 
 hist(log10(mean.depth$MEAN_DEPTH), xlab = "log10(read depth)", ylab="Number of SNPs", main="read depth", breaks=1000)
 abline(v=c(log10(5),log10(500)), col="red", lwd=2)
 dev.off()
 
-dim(mean.depth) # 519543
-# decide to use 5 to 500 as the threshold for depth
+dim(mean.depth) # 434331      4 
+# decide to use 5 to 500 as the threshold for depth 
 
 # MAF calculation before filtering 
 MAF <- read.table("~/505/vcf/combined/505_freq.txt")
@@ -284,10 +300,10 @@ abline(v=c(0.01), col="red", lwd=2)
 dev.off()
 
 # stats after filtering 
-# MAF 
-MAF.2 <- read.table("~/505/vcf/combined/505_filtered_freq.txt")
+# MAF (see log for how toget freq.txt from .frq file)
+MAF.2 <- read.table("~/505/vcf/combined/505_filtered_MAF_Q_depth_missingness_freq.txt")
 head(MAF.2)
-dim(MAF.2)
+dim(MAF.2) # 434331      3 
 
 class(MAF.2$V3)
 
@@ -301,9 +317,10 @@ abline(v=c(0.01), col="red", lwd=2)
 dev.off()
 
 # missing rate 
-missing.individual <- read.table("~/505/vcf/combined/505_filtered_MAF_missingrate_Q_depth.imiss", header=T)
+missing.individual <- read.table("~/505/vcf/combined/505_filtered_MAF_Q_depth_missingness.imiss", header=T)
 
 head(missing.individual) 
+dim(missing.individual) # 94 
 hist(missing.individual$F_MISS, breaks=100)
 
 png("~/505/output/figure/missing.individual.png", width=4, height=3, units="in", res=300) 
@@ -313,27 +330,57 @@ dev.off()
 # pull out the individuals with high missing rate 
 missing.individual[missing.individual$F_MISS > 0.2,]
 
-
-missing.site <- read.table("~/505/vcf/combined/505_filtered_MAF_missingrate_Q_depth.lmiss", header=T)
+# missing rate before filtering 
+missing.site <- read.table("~/505/vcf/combined/505_filtered_MAF_Q_depth.lmiss", header=T)
 head(missing.site)
 
 hist(missing.site$F_MISS, breaks=20)
+median(missing.site$F_MISS) # 0.01  
+mean(missing.site$F_MISS) # 0.03 
+# based on these values, SNPs with less than 0.1 
+missing.site$N_DATA # looks like it consider I have 188 samples, but... do I? no!!! I only have 94 samples... why 188 here? wierd... 
 
 png("~/505/output/figure/missing.locus.png", width=4, height=3, units="in", res=300) 
 hist(missing.site$F_MISS, xlab = "missing rate at locus level", ylab="Number of SNPs", main="Missing rate at locus level", breaks=20)
 dev.off()
+
+# missing rate after filtering 
+missing.site.2 <- read.table("~/505/vcf/combined/505_filtered_MAF_Q_depth_missingness.lmiss", header=T)
+head(missing.site.2)
+
+hist(missing.site.2$F_MISS, breaks=20)
+median(missing.site.2$F_MISS) # 0.01  
+mean(missing.site.2$F_MISS) # 0.03 
+min(missing.site.2$F_MISS)
+max(missing.site.2$F_MISS) # 89% 
+# based on these values, SNPs with less than 0.1 
+missing.site.2$N_DATA # 188 because this is diploid 
+missing.site.2$N_DATA
+
+png("~/505/output/figure/missing.locus.png", width=4, height=3, units="in", res=300) 
+hist(missing.site.2$F_MISS, xlab = "missing rate at locus level", ylab="Number of SNPs", main="Missing rate at locus level", breaks=20)
+dev.off()
 ```
 
-# analyze vcf file 
+# analyze vcf file (come to add GQ, filter based on GQ... )
 ```{r}
 library("vcfR")
-temp <- read.vcfR("505_filtered_MAF_missingrate_Q_depth.gz")
-  vcfbi <- is.biallelic(temp)
-  vcfref <- subset(getREF(temp), subset = vcfbi)
-  vcfalt <- subset(getALT(temp), subset = vcfbi)
-  vcfgts <- subset(extract.gt(temp, element = "GT"), subset = vcfbi)
-  vcfpos <- subset(getPOS(temp), subset = vcfbi)
-  vcfchrom <- subset(getCHROM(temp), subset = vcfbi)
+leaf_505 <- read.vcfR("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf/combined/505_filtered_MAF_Q_depth_missingness.gz")
+
+# save(leaf_505, file="~/505/output/leaf_505.Rdata")
+load("~/505/output/leaf_505.Rdata")
+
+# reform the orginal data
+temp <- leaf_505
+
+  vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
+  vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
+  vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele 
+  vcfgts <- subset(extract.gt(temp, element = "GT"), subset = vcfbi) # get gt info 
+  vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
+  vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
+  # vcfgls <- subset(extract.gt(temp, element = "GL"), subset = vcfbi) # get gl 
+
   temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
   colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
   rnames <- rownames(temp2)
@@ -341,22 +388,76 @@ temp <- read.vcfR("505_filtered_MAF_missingrate_Q_depth.gz")
   temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
   temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
   row.names(temp2) <- rnames
+  
+  # transpose to desired format 
+  temp2.t <- t(temp2)
+  rownames(temp2.t)[1:4] <- c("CHROM","POS","REF","ALT")
+  colnames(temp2.t) <- rnames
 
-head(temp2)
-temp2.5000 <- temp2[1:5000,] 
+# population structure 
+dim(temp2.t) # 98 434331 
+temp2.t.2500 <- temp2.t[5:98,1:2500] 
+temp2.t.2500[5:8, 1:20]
 
-geno.numeric <- data.matrix(temp2.5000)
+geno.numeric <- data.matrix(temp2.t.2500)
 genDist <- as.matrix(dist(geno.numeric))
 
 #perform the multi-dimensional scaling
 geno.mds <- as.data.frame(cmdscale(genDist))
 ?cmdscale
 head(geno.mds) #now we have 2 dimensions
+dim(geno.mds)
 
 plot(geno.mds) 
 
+######## all 
+temp2.t.all <- temp2.t[5:98,] 
+temp2.t.all[5:8, 1:20]
 
+geno.numeric.all <- data.matrix(temp2.t.all)
+genDist.all <- as.matrix(dist(geno.numeric.all))
+
+#perform the multi-dimensional scaling
+geno.mds.all <- as.data.frame(cmdscale(genDist.all))
+?cmdscale
+head(geno.mds.all) #now we have 2 dimensions
+dim(geno.mds.all)
+
+plot(geno.mds.all) 
 ``` 
+
+# transfer data to local computer 
+```{r}
+dim(temp2.t.all)
+write.csv(temp2.t.all, file="~/505/output/gt_data.csv") 
+```
+
+### import into GAPIT for population structure (do this on local computer)
+```{r}
+source("http://www.bioconductor.org/biocLite.R")
+biocLite("multtest")
+install.packages("gplots")
+install.packages("LDheatmap")
+install.packages("genetics")
+install.packages("EMMREML") 
+install.packages("scatterplot3d")
+library(multtest)
+library(gplots)
+library(LDheatmap)
+library(genetics)
+library(compiler) #this library is already installed in R
+library("scatterplot3d")
+source("http://zzlab.net/GAPIT/gapit_functions.txt")
+source("http://zzlab.net/GAPIT/emma.txt")
+setwd("C:/Users/ruijuan.li/Desktop/myGAPIT")
+
+
+
+
+
+
+```
+
 
 ```{r}
 # chromosome distribution 
