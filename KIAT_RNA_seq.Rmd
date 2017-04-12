@@ -259,7 +259,7 @@ p.average.HQ <- p.average.HQ + theme(axis.text.x = element_text(angle = 90), leg
 p.average.HQ <- p.average.HQ + geom_text(data = average.mapping.long.HQ, aes(x=Group.1, y=value, label=factor(round(value,0)))) 
 p.average.HQ
 
-ggsave(p.average.HQ, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/average_HQ.png", height = 6, width = 2) 
+ggsave(p.average.HQ, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/average_HQ.png", height = 4, width = 2) 
 
 average.mapping.long.mapping <- 
   average.mapping.long[average.mapping.long$variable!="Percent_HQ",]
@@ -272,7 +272,7 @@ p.average.mapping <- p.average.mapping + theme(axis.text.x = element_text(angle 
 p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long.mapping, aes(x=variable, y=value, label=factor(round(value,0)))) 
 p.average.mapping 
 
-ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/average_mapping.png", height = 6, width = 7) 
+ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/average_mapping.png", height = 6, width = 5) 
 ```
 
 # assemble unmapped reads to see what they hit 
@@ -418,34 +418,6 @@ sum(Ol_class_code$V1)
 # gffread -w Ae.u.fa -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ae.combined_u.gtf
 # gffread -w Ol.u.fa -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Ol.combined_u.gtf 
 
-### Cap3 to remove redundant sequences (isoforms)
-# run_cap.sh 
-# https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_RNA_transcriptome/run_cap3.sh
-
-# concatenate contig and singletons from cap3 
-# cat Ae.u.fa.cap.contigs Ae.u.fa.cap.singlets > Ae.u.fa.cap.contigs_singlets
-# cat Ol.u.fa.cap.contigs Ol.u.fa.cap.singlets > Ol.u.fa.cap.contigs_singlets 
-
-# no need to blastn against rapa ref CDS because those are with other class code 
-
-# steps needed as pipline: get transcripts with ORF  
-# TransDecoder.LongOrfs -t ../../cap3/Ae.u.fa.cap.contigs_singlets
-# TransDecoder.LongOrfs -t ../../cap3/Ol.u.fa.cap.contigs_singlets
-
-# steps needed as stats check: blast against nr database to see how many have plant hit how many don't have plant hit or don't have hit at all... 
-# blast_nr.sh 
-# https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_RNA_transcriptome/blast_nr.sh
-
-### note: need to remove redundancy when combined with de-novo transcripts & remove isoforms... 
-
-# To do: combine with de-novo transcripts for PASA annotation ... at this moment learn PASA for annotation with reference based assembly only... 
-
-
-
-
-
-
-####################### This can be done after reduant sequences are removed ################## 
 # next step: generate protein sequence from these new genes, and blastp against nr database to see what they are ... but 1stly I need to get protein sequence, however, in the gtf file I have, there is no CDS feature, which prohibit me from making protein sequences out of it, so now need to figure this out, get the protein sequence! 
 
 ####### try this on Brassica rapa 
@@ -463,7 +435,7 @@ sum(Ol_class_code$V1)
 
 # blastp long orfs against nr databaset to see what these protein hit... 
 # using script blast_nr.sh 
-# get target gene ID, batch entrez sequence fasta from NCBI protein database and explore the result. 
+# get target gene ID, batch entrez sequence fasta from NCBI protein database and explore the result.
 
 
 

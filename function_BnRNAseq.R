@@ -562,12 +562,11 @@ SNP.freebayes.reformat.Ol <- function(vcf, vcf.header){
           as.numeric) 
   
   return(vcf.reform)  
-}
-
+} 
 
 ##### get fastq sequence for lab test
 library(Biostrings) 
-get.fasta <- function(SNP.csv, genome.ref.DNAbiostring){
+SNP.reform <- function(SNP.csv){
   # get SNP data
   SNP.revised <- paste(SNP.csv$CHROM, SNP.csv$POS, sep = "_")
   # get randomly SNPs ... 
@@ -576,7 +575,11 @@ get.fasta <- function(SNP.csv, genome.ref.DNAbiostring){
   # get 150bp position info flanking the candidate SNPs 
   test.2 <- data.frame(CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", test),
                        POS = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", test) 
-  )
+  ) 
+  return(test.2)
+  }
+
+get.fasta <- function(test.2, genome.ref.DNAbiostring){
   test.2$start <- as.numeric(as.character(test.2$POS))-150 # 150bp flanking the candidate SNPs
   test.2$end <- as.numeric(as.character(test.2$POS))+150
   # extract 150bp flanking sequence in fasta format 
@@ -589,9 +592,15 @@ get.fasta <- function(SNP.csv, genome.ref.DNAbiostring){
   }
   # merge DNAstringset into a large one 
   seq.final <- do.call("c", seq) 
-  return(seq.final)
+  return(seq.final) 
 }
 
+#### get GATK vcf content for picked SNPs 
+get.vcf <- function(test.2, vcf){
+  vcf.new <- vcf[((vcf$CHROM %in% test.2$CHROM) & (vcf$POS %in% test.2$POS)),]
+  return(vcf.new) 
+}
+ 
 
 
 

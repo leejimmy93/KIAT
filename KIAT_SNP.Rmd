@@ -2351,31 +2351,104 @@ sum(Ae_Ol_after_filter.main.unique$Ol_tot.depth)/nrow(Ae_Ol_after_filter.main.un
 # randomly pick SNPs that can be confirmed in F2 VS. not found in F2 
 ```{r}
 library(Biostrings)
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 
 # get genome fasta sequence
 napus <-readDNAStringSet("~/Desktop/Brassica_project/IGV_file/Brassica_napus_v4.1.chromosomes.fa")
-napus[[1]]
-napus$chrA01
-names(napus)[[1]] 
-length(napus)
 
-# get SNP data
-all <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/vcf.Ae.Ol.intersect.final.csv",row.names = 1)
-head(all)
-tail(all) 
+# get GATK final vcf content 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.GATK.Rdata") 
 
-seq.final <- get.fasta(all, napus)
-
-writeXStringSet(seq.final, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/seq.final.fa")
-
-# get SNP present in F2 
+######### get SNP present in F2 #############
 F2.Y <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/Final_F2_SNP_Sites.csv")
-head(F2.Y)
-get.fasta(F2.Y, napus)
 
-# need to get GQ distribution for all the picked SNPs... make plot... 
+test.2.F2.Y <- SNP.reform(F2.Y) # randomly pick 96 
+seq.final.F2.Y <- get.fasta(test.2.F2.Y, napus) # get fasta seq for the 96 SNPs
+vcf.F2.Y <- get.vcf(test.2.F2.Y, vcf.Ae.Ol.GATK) 
+sum((vcf.F2.Y$CHROM %in% test.2.F2.Y$CHROM) & (vcf.F2.Y$POS %in% test.2.F2.Y$POS)) # check, correct!!! 
 
+writeXStringSet(seq.final.F2, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/seq.final.F2.fa")
 
+######### get SNP not present in F2 ############
+# get SNP data
+all <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/vcf.Ae.Ol.intersect.final.csv",row.names = 1) 
+
+all$feature <- paste(all$CHROM, all$POS, sep = "_") 
+F2.Y$feature <- paste(F2.Y$CHROM, F2.Y$POS, sep = "_")
+
+sum(F2.Y$feature %in% all$feature)
+sum(all$feature %in% F2.Y$feature)
+
+F2.N <- all[(all$feature %in% F2.Y$feature) == "FALSE",]
+dim(F2.N)
+dim(all) 
+dim(F2.Y)
+
+dim(F2.Y) + dim(F2.N)
+
+test.2.F2.N <- SNP.reform(F2.N) # randomly pick 96 
+seq.final.F2.N <- get.fasta(test.2.F2.N, napus) # get fasta seq for the 96 SNPs
+vcf.F2.N <- get.vcf(test.2.F2.N, vcf.Ae.Ol.GATK) # get vcf 
+sum((vcf.F2.N$CHROM %in% test.2.F2.N$CHROM) & (vcf.F2.N$POS %in% test.2.F2.N$POS)) # check, correct!!! 
+
+####### plot depth & quality for F2.Y & F2.N dataset  
+
+########## present in F2 with good quality ##############
+depth.F2.Y <- vcf.F2.Y[,c("Ae_approx.depth", "Ol_approx.depth")]
+GQ.F2.Y <- vcf.F2.Y[,c("Ae_genotype.qual", "Ol_genotype.qual")]
+
+# reformat 
+library(reshape)
+depth.F2.Y.long <- melt(depth.F2.Y)
+depth.F2.Y.long$gt <- gsub("(Ae|Ol)(_)(approx.depth)","\\1",depth.F2.Y.long$variable)
+depth.F2.Y.long$gt
+
+GQ.F2.Y.long <- melt(GQ.F2.Y)
+GQ.F2.Y.long$gt <- gsub("(Ae|Ol)(_)(genotype.qual)","\\1",GQ.F2.Y.long$variable) 
+GQ.F2.Y.long$gt
+
+# plot total depth by Ae_gt  
+p.tot.depth.F2.Y <- ggplot(data = depth.F2.Y.long) 
+p.tot.depth.F2.Y <- p.tot.depth.F2.Y + geom_histogram(aes(value, fill=gt)) # + scale_x_log10() 
+p.tot.depth.F2.Y <- p.tot.depth.F2.Y + facet_wrap(~gt, ncol = 1)
+p.tot.depth.F2.Y  
+ggsave(p.tot.depth.F2.Y, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.tot.depth.F2.Y.png", width = 6, height = 8)
+
+# plot GQ
+p.GQ.F2.Y <- ggplot(data = GQ.F2.Y.long) 
+p.GQ.F2.Y <- p.GQ.F2.Y + geom_histogram(aes(value, fill=gt))  
+p.GQ.F2.Y <- p.GQ.F2.Y + facet_wrap(~gt, ncol = 1)
+p.GQ.F2.Y 
+ggsave(p.GQ.F2.Y, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.GQ.F2.Y.png", width = 6, height = 8) 
+
+########### not present in F2 
+depth.F2.N <- vcf.F2.N[,c("Ae_approx.depth", "Ol_approx.depth")]
+GQ.F2.N <- vcf.F2.N[,c("Ae_genotype.qual", "Ol_genotype.qual")]
+
+# reformat 
+depth.F2.N.long <- melt(depth.F2.N)
+depth.F2.N.long$gt <- gsub("(Ae|Ol)(_)(approx.depth)","\\1",depth.F2.N.long$variable)
+depth.F2.N.long$gt
+
+GQ.F2.N.long <- melt(GQ.F2.N)
+GQ.F2.N.long$gt <- gsub("(Ae|Ol)(_)(genotype.qual)","\\1",GQ.F2.N.long$variable) 
+GQ.F2.N.long$gt
+
+# plot total depth by Ae_gt 
+p.tot.depth.F2.N <- ggplot(data = depth.F2.N.long) 
+p.tot.depth.F2.N <- p.tot.depth.F2.N + geom_histogram(aes(value, fill=gt)) # + scale_x_log10() 
+p.tot.depth.F2.N <- p.tot.depth.F2.N + facet_wrap(~gt, ncol = 1)
+p.tot.depth.F2.N  
+ggsave(p.tot.depth.F2.N, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.tot.depth.F2.N.png", width = 6, height = 8)
+
+# plot GQ
+p.GQ.F2.N <- ggplot(data = GQ.F2.N.long) 
+p.GQ.F2.N <- p.GQ.F2.N + geom_histogram(aes(value, fill=gt))  
+p.GQ.F2.N <- p.GQ.F2.N + facet_wrap(~gt, ncol = 1)
+p.GQ.F2.N 
+ggsave(p.GQ.F2.N, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.GQ.F2.N.png", width = 6, height = 8)  
+
+# design primer using primer3 
 
 
 ```

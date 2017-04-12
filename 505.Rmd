@@ -180,7 +180,7 @@ p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long, 
 p.average.mapping
 # ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/figure/average_mapping.png", height = 6, width = 9) 
 
-### split this figure to HQ ratio & mapping ratio (two plots) 
+### split this figure to HQ ratio & mapping ratio (two plots)
 average.mapping.long.HQ <- 
   average.mapping.long[average.mapping.long$variable=="Percent_HQ",]
 
@@ -209,7 +209,7 @@ p.average.mapping
 
 ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_mapping.png", height = 6, width = 5) 
 
-```
+``` 
 
 # SNP calling on cabernet & filtering 
 ```{r}
@@ -273,7 +273,7 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # mean read depth before read depth trimming 
 mean.depth <- read.table("~/505/vcf/combined/505_filtered_MAF_Q_depth_missingness.ldepth.mean", header=T)
 head(mean.depth)
-mean(mean.depth$MEAN_DEPTH) # 34.53817  
+mean(mean.depth$MEAN_DEPTH) # 34.53817 
 
 png("~/505/output/figure/read.depth.png", width=4, height=3, units="in", res=300) 
 hist(log10(mean.depth$MEAN_DEPTH), xlab = "log10(read depth)", ylab="Number of SNPs", main="read depth", breaks=1000)
@@ -376,70 +376,18 @@ temp <- leaf_505
   vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
   vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
   vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele 
-  vcfgts <- subset(extract.gt(temp, element = "GT", return.alleles = T, IDtoRowNames=T), subset = vcfbi) # get gt info  
+  vcfgts <- subset(extract.gt(temp, element = "GT"), subset = vcfbi) # get gt info 
   vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
   vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
   # vcfgls <- subset(extract.gt(temp, element = "GL"), subset = vcfbi) # get gl 
 
   temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
   colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
-  rnames <- rownames(temp2) 
-#   temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
-#   temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
-#   temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
-  row.names(temp2) <- rnames 
-
-temp2[1:10, 1:10]
-
-temp2.test <- temp2 
-temp2.test[1:10, 1:10]
-
-### convert to letters in diploid mode, use apply... 
-# temp2.diploid <- matrix("",nrow=nrow(temp2.test),ncol=ncol(temp2)-4) 
-# dim(temp2.diploid)
-# temp2.diploid[1:10, 1:10]
-# 
-#     for (i in 1:nrow(temp2)){
-#       for (j in 5:ncol(temp2)){
-#         print (i)
-#       if (temp2[i,j]=="0/0" & is.na(temp2[i,j])== F){
-#         temp2.diploid[i,j-4] <- paste(temp2[i,3], temp2[i,3])
-#       } else if (temp2[i,j]=="0/1" & is.na(temp2[i,j])== F){
-#         temp2.diploid[i,j-4] <- paste(temp2[i,3], temp2[i,4])
-#       } else if (temp2[i,j]=="1/1" & is.na(temp2[i,j])== F){
-#         temp2.diploid[i,j-4] <- paste(temp2[i,4], temp2[i,4])
-#       } else {
-#         temp2.diploid[i,j-4] <- temp2[i,j] 
-#       }
-#     }
-#     } 
-
-# save the data afterwards... 
-
-### test this... !!!!!!!!! 
-
-# temp2.diploid <- matrix("",nrow=nrow(temp2.test),ncol=ncol(temp2)-4) 
-# dim(temp2.diploid)
-# temp2.diploid[1:10, 1:10]
-# 
-#     for (i in 1:3){
-#       for (j in 5:ncol(temp2)){
-#         print (i)
-#       if (temp2[i,j]=="0/0" && is.na(temp2[i,j])== F){
-#         temp2.diploid[i,j-4] <- paste(temp2[i,3], temp2[i,3], sep="")
-#       } else if (temp2[i,j]=="0/1" && is.na(temp2[i,j])== F){
-#         temp2.diploid[i,j-4] <- paste(temp2[i,3], temp2[i,4], sep="")
-#       } else if (temp2[i,j]=="1/1" && is.na(temp2[i,j])== F){
-#         temp2.diploid[i,j-4] <- paste(temp2[i,4], temp2[i,4], sep="")
-#       } else {
-#         temp2.diploid[i,j-4] <- temp2[i,j] 
-#       }
-#     }
-#     } 
-# 
-# temp2.diploid[1:10, 1:10]
-# temp2.test[1:10, 1:10] 
-
+  rnames <- rownames(temp2)
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  row.names(temp2) <- rnames
   
   # transpose to desired format 
   temp2.t <- t(temp2)
@@ -449,7 +397,7 @@ temp2.test[1:10, 1:10]
 # population structure 
 dim(temp2.t) # 98 434331 
 temp2.t.2500 <- temp2.t[5:98,1:2500] 
-temp2.t.2500[5:8, 1:20] 
+temp2.t.2500[5:8, 1:20]
 
 geno.numeric <- data.matrix(temp2.t.2500)
 genDist <- as.matrix(dist(geno.numeric))
@@ -471,12 +419,12 @@ genDist.all <- as.matrix(dist(geno.numeric.all))
 
 #perform the multi-dimensional scaling
 geno.mds.all <- as.data.frame(cmdscale(genDist.all))
-
 ?cmdscale
 head(geno.mds.all) #now we have 2 dimensions
 dim(geno.mds.all)
 
 plot(geno.mds.all) 
+<<<<<<< HEAD
 
 save(geno.mds.all, file="~/505/output/geno.mds.all.Rdata")
 save(temp2, file="~/505/output/temp2.Rdata")
@@ -626,9 +574,13 @@ head(geno.mds)
 
 save(data.pheno,geno.mds,file="data_from_SNP_lab.Rdata")
 ```
+=======
+####### get population structure from another method... 
+>>>>>>> 6c36bb7af0e31ca257bbd6892affb9ece8f46768
 
 
 
+``` 
 
 # transfer data to local computer 
 ```{r}
@@ -661,10 +613,7 @@ source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory and start analysis 
 setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT")
-
-
-
-
+# GAPIT needs phenotype data to start with, so hang on... 
 
 
 ```
