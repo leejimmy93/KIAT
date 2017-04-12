@@ -209,7 +209,7 @@ p.average.mapping
 
 ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_mapping.png", height = 6, width = 5) 
 
-```
+``` 
 
 # SNP calling on cabernet & filtering 
 ```{r}
@@ -424,6 +424,10 @@ head(geno.mds.all) #now we have 2 dimensions
 dim(geno.mds.all)
 
 plot(geno.mds.all) 
+####### get population structure from another method... 
+
+
+
 ``` 
 
 # transfer data to local computer 
@@ -457,10 +461,7 @@ source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory and start analysis 
 setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT")
-
-
-
-
+# GAPIT needs phenotype data to start with, so hang on... 
 
 
 ```
