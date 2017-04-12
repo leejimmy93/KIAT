@@ -514,20 +514,25 @@ save(geno.mds.all.des, file="~/505/output/geno.mds.all.des.Rdata")
 
 # plot 
 p.mds.country <- ggplot(data=geno.mds.all.des)
-p.mds.country <- p.mds.country + geom_point(aes(V1, V2, color=factor(Sample.Description.Origin),  size=5)
+p.mds.country <- p.mds.country + geom_point(aes(V1, V2, color=factor(Sample.Description.Origin),  size=5))
+p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+
+p.mds.country <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin),label=factor(Sample.Description.Origin)))
+p.mds.country <- p.mds.country + geom_point(size=1) + geom_text(size=4)
+p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
 p.mds.country
 
-p.mds.type <- ggplot(data=geno.mds.all.des)
-p.mds.type <- p.mds.type + geom_point(aes(V1, V2, color=factor(Sample.Description.Type),  size=5)
+p.mds.type <- ggplot(data=geno.mds.all.des) 
+p.mds.type <- p.mds.type + geom_point(aes(V1, V2, color=factor(Sample.Description.Type),  size=5))
 p.mds.type 
-
 
 ##  
 p.mds <- ggplot(data = distance_matrix) + theme_gray(base_size = 20)
 p.mds <- p.mds + geom_point(aes(x, y, color=factor(gt), shape=factor(tissue)), size=5) 
 p.mds <- p.mds + labs(y = "BCV distance 2", x="BCV distance 1")
 p.mds <- p.mds + theme()
-# p.mds <- p.mds + facet_grid(~gt) 
+# p.mds <- p.mds + facet_grid(~gt)  
 p.mds         
   
 ####
