@@ -180,7 +180,7 @@ p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long, 
 p.average.mapping
 # ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/figure/average_mapping.png", height = 6, width = 9) 
 
-### split this figure to HQ ratio & mapping ratio (two plots)
+### split this figure to HQ ratio & mapping ratio (two plots) 
 average.mapping.long.HQ <- 
   average.mapping.long[average.mapping.long$variable=="Percent_HQ",]
 
@@ -273,7 +273,7 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # mean read depth before read depth trimming 
 mean.depth <- read.table("~/505/vcf/combined/505_filtered_MAF_Q_depth_missingness.ldepth.mean", header=T)
 head(mean.depth)
-mean(mean.depth$MEAN_DEPTH) # 34.53817 
+mean(mean.depth$MEAN_DEPTH) # 34.53817  
 
 png("~/505/output/figure/read.depth.png", width=4, height=3, units="in", res=300) 
 hist(log10(mean.depth$MEAN_DEPTH), xlab = "log10(read depth)", ylab="Number of SNPs", main="read depth", breaks=1000)
@@ -376,18 +376,70 @@ temp <- leaf_505
   vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
   vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
   vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele 
-  vcfgts <- subset(extract.gt(temp, element = "GT"), subset = vcfbi) # get gt info 
+  vcfgts <- subset(extract.gt(temp, element = "GT", return.alleles = T, IDtoRowNames=T), subset = vcfbi) # get gt info  
   vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
   vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
   # vcfgls <- subset(extract.gt(temp, element = "GL"), subset = vcfbi) # get gl 
 
   temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
   colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
-  rnames <- rownames(temp2)
-  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
-  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
-  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
-  row.names(temp2) <- rnames
+  rnames <- rownames(temp2) 
+#   temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+#   temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
+#   temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  row.names(temp2) <- rnames 
+
+temp2[1:10, 1:10]
+
+temp2.test <- temp2 
+temp2.test[1:10, 1:10]
+
+### convert to letters in diploid mode, use apply... 
+# temp2.diploid <- matrix("",nrow=nrow(temp2.test),ncol=ncol(temp2)-4) 
+# dim(temp2.diploid)
+# temp2.diploid[1:10, 1:10]
+# 
+#     for (i in 1:nrow(temp2)){
+#       for (j in 5:ncol(temp2)){
+#         print (i)
+#       if (temp2[i,j]=="0/0" & is.na(temp2[i,j])== F){
+#         temp2.diploid[i,j-4] <- paste(temp2[i,3], temp2[i,3])
+#       } else if (temp2[i,j]=="0/1" & is.na(temp2[i,j])== F){
+#         temp2.diploid[i,j-4] <- paste(temp2[i,3], temp2[i,4])
+#       } else if (temp2[i,j]=="1/1" & is.na(temp2[i,j])== F){
+#         temp2.diploid[i,j-4] <- paste(temp2[i,4], temp2[i,4])
+#       } else {
+#         temp2.diploid[i,j-4] <- temp2[i,j] 
+#       }
+#     }
+#     } 
+
+# save the data afterwards... 
+
+### test this... !!!!!!!!! 
+
+# temp2.diploid <- matrix("",nrow=nrow(temp2.test),ncol=ncol(temp2)-4) 
+# dim(temp2.diploid)
+# temp2.diploid[1:10, 1:10]
+# 
+#     for (i in 1:3){
+#       for (j in 5:ncol(temp2)){
+#         print (i)
+#       if (temp2[i,j]=="0/0" && is.na(temp2[i,j])== F){
+#         temp2.diploid[i,j-4] <- paste(temp2[i,3], temp2[i,3], sep="")
+#       } else if (temp2[i,j]=="0/1" && is.na(temp2[i,j])== F){
+#         temp2.diploid[i,j-4] <- paste(temp2[i,3], temp2[i,4], sep="")
+#       } else if (temp2[i,j]=="1/1" && is.na(temp2[i,j])== F){
+#         temp2.diploid[i,j-4] <- paste(temp2[i,4], temp2[i,4], sep="")
+#       } else {
+#         temp2.diploid[i,j-4] <- temp2[i,j] 
+#       }
+#     }
+#     } 
+# 
+# temp2.diploid[1:10, 1:10]
+# temp2.test[1:10, 1:10] 
+
   
   # transpose to desired format 
   temp2.t <- t(temp2)
@@ -397,7 +449,7 @@ temp <- leaf_505
 # population structure 
 dim(temp2.t) # 98 434331 
 temp2.t.2500 <- temp2.t[5:98,1:2500] 
-temp2.t.2500[5:8, 1:20]
+temp2.t.2500[5:8, 1:20] 
 
 geno.numeric <- data.matrix(temp2.t.2500)
 genDist <- as.matrix(dist(geno.numeric))
@@ -419,16 +471,166 @@ genDist.all <- as.matrix(dist(geno.numeric.all))
 
 #perform the multi-dimensional scaling
 geno.mds.all <- as.data.frame(cmdscale(genDist.all))
+
 ?cmdscale
 head(geno.mds.all) #now we have 2 dimensions
 dim(geno.mds.all)
 
 plot(geno.mds.all) 
+<<<<<<< HEAD
 ####### get population structure from another method... 
 
 
 
+=======
+
+save(geno.mds.all, file="~/505/output/geno.mds.all.Rdata")
+save(temp2, file="~/505/output/temp2.Rdata")
+
+## add country of origin, winter or spring type to the figure ... 
+sample_des_a_revised <- read.csv("~/505/data/phenotype/batch_a_revised.csv", header=T)
+sample_des_a_revised_sub <- sample_des_a_revised[,c("Sample.ID", "Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_b_revised <- read.csv("~/505/data/phenotype/batch_b_revised.csv", header=T)
+sample_des_b_revised_sub <- sample_des_b_revised[,c("Sample.ID", "Sample.Description.Origin", "Sample.Description.Type")]
+head(sample_des_a_revised_sub)
+sample_des_a_revised_sub$Sample.ID
+sample_des_b_revised_sub$Sample.ID
+
+sample_des_revised <- rbind(sample_des_a_revised_sub, sample_des_b_revised_sub)
+sample_des_revised <- sample_des_revised[-c(47:51),]
+sample_des_revised$Sample.ID
+
+# MDS result 
+head(geno.mds.all)
+rownames(geno.mds.all)
+
+# reformat MDS result sample ID (X remove & . to -)
+geno.mds.all$Sample.ID <- gsub("\\.","\\-", rownames(geno.mds.all)) 
+geno.mds.all$Sample.ID <- gsub("X", "", geno.mds.all$Sample.ID)
+class(geno.mds.all$Sample.ID)
+
+geno.mds.all$Sample.ID[94]==sample_des_revised$Sample.ID[75]
+
+# merge 
+geno.mds.all.des <- merge(geno.mds.all, sample_des_revised, by="Sample.ID")
+head(geno.mds.all.des)
+
+plot(geno.mds.all.des$V1, geno.mds.all.des$V2)
+save(geno.mds.all.des, file="~/505/output/geno.mds.all.des.Rdata")
+
+# plot 
+p.mds.country <- ggplot(data=geno.mds.all.des)
+p.mds.country <- p.mds.country + geom_point(aes(V1, V2, color=factor(Sample.Description.Origin),  size=5)
+p.mds.country
+
+p.mds.type <- ggplot(data=geno.mds.all.des)
+p.mds.type <- p.mds.type + geom_point(aes(V1, V2, color=factor(Sample.Description.Type),  size=5)
+p.mds.type 
+
+
+##  
+p.mds <- ggplot(data = distance_matrix) + theme_gray(base_size = 20)
+p.mds <- p.mds + geom_point(aes(x, y, color=factor(gt), shape=factor(tissue)), size=5) 
+p.mds <- p.mds + labs(y = "BCV distance 2", x="BCV distance 1")
+p.mds <- p.mds + theme()
+# p.mds <- p.mds + facet_grid(~gt) 
+p.mds         
+  
+####
+>>>>>>> 360fcc1f62c3226710dbbd47bf2d50ae4f0b6acb
 ``` 
+
+# PSMix: Assigning varieties to populations 
+```{r}
+# install.packages("~/bin/PSMix/", repos = NULL, type="source")
+library(PSMix) 
+
+#Convert to character matrix.  The apply function applies a function (in this case as.character()) either to every column or every row in the data.
+temp2.t.all.c <- apply(temp2.t.all,2,as.character)
+
+#Create a new Matrix to hold reformatted data
+temp2.t.all.ps <- matrix("",nrow=nrow(temp2.t.all.c)*2,ncol=ncol(temp2.t.all.c)) # this is an empty matrix 
+temp2.t.all.ps[1:10, 1:10]
+
+#for each row of genotypes, create 2 rows, one with the first allele and one with the second allele. 
+for (i in 1:nrow(temp2.t.all.c)) {
+  temp2.t.all.ps[(i-1)*2+1,] <- substr(temp2.t.all.c[i,],1,1)
+  temp2.t.all.ps[(i-1)*2+2,] <- substr(temp2.t.all.c[i,],2,2)
+  } # do I need varities name here??? 
+
+temp2.t.all.c[1:10, 1:10] 
+temp2.t.all.ps[1:10, 1:10] 
+dim(data.geno.2500.ps) # 826 2500 
+
+geno.x <- data.geno.2500.ps
+geno.y <- rownames(data.geno.2500)
+
+dim(geno.x) # 826 2500
+length(geno.y) # 413
+
+# PSMix practice ... 
+Geno <- geno.x
+
+# Infer population structure with first 30 markers
+a = PSMix(K=4,Geno[,1:300],eps=1e-8,seed=as.integer(1+abs(rcauchy(1,scale=180))), MarkerVar=FALSE )
+t( round(a[[1]],3) ) 
+
+# Infer population structure with all markers
+a = PSMix( K=4,Geno,eps=1e-8,seed=as.integer(1+abs(rcauchy(1,scale=180))), MarkerVar=FALSE )
+t( round(a[[1]],3) ) 
+
+# examine the output 
+ps4 <- a
+names(ps4)
+head(ps4$AmPr)
+round(head(ps4$AmPr),3) #round to 3 decimal places to make it easier to see
+
+head(ps4$AmId) # assignment of each individual to each population 
+table(ps4$AmId)
+
+### reformat for plot
+ps4.df <- as.data.frame(cbind(round(ps4$AmPr,3), ps4$AmId))
+head(ps4.df) #look at the new data frame
+
+#Next add useful column names
+colnames(ps4.df) <- c(paste("pop",1:(ncol(ps4.df)-1),sep=""),"popID")
+head(ps4.df) #look at the new data frame
+
+# calculate the largest proportion of the genome from a single ancestral population for each individual. 
+maxGenome <- apply(ps4$AmPr,1,max) 
+
+#now we order the varieties by their prediced population membership and their degree of admixture.
+ps4.df <- ps4.df[order(ps4.df$popID,-maxGenome),]
+#Add a column for sample index
+ps4.df$sampleID <- factor(1:413)
+head(ps4.df)
+
+library(reshape2)
+ps4.df.melt <- melt(ps4.df,id.vars=c("popID","sampleID"))
+head(ps4.df.melt) #look a the melted data set.
+
+library(ggplot2)
+
+pl <- ggplot(aes(x=sampleID, y=value, color=variable, fill=variable), data=ps4.df.melt)
+pl <- pl + geom_bar(stat="identity") 
+pl <- pl + ylab("genome proportion") + scale_color_brewer(type="div") + scale_fill_brewer(type="div")
+
+pl
+
+geno.mds$popID <- factor(ps4$AmId) #this only works because the order of the varieties is the same in geno.mds and ps4
+head(geno.mds$popID)
+#Also add the admixture proportions for future use
+#first give them some useful names
+colnames(ps4$AmPr) <- paste("pr",1:4,sep="")
+
+geno.mds <- cbind(geno.mds,ps4$AmPr)
+head(geno.mds) 
+
+save(data.pheno,geno.mds,file="data_from_SNP_lab.Rdata")
+```
+
+
+
 
 # transfer data to local computer 
 ```{r}
