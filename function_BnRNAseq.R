@@ -571,7 +571,7 @@ SNP.reform <- function(SNP.csv){
   SNP.revised <- paste(SNP.csv$CHROM, SNP.csv$POS, sep = "_")
   # get randomly SNPs ... 
   set.seed(1) 
-  test <- sample(SNP.revised, size = 96, replace = F) # for 96 plate
+  test <- sample(SNP.revised, size = 300, replace = F) # for 96 plate
   # get 150bp position info flanking the candidate SNPs 
   test.2 <- data.frame(CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", test),
                        POS = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", test) 
@@ -588,12 +588,12 @@ get.fasta <- function(test.2, genome.ref.DNAbiostring){
   for (i in 1:length(genome.ref.DNAbiostring)){
     test.i <- test.2[test.2$CHROM == names(genome.ref.DNAbiostring)[i],]
     seq[[i]] <- DNAStringSet(napus[[i]], start = test.i$start, end = test.i$end, use.names = T) 
-    names(seq[[i]]) <- paste(test.i$CHROM, test.i$POS, test.i$start, test.i$end, sep = "_")
+    names(seq[[i]]) <- paste(test.i$CHROM, test.i$POS, sep = "_")
   }
   # merge DNAstringset into a large one 
   seq.final <- do.call("c", seq) 
   return(seq.final) 
-}
+} 
 
 #### get GATK vcf content for picked SNPs 
 get.vcf <- function(test.2, vcf){

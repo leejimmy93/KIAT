@@ -2360,14 +2360,17 @@ napus <-readDNAStringSet("~/Desktop/Brassica_project/IGV_file/Brassica_napus_v4.
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.GATK.Rdata") 
 
 ######### get SNP present in F2 #############
-F2.Y <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/Final_F2_SNP_Sites.csv")
+F2.Y <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/Final_F2_SNP_Sites.csv")  
 
-test.2.F2.Y <- SNP.reform(F2.Y) # randomly pick 96 
-seq.final.F2.Y <- get.fasta(test.2.F2.Y, napus) # get fasta seq for the 96 SNPs
+test.2.F2.Y <- SNP.reform(F2.Y) # randomly pick 150 because otherwise designing primer will become a problem, since we want to avoid picking primer from the 20-30 bp flanking region of the candiate SNPs (sanger sequencing has bad quality for the 1st 20-30 nucleotides).  
+
+seq.final.F2.Y <- get.fasta(test.2.F2.Y, napus) # get fasta seq for the 150 SNPs
 vcf.F2.Y <- get.vcf(test.2.F2.Y, vcf.Ae.Ol.GATK) 
 sum((vcf.F2.Y$CHROM %in% test.2.F2.Y$CHROM) & (vcf.F2.Y$POS %in% test.2.F2.Y$POS)) # check, correct!!! 
+test.2.F2.Y
 
-writeXStringSet(seq.final.F2, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/seq.final.F2.fa")
+save(vcf.F2.Y, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.F2.Y")
+writeXStringSet(seq.final.F2.Y, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP_validation/seq.final.F2.fa") 
 
 ######### get SNP not present in F2 ############
 # get SNP data
@@ -2448,7 +2451,16 @@ p.GQ.F2.N <- p.GQ.F2.N + facet_wrap(~gt, ncol = 1)
 p.GQ.F2.N 
 ggsave(p.GQ.F2.N, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.GQ.F2.N.png", width = 6, height = 8)  
 
-# design primer using primer3 
+# design primer using primer-BLAST 
+# use primer blast to design primer one by one: 
+# rules to follow: 
+# 1) SNPs must fall within the targeted region
+# 2) avoid having SNP in the 1st 20nt of sanger sequencing, that's forward primer end position + 20 && reverse primer start postion - 20 
+# 3) if the tempelate is not unique, don't use that SNP 
+
+### To do: grep 300 SNPs, and include only SNPs in the seq name... 
+
+
 
 
 ```
