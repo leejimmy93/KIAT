@@ -371,15 +371,32 @@ leaf_505 <- read.vcfR("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammot
 load("~/505/output/leaf_505.Rdata")
 
 # reform the orginal data
-temp <- leaf_505
+temp <- leaf_505 
 
   vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
   vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
-  vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele 
-  vcfgts <- subset(extract.gt(temp, element = "GT"), subset = vcfbi) # get gt info 
-  vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
+  vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele
   vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
-  # vcfgls <- subset(extract.gt(temp, element = "GL"), subset = vcfbi) # get gl 
+  vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
+  vcfgts <- subset(extract.gt(temp, element = "GT", return.alleles = T, IDtoRowNames = F), subset = vcfbi) # get gt info with allele directly  
+  vcfgls <- subset(extract.gt(temp, element = "GL", IDtoRowNames = F), subset = vcfbi) # get gl 
+
+####### filter for GL 
+# for(i in 1:length(vcfgls)){
+#   if(!is.na(vcfgls[i])){
+#     if(sum(sapply(as.numeric(unlist(strsplit(vcfgls[i],","))), function(x) (x > -2 && x != 0))) >= 1){
+#       vcfgls[i] <- NA
+#     }
+#   }
+# }
+# 
+# for(i in 1:length(vcfgls)){
+#   if(is.na(vcfgls[i])){
+#     vcfgls[i] <- NA
+#   }
+# }
+#######
+
 
   temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
   colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
@@ -431,9 +448,9 @@ save(temp2, file="~/505/output/temp2.Rdata")
 
 ## add country of origin, winter or spring type to the figure ... 
 sample_des_a_revised <- read.csv("~/505/data/phenotype/batch_a_revised.csv", header=T)
-sample_des_a_revised_sub <- sample_des_a_revised[,c("Sample.ID", "Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_a_revised_sub <- sample_des_a_revised[,c("Sample.ID", "Name","Sample.Description.Origin", "Sample.Description.Type")]
 sample_des_b_revised <- read.csv("~/505/data/phenotype/batch_b_revised.csv", header=T)
-sample_des_b_revised_sub <- sample_des_b_revised[,c("Sample.ID", "Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_b_revised_sub <- sample_des_b_revised[,c("Sample.ID", "Name", "Sample.Description.Origin", "Sample.Description.Type")]
 head(sample_des_a_revised_sub)
 sample_des_a_revised_sub$Sample.ID
 sample_des_b_revised_sub$Sample.ID
@@ -460,16 +477,23 @@ head(geno.mds.all.des)
 plot(geno.mds.all.des$V1, geno.mds.all.des$V2)
 save(geno.mds.all.des, file="~/505/output/geno.mds.all.des.Rdata")
 
-# plot 
-p.mds.country <- ggplot(data=geno.mds.all.des)
-p.mds.country <- p.mds.country + geom_point(aes(V1, V2, color=factor(Sample.Description.Origin),  size=5))
-p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+# # plot 
+# p.mds.country <- ggplot(data=geno.mds.all.des)
+# p.mds.country <- p.mds.country + geom_point(aes(V1, V2, color=factor(Sample.Description.Origin),  size=5))
+# p.mds.country + scale_color_brewer(type="qual",palette="Set1")
 
-p.mds.country <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin),label=factor(Sample.Description.Origin)))
-p.mds.country <- p.mds.country + geom_point(size=1) + geom_text(size=4)
+# install.packages("ggrepel")
+library(ggrepel)
+set.seed(111) 
+
+p.mds.country <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country <- p.mds.country + geom_point(size=1) + geom_text(size=2)
 p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country <- p.mds.country + geom_text_repel(aes(x=V1, y=V2), label=factor(Name))
 p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
-p.mds.country
+p.mds.country 
+
+ggsave(p.mds.country, filename="~/505/output/figure/p.mds.country.png", height=10, width=10)
 
 p.mds.type <- ggplot(data=geno.mds.all.des) 
 p.mds.type <- p.mds.type + geom_point(aes(V1, V2, color=factor(Sample.Description.Type),  size=5))
