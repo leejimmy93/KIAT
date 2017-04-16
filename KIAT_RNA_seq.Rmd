@@ -2876,5 +2876,71 @@ parent.stats[parent.stats$ID=="Da-Ol-1_late-silique",] # sample 4
 # wait... 
 ```
 
+# unused 
+```{r}
+# fitted expression value correlation 
+head(fitted.all.3$fitted.values)
+
+fitted.value.all <- data.frame(row.names = row.names(fitted.all.3),
+                                 value = as.numeric(rowMeans(fitted.all.3$fitted.values)))
+
+fitted.value.two.rep <- data.frame(row.names = row.names(fitted.all.two.rep),
+                                 value = as.numeric(rowMeans(fitted.all.two.rep$fitted.values)))
+
+fitted.value.no.rep <- data.frame(row.names = row.names(fitted.all.no.rep),
+                                 value = as.numeric(rowMeans(fitted.all.no.rep$fitted.values)))
+
+fitted.value.three.quarter <- data.frame(row.names = row.names(fitted.three.quarter.3),
+                                 value = as.numeric(rowMeans(fitted.three.quarter.3$fitted.values))) 
+
+fitted.value.half <- data.frame(row.names = row.names(fitted.half.3),
+                                 value = as.numeric(rowMeans(fitted.half.3$fitted.values)))
+
+fitted.value.one.quarter <- data.frame(row.names = row.names(fitted.quarter.3),
+                                 value = as.numeric(rowMeans(fitted.quarter.3$fitted.values)))
+
+ref.vs.rep2 <- as.numeric(cor(fitted.value.all$value, fitted.value.two.rep$value))
+ref.vs.rep1 <- as.numeric(cor(fitted.value.all$value, fitted.value.no.rep$value))
+ref.vs.three.quarter <- as.numeric(cor(fitted.value.all$value, fitted.value.three.quarter$value))
+ref.vs.one.quarter <- as.numeric(cor(fitted.value.all$value, fitted.value.one.quarter$value))
+ref.vs.half <- as.numeric(cor(fitted.value.all$value, fitted.value.half$value))
+
+fitted.value.fit <- data.frame(ref.vs.three.quarter, ref.vs.rep2, ref.vs.half, ref.vs.rep1, ref.vs.one.quarter) 
+fitted.value.fit.long <- melt(fitted.value.fit)
+fitted.value.fit.long
+
+p.fitted.value <- ggplot(data = fitted.value.fit.long)
+p.fitted.value <- p.fitted.value + geom_count(mapping = aes(x = variable, y = value), stat = "identity")
+p.fitted.value <- p.fitted.value + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0)) 
+p.fitted.value <- p.fitted.value + labs(y = "fitted value correlation", x = "")
+
+p.fitted.value 
+ggsave(p.AveLogCPM, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/p.AveLogCPM.png", width = 4, height = 4)  
+
+dim(fitted.all.3$coefficients)
+head(fitted.all.3$coefficients, 1000)
+dim(fitted.all.3$fitted.values)
+length(fitted.all.3$AveLogCPM)
+
+# fitted AveLogCPM
+ref.vs.rep2 <- as.numeric(cor(fitted.all.3$AveLogCPM, fitted.all.two.rep$AveLogCPM))
+ref.vs.rep1 <- as.numeric(cor(fitted.all.3$AveLogCPM, fitted.all.no.rep$AveLogCPM))
+ref.vs.three.quarter <- as.numeric(cor(fitted.all.3$AveLogCPM, fitted.three.quarter.3$AveLogCPM))
+ref.vs.one.quarter <- as.numeric(cor(fitted.all.3$AveLogCPM, fitted.quarter.3$AveLogCPM))
+ref.vs.half <- as.numeric(cor(fitted.all.3$AveLogCPM, fitted.half.3$AveLogCPM)) 
+
+AveLogCPM.fit <- data.frame(ref.vs.three.quarter, ref.vs.rep2, ref.vs.half, ref.vs.rep1, ref.vs.one.quarter) 
+AveLogCPM.fit.long <- melt(AveLogCPM.fit)
+AveLogCPM.fit.long
+
+p.AveLogCPM <- ggplot(data = AveLogCPM.fit.long)
+p.AveLogCPM <- p.AveLogCPM + geom_count(mapping = aes(x = variable, y = value), stat = "identity")
+p.AveLogCPM <- p.AveLogCPM + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0)) 
+p.AveLogCPM <- p.AveLogCPM + labs(y = "AveLogCPM correlation", x = "")
+
+p.AveLogCPM 
+ggsave(p.AveLogCPM, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/p.AveLogCPM.png", width = 4, height = 4)  
+```
+
 
 
