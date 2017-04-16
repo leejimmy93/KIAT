@@ -219,7 +219,7 @@ head(flowering.read.count.no.rep)
 fitted.all.no.rep <- get.fitted.value.no.rep(flowering.read.count.no.rep) 
 ``` 
 
-# correlation test for the fitted value, which value should be used???   
+# correlation test for the fitted coefficient  
 ```{r} 
 # fitted coefficient 
 ref.vs.rep2 <- cor(fitted.all.3$coefficients, fitted.all.two.rep$coefficients)
