@@ -283,11 +283,8 @@ coefficients.fit <- as.data.frame(rbind(ref.vs.three.quarter, ref.vs.rep2, ref.v
 coefficients.fit$value <- as.numeric(rowMeans(coefficients.fit))
 coefficients.fit
 
-<<<<<<< HEAD
 coefficients.fit$type <- factor(rownames(coefficients.fit), levels = c("ref.vs.three.quarter", "ref.vs.rep2", "ref.vs.half", "ref.vs.one.quarter", "ref.vs.rep1", "ref.vs.rep1.2", "ref.vs.rep1.3"))
-=======
-coefficients.fit$type <- factor(rownames(coefficients.fit), levels = c("ref.vs.three.quarter", "ref.vs.half", "ref.vs.one.quarter", "ref.vs.rep2","ref.vs.rep1"),labels=c("ref.vs.three.quarter", "ref.vs.half", "ref.vs.one.quarter","ref.vs.two.reps","ref.vs.one.rep"))
->>>>>>> f9224a8735952539a795b55f8a700dee155e1ad6
+coefficients.fit$type <- factor(rownames(coefficients.fit), levels = c("ref.vs.three.quarter", "ref.vs.half", "ref.vs.one.quarter", "ref.vs.rep2","ref.vs.rep1", "ref.vs.rep1.2", "ref.vs.rep1.3"),labels=c("ref.vs.three.quarter", "ref.vs.half", "ref.vs.one.quarter","ref.vs.two.reps","ref.vs.one.rep", "ref.vs.one.rep.2", "ref.vs.one.rep.3"))
 
 # plot 
 p.coefficient <- ggplot(data = coefficients.fit)
