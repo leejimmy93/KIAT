@@ -283,13 +283,17 @@ coefficients.fit <- as.data.frame(rbind(ref.vs.three.quarter, ref.vs.rep2, ref.v
 coefficients.fit$value <- as.numeric(rowMeans(coefficients.fit))
 coefficients.fit
 
+<<<<<<< HEAD
 coefficients.fit$type <- factor(rownames(coefficients.fit), levels = c("ref.vs.three.quarter", "ref.vs.rep2", "ref.vs.half", "ref.vs.one.quarter", "ref.vs.rep1", "ref.vs.rep1.2", "ref.vs.rep1.3"))
+=======
+coefficients.fit$type <- factor(rownames(coefficients.fit), levels = c("ref.vs.three.quarter", "ref.vs.half", "ref.vs.one.quarter", "ref.vs.rep2","ref.vs.rep1"),labels=c("ref.vs.three.quarter", "ref.vs.half", "ref.vs.one.quarter","ref.vs.two.reps","ref.vs.one.rep"))
+>>>>>>> f9224a8735952539a795b55f8a700dee155e1ad6
 
 # plot 
 p.coefficient <- ggplot(data = coefficients.fit)
-p.coefficient <- p.coefficient + geom_count(mapping = aes(x = factor(coefficients.fit$type), y = value), stat = "identity")
+p.coefficient <- p.coefficient + geom_count(mapping = aes(x = type, y = value^2), stat = "identity")
 p.coefficient <- p.coefficient + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0)) 
-p.coefficient <- p.coefficient + labs(y = "coefficient correlation", x = "")
+p.coefficient <- p.coefficient + labs(y = "squared coefficient correlation", x = "")
 
 p.coefficient  
 #ggsave(p.coefficient, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/p.coefficients.png", width = 4, height = 4)    
