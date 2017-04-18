@@ -793,4 +793,3 @@ write.csv(sample_des_c, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data
 
 
 
-

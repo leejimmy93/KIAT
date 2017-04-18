@@ -1,0 +1,13 @@
+---
+title: "phenotype_data"
+author: "Ruijuan Li"
+date: "4/17/2017"
+output: html_document
+---
+
+```{r}
+# the goal of this script is to extract phenotype info from Julin's 505 cross scheme repo: 
+# https://github.com/MaloofLab/KIAT505-crossing
+```
+
+# 
