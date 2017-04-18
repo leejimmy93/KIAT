@@ -1,0 +1,40 @@
+Title: code that I didn't keep in the working code but might be useful late sometime 
+========================================================
+
+```{r}
+# 6) filter using vcftool to get only biallelic SNPs
+# extract_SNP.sh & extract_biallelic.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/extract_SNP.sh)  
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/extract_biallelic.sh) 
+# output: 505_SNP_biallelic.gz 
+
+# 7) filter based on MAF and Q 
+# filtering_MAF_Q.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filtering_MAF_Q.sh)
+# output: 505_filtered_MAF_Q.gz 
+
+# 8) calcaulate mean read depth across individuals
+# calc_depth.sh
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc_depth.sh) calculate in R
+# output: 505_filtered_MAF_Q.ldepth.mean 
+
+# 9) filter based on read depth (after check mean and distribution of read depth, decide to use 5-500 as the threshold)
+# filtering_depth.sh
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filtering_depth.sh)
+# output: 505_filtered_MAF_Q_depth.gz 
+
+# 10) calculate missing rate (SNPs with less than median of missing rate should be filtered out) 
+# calc_missingness.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc_missingness.sh)
+# output: 505_filtered_MAF_Q_depth.imiss; 505_filtered_MAF_Q_depth.lmiss 
+
+# 11) filter based on missing rate 
+# filter_missingness.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filtering_missingrate.sh)
+# output: 505_filtered_MAF_Q_depth_missingness.gz 
+
+# 12) calculate MAF, missing rate, depth, and LD... 
+# calc.sh
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc.sh)
+# output: a lot of stats start with 505_filtered_MAF_Q_depth_missingness prefix 
+```
