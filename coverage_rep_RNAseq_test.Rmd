@@ -122,6 +122,7 @@ get.fitted.value.no.rep <- function(reads.formated){
 ## coverage test (all VS 3/4 VS 1/2 VS 1/4)
 ```{r} 
 ######### all trimmed data 
+setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/")
 flowering.read.count.all <- read.table("read_count/read.count.flowering.all.tsv", header = T, check.names = F)
 rownames(flowering.read.count.all) <- flowering.read.count.all[,1]
 flowering.read.count.all <- flowering.read.count.all[,-1]
@@ -204,7 +205,7 @@ head(flowering.read.count.two.rep)
 
 fitted.all.two.rep <- get.fitted.value(flowering.read.count.two.rep)
 
-##### no rep 
+##### no rep (1)  
 flowering.read.count.no.rep <- read.table("read_count/read.count.flowering.no.rep.tsv", header = T, check.names = F)
 rownames(flowering.read.count.no.rep) <- flowering.read.count.no.rep[,1]
 flowering.read.count.no.rep <- flowering.read.count.no.rep[,-1]
@@ -219,11 +220,44 @@ colnames(flowering.read.count.no.rep) <- c("Da-Ol-1_flowering_1","Da-Ae_flowerin
 head(flowering.read.count.no.rep)
 
 fitted.all.no.rep <- get.fitted.value.no.rep(flowering.read.count.no.rep) 
+
+# (2)
+flowering.read.count.no.rep.2 <- read.table("read_count/read.count.flowering.all.tsv", header = T, check.names = F)
+head(flowering.read.count.no.rep.2)
+rownames(flowering.read.count.no.rep.2) <- flowering.read.count.no.rep.2[,1]
+flowering.read.count.no.rep.2 <- flowering.read.count.no.rep.2[,-c(1, 2, 3, 5, 7)]
+
+# format data 
+head(flowering.read.count.no.rep.2)
+dim(flowering.read.count.no.rep.2) # 101040     6 
+colnames(flowering.read.count.no.rep.2)
+
+# replace sample ID 
+colnames(flowering.read.count.no.rep.2) <- c("Da-Ae_flowering_2","Da-Ol-1_flowering_2")
+head(flowering.read.count.no.rep.2)
+
+fitted.all.no.rep.2 <- get.fitted.value.no.rep(flowering.read.count.no.rep.2)
+
+# (3)
+flowering.read.count.no.rep.3 <- read.table("read_count/read.count.flowering.all.tsv", header = T, check.names = F)
+head(flowering.read.count.no.rep.3)
+rownames(flowering.read.count.no.rep.3) <- flowering.read.count.no.rep.3[,1]
+flowering.read.count.no.rep.3 <- flowering.read.count.no.rep.3[,-c(1, 2, 3, 4, 6)]
+
+# format data 
+head(flowering.read.count.no.rep.3)
+dim(flowering.read.count.no.rep.3) # 101040     6 
+colnames(flowering.read.count.no.rep.3)
+
+# replace sample ID 
+colnames(flowering.read.count.no.rep.3) <- c("Da-Ae_flowering_3","Da-Ol-1_flowering_3")
+head(flowering.read.count.no.rep.3)
+
+fitted.all.no.rep.3 <- get.fitted.value.no.rep(flowering.read.count.no.rep.3)
 ``` 
 
 # correlation test for the fitted coefficient  
 ```{r} 
-
 hist(fitted.all.3$coefficients)
 
 filter <- apply(fitted.all.3$coefficients,1,max) > -18 #get rid of extremely low expressed genes, so that this is more normal
@@ -231,21 +265,25 @@ filter <- apply(fitted.all.3$coefficients,1,max) > -18 #get rid of extremely low
 # fitted coefficient 
 ref.vs.rep2 <- cor(fitted.all.3$coefficients[filter,], fitted.all.two.rep$coefficients[filter,])
 ref.vs.rep1 <- cor(fitted.all.3$coefficients[filter,], fitted.all.no.rep$coefficients[filter,])
+ref.vs.rep1.2 <- cor(fitted.all.3$coefficients[filter,], fitted.all.no.rep.2$coefficients[filter,]) # rep2
+ref.vs.rep1.3 <- cor(fitted.all.3$coefficients[filter,], fitted.all.no.rep.3$coefficients[filter,]) # rep3
 ref.vs.three.quarter <- cor(fitted.all.3$coefficients[filter,], fitted.three.quarter.3$coefficients[filter,])
 ref.vs.one.quarter <- cor(fitted.all.3$coefficients[filter,], fitted.quarter.3$coefficients[filter,])
 ref.vs.half <- cor(fitted.all.3$coefficients[filter,], fitted.half.3$coefficients[filter,])
 
 ref.vs.rep2 <- ref.vs.rep2[1,]
 ref.vs.rep1 <- ref.vs.rep1[1,]
+ref.vs.rep1.2 <- ref.vs.rep1.2[1,]
+ref.vs.rep1.3 <- ref.vs.rep1.3[1,]
 ref.vs.three.quarter <- ref.vs.three.quarter[1,]
 ref.vs.one.quarter <- ref.vs.one.quarter[1,]
 ref.vs.half <- ref.vs.half[1,]
 
-coefficients.fit <- as.data.frame(rbind(ref.vs.three.quarter, ref.vs.rep2, ref.vs.half, ref.vs.rep1, ref.vs.one.quarter))
+coefficients.fit <- as.data.frame(rbind(ref.vs.three.quarter, ref.vs.rep2, ref.vs.half, ref.vs.rep1, ref.vs.rep1.2, ref.vs.rep1.3, ref.vs.one.quarter))
 coefficients.fit$value <- as.numeric(rowMeans(coefficients.fit))
 coefficients.fit
 
-coefficients.fit$type <- factor(rownames(coefficients.fit), levels = c("ref.vs.three.quarter", "ref.vs.rep2", "ref.vs.half", "ref.vs.one.quarter", "ref.vs.rep1"))
+coefficients.fit$type <- factor(rownames(coefficients.fit), levels = c("ref.vs.three.quarter", "ref.vs.rep2", "ref.vs.half", "ref.vs.one.quarter", "ref.vs.rep1", "ref.vs.rep1.2", "ref.vs.rep1.3"))
 
 # plot 
 p.coefficient <- ggplot(data = coefficients.fit)
@@ -253,8 +291,8 @@ p.coefficient <- p.coefficient + geom_count(mapping = aes(x = factor(coefficient
 p.coefficient <- p.coefficient + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0)) 
 p.coefficient <- p.coefficient + labs(y = "coefficient correlation", x = "")
 
-p.coefficient 
-#ggsave(p.coefficient, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/p.coefficients.png", width = 4, height = 4)   
+p.coefficient  
+#ggsave(p.coefficient, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/p.coefficients.png", width = 4, height = 4)    
 ```
 
 

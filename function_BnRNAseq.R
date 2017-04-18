@@ -570,8 +570,8 @@ SNP.reform <- function(SNP.csv){
   # get SNP data
   SNP.revised <- paste(SNP.csv$CHROM, SNP.csv$POS, sep = "_")
   # get randomly SNPs ... 
-  set.seed(1) 
-  test <- sample(SNP.revised, size = 300, replace = F) # for 96 plate
+  set.seed(100) 
+  test <- sample(SNP.revised, size = 100, replace = F) # for 96 plate
   # get 150bp position info flanking the candidate SNPs 
   test.2 <- data.frame(CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", test),
                        POS = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", test) 

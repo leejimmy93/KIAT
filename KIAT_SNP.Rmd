@@ -2372,6 +2372,17 @@ test.2.F2.Y
 save(vcf.F2.Y, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.F2.Y")
 writeXStringSet(seq.final.F2.Y, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP_validation/seq.final.F2.fa") 
 
+# get 2nd dataset because the number of SNPs are not enough 
+test.2.F2.Y.2 <- SNP.reform(F2.Y) # randomly pick 150 because otherwise designing primer will become a problem, since we want to avoid picking primer from the 20-30 bp flanking region of the candiate SNPs (sanger sequencing has bad quality for the 1st 20-30 nucleotides).  
+
+seq.final.F2.Y.2 <- get.fasta(test.2.F2.Y, napus) # get fasta seq for the 150 SNPs
+vcf.F2.Y.2 <- get.vcf(test.2.F2.Y.2, vcf.Ae.Ol.GATK) 
+sum((vcf.F2.Y.2$CHROM %in% test.2.F2.Y.2$CHROM) & (vcf.F2.Y.2$POS %in% test.2.F2.Y.2$POS)) # check, correct!!! 
+test.2.F2.Y.2
+
+save(vcf.F2.Y.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.F2.2.Y")
+writeXStringSet(seq.final.F2.Y.2, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP_validation/seq.final.F2.2.fa") 
+
 ######### get SNP not present in F2 ############
 # get SNP data
 all <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/final/vcf.Ae.Ol.intersect.final.csv",row.names = 1) 
