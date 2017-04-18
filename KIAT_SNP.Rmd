@@ -2381,7 +2381,7 @@ sum((vcf.F2.Y.2$CHROM %in% test.2.F2.Y.2$CHROM) & (vcf.F2.Y.2$POS %in% test.2.F2
 test.2.F2.Y.2
 
 save(vcf.F2.Y.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.F2.2.Y")
-writeXStringSet(seq.final.F2.Y.2, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP_validation/seq.final.F2.2.fa") 
+writeXStringSet(seq.final.F2.Y.2, filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP_validation/seq.final.F2.2fa") 
 
 ######### get SNP not present in F2 ############
 # get SNP data
