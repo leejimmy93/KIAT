@@ -10,8 +10,8 @@ The goal of this analysis is to build genetic map using F2 genotyping informatio
 
 # install & load package 
 ```{r}
-# install.packages("onemap")
-# install.packages("tkrplot", type="source")
+install.packages("onemap")
+install.packages("tkrplot", type="source")
 library(tcltk)
 library(tkrplot)
 library(onemap) 
@@ -105,7 +105,11 @@ data <- read.mapmaker(file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2
 # data
 # save(data, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/data.Rdata") # the data saved here can be used later for map construction 
 
+<<<<<<< HEAD
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/data.Rdata")
+=======
+load("~/F2/data/data.Rdata")  
+>>>>>>> 9896c5394baae73679882b4dfde688bf85ce802d
 # estimate two-point rf
 twopts.f2 <- rf.2pts(data, LOD = 6, max.rf = 0.25) ##### run this on whitney....  
 ?rf.2pts
