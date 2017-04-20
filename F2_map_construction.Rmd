@@ -10,8 +10,8 @@ The goal of this analysis is to build genetic map using F2 genotyping informatio
 
 # install & load package 
 ```{r}
-# install.packages("onemap")
-# install.packages("tkrplot", type="source")
+install.packages("onemap")
+install.packages("tkrplot", type="source")
 library(tcltk)
 library(tkrplot)
 library(onemap)
@@ -62,6 +62,7 @@ write.table(rownames(F2_geno_data), file = "~/Desktop/Brassica_project/KIAT_RNA_
 data <- read.mapmaker(file = "input_for_onemap.txt")
 data
 
+load("~/F2/data/data.Rdata")  
 # estimate two-point rf
 twopts.f2 <- rf.2pts(data, LOD = 6, max.rf = 0.25)
 ?rf.2pts

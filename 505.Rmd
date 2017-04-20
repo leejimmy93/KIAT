@@ -343,10 +343,11 @@ dev.off()
 # analyze vcf file (come to add GQ, filter based on GQ... )
 ```{r}
 library("vcfR")
-leaf_505 <- read.vcfR("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique/combined/505_filtered.vcf.gz")
+leaf_505 <- read.vcfR("~/505/vcf_leaf_no_pop/combined/505_filtered_GQ.vcf.gz")
 
 # save(leaf_505, file="~/505/output/leaf_505.Rdata")
 load("~/505/output/leaf_505.Rdata")
+dim(leaf_505) # 476781        8       95  
 
 # reform the orginal data
 temp <- leaf_505 
@@ -362,28 +363,36 @@ temp <- leaf_505
   temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
   colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
   rnames <- rownames(temp2)
-#   temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+#  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
 #   temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
 #   temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("/","",x)))
 #   row.names(temp2) <- rnames
   
-  # filter based on QG 
-  temp3 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgqs))
-  
+#   temp3 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgqs))
+#   colnames(temp3)[1:4] <- c("CHROM","POS","REF","ALT")
 
+#  save(temp2, file="~/505/output/temp2.Rdata")
+#  save(temp3, file="~/505/output/temp3.Rdata")
 
+  load("~/505/output/temp2.Rdata") 
+#  load("~/505/output/temp3.Rdata")
 
-  # transpose to desired format 
-  temp2.t <- t(temp2)
-  rownames(temp2.t)[1:4] <- c("CHROM","POS","REF","ALT")
-  colnames(temp2.t) <- rnames
+  head(temp2) 
+#   temp2 <- gsub("/", "", temp2)
+
+#   # transpose to desired format 
+#   temp2.t <- t(temp2)
+#   rownames(temp2.t)[1:4] <- c("CHROM","POS","REF","ALT")
+#   colnames(temp2.t) <- rnames
 
 # population structure 
-dim(temp2.t) # 98 434331 
-temp2.t.2500 <- temp2.t[5:98,1:2500] 
-temp2.t.2500[5:8, 1:20]
+dim(temp2.t) # 98 476781
+head(temp2.t)
+temp2.t.reform <- temp2.t[5:98,] 
+temp2.t.reform[1:8, 1:20]
 
-geno.numeric <- data.matrix(temp2.t.2500)
+geno.numeric <- data.matrix(temp2.t)
 genDist <- as.matrix(dist(geno.numeric))
 
 #perform the multi-dimensional scaling
@@ -595,8 +604,11 @@ write.csv(temp2.t.all, file="~/505/output/gt_data.csv")
 
 # prepare for GWAS 
 ```{r}
-# 1) genotype data 
-# sowing number as sample ID??? 
+# 1) check to see whether the genotype & phentype data ID match  
+# sowing number as sample ID???
+sample_des_a_revised <- read.csv("~/505/data/phenotype/batch_a_revised.csv", header=T)
+sample_des_b_revised <- read.csv("~/505/data/phenotype/batch_b_revised.csv", header=T)
+
 length(unique(c(sample_des_a_revised$No..of.Sowing, sample_des_b_revised$No..of.Sowing)[!is.na(c(sample_des_a_revised$No..of.Sowing, sample_des_b_revised$No..of.Sowing))])) # 94 
 
 genotype.data.sample.ID.leaf <- unique(c(sample_des_a_revised$No..of.Sowing, sample_des_b_revised$No..of.Sowing)[!is.na(c(sample_des_a_revised$No..of.Sowing, sample_des_b_revised$No..of.Sowing))])
@@ -604,12 +616,16 @@ genotype.data.sample.ID.leaf <- unique(c(sample_des_a_revised$No..of.Sowing, sam
 # get phentoype data 
 load("~/KIAT505-crossing/mongolia_korea_data_means_combined.Rdata") 
 head(data.all)
+
 data.all$SN
 
 phenotype.data.sample.ID <- gsub("K", "", data.all$SN)
 phenotype.data.sample.ID
 
-length(intersect(phenotype.data.sample.ID, genotype.data.sample.ID.leaf)) # I see, so they are named according to their sowing number... 
+length(intersect(phenotype.data.sample.ID, genotype.data.sample.ID.leaf)) # I see, so they are named according to their sowing number... YES, they matched!!! 
+
+# 2) reform genotype & phentoype data for GWAS 
+
 
 
 
@@ -792,6 +808,7 @@ write.csv(sample_des_a, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data
 write.csv(sample_des_b, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_b.csv")
 write.csv(sample_des_c, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_c.csv")
 ```
+
 
 
 
