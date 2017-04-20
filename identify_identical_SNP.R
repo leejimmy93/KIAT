@@ -27,3 +27,6 @@ options(warn=0) # unsuppress warning message
 
 # print a message 
 print("done") 
+
+# calcualte number of SNPs with correlation of 1
+nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T))
