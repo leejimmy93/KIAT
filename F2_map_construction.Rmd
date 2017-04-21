@@ -10,8 +10,8 @@ The goal of this analysis is to build genetic map using F2 genotyping informatio
 
 # install & load package 
 ```{r}
-install.packages("onemap")
-install.packages("tkrplot", type="source")
+# install.packages("onemap")
+# install.packages("tkrplot", type="source")
 library(tcltk)
 library(tkrplot)
 library(onemap) 
@@ -46,26 +46,26 @@ head(F2_geno_data)
 some SNPs should have exactly the same genotype across all individuals, they are redundant in terms of genetic map construction, so they should be removed. find those SNPs by doing correlation test. 
 
 ```{r}
-# problem: 
-# 1)  12 markers are not polymorphism across individuals 
-# 2)  because there are missing data present in the matrix, when computing for correlation, only non missing data are accepted, so the pairwise correlation resulted in many markers that end up with same genotypes for the shared non-missing data, this cause error in cor() functon, I suppressed the "0 as standard deviation" warning message. finally found out there are 43422 pairs of SNPs that have this kind of problem 
+install.packages("picante")
+library(picante)
+#Insert the name of your dataset in the code below
+cor.table(dataset, cor.method="pearson")
 
-# script "identify_identical_SNP.R" deal with problem 1 & 2 
-# output file /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_SNP_correlation.Rdata is the correlation matrix for individuals in F2 population... 
 
-# 3) which marker should keep when their correlation is 1? this is more complicated than I thought... hang on.... leave for later... 579 pairs of SNPs have correlation of 1 
 
-# ####### pick highly correlated values, below are just practice test, with potential useful code for future use...  
-# mat = matrix(runif(12), 3) 
-# mat
-# colnames(mat) <- c("test1", "test2", "test3", "test4")
-# ?runif
-# cor_mat <- cor(mat)
-# cor_mat
-# class(cor_mat)
-# cor_mat[1,3] <- NA
-# cor_mat
-# nrow(which(cor_mat > 0.9 & lower.tri(cor_mat), arr.ind = T, useNames = T)) 
+head(F2_geno_data)
+F2_geno_data.numeric <- data.matrix(F2_geno_data)
+head(F2_geno_data.numeric)
+cor()  
+
+
+
+
+set.seed(123)
+data <- matrix(rnorm(100), 20, 5)
+data
+cor.prob(data)
+
 ```
 
 # format data for onemap 
@@ -105,11 +105,7 @@ data <- read.mapmaker(file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2
 # data
 # save(data, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/data.Rdata") # the data saved here can be used later for map construction 
 
-<<<<<<< HEAD
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/data.Rdata")
-=======
-load("~/F2/data/data.Rdata")  
->>>>>>> 9896c5394baae73679882b4dfde688bf85ce802d
 # estimate two-point rf
 twopts.f2 <- rf.2pts(data, LOD = 6, max.rf = 0.25) ##### run this on whitney....  
 ?rf.2pts
@@ -123,7 +119,7 @@ LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
 LGs.f2
 
 #################### LG1 ##############################
-LG1.f2 <- make.seq(LGs.f2, 1)
+LG1.f2 <- make.seq(LGs.f2, 1) 
 LG1.f2
 
 # use touchdown
@@ -135,7 +131,7 @@ LG1.f2.ord <- order.seq(input.seq = LG1.f2, n.init = 5,
 
 LG1.f2.ord
 
-# safe mode order
+# safe mode order (safe order should be recommended because we have enough marker here)
 LG1.f2.safe <- make.seq(LG1.f2.ord, "safe")
 LG1.f2.safe
 # all order
