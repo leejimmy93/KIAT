@@ -31,11 +31,6 @@ dim(F2_geno_data) # 18226   166
 colnames(F2_geno_data) <- gsub("([[:print:]]+)(\\.)([[:digit:]])", "\\3", colnames(F2_geno_data))
 head(F2_geno_data)  
 
-### filter based on missing data less than 20% missing data for each marker... don't need to, because the data is already filtered based on missing rate 
-# F2_geno_data$num <- apply(F2_geno_data,1, function(x) sum(!is.na(x)))
-# F2_geno_data_filter <- (F2_geno_data$num/94)
-# sum(is.na(F2_geno_data[1,])) 
-
 ## sample 200 markers to try this method ... 
 # test <- sample_n(F2_geno_data, size = 200, replace = F) 
 # dim(test)
@@ -50,22 +45,14 @@ some SNPs should have exactly the same genotype across all individuals, they are
 # 1)  12 markers are not polymorphism across individuals 
 # 2)  because there are missing data present in the matrix, when computing for correlation, only non missing data are accepted, so the pairwise correlation resulted in many markers that end up with same genotypes for the shared non-missing data, this cause error in cor() functon, I suppressed the "0 as standard deviation" warning message. finally found out there are 43422 pairs of SNPs that have this kind of problem 
 
-# script "identify_identical_SNP.R" deal with problem 1 & 2 
+# script "SNP_pairwise_correlatition.R" deal with problem 1 & 2 
 # output file /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_SNP_correlation.Rdata is the correlation matrix for individuals in F2 population... 
+# output file SNP.not.poly.Rdata has the 12 SNPs that are not polymorphism across F2 pops 
 
-# 3) which marker should keep when their correlation is 1? this is more complicated than I thought... hang on.... leave for later... 579 pairs of SNPs have correlation of 1 
+# 3) 579 pairs of SNPs have correlation of 1 
+# script "identify_identical_SNP.R" identifys SNPs with pairwise correlation of 1 
+# output dup.pair.Rdata (identical pairs); rem.Rdata (SNPs that should be removed)
 
-# ####### pick highly correlated values, below are just practice test, with potential useful code for future use...  
-# mat = matrix(runif(12), 3) 
-# mat
-# colnames(mat) <- c("test1", "test2", "test3", "test4")
-# ?runif
-# cor_mat <- cor(mat)
-# cor_mat
-# class(cor_mat)
-# cor_mat[1,3] <- NA
-# cor_mat
-# nrow(which(cor_mat > 0.9 & lower.tri(cor_mat), arr.ind = T, useNames = T))  
 ```
 
 # format data for onemap 
