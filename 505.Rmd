@@ -662,6 +662,9 @@ setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT")
 # GAPIT needs phenotype data to start with, so hang on... 
 
 
+
+
+
 ```
 
 
