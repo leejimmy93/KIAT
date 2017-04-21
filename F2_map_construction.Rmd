@@ -121,7 +121,7 @@ mark.all.f2
 ?make.seq
 LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
 LGs.f2
-
+# save(LGs.f2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/LGs.f2.Rdata")
 #################### LG1 ##############################
 LG1.f2 <- make.seq(LGs.f2, 1)
 LG1.f2
