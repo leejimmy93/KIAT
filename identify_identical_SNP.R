@@ -1,32 +1,24 @@
-# load data
-F2_geno_data <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/data/F2_Final_SNP_Calls", header = T)
-head(F2_geno_data) # print to make sure data is imported 
+# the goal of this script is to remove identical SNPs based on correlation, if pairwise correlation is 1, extract the name of identical SNPs, output file are the SNPs that should be excluded from the dataset (rem.Rdata) and duplicated pairs (dup.pair.Rdata)  
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output")
+load("F2_SNP_correlation.Rdata")
 
-# reformat data
-rownames(F2_geno_data) <- paste(F2_geno_data$CHROM, F2_geno_data$POS, sep = "_")
-F2_geno_data <- F2_geno_data[, -c(1:6)]
-colnames(F2_geno_data) <- gsub("([[:print:]]+)(\\.)([[:digit:]])", "\\3", colnames(F2_geno_data))
+# find duplicate coordinate
+dup.cordinate <- which(F2_SNP_correlation ==1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
+dup.cordinate.df <- as.data.frame(dup.cordinate)
+sample.ID <- colnames(F2_SNP_correlation)
 
-###### remove redundant SNPs
-# some SNPs should have exactly the same genotype across all individuals, they are redundant in terms of genetic map construction, so they should be removed. find those SNPs by doing correlation test. 
+# extract duplicate pair information based on their coordicate
+dup.pair <- data.frame(matrix(nrow = nrow(dup.cordinate), ncol = 2))
+for (i in 1:nrow(dup.cordinate)){
+ dup.pair[i,1] <- sample.ID[dup.cordinate[i,1]]
+ dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
+}
 
-F2_geno_data_t <- as.data.frame(t(F2_geno_data))
-F2_geno_data_t.numeric <- data.matrix(F2_geno_data_t)
+rem <- unique(dup.pair[,2])
 
-# delete markers with all same genotypes across individuals  
-test <- apply(F2_geno_data_t.numeric, 2, function(x) length(unique(x[!is.na(x)])))
-filter.polymorphsm <- test != 1
+# save data
+save(dup.pair, file="dup.pair.Rdata")
+save(rem, file="rem.Rdata")
 
-F2_geno_data_t.numeric.2 <- F2_geno_data_t.numeric[,filter.polymorphsm]
 
-# correlation test 
-options(warn=-1) # suppress warning message
-F2_SNP_correlation <- cor(F2_geno_data_t.numeric.2, use = "pairwise.complete.obs")
-save(F2_SNP_correlation, file = "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_SNP_correlation.Rdata") 
-options(warn=0) # unsuppress warning message
 
-# print a message 
-print("done") 
-
-# calcualte number of SNPs with correlation of 1
-nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T))

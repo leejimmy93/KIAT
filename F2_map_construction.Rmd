@@ -51,8 +51,23 @@ some SNPs should have exactly the same genotype across all individuals, they are
 
 # 3) 579 pairs of SNPs have correlation of 1 
 # script "identify_identical_SNP.R" identifys SNPs with pairwise correlation of 1 
-# output dup.pair.Rdata (identical pairs); rem.Rdata (SNPs that should be removed)
+# output dup.pair.Rdata (identical pairs); rem.Rdata (SNPs that should be removed) 
 
+# code to remove duplicated SNPs 
+length(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation))) # 579 SNPs with exactly the same genotype across F2 individuals
+
+dup.cordinate <- which(F2_SNP_correlation ==1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
+dup.cordinate.df <- as.data.frame(dup.cordinate)
+sample.ID <- colnames(F2_SNP_correlation)
+length(sample.ID) # 18214
+
+dup.pair <- data.frame(matrix(nrow = nrow(dup.cordinate), ncol = 2))
+for (i in 1:nrow(dup.cordinate)){
+ dup.pair[i,1] <- sample.ID[dup.cordinate[i,1]]
+ dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
+}
+
+rem <- unique(dup.pair[,2])
 ```
 
 # format data for onemap 
@@ -104,7 +119,7 @@ mark.all.f2
 ?make.seq
 LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
 LGs.f2
-
+# save(LGs.f2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/LGs.f2.Rdata")
 #################### LG1 ##############################
 LG1.f2 <- make.seq(LGs.f2, 1) 
 LG1.f2
