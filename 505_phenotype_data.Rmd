@@ -10,4 +10,20 @@ output: html_document
 # https://github.com/MaloofLab/KIAT505-crossing
 ```
 
-# 
+# import data 
+```{r} 
+# total data 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/KIAT505-crossing/mongolia_korea_data_means_combined.Rdata")
+pheno.505 <- data.all
+head(pheno.505)
+colnames(pheno.505)
+
+# gh seed data 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/gh.seed.bolt.table.wide.Rdata")
+head(gh.seed.bolt.table.wide)
+colnames(gh.seed.bolt.table.wide) ##### work on this tomorrow... 
+
+
+
+```
+
