@@ -46,26 +46,26 @@ head(F2_geno_data)
 some SNPs should have exactly the same genotype across all individuals, they are redundant in terms of genetic map construction, so they should be removed. find those SNPs by doing correlation test. 
 
 ```{r}
-install.packages("picante")
-library(picante)
-#Insert the name of your dataset in the code below
-cor.table(dataset, cor.method="pearson")
+# problem: 
+# 1)  12 markers are not polymorphism across individuals 
+# 2)  because there are missing data present in the matrix, when computing for correlation, only non missing data are accepted, so the pairwise correlation resulted in many markers that end up with same genotypes for the shared non-missing data, this cause error in cor() functon, I suppressed the "0 as standard deviation" warning message. finally found out there are 43422 pairs of SNPs that have this kind of problem 
 
+# script "identify_identical_SNP.R" deal with problem 1 & 2 
+# output file /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_SNP_correlation.Rdata is the correlation matrix for individuals in F2 population... 
 
+# 3) which marker should keep when their correlation is 1? this is more complicated than I thought... hang on.... leave for later... 579 pairs of SNPs have correlation of 1 
 
-head(F2_geno_data)
-F2_geno_data.numeric <- data.matrix(F2_geno_data)
-head(F2_geno_data.numeric)
-cor()  
-
-
-
-
-set.seed(123)
-data <- matrix(rnorm(100), 20, 5)
-data
-cor.prob(data)
-
+# ####### pick highly correlated values, below are just practice test, with potential useful code for future use...  
+# mat = matrix(runif(12), 3) 
+# mat
+# colnames(mat) <- c("test1", "test2", "test3", "test4")
+# ?runif
+# cor_mat <- cor(mat)
+# cor_mat
+# class(cor_mat)
+# cor_mat[1,3] <- NA
+# cor_mat
+# nrow(which(cor_mat > 0.9 & lower.tri(cor_mat), arr.ind = T, useNames = T))  
 ```
 
 # format data for onemap 
