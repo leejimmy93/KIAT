@@ -67,6 +67,9 @@ for (i in 1:nrow(dup.cordinate)){
  dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
 }
 
+<<<<<<< HEAD
+rem <- unique(dup.pair[,2]) 
+=======
 rem <- unique(dup.pair[,2])
 ### remove the redundant SNPs
 load("rem.Rdata")
@@ -79,10 +82,16 @@ F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
 
 dim(F2_geno_data_2) # 17673   166
 save(F2_geno_data_2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs 
+>>>>>>> 82ef09e7c010788fa103e699d5a8f96579fb8e0a
 ```
 
 # format data for onemap 
 ```{r}
+<<<<<<< HEAD
+# F2_geno_data <- test 
+
+=======
+>>>>>>> 82ef09e7c010788fa103e699d5a8f96579fb8e0a
 # formating data for onemap 
 F2_geno_data_2 <- as.matrix(F2_geno_data_2)
 F2_geno_data_2[is.na(F2_geno_data_2)] <- "-"
@@ -139,7 +148,7 @@ LG1.f2.ord
 LG1.f2.safe <- make.seq(LG1.f2.ord, "safe")
 LG1.f2.safe
 # all order
-LG1.f2.final <- make.seq(LG1.f2.ord, "force")
+LG1.f2.final <- make.seq(LG1.f2.ord, "force") 
 LG1.f2.final
 
 # ripple
