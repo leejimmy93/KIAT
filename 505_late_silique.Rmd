@@ -240,12 +240,19 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/concat.sh)
 # output: 505.vcf.gz  
 
+# 6) filter *** this step can replace the following steps 6, 7, 9, 11 
+# filter.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
+# output: 505.filtered.vcf.gz 
 
-
+# 7) calculate a bunch of stats 
+# ./calc.sh 505_filtered.vcf.gz 505_filtered 
+# https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc.sh 
+# output: many stats start with 505_filtered  
 ```
 
 # SNP filtering 
-```{r}
+```{r} 
 
 ```
 

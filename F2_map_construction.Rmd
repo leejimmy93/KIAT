@@ -67,12 +67,12 @@ for (i in 1:nrow(dup.cordinate)){
  dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
 }
 
-rem <- unique(dup.pair[,2])
+rem <- unique(dup.pair[,2]) 
 ```
 
 # format data for onemap 
 ```{r}
-# F2_geno_data <- test
+# F2_geno_data <- test 
 
 # formating data for onemap 
 F2_geno_data <- as.matrix(F2_geno_data)
@@ -137,7 +137,7 @@ LG1.f2.ord
 LG1.f2.safe <- make.seq(LG1.f2.ord, "safe")
 LG1.f2.safe
 # all order
-LG1.f2.final <- make.seq(LG1.f2.ord, "force")
+LG1.f2.final <- make.seq(LG1.f2.ord, "force") 
 LG1.f2.final
 
 # ripple
