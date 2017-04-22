@@ -240,23 +240,61 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/concat.sh)
 # output: 505.vcf.gz  
 
+# 6) filter 
+# filter.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
+# output: 505.filtered.vcf.gz 
 
-
+# 7) calculate a bunch of stats 
+# ./calc.sh 505_filtered.vcf.gz 505_filtered 
+# https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc.sh 
+# output: many stats start with 505_filtered
 ```
 
-# SNP filtering 
-```{r}
-
-```
-
-# stats 
+# stats, wait for late 
 ```{r}
 
 ```
 
 # analyze 
 ```{r}
+# SNP import & reformat for GWAS 
+# reform_505_late_silique.R to reform vcf file for GWAS 
+# output: late_silique_505.2 
 
+# cluster analysis 
+load("~/505/output/late_silique_505.2.Rdata")
+class(late_silique_505.2.t)
+dim(late_silique_505.2.t)
+late_silique_505.2.t[1:10, 1:10]
+# late_silique_505.2.t <- as.data.frame(late_silique_505.2.t)
+# geno.numeric <- data.matrix(late_silique_505.2.t)
+# geno.numeric[1:10, 1:10]
+
+geno.numeric <- apply(late_silique_505.2.t, 2, function(x) as.integer(x))
+rnames <- rownames(late_silique_505.2.t)
+rownames(geno.numeric) <- rnames
+
+geno.numeric.df <- as.data.frame(geno.numeric)
+sum(is.na(geno.numeric.df["x505.K88",])) 
+
+geno.numeric.df.2 <- geno.numeric.df[which(!rownames(geno.numeric.df) %in% "X505.K88"),]
+geno.numeric.2 <- as.matrix(geno.numeric.df.2)
+
+genDist <- as.matrix(dist(geno.numeric.2))
+
+#perform the multi-dimensional scaling
+geno.mds <- as.data.frame(cmdscale(genDist))
+head(geno.mds) #now we have 2 dimensions
+dim(geno.mds)
+plot(geno.mds)  
+
+############  
+save(geno.numeric, file="~/505/output/late_silique_505_geno_numeric.Rdata") 
 ```
 
+# cluster analysis 
+```{r}
+
+```
 
