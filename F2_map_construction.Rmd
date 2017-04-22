@@ -68,39 +68,41 @@ for (i in 1:nrow(dup.cordinate)){
 }
 
 rem <- unique(dup.pair[,2])
+### remove the redundant SNPs
+load("rem.Rdata")
+load("SNP.not.poly.Rdata")
+# remove identical SNPs 
+F2_geno_data_1 <- F2_geno_data[!(rownames(F2_geno_data) %in% rem),]  
+
+# remove non polymorphism SNPs 
+F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
+
+dim(F2_geno_data_2) # 17673   166
+save(F2_geno_data_2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs 
 ```
 
 # format data for onemap 
 ```{r}
-# F2_geno_data <- test
-
 # formating data for onemap 
-F2_geno_data <- as.matrix(F2_geno_data)
-F2_geno_data[is.na(F2_geno_data)] <- "-"
-F2_geno_data <- gsub("0/0", "A", F2_geno_data) 
-F2_geno_data <- gsub("0/1", "H", F2_geno_data)
-F2_geno_data <- gsub("1/1", "B", F2_geno_data)
+F2_geno_data_2 <- as.matrix(F2_geno_data_2)
+F2_geno_data_2[is.na(F2_geno_data_2)] <- "-"
+F2_geno_data_2 <- gsub("0/0", "A", F2_geno_data_2) 
+F2_geno_data_2 <- gsub("0/1", "H", F2_geno_data_2)
+F2_geno_data_2 <- gsub("1/1", "B", F2_geno_data_2)
 # F2_geno_data <- t(F2_geno_data)
 
-F2_geno_data <- as.data.frame(F2_geno_data)
-dim(F2_geno_data) #  
-write.table(F2_geno_data, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_geno_data.txt")
+F2_geno_data_2 <- as.data.frame(F2_geno_data_2)
+dim(F2_geno_data_2) #  
+write.table(F2_geno_data_2, file = "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_geno_data.txt")
 # change file format in linux 
 # cat F2_geno_data.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
 # tail -18226 tmp > tmp.1 
 
-write.table(rownames(F2_geno_data), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/marker_info.txt" )
+write.table(rownames(F2_geno_data_2), file = "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/marker_info.txt" )
 # cat marker_info.txt | awk '{print "*"$2}' | tail -18226 | sed 's/"//g' > marker_info_reform.txt
 
 # paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt 
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt 
-
-# cross_pheno_data <- t(read.csv("F2_415_pheno.csv", header = T))
-# cross_pheno_data
-# cross_pheno_data <- as.data.frame(cross_pheno_data)
-# cross_pheno_data
-# change file format in linux 
-# cat cross_pheno_data.txt | sed 's/\"\.\"/\"\-\"/g'  | sed 's/"//g' | awk '{print "*" $0}' > pheno.txt 
 
 ########### real analysis start from here ################################
 data <- read.mapmaker(file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_geno_for_one_map_final.txt")
