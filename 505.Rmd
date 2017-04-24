@@ -603,7 +603,7 @@ dim(temp2.t.all)
 write.csv(temp2.t.all, file="~/505/output/gt_data.csv") 
 ```
 
-# prepare for GWAS
+# prepare for GWAS (my MAC) # need to use code to detect which computer I am at later on 
 ```{r}
 # 1) check to see whether the genotype & phentype data ID match  
 # sowing number as sample ID???
@@ -632,6 +632,29 @@ length(intersect(phenotype.data.sample.ID, genotype.data.sample.ID.leaf)) # I se
 # scp to my MAC & also do this on whitney 
 # scp ruijuanli@whitney.plb.ucdavis.edu:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/leaf_505.2.txt . 
 
+```
+
+# prepare for GWAS (whitney)
+```{r}
+# 1) check to see whether the genotype & phentype data ID match  
+# sowing number as sample ID???
+sample_des_a_revised <- read.csv("~/505/data/phenotype/batch_a_revised.csv", header=T)
+sample_des_b_revised <- read.csv("~/505/data/phenotype/batch_b_revised.csv", header=T)
+
+length(unique(c(sample_des_a_revised$No..of.Sowing, sample_des_b_revised$No..of.Sowing)[!is.na(c(sample_des_a_revised$No..of.Sowing, sample_des_b_revised$No..of.Sowing))])) # 94 
+
+genotype.data.sample.ID.leaf <- unique(c(sample_des_a_revised$No..of.Sowing, sample_des_b_revised$No..of.Sowing)[!is.na(c(sample_des_a_revised$No..of.Sowing, sample_des_b_revised$No..of.Sowing))])
+
+# get phentoype data 
+load("~/KIAT505-crossing/mongolia_korea_data_means_combined.Rdata") 
+head(data.all)
+
+data.all$SN
+
+phenotype.data.sample.ID <- gsub("K", "", data.all$SN)
+phenotype.data.sample.ID
+
+length(intersect(phenotype.data.sample.ID, genotype.data.sample.ID.leaf)) # I see, so they are named according to their sowing number... YES, they matched!!!  
 ```
 
 
@@ -727,6 +750,44 @@ head(gh.seed.bolt.table.wide)
 colnames(gh.seed.bolt.table.wide) 
 
 # try GWAS... 
+
+```
+
+# GWAS on whitney 
+```{r}
+# myGD <- read.table("~/505/output/leaf_505.2.modified.txt", header = TRUE) # this is a bad idea, doesn't work, takes too long time... 
+
+# cat leaf_505.2.modified.txt | sed 's/ /,/g' > leaf_505.2.modified.csv
+# myGD <- read.csv("~/505/output/leaf_505.2.modified.csv.gz", 
+#                  row.names=1, #this tells R to use the first column as row names
+#                  na.strings=c("NA")) #this tells R that missing data is denoted as "NA" or "00") # doesn't work, takes forever 
+
+geno_505 <- read.table("~/505/output/temp2.txt", header=T)
+head(geno_505)
+
+class(geno_505)
+
+rownames(geno_505) <- paste(geno_505$CHROM, geno_505$POS, sep = "_")
+head(geno_505)
+geno_data_505 <- geno_505[, -c(1:4)]
+dim(geno_data_505) # 476781     94
+
+colnames(geno_data_505) <- gsub("X", "", colnames(geno_data_505))
+colnames(geno_data_505) <- gsub("\\.","\\-", colnames(geno_data_505)) 
+
+geno_data_505.t <- data.frame(t(geno_data_505))
+rownames(geno_data_505.t)
+
+# reform taxa name to sowing number 
+sample_des_a_sub2 <- sample_des_a_revised[,c("Sample.ID", "No..of.Sowing")]
+sample_des_a_sub2 <- sample_des_a_sub2[!is.na(sample_des_a_sub2$Sample.ID),]
+sample_des_b_sub2 <- sample_des_b_revised[,c("Sample.ID", "No..of.Sowing")]
+sample_des_sub2 <- rbind(sample_des_a_sub2, sample_des_b_sub2)
+sample_des_sub2
+sample_des_sub2.t <- data.frame(t(sample_des_sub2))
+sample_des_sub2.t
+
+merge(sample_des_a_sub2, geno_data_505, by = "")
 
 
 
