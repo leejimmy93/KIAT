@@ -703,7 +703,6 @@ leaf_505.2.t[1:10, 1:10]
 dim(leaf_505.2.t) # 94 476781 
 rownames(leaf_505.2.t) 
 # sample 40,000 for test 
-leaf_505.2.t.sub <- 
 
 
 
@@ -792,7 +791,15 @@ geno_data_505.t.merge[1:10, 1:10]
 dim(geno_data_505.t) # 94 476782
 geno_data_505.for.GWAS <- geno_data_505.t.merge[,-1]
 colnames(geno_data_505.for.GWAS)[1] <- "taxa"
+geno_data_505.for.GWAS$taxa <- paste("K", geno_data_505.for.GWAS$taxa, sep = "")
 geno_data_505.for.GWAS[1:10, 1:10]
+as.numeric(as.character(geno_data_505.for.GWAS[1,3]))
+
+geno_data_505.for.GWAS.numeric <- data.frame(sapply(geno_data_505.for.GWAS, function(x) as.numeric(as.character(x))))
+class(geno_data_505.for.GWAS.numeric[1,1])
+geno_data_505.for.GWAS.numeric$taxa <- geno_data_505.t.merge[,2]
+geno_data_505.for.GWAS.numeric$taxa <- paste("K", geno_data_505.for.GWAS.numeric$taxa, sep = "")
+geno_data_505.for.GWAS.numeric[1:10, 1:10]
 
 ### GD file 
 SNP.info <- data.frame(matrix(nrow = ncol(geno_data_505.t), ncol = 3))
@@ -800,14 +807,92 @@ colnames(SNP.info) <- c("Name", "Chromosome", "Position")
 SNP.info$Name <- colnames(geno_data_505.t)
 SNP.info$Chromosome <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", colnames(geno_data_505.t))
 SNP.info$Position <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", colnames(geno_data_505.t))
-head(SNP.info)
+SNP.info <- SNP.info[1:(nrow(SNP.info)-1),]
+dim(SNP.info)
+tail(SNP.info)
 
-#### phenotype data 
-load("~/KIAT505-crossing/gh.seed.bolt.table.wide.Rdata")
+#### only get phenotype data for which there are genotype data 
+load("~/505/data/phenotype/gh.seed.bolt.table.wide.Rdata")
 head(gh.seed.bolt.table.wide)
 colnames(gh.seed.bolt.table.wide) 
+pheno_data_505 <- gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN %in% geno_data_505.for.GWAS$taxa,] 
+colnames(pheno_data_505_nomissing <- pheno_data_505[,c("SN", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
+          
+colnames(pheno_data_505) <- c("taxa", "erucic_acid", "oil_content", "oleic_acid")
+head(pheno_data_505)
 
+# remove taxa w/o data 
+pheno_data_505_nomissing <- pheno_data_505[!is.na(pheno_data_505$erucic_acid),]
+class(pheno_data_505_nomissing)         
+pheno_data_505_nomissing 
+dim(pheno_data_505_nomissing) # 79 4
+tail(pheno_data_505_nomissing)
+rownames(pheno_data_505_nomissing) <- c(1: nrow(pheno_data_505_nomissing))
 
+### also need to remove lines w/o phenotype data from the genotype data
+geno_data_505.for.GWAS.numeric.final <- geno_data_505.for.GWAS.numeric[geno_data_505.for.GWAS.numeric$taxa %in% pheno_data_505_nomissing$taxa,]
+
+pheno_data_505_nomissing$taxa
+geno_data_505.for.GWAS.numeric[1:10, 1:10]
+rownames(geno_data_505.for.GWAS.numeric.final)
+rownames(geno_data_505.for.GWAS.numeric.final) <- c(1:nrow(geno_data_505.for.GWAS.numeric.final))
+
+dim(geno_data_505.for.GWAS.numeric.final) # 79 476782
+dim(pheno_data_505_nomissing) # 79  4 
+
+######## for test 
+# subset for one chrosome ChrA01 
+SNP.info.chrA01 <- SNP.info[SNP.info$Chromosome == "chrA01",]
+dim(SNP.info.chrA01)
+
+filter <- SNP.info.chrA01$Name
+
+geno_data_505.for.GWAS.numeric.final.chrA01 <- 
+geno_data_505.for.GWAS.numeric.final[,colnames(geno_data_505.for.GWAS.numeric.final) %in% filter]
+
+geno_data_505.for.GWAS.numeric.final.chrA01[1:10, 1:10]
+geno_data_505.for.GWAS.numeric.final.chrA01$taxa <- geno_data_505.for.GWAS.numeric.final$taxa
+
+dim(geno_data_505.for.GWAS.numeric.final.chrA01) 
+geno_data_505.for.GWAS.numeric.final.chrA01 <- geno_data_505.for.GWAS.numeric.final.chrA01[,c(21415, 1:21414)] 
+
+########
+
+######## GWAS, finally ######################
+# install.packages("LDheatmap")
+
+library(multtest) 
+library(gplots)
+library(LDheatmap)
+library(genetics)
+library(EMMREML)
+library(compiler) #this library is already installed in R
+library("scatterplot3d")
+library(dplyr)
+
+# install GAPIT package 
+source("http://zzlab.net/GAPIT/gapit_functions.txt")
+# intall EMMA package 
+source("http://zzlab.net/GAPIT/emma.txt")
+
+# set working directory and start analysis 
+setwd("~/505/output/myGAPIT/")
+
+myGD <- geno_data_505.for.GWAS.numeric.final.chrA01
+myGD[is.na(myGD)] <- 0
+myGD[1:10, 1:10]
+myGM <- SNP.info.chrA01
+myY <- pheno_data_505_nomissing
+
+###### test for only one chrosome
+myGAPIT <- GAPIT( 
+Y=myY,
+GD=myGD, 
+GM=myGM, 
+PCA.total=3
+)
+
+###### problem, cannot tolerate missing value... 
 
 ```
 
