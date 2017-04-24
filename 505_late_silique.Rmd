@@ -244,7 +244,7 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # 6) filter 
 =======
 # 6) filter *** this step can replace the following steps 6, 7, 9, 11 
->>>>>>> 501e9af907aa3bd1652bbafc621301e551b2c109
+>>>>>>> 501e9af907aa3bd1652bbafc621301e551b2c109 
 # filter.sh 
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
 # output: 505.filtered.vcf.gz 

@@ -19,7 +19,7 @@ setwd("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/")
 fastQC_summary <- read.delim("./fastQC_result/summary_all.txt", header = F)
 dim(fastQC_summary)
 head(fastQC_summary)
-tail(fastQC_summary)
+tail(fastQC_summary) 
 
 fastQC_summary_wide <- reshape(fastQC_summary, timevar="V2",idvar="V3",direction="wide")
 colnames(fastQC_summary_wide) <- gsub("(V1)(.)([[:print:]]+)","\\3",colnames(fastQC_summary_wide))
