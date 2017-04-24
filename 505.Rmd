@@ -702,17 +702,12 @@ leaf_505.2.t$taxa <- gsub("\\.","\\-", rownames(leaf_505.2.t))
 rownames(leaf_505.2.t)
 
 
-
-
-
 # reform taxa name to sowing number 
 sample_des_a_sub2 <- sample_des_a_revised[,c("Sample.ID", "No..of.Sowing", "Name")]
 sample_des_a_sub2 <- sample_des_a_sub2[!is.na(sample_des_a_sub2$Sample.ID),]
 sample_des_b_sub2 <- sample_des_b_revised[,c("Sample.ID", "No..of.Sowing", "Name")]
 sample_des_sub2 <- rbind(sample_des_a_sub2, sample_des_b_sub2)
-sample_des_sub2$Sample.ID
-
-
+sample_des_sub2$Sample.ID 
 
 
 # leaf_505.2.numeric <- data.matrix(as.data.frame(leaf_505.2.t))
@@ -757,6 +752,7 @@ colnames(geno_data_505) <- gsub("\\.","\\-", colnames(geno_data_505))
 
 geno_data_505.t <- data.frame(t(geno_data_505))
 rownames(geno_data_505.t)
+geno_data_505.t$Sample.ID <- rownames(geno_data_505.t)
 
 # reform taxa name to sowing number 
 sample_des_a_sub2 <- sample_des_a_revised[,c("Sample.ID", "No..of.Sowing")]
@@ -764,10 +760,32 @@ sample_des_a_sub2 <- sample_des_a_sub2[!is.na(sample_des_a_sub2$Sample.ID),]
 sample_des_b_sub2 <- sample_des_b_revised[,c("Sample.ID", "No..of.Sowing")]
 sample_des_sub2 <- rbind(sample_des_a_sub2, sample_des_b_sub2)
 sample_des_sub2
-sample_des_sub2.t <- data.frame(t(sample_des_sub2))
-sample_des_sub2.t
 
-merge(sample_des_a_sub2, geno_data_505, by = "")
+geno_data_505.t.merge <- merge(sample_des_sub2, geno_data_505.t, by = "Sample.ID")
+geno_data_505.t.merge$Sample.ID
+
+dim(geno_data_505.t.merge) # 94 476783
+geno_data_505.t.merge$No..of.Sowing
+
+rownames(geno_data_505.t.merge)
+geno_data_505.t.merge[1:10, 1:10]
+dim(geno_data_505.t) # 94 476782
+geno_data_505.for.GWAS <- geno_data_505.t.merge[,-1]
+colnames(geno_data_505.for.GWAS)[1] <- "taxa"
+geno_data_505.for.GWAS[1:10, 1:10]
+
+### GD file 
+SNP.info <- data.frame(matrix(nrow = ncol(geno_data_505.t), ncol = 3))
+colnames(SNP.info) <- c("Name", "Chromosome", "Position")
+SNP.info$Name <- colnames(geno_data_505.t)
+SNP.info$Chromosome <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", colnames(geno_data_505.t))
+SNP.info$Position <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", colnames(geno_data_505.t))
+head(SNP.info)
+
+#### phenotype data 
+load("~/KIAT505-crossing/gh.seed.bolt.table.wide.Rdata")
+head(gh.seed.bolt.table.wide)
+colnames(gh.seed.bolt.table.wide) 
 
 
 
