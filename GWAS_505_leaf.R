@@ -42,7 +42,8 @@ temp <- leaf_505
   temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","1",x)))
   temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","2",x)))
   row.names(temp2) <- rnames
-  save(temp2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/temp2.Rdata") 
+  save(temp2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/temp2.Rdata")
+  write.table(temp2, file= "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/temp2.txt")
   rownames(temp2) <- paste(temp2$CHROM, temp2$POS, sep="_")
 
 # GD file 

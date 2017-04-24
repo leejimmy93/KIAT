@@ -15,9 +15,11 @@ F2.data <- read.mapmaker(file="F2_geno_for_one_map_final.txt")
 twopts.f2.04.21 <- rf.2pts(F2.data, LOD = 6, max.rf = 0.25)
 
 # save & export data 
-save(twopts.f2.04.21, file='/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/twopts.f2.04.21Rdata')
+save(twopts.f2.04.21, file='/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/twopts.f2.04.21.Rdata')
 
 # assign marker to linkage group
 mark.all.f2 <- make.seq(twopts.f2.04.21, "all")
 LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
+save(LGs.f2, file='/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/LGs.f2.04.24.Rdata')
+
 
