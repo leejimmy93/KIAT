@@ -24,6 +24,8 @@ library(dplyr)
 ```{r}
 F2_geno_data <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Final_SNP_Calls", header = T)
 head(F2_geno_data) 
+dim(F2_geno_data) 
+class(F2_geno_data)
 
 rownames(F2_geno_data) <- paste(F2_geno_data$CHROM, F2_geno_data$POS, sep = "_")
 F2_geno_data <- F2_geno_data[, -c(1:6)]
@@ -67,9 +69,6 @@ for (i in 1:nrow(dup.cordinate)){
  dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
 }
 
-<<<<<<< HEAD
-rem <- unique(dup.pair[,2]) 
-=======
 rem <- unique(dup.pair[,2])
 ### remove the redundant SNPs
 load("rem.Rdata")
@@ -82,16 +81,12 @@ F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
 
 dim(F2_geno_data_2) # 17673   166
 save(F2_geno_data_2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs 
->>>>>>> 82ef09e7c010788fa103e699d5a8f96579fb8e0a
 ```
 
 # format data for onemap 
 ```{r}
-<<<<<<< HEAD
 # F2_geno_data <- test 
 
-=======
->>>>>>> 82ef09e7c010788fa103e699d5a8f96579fb8e0a
 # formating data for onemap 
 F2_geno_data_2 <- as.matrix(F2_geno_data_2)
 F2_geno_data_2[is.na(F2_geno_data_2)] <- "-"
@@ -113,7 +108,8 @@ write.table(rownames(F2_geno_data_2), file = "/Network/Servers/avalanche.plb.ucd
 # paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt 
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt 
 
-########### real analysis start from here ################################
+
+########### start to build linkage group ################################
 data <- read.mapmaker(file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_geno_for_one_map_final.txt")
 # data
 # save(data, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/data.Rdata") # the data saved here can be used later for map construction 
@@ -130,7 +126,12 @@ mark.all.f2
 ?make.seq
 LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
 LGs.f2
-# save(LGs.f2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/LGs.f2.Rdata")
+# save(LGs.f2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/LGs.f2.Rdata") 
+```
+
+
+# after getting good number of linkage group, work on each LG seperately... 
+```{r}
 #################### LG1 ##############################
 LG1.f2 <- make.seq(LGs.f2, 1) 
 LG1.f2

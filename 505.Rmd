@@ -652,6 +652,7 @@ library(genetics)
 library(EMMREML)
 library(compiler) #this library is already installed in R
 library("scatterplot3d")
+library(dplyr)
 
 # install GAPIT package 
 source("http://zzlab.net/GAPIT/gapit_functions.txt")
@@ -670,14 +671,33 @@ setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT")
 # load table takes very long time, so I decide to work with Rdata, much faster 
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/leaf_505.2.Rdata")
+leaf_505.2 <- t(leaf_505.2.t) 
+leaf_505.2 <- sample_n(leaf_505.2, size = 40000, replace = F)
+
+
 class(leaf_505.2.t)  # matrix
 leaf_505.2.t[1:10, 1:10]
+dim(leaf_505.2.t) # 94 476781 
 rownames(leaf_505.2.t) 
+# sample 40,000 for test 
+leaf_505.2.t.sub <- 
 
+
+
+leaf_505.2.t.df <- as.data.frame(leaf)
+
+leaf_505.2.t$taxa <- rownames(leaf_505.2.t)
 leaf_505_2.t$taxa <- gsub("X", "", rownames(leaf_505.2.t))
 leaf_505.2.t$taxa <- gsub("\\.","\\-", rownames(leaf_505.2.t)) 
 rownames(leaf_505.2.t)
 
+# still takes very long time, seems impossible, try another way
+# cat leaf_505.2.modified.txt | sed 's/ /,/g' > leaf_505.2.modified.csv
+# gzip leaf_505.2.modified.csv 
+
+myGD <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/leaf_505.2.modified.csv.gz", 
+                 row.names=1, #this tells R to use the first column as row names
+                 na.strings=c("NA")) #this tells R that missing data is denoted as "NA" or "00")
 
 
 
