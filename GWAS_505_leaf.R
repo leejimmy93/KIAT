@@ -42,6 +42,7 @@ temp <- leaf_505
   temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","1",x)))
   temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","2",x)))
   row.names(temp2) <- rnames
+  save(temp2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/temp2.Rdata") 
   rownames(temp2) <- paste(temp2$CHROM, temp2$POS, sep="_")
 
 # GD file 
@@ -52,10 +53,27 @@ write.table(leaf_505.2.t, file = "leaf_505.2.txt")
 
 # leaf_505.2.matrix <- data.matrix(leaf_505.2.t)
 # GM file 
-
-
+ 
+SNP.info <- data.frame(matrix(nrow = ncol(leaf_505.2.t), ncol = 3))
+colnames(SNP.info) <- c("Name", "Chromosome", "Position")
+SNP.info$Name <- colnames(leaf_505.2.t)
+SNP.info$Chromosome <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", colnames(leaf_505.2.t))
+SNP.info$Position <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", colnames(leaf_505.2.t))
 
 # phenotype data 
+load("")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

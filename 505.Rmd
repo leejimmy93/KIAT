@@ -667,6 +667,16 @@ setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT")
 
 
 
+```
+
+# GWAS on whitney 
+```{r}
+# myGD <- read.table("~/505/output/leaf_505.2.modified.txt", header = TRUE) # this is a bad idea, doesn't work, takes too long time... 
+
+# cat leaf_505.2.modified.txt | sed 's/ /,/g' > leaf_505.2.modified.csv
+myGD <- read.csv("~/505/output/leaf_505.2.modified.csv.gz", 
+                 row.names=1, #this tells R to use the first column as row names
+                 na.strings=c("NA")) #this tells R that missing data is denoted as "NA" or "00")
 
 
 ```
