@@ -50,6 +50,7 @@ leaf_505.2.t <- t(leaf_505.2)
 save(leaf_505.2.t, file = "leaf_505.2.Rdata")
 write.table(leaf_505.2.t, file = "leaf_505.2.txt")
 
+# leaf_505.2.matrix <- data.matrix(leaf_505.2.t)
 # GM file 
 
 
