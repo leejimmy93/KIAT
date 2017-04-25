@@ -145,7 +145,27 @@ load("~/F2/output/F2_geno_data_2.Rdata")
 dim(F2_geno_data_2) 
 head(F2_geno_data)
 F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2))
-sum(F2_geno_data_2$Chr=="chrA01")
+sum(F2_geno_data_2$Chr=="chrA01") # 403 
+sum(F2_geno_data_2$Chr=="chrA02") # 248 404-651
+sum(F2_geno_data_2$Chr=="chrA03") # 504 652-1155
+sum(F2_geno_data_2$Chr=="chrA04") # 287 1156-1442
+sum(F2_geno_data_2$Chr=="chrA05") # 282 1443-1724
+sum(F2_geno_data_2$Chr=="chrA06") # 446 1725-2170
+sum(F2_geno_data_2$Chr=="chrA07") # 429 2171-2599
+sum(F2_geno_data_2$Chr=="chrA08") # 239 2600-2838
+sum(F2_geno_data_2$Chr=="chrA09") # 554 2839-3392
+sum(F2_geno_data_2$Chr=="chrA10") # 367 3393-3759
+sum(F2_geno_data_2$Chr=="chrC01") # 227 3760-3986
+sum(F2_geno_data_2$Chr=="chrC02") # 237 3987-4223
+sum(F2_geno_data_2$Chr=="chrC03") # 444 4224-4667
+sum(F2_geno_data_2$Chr=="chrC04") # 202 4668-4869
+sum(F2_geno_data_2$Chr=="chrC05") # 174 4870-5043
+sum(F2_geno_data_2$Chr=="chrC06") # 197 5044-5240
+sum(F2_geno_data_2$Chr=="chrC07") # 209 5241-5449
+sum(F2_geno_data_2$Chr=="chrC08") # 185 5450-5634
+sum(F2_geno_data_2$Chr=="chrC09") # 131 5635-5765 
+
+
 ```
 
 ```{r} 
@@ -159,7 +179,10 @@ sum(F2_geno_data_2$Chr=="chrA01")
 # after getting good number of linkage group, work on each LG seperately... 
 ```{r}
 #################### LG1 ##############################
-mark.f2.A01 <- make.seq(twopts.f2, 1:1095)
+F2.data <- read.mapmaker(file="~/F2/output/F2_geno_for_one_map_final.txt")
+load("~/F2/output/twopts.f2.04.21.Rdata")
+twopts.f2.04.24
+mark.f2.A01 <- make.seq(twopts.f2.04.24, 1:403)
 mark.f2.A01 
 
 # use touchdown to order marker 
