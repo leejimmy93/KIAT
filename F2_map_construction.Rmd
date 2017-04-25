@@ -123,11 +123,11 @@ twopts.f2
 # assign marker to linkage groups
 mark.all.f2 <- make.seq(twopts.f2, "all")
 mark.all.f2
-?make.seq
+?make.seq 
 LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
 LGs.f2
 # save(LGs.f2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/LGs.f2.Rdata") 
-```
+``` 
 
 
 # after getting good number of linkage group, work on each LG seperately... 

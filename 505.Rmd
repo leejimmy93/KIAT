@@ -746,7 +746,13 @@ colnames(gh.seed.bolt.table.wide)
 # try GWAS... with data from whitney 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/for_GAPIT.Rdata")
 
-
+myGAPIT <- GAPIT( 
+Y=myY,
+GD=myGD, 
+GM=myGM, 
+PCA.total=3,
+Geno.View.output=FALSE
+)
 
 ```
 
@@ -859,7 +865,10 @@ geno_data_505.for.GWAS.numeric.final.chrA01$taxa <- geno_data_505.for.GWAS.numer
 dim(geno_data_505.for.GWAS.numeric.final.chrA01) 
 geno_data_505.for.GWAS.numeric.final.chrA01 <- geno_data_505.for.GWAS.numeric.final.chrA01[,c(21415, 1:21414)] 
 
-########
+######## use tassel to get hapmap format ########### 
+# run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_GQ.vcf.gz -outputFile 505_filtered_GQ_sorted -fileType VCF
+# run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_GQ_sorted.vcf -export -exportType Hapmap -runfork1 
+# output: 505_filtered_GQ_sorted.hmp.txt 
 
 ######## GWAS, finally ######################
 # install.packages("LDheatmap")
