@@ -187,10 +187,26 @@ sum(F2_geno_data_2$Chr=="chrC09") # 131 5635-5765
 
 # after getting good number of linkage group, work on each LG seperately... 
 ```{r}
+<<<<<<< HEAD
 #################### A01 ##############################
 F2.data <- read.mapmaker(file="~/F2/output/F2_geno_for_one_map_final.txt")
 load("~/F2/output/twopts.f2.04.21.Rdata")
 # map_A01.R 
+=======
+#################### LG1 ##############################
+F2.data <- read.mapmaker(file="~/F2/output/F2_geno_for_one_map_final.txt")
+load("~/F2/output/twopts.f2.04.21.Rdata")
+twopts.f2.04.24
+mark.f2.A01 <- make.seq(twopts.f2.04.24, 1:403)
+mark.f2.A01 
+
+# use touchdown to order marker 
+LG1.f2.ord <- order.seq(input.seq = mark.f2.A01, n.init = 5,
+                        subset.search = "twopt",
+                        twopt.alg = "rcd", THRES = 6,
+                        draw.try = T, wait = 1,
+                        touchdown = T)
+>>>>>>> d29c2a4f639cffd5dce8579557b1ac3bb182f391
 
 ######## wait for next step analysis ############ 
 LG1.f2.ord
