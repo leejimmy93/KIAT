@@ -870,6 +870,10 @@ geno_data_505.for.GWAS.numeric.final.chrA01 <- geno_data_505.for.GWAS.numeric.fi
 # run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_GQ_sorted.vcf -export -exportType Hapmap -runfork1 
 # output: 505_filtered_GQ_sorted.hmp.txt 
 
+# get genotype data 
+geno_505_hmp <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/505_filtered_GQ_sorted.hmp.txt", head=T)
+head(geno_505_hmp) 
+
 ######## GWAS, finally ######################
 # install.packages("LDheatmap")
 
