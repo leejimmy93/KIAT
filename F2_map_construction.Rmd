@@ -150,6 +150,7 @@ LGs.f2
 
 # so get the number of markers for each chromosome 
 load("~/F2/output/F2_geno_data_2.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
 dim(F2_geno_data_2) 
 head(F2_geno_data)
 F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2))
@@ -183,9 +184,8 @@ F2_geno_data_info <- F2_geno_data_2[,c("Chr", "Pos", "index")]
 C01 <- F2_geno_data_info[F2_geno_data_info$Chr=="chrC01",]
 C01$Pos <- as.numeric(C01$Pos)
 
-C01[order(C01$Pos),]$index
+order.C01 <- C01[order(C01$Pos),]$index 
 
-sorted.data <- data[order(data$V1,data$V12,decreasing = TRUE),]
 ```
 
 ```{r} 
@@ -456,11 +456,9 @@ par(mfrow=c(1,1))
 draw.map(LG1.f2.final.C01, names= F, grid=F, cex.mrk=0.5)
 
 # map estimation for arbitrary order 
-LG1.f2.arbi.C01 <- make.seq(twopts.f2.04.24, c(3843, 3922, 3923, 3970, 3804, 3841, 3851, 3852, 3853, 3855, 3857, 3858, 3860, 3856))
+LG1.f2.arbi.C01 <- make.seq(twopts.f2.04.24, order.C01)
 LG1.f2.arbi.C01.map <- map(LG1.f2.arbi.C01)
 rf.graph.table(LG1.f2.arbi.C01.map) 
-
-
 
 
 
