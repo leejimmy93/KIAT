@@ -154,6 +154,8 @@ load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
 dim(F2_geno_data_2) 
 head(F2_geno_data)
 F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2))
+F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2)) 
+F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
 sum(F2_geno_data_2$Chr=="chrA01") # 403 
 sum(F2_geno_data_2$Chr=="chrA02") # 248 404-651
 sum(F2_geno_data_2$Chr=="chrA03") # 504 652-1155
@@ -174,17 +176,16 @@ sum(F2_geno_data_2$Chr=="chrC07") # 209 5241-5449
 sum(F2_geno_data_2$Chr=="chrC08") # 185 5450-5634
 sum(F2_geno_data_2$Chr=="chrC09") # 131 5635-5765 
 
-# figure out the index positon within each chromosome 
-F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2))
-sum(F2_geno_data_2$Chr=="chrC01")
-
-F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
+# figure out the index positon within each chromosome for all chromosomes 
 F2_geno_data_info <- F2_geno_data_2[,c("Chr", "Pos", "index")]
 
-C01 <- F2_geno_data_info[F2_geno_data_info$Chr=="chrC01",]
-C01$Pos <- as.numeric(C01$Pos)
+order <- list()
 
-order.C01 <- C01[order(C01$Pos),]$index 
+# for (i in 1:19){
+#   C01 <- F2_geno_data_info[F2_geno_data_info$Chr=="chrC01",]
+#   C01$Pos <- as.numeric(C01$Pos) 
+#   order[[i]] <- C01[order(C01$Pos),]$index 
+# } 
 
 ```
 
