@@ -871,8 +871,26 @@ geno_data_505.for.GWAS.numeric.final.chrA01 <- geno_data_505.for.GWAS.numeric.fi
 # output: 505_filtered_GQ_sorted.hmp.txt 
 
 # get genotype data 
-geno_505_hmp <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/505_filtered_GQ_sorted.hmp.txt", head=T)
+geno_505_hmp <- read.table("~/505/vcf_leaf_no_pop/combined/505_filtered_GQ_sorted.hmp.txt", head=T)
 head(geno_505_hmp) 
+# replace sample ID with sowing number 
+# get right format 
+colnames(geno_505_hmp) <- gsub("X", "", colnames(geno_505_hmp))
+colnames(geno_505_hmp) <- gsub("\\.","\\-", colnames(geno_505_hmp)) 
+# merge & replace  
+colnames(geno_505_hmp) 
+geno_505_hmp.t <- data.frame(t(geno_505_hmp))
+dim(geno_505_hmp.t)
+geno_505_hmp.t.header <- geno_505_hmp.t[1:11,]
+geno_505_hmp.t.content <- geno_505_hmp.t[12:105,]
+rownames(geno_505_hmp.t.content)
+geno_505_hmp.t.content$Sample.ID <- rownames(geno_505_hmp.t.content) 
+geno_505_hmp.t.content.merge <- merge(sample_des_sub2, geno_505_hmp.t.content, by = "Sample.ID")
+
+# only exact lines w/o phenotype data 
+
+
+
 
 ######## GWAS, finally ######################
 # install.packages("LDheatmap")
