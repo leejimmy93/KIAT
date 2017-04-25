@@ -3,7 +3,7 @@ setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanl
 load("F2_SNP_correlation.Rdata")
 
 # find duplicate coordinate
-dup.cordinate <- which(F2_SNP_correlation ==1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
+dup.cordinate <- which(F2_SNP_correlation >=0.9 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
 dup.cordinate.df <- as.data.frame(dup.cordinate)
 sample.ID <- colnames(F2_SNP_correlation)
 
