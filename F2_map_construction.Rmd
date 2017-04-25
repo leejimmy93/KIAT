@@ -14,13 +14,13 @@ The goal of this analysis is to build genetic map using F2 genotyping informatio
 # install.packages("tkrplot", type="source")
 library(tcltk)
 library(tkrplot)
-library(onemap) 
+library(onemap)  
 library(ggplot2)
 library(reshape)
 library(dplyr)
 ```
 
-# import & foramt data
+# import & foramt data (MAC version)
 ```{r}
 F2_geno_data <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Final_SNP_Calls", header = T)
 head(F2_geno_data) 
@@ -37,6 +37,22 @@ head(F2_geno_data)
 # test <- sample_n(F2_geno_data, size = 200, replace = F) 
 # dim(test)
 ```
+
+# import & foramt data (whitney version)
+```{r}
+F2_geno_data <- read.table("~/F2/data/F2_Final_SNP_Calls", header = T)
+head(F2_geno_data) 
+dim(F2_geno_data) 
+class(F2_geno_data)
+
+rownames(F2_geno_data) <- paste(F2_geno_data$CHROM, F2_geno_data$POS, sep = "_")
+F2_geno_data <- F2_geno_data[, -c(1:6)]
+dim(F2_geno_data) # 18226   166 
+colnames(F2_geno_data) <- gsub("([[:print:]]+)(\\.)([[:digit:]])", "\\3", colnames(F2_geno_data))
+head(F2_geno_data)  
+
+```
+
 
 # remove redundant SNPs
 
@@ -55,8 +71,9 @@ some SNPs should have exactly the same genotype across all individuals, they are
 # script "identify_identical_SNP.R" identifys SNPs with pairwise correlation of 1 
 # output dup.pair.Rdata (identical pairs); rem.Rdata (SNPs that should be removed) 
 
+load("~/F2/output/F2_SNP_correlation.Rdata")
 # code to remove duplicated SNPs 
-length(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation))) # 579 SNPs with exactly the same genotype across F2 individuals
+length(which(F2_SNP_correlation >= 0.9 & lower.tri(F2_SNP_correlation))) # 579 SNPs with exactly the same genotype across F2 individuals
 
 dup.cordinate <- which(F2_SNP_correlation ==1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
 dup.cordinate.df <- as.data.frame(dup.cordinate)
@@ -71,15 +88,16 @@ for (i in 1:nrow(dup.cordinate)){
 
 rem <- unique(dup.pair[,2])
 ### remove the redundant SNPs
-load("rem.Rdata")
-load("SNP.not.poly.Rdata")
+
+load("~/F2/output/rem.Rdata")
+load("~/F2/output/SNP.not.poly.Rdata")
 # remove identical SNPs 
 F2_geno_data_1 <- F2_geno_data[!(rownames(F2_geno_data) %in% rem),]  
 
 # remove non polymorphism SNPs 
 F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
 
-dim(F2_geno_data_2) # 17673   166
+dim(F2_geno_data_2) # 5765   166
 save(F2_geno_data_2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs 
 ```
 
@@ -120,12 +138,49 @@ twopts.f2 <- rf.2pts(data, LOD = 6, max.rf = 0.25) ##### run this on whitney....
 ?rf.2pts
 twopts.f2
 
+<<<<<<< HEAD
 # assign marker to linkage groups
 mark.all.f2 <- make.seq(twopts.f2, "all")
 mark.all.f2
 ?make.seq 
 LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
 LGs.f2
+=======
+# assign marker to linkage groups # this is not a good way, maybe should make.seq with a subset of markers, say, markers on specific chromosomes. then order marker within each chromosome. 
+
+# so get the number of markers for each chromosome 
+load("~/F2/output/F2_geno_data_2.Rdata")
+dim(F2_geno_data_2) 
+head(F2_geno_data)
+F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2))
+sum(F2_geno_data_2$Chr=="chrA01") # 403 
+sum(F2_geno_data_2$Chr=="chrA02") # 248 404-651
+sum(F2_geno_data_2$Chr=="chrA03") # 504 652-1155
+sum(F2_geno_data_2$Chr=="chrA04") # 287 1156-1442
+sum(F2_geno_data_2$Chr=="chrA05") # 282 1443-1724
+sum(F2_geno_data_2$Chr=="chrA06") # 446 1725-2170
+sum(F2_geno_data_2$Chr=="chrA07") # 429 2171-2599
+sum(F2_geno_data_2$Chr=="chrA08") # 239 2600-2838
+sum(F2_geno_data_2$Chr=="chrA09") # 554 2839-3392
+sum(F2_geno_data_2$Chr=="chrA10") # 367 3393-3759
+sum(F2_geno_data_2$Chr=="chrC01") # 227 3760-3986
+sum(F2_geno_data_2$Chr=="chrC02") # 237 3987-4223
+sum(F2_geno_data_2$Chr=="chrC03") # 444 4224-4667
+sum(F2_geno_data_2$Chr=="chrC04") # 202 4668-4869
+sum(F2_geno_data_2$Chr=="chrC05") # 174 4870-5043
+sum(F2_geno_data_2$Chr=="chrC06") # 197 5044-5240
+sum(F2_geno_data_2$Chr=="chrC07") # 209 5241-5449
+sum(F2_geno_data_2$Chr=="chrC08") # 185 5450-5634
+sum(F2_geno_data_2$Chr=="chrC09") # 131 5635-5765 
+
+
+```
+
+```{r} 
+?make.seq
+# LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
+# LGs.f2
+>>>>>>> cae03dbfa6c30a1cae4ecafd1b6490e387fc21c2
 # save(LGs.f2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/LGs.f2.Rdata") 
 ``` 
 
@@ -133,6 +188,26 @@ LGs.f2
 # after getting good number of linkage group, work on each LG seperately... 
 ```{r}
 #################### LG1 ##############################
+F2.data <- read.mapmaker(file="~/F2/output/F2_geno_for_one_map_final.txt")
+load("~/F2/output/twopts.f2.04.21.Rdata")
+twopts.f2.04.24
+mark.f2.A01 <- make.seq(twopts.f2.04.24, 1:403)
+mark.f2.A01 
+
+# use touchdown to order marker 
+LG1.f2.ord <- order.seq(input.seq = mark.f2.A01, n.init = 5,
+                        subset.search = "twopt",
+                        twopt.alg = "rcd", THRES = 6,
+                        draw.try = T, wait = 1,
+                        touchdown = T)
+
+LG1.f2.ord
+
+# safe mode order (safe order should be recommended because we have enough marker here)
+LG1.f2.safe <- make.seq(LG1.f2.ord, "safe")
+LG1.f2.safe 
+
+
 LG1.f2 <- make.seq(LGs.f2, 1) 
 LG1.f2
 
