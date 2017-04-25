@@ -444,7 +444,7 @@ par(mfrow=c(1,1))
 draw.map(LG1.f2.final.C01, names= F, grid=F, cex.mrk=0.5)
 
 # map estimation for arbitrary order 
-LG1.f2.arbi.C01 <- make.seq(twopts.f2.04.24, c(3843, 3922, 3923, 3970, 3804, 3855, 3857))
+LG1.f2.arbi.C01 <- make.seq(twopts.f2.04.24, c(3843, 3922, 3923, 3970, 3804, 3841, 3851, 3852, 3853, 3855, 3857, 3858, 3860, 3856))
 LG1.f2.arbi.C01.map <- map(LG1.f2.arbi.C01)
 rf.graph.table(LG1.f2.arbi.C01.map) 
 
