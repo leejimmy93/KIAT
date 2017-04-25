@@ -791,25 +791,41 @@ dim(geno_505_hmp.for.GWAS)
 geno_505_hmp.for.GWAS[1:10, 1:10]
 rownames(geno_505_hmp.for.GWAS) <- c(1:nrow(geno_505_hmp.for.GWAS))
 
+# phenotype data 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/gh.seed.bolt.table.wide.Rdata")
 head(gh.seed.bolt.table.wide)
 colnames(gh.seed.bolt.table.wide) 
 
 pheno_data_505 <- gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN %in% colnames(geno_505_hmp.for.GWAS)[12:105] ,] 
-colnames(pheno_data_505) <- pheno_data_505[,c("SN", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
+pheno_data_505 <- pheno_data_505[,c("SN", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
           
 colnames(pheno_data_505) <- c("taxa", "erucic_acid", "oil_content", "oleic_acid")
-head(pheno_data_505) 
-rownames(pheno_data_505) <- c(1: nrow(pheno_data_505))
+pheno_data_505
 
-myY <- pheno_data_505
-myG <- geno_505_hmp.for.GWAS
+## remove lines with missing data in phenotype data 
+pheno_data_505_nomissing <- pheno_data_505[!is.na(pheno_data_505$erucic_acid),]
+class(pheno_data_505_nomissing)         
+pheno_data_505_nomissing 
+dim(pheno_data_505_nomissing) # 79 4
+tail(pheno_data_505_nomissing)
+rownames(pheno_data_505_nomissing) <- c(1: nrow(pheno_data_505_nomissing))
+pheno_data_505_nomissing
+
+## remove lines with missing data in genotype data
+filter <- pheno_data_505[is.na(pheno_data_505$erucic_acid),]$taxa
+filter
+
+geno_505_hmp.for.GWAS.nomissing <- geno_505_hmp.for.GWAS[,!(colnames(geno_505_hmp.for.GWAS) %in% filter)]
+
+
+myY <- pheno_data_505_nomissing
+myG <- geno_505_hmp.for.GWAS.nomissing
 
 myGAPIT <- GAPIT( 
 Y=myY,
 G=myG, 
 PCA.total=3,
-Geno.View.output=FALSE
+Geno.View.output=FALSE 
 )
 
 ```
