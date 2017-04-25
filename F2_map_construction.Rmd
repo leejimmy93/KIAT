@@ -179,14 +179,17 @@ sum(F2_geno_data_2$Chr=="chrC09") # 131 5635-5765
 # figure out the index positon within each chromosome for all chromosomes 
 F2_geno_data_info <- F2_geno_data_2[,c("Chr", "Pos", "index")]
 
+out <- split( F2_geno_data_info , f = F2_geno_data_info$Chr)
+length(out)
+
 order <- list()
 
-# for (i in 1:19){
-#   C01 <- F2_geno_data_info[F2_geno_data_info$Chr=="chrC01",]
-#   C01$Pos <- as.numeric(C01$Pos) 
-#   order[[i]] <- C01[order(C01$Pos),]$index 
-# } 
+for (i in 1:length(out)){
+  out[[i]]$Pos <- as.numeric(out[[i]]$Pos)
+  order[[i]] <- out[[i]][order(out[[i]]$Pos),]$index 
+}
 
+order 
 ```
 
 ```{r} 
