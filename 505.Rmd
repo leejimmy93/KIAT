@@ -743,7 +743,10 @@ load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/gh.seed.bolt.table.wide.R
 head(gh.seed.bolt.table.wide)
 colnames(gh.seed.bolt.table.wide) 
 
-# try GWAS... 
+# try GWAS... with data from whitney 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/for_GAPIT.Rdata")
+
+
 
 ```
 
@@ -816,7 +819,7 @@ load("~/505/data/phenotype/gh.seed.bolt.table.wide.Rdata")
 head(gh.seed.bolt.table.wide)
 colnames(gh.seed.bolt.table.wide) 
 pheno_data_505 <- gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN %in% geno_data_505.for.GWAS$taxa,] 
-colnames(pheno_data_505_nomissing <- pheno_data_505[,c("SN", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
+colnames(pheno_data_505_nomissing) <- pheno_data_505[,c("SN", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
           
 colnames(pheno_data_505) <- c("taxa", "erucic_acid", "oil_content", "oleic_acid")
 head(pheno_data_505)
