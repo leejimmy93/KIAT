@@ -11,7 +11,7 @@ The goal of this analysis is to build genetic map using F2 genotyping informatio
 # install & load package 
 ```{r}
 # install.packages("onemap")
-# install.packages("tkrplot", type="source")
+# install.packages("tkrplot", type="source") 
 library(tcltk)
 library(tkrplot)
 library(onemap)  
@@ -461,7 +461,7 @@ LG1.f2.arbi.C01 <- make.seq(twopts.f2.04.24, order.C01)
 LG1.f2.arbi.C01.map <- map(LG1.f2.arbi.C01)
 rf.graph.table(LG1.f2.arbi.C01.map) 
 
-draw.map(LG1.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5) 
+draw.map(LG1.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
 ################# LG12/A10 ##############################
 LG12.f2 <- make.seq(LGs.f2, 12)
