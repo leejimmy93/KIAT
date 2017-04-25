@@ -684,6 +684,7 @@ source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory and start analysis 
 setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT")
+setwd("~/505/output/myGAPIT/")
 
 # genotype data  
 # modify genotype data a little to make sure it looks like the right format for GAPIT 
@@ -748,6 +749,8 @@ load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/for_GAPIT.Rdata")
 
 # get genotype data 
 geno_505_hmp <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/505_filtered_GQ_sorted.hmp.txt", head=T)
+geno_505_hmp <- read.table("~/505/vcf_leaf_no_pop/combined/505_filtered_GQ_sorted.hmp.txt", head=T)
+
 head(geno_505_hmp) 
 # replace sample ID with sowing number 
 # get right format 
@@ -793,6 +796,7 @@ rownames(geno_505_hmp.for.GWAS) <- c(1:nrow(geno_505_hmp.for.GWAS))
 
 # phenotype data 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/gh.seed.bolt.table.wide.Rdata")
+load("~/505/data/phenotype/gh.seed.bolt.table.wide.Rdata")
 head(gh.seed.bolt.table.wide)
 colnames(gh.seed.bolt.table.wide) 
 
