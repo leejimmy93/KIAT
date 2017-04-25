@@ -460,7 +460,7 @@ LG1.f2.arbi.C01 <- make.seq(twopts.f2.04.24, order.C01)
 LG1.f2.arbi.C01.map <- map(LG1.f2.arbi.C01)
 rf.graph.table(LG1.f2.arbi.C01.map) 
 
-draw.map(LG1.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5)
+draw.map(LG1.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5) 
 
 ################# LG12/A10 ##############################
 LG12.f2 <- make.seq(LGs.f2, 12)
