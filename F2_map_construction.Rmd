@@ -435,6 +435,7 @@ F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/twopts.f2.04.21.Rdata")
 
+###### don't consider mapping postion at all
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG1.f2.ord.C01.Rdata")
 LG1.f2.ord.C01
 
@@ -445,7 +446,7 @@ set.map.fun(type="kosambi")
 LG1.f2.safe.C01 <- make.seq(LG1.f2.ord.C01, "safe")
 LG1.f2.safe.C01
 # all order (all markers)
-(LG1.f2.final.C01 <- make.seq(LG1.f2.ord.C01, "force"))
+LG1.f2.final.C01 <- make.seq(LG1.f2.ord.C01, "force")
 LG1.f2.final.C01
 
 # print the recombination fraction mix 
