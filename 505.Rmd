@@ -820,10 +820,17 @@ filter <- pheno_data_505[is.na(pheno_data_505$erucic_acid),]$taxa
 filter
 
 geno_505_hmp.for.GWAS.nomissing <- geno_505_hmp.for.GWAS[,!(colnames(geno_505_hmp.for.GWAS) %in% filter)]
+head(geno_505_hmp.for.GWAS.nomissing)
+tail(geno_505_hmp.for.GWAS.nomissing)
 
+# some NA in allele colomn, remove them 
+geno_505_hmp.for.GWAS.nomissing.final <-  geno_505_hmp.for.GWAS.nomissing[!is.na(geno_505_hmp.for.GWAS.nomissing$alleles),] # 463900     90  
+geno_505_hmp.for.GWAS.nomissing.final[1:10, 1:10]
+rownames(geno_505_hmp.for.GWAS.nomissing.final) <- c(1:nrow(geno_505_hmp.for.GWAS.nomissing.final))
 
 myY <- pheno_data_505_nomissing
-myG <- geno_505_hmp.for.GWAS.nomissing
+myG <- geno_505_hmp.for.GWAS.nomissing.final
+
 
 myGAPIT <- GAPIT( 
 Y=myY,
