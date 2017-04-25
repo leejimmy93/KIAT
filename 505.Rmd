@@ -876,13 +876,15 @@ source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory and start analysis 
-setwd("~/505/output/myGAPIT/")
+setwd("~/505/output/myGAPIT/") 
 
 myGD <- geno_data_505.for.GWAS.numeric.final.chrA01
 myGD[is.na(myGD)] <- 0
 myGD[1:10, 1:10]
 myGM <- SNP.info.chrA01
 myY <- pheno_data_505_nomissing
+
+save(myGD, myGM, myY, file="for_GAPIT.Rdata")
 
 ###### test for only one chrosome
 myGAPIT <- GAPIT( 
