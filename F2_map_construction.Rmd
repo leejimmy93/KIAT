@@ -173,7 +173,19 @@ sum(F2_geno_data_2$Chr=="chrC07") # 209 5241-5449
 sum(F2_geno_data_2$Chr=="chrC08") # 185 5450-5634
 sum(F2_geno_data_2$Chr=="chrC09") # 131 5635-5765 
 
+# figure out the index positon within each chromosome 
+F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2))
+sum(F2_geno_data_2$Chr=="chrC01")
 
+F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
+F2_geno_data_info <- F2_geno_data_2[,c("Chr", "Pos", "index")]
+
+C01 <- F2_geno_data_info[F2_geno_data_info$Chr=="chrC01",]
+C01$Pos <- as.numeric(C01$Pos)
+
+C01[order(C01$Pos),]$index
+
+sorted.data <- data[order(data$V1,data$V12,decreasing = TRUE),]
 ```
 
 ```{r} 
