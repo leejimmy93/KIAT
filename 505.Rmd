@@ -154,7 +154,7 @@ p.toomany.mapping
 # histogram of unmapped 
 p.un.mapping <- ggplot(data=mapping_result_505)
 p.un.mapping <- p.un.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Unmapped_Mismatches+mapping_result_505$Percent_Unmapped_Other+mapping_result_505$Percent_Unmapped_Too_Short, fill=batch), binwidth = 2.5) 
-p.un.mapping <- p.un.mapping + labs(list(title = "histogram of unmapped reads percentage", x = "Percent of unmapped reads", y = "number of samples"))
+p.un.mapping <- p.un.mapping + labs(list(title = "histogram of unmapped reads percentage", x = "Percent of unmapped reads", y = "number of samples")) 
 p.un.mapping
 # ggsave(p.un.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/un_mapped.png", height = 8, width = 11)
 
@@ -749,29 +749,29 @@ load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/for_GAPIT.Rdata")
 
 # get genotype data 
 geno_505_hmp <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/505_filtered_GQ_sorted.hmp.txt", head=T)
-geno_505_hmp <- read.table("~/505/vcf_leaf_no_pop/combined/505_filtered_GQ_sorted.hmp.txt", head=T)
+geno_505_hmp <- read.table("~/505/vcf_leaf_no_pop/combined/505_filtered_GQ_sorted.hmp.txt", head=FALSE)
 
 head(geno_505_hmp) 
 # replace sample ID with sowing number 
 # get right format 
-colnames(geno_505_hmp) <- gsub("X", "", colnames(geno_505_hmp))
-colnames(geno_505_hmp) <- gsub("\\.","\\-", colnames(geno_505_hmp)) 
+# colnames(geno_505_hmp) <- gsub("X", "", colnames(geno_505_hmp))
+# colnames(geno_505_hmp) <- gsub("\\.","\\-", colnames(geno_505_hmp)) 
 # merge & replace  
-colnames(geno_505_hmp) 
-geno_505_hmp.t <- data.frame(t(geno_505_hmp))
-dim(geno_505_hmp.t)
-geno_505_hmp.t.header <- geno_505_hmp.t[1:11,]
-geno_505_hmp.t.content <- geno_505_hmp.t[12:105,]
-rownames(geno_505_hmp.t.content)
-geno_505_hmp.t.content[1:10, 1:10]
-geno_505_hmp.t.header[1:10, 1:10]
-geno_505_hmp.t.content$Sample.ID <- rownames(geno_505_hmp.t.content) 
-geno_505_hmp.t.content.merge <- merge(sample_des_sub2, geno_505_hmp.t.content, by = "Sample.ID")
-
-geno_505_hmp.t.content.merge$No..of.Sowing
-colnames(geno_505_hmp.t.content.merge)[2] <- "taxa"
-geno_505_hmp.t.content.merge$taxa <- paste("K", geno_505_hmp.t.content.merge$taxa, sep = "")
-geno_505_hmp.t.content.merge[1:10, 1:10] 
+# colnames(geno_505_hmp) 
+# geno_505_hmp.t <- data.frame(t(geno_505_hmp))
+# dim(geno_505_hmp.t)
+# geno_505_hmp.t.header <- geno_505_hmp.t[1:11,]
+# geno_505_hmp.t.content <- geno_505_hmp.t[12:105,]
+# rownames(geno_505_hmp.t.content)
+# geno_505_hmp.t.content[1:10, 1:10]
+# geno_505_hmp.t.header[1:10, 1:10]
+# geno_505_hmp.t.content$Sample.ID <- rownames(geno_505_hmp.t.content) 
+# geno_505_hmp.t.content.merge <- merge(sample_des_sub2, geno_505_hmp.t.content, by = "Sample.ID")
+# 
+# geno_505_hmp.t.content.merge$No..of.Sowing
+# colnames(geno_505_hmp.t.content.merge)[2] <- "taxa"
+# geno_505_hmp.t.content.merge$taxa <- paste("K", geno_505_hmp.t.content.merge$taxa, sep = "")
+# geno_505_hmp.t.content.merge[1:10, 1:10] 
 
 # only exact lines w/ phenotype data (what if don't worry about this)
 # geno_505_hmp.t.content.merge.sub <- merge(myY, geno_505_hmp.t.content.merge, by = "taxa")
@@ -781,18 +781,18 @@ geno_505_hmp.t.content.merge[1:10, 1:10]
 # dim(geno_505_hmp.t.header)
 # 
 # # add header & transpose 
-dim(geno_505_hmp.t.content.merge) 
-dim(geno_505_hmp.t.header)
-
-rownames(geno_505_hmp.t.content.merge) <- geno_505_hmp.t.content.merge$taxa
-geno_505_hmp.t.content.merge <- geno_505_hmp.t.content.merge[,-c(1:2)]
-
-geno_505_hmp.t.for.GWAS <- data.frame(rbind(geno_505_hmp.t.header, geno_505_hmp.t.content.merge))
-
-geno_505_hmp.for.GWAS <- data.frame(t(geno_505_hmp.t.for.GWAS))
-dim(geno_505_hmp.for.GWAS) 
-geno_505_hmp.for.GWAS[1:10, 1:10]
-rownames(geno_505_hmp.for.GWAS) <- c(1:nrow(geno_505_hmp.for.GWAS))
+# dim(geno_505_hmp.t.content.merge) 
+# dim(geno_505_hmp.t.header)
+# 
+# rownames(geno_505_hmp.t.content.merge) <- geno_505_hmp.t.content.merge$taxa
+# geno_505_hmp.t.content.merge <- geno_505_hmp.t.content.merge[,-c(1:2)]
+# 
+# geno_505_hmp.t.for.GWAS <- data.frame(rbind(geno_505_hmp.t.header, geno_505_hmp.t.content.merge))
+# 
+# geno_505_hmp.for.GWAS <- data.frame(t(geno_505_hmp.t.for.GWAS))
+# dim(geno_505_hmp.for.GWAS) 
+# geno_505_hmp.for.GWAS[1:10, 1:10]
+# rownames(geno_505_hmp.for.GWAS) <- c(1:nrow(geno_505_hmp.for.GWAS))
 
 # phenotype data 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/gh.seed.bolt.table.wide.Rdata")
@@ -800,44 +800,84 @@ load("~/505/data/phenotype/gh.seed.bolt.table.wide.Rdata")
 head(gh.seed.bolt.table.wide)
 colnames(gh.seed.bolt.table.wide) 
 
-pheno_data_505 <- gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN %in% colnames(geno_505_hmp.for.GWAS)[12:105] ,] 
-pheno_data_505 <- pheno_data_505[,c("SN", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
+# add name to to replace SN 
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
+sample_des_sub2$SN
+gh.seed.bolt.table.wide$SN
+gh.seed.bolt.table.wide.merge <- merge(sample_des_sub2, gh.seed.bolt.table.wide, by = "SN")
+gh.seed.bolt.table.wide.merge 
+
+# only keep those that are in the genotype data 
+# pheno_data_505 <- gh.seed.bolt.table.wide[which(gh.seed.bolt.table.wide$SN %in% colnames(geno_505_hmp.for.GWAS)[12:105]),]
+# 
+# identical(
+# pheno_data_505$SN[order(pheno_data_505$SN)],
+# colnames(geno_505_hmp.for.GWAS)[12:105][order(colnames(geno_505_hmp.for.GWAS)[12:105])]) 
+
+# pheno_data_505 <- pheno_data_505[,c("SN", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
           
-colnames(pheno_data_505) <- c("taxa", "erucic_acid", "oil_content", "oleic_acid")
+pheno_data_505 <- gh.seed.bolt.table.wide.merge[,c("Sample.ID", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
+
+colnames(pheno_data_505) <- c("Taxa", "Erucic_acid", "Oil_content", "Oleic_acid")
 pheno_data_505
 
 ## remove lines with missing data in phenotype data 
-pheno_data_505_nomissing <- pheno_data_505[!is.na(pheno_data_505$erucic_acid),]
-class(pheno_data_505_nomissing)         
-pheno_data_505_nomissing 
-dim(pheno_data_505_nomissing) # 79 4
-tail(pheno_data_505_nomissing)
-rownames(pheno_data_505_nomissing) <- c(1: nrow(pheno_data_505_nomissing))
-pheno_data_505_nomissing
+# pheno_data_505_nomissing <- pheno_data_505[!is.na(pheno_data_505$Erucic_acid),]
+# class(pheno_data_505_nomissing)         
+# pheno_data_505_nomissing 
+# dim(pheno_data_505_nomissing) # 79 4
+# tail(pheno_data_505_nomissing)
+# rownames(pheno_data_505_nomissing) <- c(1: nrow(pheno_data_505_nomissing))
+# pheno_data_505_nomissing
+# 
+# ## remove lines with missing data in genotype data
+# pheno_data_505
+# filter <- pheno_data_505[is.na(pheno_data_505$Erucic_acid),]$Taxa
+# filter
+# 
+# # geno_505_hmp.for.GWAS.nomissing <- geno_505_hmp.for.GWAS[,which(!(colnames(geno_505_hmp.for.GWAS) %in% filter))]
+# # 
+# # colnames(geno_505_hmp.for.GWAS.nomissing)[12:90]
+# # pheno_data_505_nomissing$Taxa
+# 
+# geno_505_hmp.nomissing <- geno_505_hmp[,which(!(geno_505_hmp[1,] %in% filter))]
 
-## remove lines with missing data in genotype data
-filter <- pheno_data_505[is.na(pheno_data_505$erucic_acid),]$taxa
-filter
-
-geno_505_hmp.for.GWAS.nomissing <- geno_505_hmp.for.GWAS[,!(colnames(geno_505_hmp.for.GWAS) %in% filter)]
-head(geno_505_hmp.for.GWAS.nomissing)
-tail(geno_505_hmp.for.GWAS.nomissing)
 
 # some NA in allele colomn, remove them 
-geno_505_hmp.for.GWAS.nomissing.final <-  geno_505_hmp.for.GWAS.nomissing[!is.na(geno_505_hmp.for.GWAS.nomissing$alleles),] # 463900     90  
-geno_505_hmp.for.GWAS.nomissing.final[1:10, 1:10]
-rownames(geno_505_hmp.for.GWAS.nomissing.final) <- c(1:nrow(geno_505_hmp.for.GWAS.nomissing.final))
+# geno_505_hmp.for.GWAS.nomissing.final <-  geno_505_hmp.for.GWAS.nomissing[!is.na(geno_505_hmp.for.GWAS.nomissing$alleles),] # 463900     90  
+# dim(geno_505_hmp.for.GWAS.nomissing.final) # 463900     90 
+# geno_505_hmp.for.GWAS.nomissing.final[1:10, 1:13]
+# head(pheno_data_505_nomissing)
+# rownames(geno_505_hmp.for.GWAS.nomissing.final) <- c(1:nrow(geno_505_hmp.for.GWAS.nomissing.final))
+# 
+# myY <- pheno_data_505_nomissing
+# myG <- geno_505_hmp.for.GWAS.nomissing.final 
 
-myY <- pheno_data_505_nomissing
-myG <- geno_505_hmp.for.GWAS.nomissing.final
+# error, check the file to make sure taxa matched  
+# identical(
+# myY$Taxa[order(myY$Taxa)],
+# colnames(myG)[12:90][order(colnames(myG)[12:90])])  
 
+# head(myY)
+# myG[1:10, 1:12]
+# write.table(myG, file="~/505/output/myG.txt")
+# myG2 <- read.table("~/505/output/myG.txt", head=F) 
+
+myY <- pheno_data_505
+myG <- geno_505_hmp
+
+dim(myY)
+dim(myG)
+### maybe I need the same order for genotype & phenotype data??? 
+# get the order of genotype for phenotype 
 
 myGAPIT <- GAPIT( 
 Y=myY,
 G=myG, 
 PCA.total=3,
-Geno.View.output=FALSE 
-)
+Geno.View.output=FALSE, 
+PCA.View.output=FALSE 
+) 
 
 ```
 
