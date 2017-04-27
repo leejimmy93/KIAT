@@ -217,7 +217,7 @@ rf.graph.table(LG1.f2.arbi.C01.map)
 
 draw.map(LG.f2.arbi.A01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
->>>>>>> d29c2a4f639cffd5dce8579557b1ac3bb182f391
+>>>>>>> d29c2a4f639cffd5dce8579557b1ac3bb182f391 
 
 ######## wait for next step analysis ############ 
 LG1.f2.ord
@@ -450,7 +450,7 @@ LG1.f2.final.C01 <- make.seq(LG1.f2.ord.C01, "force")
 LG1.f2.final.C01
 
 # print the recombination fraction mix 
-rf.graph.table(LG1.f2.final.C01) 
+rf.graph.table(LG1.f2.safe.C01) 
 par(mfrow=c(1,1))
 draw.map(LG1.f2.final.C01, names= F, grid=F, cex.mrk=0.5)
 draw.map(LG1.f2.safe.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
