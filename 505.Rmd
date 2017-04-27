@@ -703,6 +703,7 @@ source("http://zzlab.net/GAPIT/emma.txt")
 setwd("~/505/output/myGAPIT/")  # ***** need to get this right 
 
 # get genotype data 
+# before importing, remove # after rs & assembly 
 geno_505_hmp <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/505_filtered_GQ_sorted.hmp.txt", head=T)
 geno_505_hmp <- read.table("~/505/vcf_leaf_no_pop/combined/505_filtered_sorted.hmp.txt", head=FALSE)
 
