@@ -892,6 +892,14 @@ PCA.total=3,
 Geno.View.output=FALSE, 
 PCA.View.output=FALSE 
 ) 
+```
+
+# display GWAS result using qqman 
+```{r}
+install.packages("qqman")
+library("qqman") 
+
+### memory problem... 
 
 ```
 
