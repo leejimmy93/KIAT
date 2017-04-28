@@ -673,6 +673,14 @@ dim(temp2.t.all)
 write.csv(temp2.t.all, file="~/505/output/gt_data.csv") 
 ```
 
+# get hapmap file using tassel 
+```{r}
+######## use tassel to get hapmap format ########### 
+# run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_GQ.vcf.gz -outputFile 505_filtered_GQ_sorted -fileType VCF
+# run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_GQ_sorted.vcf -export -exportType Hapmap -runfork1 
+# output: 505_filtered_GQ_sorted.hmp.txt  
+``` 
+
 # GWAS 
 ```{r}
 ######## GWAS, finally ######################
@@ -749,13 +757,38 @@ PCA.View.output=FALSE
 
 ```
 
-# get hapmap file using tassel 
+# display GWAS result in qqman 
 ```{r}
-######## use tassel to get hapmap format ########### 
-# run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_GQ.vcf.gz -outputFile 505_filtered_GQ_sorted -fileType VCF
-# run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_GQ_sorted.vcf -export -exportType Hapmap -runfork1 
-# output: 505_filtered_GQ_sorted.hmp.txt  
-``` 
+library("qqman")
+Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/A01/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/A01/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/A01/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+
+par(mfrow=c(3,1)) 
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/GWAS_preliminary.png", width=4, height=3, units="in", res=300)
+
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 5), cex = 0.6, 
+    cex.axis = 0.9, supggestiveline = 3, genomewideline = F 
+    ) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 5), cex = 0.6, 
+    cex.axis = 0.9, suggestiveline = 3, genomewideline = F
+    ) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 5), cex = 0.6, 
+    cex.axis = 0.9, suggestiveline = 3, genomewideline = F 
+    ) 
+
+dev.off() 
+
+```
 
 # late silique data duplicate check 
 ```{r}
