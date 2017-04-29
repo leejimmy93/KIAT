@@ -340,14 +340,16 @@ hist(missing.site.2$F_MISS, xlab = "missing rate at locus level", ylab="Number o
 dev.off()
 ```
 
-# analyze vcf file (come to add GQ, filter based on GQ... )
+# cluster analysis 
 ```{r}
 library("vcfR")
-leaf_505 <- read.vcfR("~/505/vcf_leaf_no_pop/combined/505_filtered_GQ.vcf.gz")
+# leaf_505 <- read.vcfR("~/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered.vcf.gz")
 
-# save(leaf_505, file="~/505/output/leaf_505.Rdata")
-load("~/505/output/leaf_505.Rdata")
-dim(leaf_505) # 476781        8       95  
+# save(leaf_505, file="~/505/output/leaf/leaf_505.Rdata")
+load("~/505/output/leaf/leaf_505.Rdata")
+dim(leaf_505) 
+# variants fix_cols  gt_cols 
+#   213869        8       95 
 
 # reform the orginal data
 temp <- leaf_505 
@@ -363,64 +365,40 @@ temp <- leaf_505
   temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
   colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
   rnames <- rownames(temp2)
-#  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
-#   temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
-#   temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
-  temp2 <- data.frame(sapply(temp2, function(x) sub("/","",x)))
-#   row.names(temp2) <- rnames
-  
-#   temp3 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgqs))
-#   colnames(temp3)[1:4] <- c("CHROM","POS","REF","ALT")
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  row.names(temp2) <- rnames
 
-#  save(temp2, file="~/505/output/temp2.Rdata")
-#  save(temp3, file="~/505/output/temp3.Rdata")
+#  save(temp2, file="~/505/output/leaf/temp2.Rdata")
 
-  load("~/505/output/temp2.Rdata") 
-#  load("~/505/output/temp3.Rdata")
+  load("~/505/output/leaf/temp2.Rdata") 
 
-  head(temp2) 
-#   temp2 <- gsub("/", "", temp2)
+  # transpose to desired format 
+  temp2.t <- t(temp2)
+  rownames(temp2.t)[1:4] <- c("CHROM","POS","REF","ALT")
+  colnames(temp2.t) <- rnames
 
-#   # transpose to desired format 
-#   temp2.t <- t(temp2)
-#   rownames(temp2.t)[1:4] <- c("CHROM","POS","REF","ALT")
-#   colnames(temp2.t) <- rnames
-
-# population structure 
-dim(temp2.t) # 98 476781
-head(temp2.t)
+# cluster analysis  
+dim(temp2.t) # 98 213869 
 temp2.t.reform <- temp2.t[5:98,] 
-temp2.t.reform[1:8, 1:20]
 
-# cluster analysis 
-geno.numeric <- data.matrix(temp2.t)
+########
+geno.numeric <- apply(temp2.t.reform, 2, function(x) as.integer(x))
+rnames <- rownames(temp2.t.reform)
+rownames(geno.numeric) <- rnames
+
+geno.numeric.df <- as.data.frame(geno.numeric)
+
+geno.numeric <- as.matrix(geno.numeric.df)
+
 genDist <- as.matrix(dist(geno.numeric))
 
 #perform the multi-dimensional scaling
 geno.mds <- as.data.frame(cmdscale(genDist))
-?cmdscale
 head(geno.mds) #now we have 2 dimensions
 dim(geno.mds)
-
-plot(geno.mds) 
-
-######## all 
-temp2.t.all <- temp2.t[5:98,] 
-temp2.t.all[5:8, 1:20]
-
-geno.numeric.all <- data.matrix(temp2.t.all)
-genDist.all <- as.matrix(dist(geno.numeric.all))
-
-#perform the multi-dimensional scaling
-geno.mds.all <- as.data.frame(cmdscale(genDist.all))
-?cmdscale
-head(geno.mds.all) #now we have 2 dimensions
-dim(geno.mds.all)
-
-plot(geno.mds.all) 
-
-save(geno.mds.all, file="~/505/output/geno.mds.all.Rdata")
-save(temp2, file="~/505/output/temp2.Rdata")
+plot(geno.mds)  
 
 ## add country of origin, winter or spring type to the figure ... 
 sample_des_a_revised <- read.csv("~/505/data/phenotype/batch_a_revised.csv", header=T)
@@ -436,29 +414,18 @@ sample_des_revised <- sample_des_revised[-c(47:51),]
 sample_des_revised$Sample.ID
 
 # MDS result 
-head(geno.mds.all)
-rownames(geno.mds.all)
-
 # reformat MDS result sample ID (X remove & . to -)
-geno.mds.all$Sample.ID <- gsub("\\.","\\-", rownames(geno.mds.all)) 
-geno.mds.all$Sample.ID <- gsub("X", "", geno.mds.all$Sample.ID)
-class(geno.mds.all$Sample.ID)
+geno.mds$Sample.ID <- gsub("\\.","\\-", rownames(geno.mds)) 
+geno.mds$Sample.ID <- gsub("X", "", geno.mds$Sample.ID)
+class(geno.mds$Sample.ID)
 
-geno.mds.all$Sample.ID[94]==sample_des_revised$Sample.ID[75]
+geno.mds$Sample.ID[94]==sample_des_revised$Sample.ID[75]
 
 # merge 
-geno.mds.all.des <- merge(geno.mds.all, sample_des_revised, by="Sample.ID")
+geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID")
 head(geno.mds.all.des)
 
-plot(geno.mds.all.des$V1, geno.mds.all.des$V2)
-save(geno.mds.all.des, file="~/505/output/geno.mds.all.des.Rdata")
 
-# # plot 
-# p.mds.country <- ggplot(data=geno.mds.all.des)
-# p.mds.country <- p.mds.country + geom_point(aes(V1, V2, color=factor(Sample.Description.Origin),  size=5))
-# p.mds.country + scale_color_brewer(type="qual",palette="Set1")
-
-# install.packages("ggrepel")
 library(ggrepel)
 set.seed(111) 
 
@@ -476,7 +443,7 @@ p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set
 p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
 # p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
 p.mds.country.2
-ggsave(p.mds.country.2, filename="~/505/output/figure/p.mds.country.2.png", height=20, width=20)
+ggsave(p.mds.country.2, filename="~/505/output/figure/leaf/p.mds.country.2.png", height=20, width=20)
 
 p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
 p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
@@ -484,29 +451,20 @@ p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set
 p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
 # p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
 p.mds.country.2
-ggsave(p.mds.country.2, filename="~/505/output/figure/p.mds.country.2.png", height=20, width=20)
+ggsave(p.mds.country.2, filename="~/505/output/figure/leaf/p.mds.country.2.png", height=20, width=20)
 
-
-p.mds.type <- ggplot(data=geno.mds.all.des) 
-p.mds.type <- p.mds.type + geom_point(aes(V1, V2, color=factor(Sample.Description.Type),  size=5))
-p.mds.type 
-
-##  
-p.mds <- ggplot(data = distance_matrix) + theme_gray(base_size = 20)
-p.mds <- p.mds + geom_point(aes(x, y, color=factor(gt), shape=factor(tissue)), size=5) 
-p.mds <- p.mds + labs(y = "BCV distance 2", x="BCV distance 1")
-p.mds <- p.mds + theme()
-# p.mds <- p.mds + facet_grid(~gt)  
-p.mds         
-  
-####
 ``` 
 
 ```{r}
 # chromosome distribution 
-distri <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/CHROM_POS")
+geno_505_hmp.2 <- read.table("~/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.hmp.txt", head=T)
+head(geno_505_hmp.2)
+colnames(geno_505_hmp.2)
+nrow(geno_505_hmp.2) # 213869 
+
+distri <- geno_505_hmp.2[,c("chrom", "pos")] 
 head(distri)
-colnames(distri) <- c("number", "CHROM", "POS")
+colnames(distri) <- c("CHROM", "POS")
 
 class(distri)
 data <- distri
@@ -526,16 +484,16 @@ SNP_chr.unique$ID <- rownames(SNP_chr.unique)
 head(SNP_chr.unique)
 # split to main & random chromosomes 
 # main 
-SNP_chr_main.unique <- SNP_chr.unique[!grepl("random", SNP_chr.unique$ID),]  
+SNP_chr_main.unique <- SNP_chr.unique[!grepl("RANDOM", SNP_chr.unique$ID),]  
 head(SNP_chr_main.unique)
-SNP_chr_main.unique$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID)   
-SNP_chr_main.unique$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", SNP_chr_main.unique$ID) 
+SNP_chr_main.unique$subgenome <- gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\1", SNP_chr_main.unique$ID)   
+SNP_chr_main.unique$chr_ID <- gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID) 
 
 # do a little calculation: how many SNPs on main & random chromosomes? 
-sum(SNP_chr_main.unique$V1) # 62958     
+sum(SNP_chr_main.unique$V1) # 176941       
 head(SNP_chr_main.unique) # 200317    
 
-sum(SNP_chr_main.unique[SNP_chr_main.unique$subgenome=="A",]$V1)/sum(SNP_chr_main.unique$V1)
+sum(SNP_chr_main.unique[SNP_chr_main.unique$subgenome=="A",]$V1)/sum(SNP_chr_main.unique$V1) # 54% 
 
 # make a plot to see how many SNPs on each chromosome 
 library(ggplot2)
@@ -546,19 +504,19 @@ pl.SNP.main.1.unique <- pl.SNP.main.1.unique + facet_wrap(~subgenome, ncol = 1)
 pl.SNP.main.1.unique <- pl.SNP.main.1.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
 pl.SNP.main.1.unique <- pl.SNP.main.1.unique + theme(legend.position = "none")
 pl.SNP.main.1.unique 
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/SNP.main.png", width = 9, height = 7) 
+ggsave("~/505/output/figure/leaf/SNP.main.png", width = 9, height = 7) 
 
 ########## Per Mb ... 
 head(data)
-data <- data[!grepl("random", data$CHROM),]  
-data$subgenome <-  gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", data$CHROM) 
-data$Chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", data$CHROM) 
+data <- data[!grepl("RANDOM", data$CHROM),]  
+data$subgenome <-  gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\1", data$CHROM) 
+data$Chr_ID <- gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", data$CHROM) 
 head(data) 
 
 # write.csv(vcf.Ae.Ol.intersect.df.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.2.csv") # sort in excel manually 
 
 # cf.Ae.Ol.intersect.df.2.sorted <-  read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.df.2.csv")
-head(vcf.Ae.Ol.intersect.df.2.sorted) 
+# head(vcf.Ae.Ol.intersect.df.2.sorted) 
 
 library(ggplot2)
 pl.SNP.main.2.unique <- ggplot(data = data)
@@ -568,7 +526,12 @@ pl.SNP.main.2.unique <- pl.SNP.main.2.unique + labs(list(title = "", x = "chromo
 pl.SNP.main.2.unique <- pl.SNP.main.2.unique + theme(legend.position = "none")
 pl.SNP.main.2.unique 
 
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/SNP.main.PerMb.png", width = 9, height = 7) 
+ggsave("~/505/output/figure/leaf/SNP.main.PerMb.png", width = 9, height = 7) 
+ 
+# calculate SNPs per Mb number 
+chrom.length <- read.table("~/Reference/B.napus/Brassica_napus_v4.1.length", header=F)
+chrom.length
+nrow(geno_505_hmp.2)/sum(chrom.length$V2)*1000000
 
 ```
 
