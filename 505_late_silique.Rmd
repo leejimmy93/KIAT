@@ -7,7 +7,7 @@ output:
     keep_md: yes 
 ---
 
-### data description
+### data description 
 ```{r}
 # RNA seq data from late silique, batch C: 47 lines; batch D: 41 lines, more lines will come... 
 ```
@@ -240,37 +240,24 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/concat.sh)
 # output: 505.vcf.gz  
 
-<<<<<<< HEAD
 # 6) filter 
-=======
-# 6) filter *** this step can replace the following steps 6, 7, 9, 11 
->>>>>>> 501e9af907aa3bd1652bbafc621301e551b2c109 
 # filter.sh 
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
 # output: 505.filtered.vcf.gz 
 
-# 7) calculate a bunch of stats 
+# 7) calculate a bunch of stats (haven't done this step yet...)
 # ./calc.sh 505_filtered.vcf.gz 505_filtered 
 # https://github.com/leejimmy93/KIAT_whitney/blob/master/505/calc.sh 
-<<<<<<< HEAD
 # output: many stats start with 505_filtered
 ```
 
 # stats, wait for late 
 ```{r}
-=======
 # output: many stats start with 505_filtered  
 ```
 
-# SNP filtering 
+# cluster analysis   
 ```{r} 
->>>>>>> 501e9af907aa3bd1652bbafc621301e551b2c109
-
-```
-
-# analyze 
-```{r}
-# SNP import & reformat for GWAS 
 # reform_505_late_silique.R to reform vcf file for GWAS 
 # output: late_silique_505.2 
 
@@ -305,8 +292,16 @@ plot(geno.mds)
 save(geno.numeric, file="~/505/output/late_silique_505_geno_numeric.Rdata") 
 ```
 
-# cluster analysis 
+# GWAS
 ```{r}
+# reformat for GWAS 
+# get hapmap file using tassel 
 
+######## use tassel to get hapmap format ########### 
+# run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_GQ.vcf.gz -outputFile 505_filtered_GQ_sorted -fileType VCF
+# run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_GQ_sorted.vcf -export -exportType Hapmap -runfork1 
+# output: 505_filtered_GQ_sorted.hmp.txt  
+# edit output file to remove "#" after rs & assembly 
+#################################################### 
 ```
 

@@ -10,7 +10,7 @@ output:
 # download, trimming, mapping 
 ```{r}
 # 1) download 
-# in cabernet, using download.slurm & download_2.slurm
+# in cabernet, using download.slurm & download_2.slurm 
 # also download to whitney 
 
 # 2) trimming on whitney only 
@@ -679,89 +679,15 @@ write.csv(temp2.t.all, file="~/505/output/gt_data.csv")
 # run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_GQ.vcf.gz -outputFile 505_filtered_GQ_sorted -fileType VCF
 # run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_GQ_sorted.vcf -export -exportType Hapmap -runfork1 
 # output: 505_filtered_GQ_sorted.hmp.txt  
-<<<<<<< HEAD
+# edit output file to remove "#" after rs & assembly 
 ``` 
-=======
-```  
->>>>>>> 6cdb4a60fc0fe14475c38adf299747f3ae0bd982
 
 # GWAS 
 ```{r}
 ######## GWAS, finally ######################
-# load libs 
-library(multtest) 
-library(gplots)
-library(LDheatmap)
-library(genetics)
-library(EMMREML)
-library(compiler) #this library is already installed in R
-library("scatterplot3d")
-library(dplyr)
-
-# install GAPIT package 
-source("http://zzlab.net/GAPIT/gapit_functions.txt")
-# intall EMMA package 
-source("http://zzlab.net/GAPIT/emma.txt")
-
-# set working directory and start analysis 
-setwd("~/505/output/myGAPIT/")  # ***** need to get this right 
-
-# get genotype data 
-# before importing, remove # after rs & assembly 
-geno_505_hmp <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/505_filtered_GQ_sorted.hmp.txt", head=T)
-geno_505_hmp <- read.table("~/505/vcf_leaf_no_pop/combined/505_filtered_sorted.hmp.txt", head=FALSE)
-
-geno_505_hmp$V3 <- as.numeric(geno_505_hmp$V3)
-dim(geno_505_hmp) 
-geno_505_hmp[1,3] <- "chrom"
-geno_505_hmp[1:10, 1:10] 
-
-# phenotype data 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/gh.seed.bolt.table.wide.Rdata")
-load("~/505/data/phenotype/gh.seed.bolt.table.wide.Rdata")
-head(gh.seed.bolt.table.wide)
-colnames(gh.seed.bolt.table.wide) 
-
-# add name to to replace SN 
-sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
-sample_des_sub2$SN
-gh.seed.bolt.table.wide$SN
-gh.seed.bolt.table.wide.merge <- merge(sample_des_sub2, gh.seed.bolt.table.wide, by = "SN")
-gh.seed.bolt.table.wide.merge 
-          
-pheno_data_505 <- gh.seed.bolt.table.wide.merge[,c("Sample.ID", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
-
-colnames(pheno_data_505) <- c("Taxa", "Erucic_acid", "Oil_content", "Oleic_acid")
-pheno_data_505
-
-myY <- pheno_data_505
-myG <- geno_505_hmp
-
-# subset to get only 1st chromosome result 
-myG[1:10, 1:10]
-myG[1,]
-myG.03 <- myG[myG$V3==1,]
-class(myG.03$V3)
-myG.03.final <- data.frame(rbind(myG[1,], myG.03))
-myG.03.final[1:10, 1:10] 
-dim(myG.03.final) # 21415 105
-myG.03.final$V3[2:21415] <- as.numeric(as.character(myG.03.final$V3[2:21415]))
-class(myG.03.final$V3[2]) 
-
-dim(myY)
-dim(myG.03.final)
-
-# run GAPIT 
-myGAPIT <- GAPIT( 
-Y=myY,
-G=myG.03.final, 
-PCA.total=3,
-Geno.View.output=FALSE, 
-PCA.View.output=FALSE 
-)    
+# GWAS_505_leaf.R   
 ```
 
-<<<<<<< HEAD
 # display GWAS result in qqman 
 ```{r}
 library("qqman")
