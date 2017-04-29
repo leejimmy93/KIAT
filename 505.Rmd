@@ -654,42 +654,35 @@ write.csv(temp2.t.all, file="~/505/output/gt_data.csv")
 # display GWAS result in qqman 
 ```{r}
 library("qqman")
-Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/A01/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/leaf/missing_0.5/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
-Oil_content <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/A01/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+Oil_content <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/leaf/missing_0.5/GAPIT..Oil_content.GWAS.Results.csv", header = T)
 
-Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/A01/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/leaf/missing_0.5/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
 
 colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
 colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
 colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
 
-
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/leaf/Erucic_acid.png", width=12, height=10, units="in", res=300)
 par(mfrow=c(3,1)) 
-png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/GWAS_preliminary.png", width=4, height=3, units="in", res=300)
-
-manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 5), cex = 0.6, 
-    cex.axis = 0.9, supggestiveline = 3, genomewideline = F 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
     ) 
 
-manhattan(Oil_content, main = "Oil content", ylim = c(0, 5), cex = 0.6, 
-    cex.axis = 0.9, suggestiveline = 3, genomewideline = F
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
     ) 
 
-manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 5), cex = 0.6, 
-    cex.axis = 0.9, suggestiveline = 3, genomewideline = F 
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
     ) 
-
 dev.off() 
-=======
-# display GWAS result using qqman 
-```{r}
-install.packages("qqman")
-library("qqman") 
 
-### memory problem... 
->>>>>>> 6cdb4a60fc0fe14475c38adf299747f3ae0bd982
-
+# check the significant SNPs
+unique(Erucic_acid[Erucic_acid$P < 0.00001,]$CHR)
+unique(Oleic_acid[Oleic_acid$P < 0.00001,]$CHR)
+unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs 
 ```
 
 # late silique data duplicate check 
@@ -712,7 +705,7 @@ common <- intersect(name_late_silique, name_young_leaf) # only 29 samples have e
 common
 
 # get the unique ones in late silique, are they having slightly differnet names in young leaf??? 
-name_late_silique
+name_late_silique 
 common
 
 setdiff(name_late_silique, common) # setdiff will discard duplicated values, so 3 DG5 lines were discarded here... 
