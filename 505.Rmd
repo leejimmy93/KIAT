@@ -683,6 +683,7 @@ dev.off()
 unique(Erucic_acid[Erucic_acid$P < 0.00001,]$CHR)
 unique(Oleic_acid[Oleic_acid$P < 0.00001,]$CHR)
 unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs 
+
 ```
 
 # late silique data duplicate check 
