@@ -680,9 +680,47 @@ manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6,
 dev.off() 
 
 # check the significant SNPs
+unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs 
+
+# need to figure out which chromosome is which 
+Erucic_acid$chrom <- gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", Erucic_acid$SNP)
+
+Erucic_acid$index <- paste(Erucic_acid$CHR, Erucic_acid$chrom)
+index.info <- unique(Erucic_acid$index)
+
+index <- data.frame(num = gsub("([[:digit:]]+)( )([[:print:]]+)", "\\1", index.info),
+                    chrom = gsub("([[:digit:]]+)( )([[:print:]]+)", "\\3", index.info))
+
+chrom.index <- index[order(index$chrom),]
+write.csv(chrom.index, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/leaf/chrom.index.csv")
+
+####### only look at the chromosomes with significant SNPs
 unique(Erucic_acid[Erucic_acid$P < 0.00001,]$CHR)
 unique(Oleic_acid[Oleic_acid$P < 0.00001,]$CHR)
-unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs 
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/leaf/GWAS_oil_subset.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(2,4)) 
+manhattan(subset(Erucic_acid, CHR==15), xlab="15: chrA08 Eurcic acid", ylim = c(0, 8), genomewideline = F)
+manhattan(subset(Erucic_acid, CHR==17), xlab="17: chrA09 Eurcic acid", ylim = c(0, 8), genomewideline = F)
+manhattan(subset(Erucic_acid, CHR==26), xlab="26: chrC03 Eurcic acid", ylim = c(0, 8), genomewideline = F)
+manhattan(subset(Erucic_acid, CHR==41), xlab="41: chrCnn_random Eurcic acid", ylim = c(0, 8), genomewideline = F)
+
+manhattan(subset(Oleic_acid, CHR==15), xlab="15: chrA08 Oleic acid", ylim = c(0, 8), genomewideline = F)
+manhattan(subset(Oleic_acid, CHR==17), xlab="17: chrA09 Oleic acid", ylim = c(0, 8), genomewideline = F)
+manhattan(subset(Oleic_acid, CHR==26), xlab="26: chrC03 Oleic acid", ylim = c(0, 8), genomewideline = F)
+manhattan(subset(Oleic_acid, CHR==41), xlab="41: chrCnn_random Oleic acid", ylim = c(0, 8), genomewideline = F)
+
+dev.off()
+
+# check the number of SNPs 
+sum(Erucic_acid$P <= 0.00001)
+sum(Oleic_acid$P <= 0.00001)
+
+# overlaps between Erucic acid & Oleic acid? 
+Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP 
+Oleic_acid[Oleic_acid$P <= 0.00001,]$SNP %in% Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP
+
+
 ```
 
 # late silique data duplicate check 
