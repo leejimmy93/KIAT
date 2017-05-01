@@ -412,6 +412,7 @@ sample_des_b_revised_sub$Sample.ID
 sample_des_revised <- rbind(sample_des_a_revised_sub, sample_des_b_revised_sub)
 sample_des_revised <- sample_des_revised[-c(47:51),]
 sample_des_revised$Sample.ID
+save(sample_des_revised, file="~/505/output/leaf/sample_des_revised.Rdata")
 
 # MDS result 
 # reformat MDS result sample ID (X remove & . to -)
@@ -651,6 +652,59 @@ write.csv(temp2.t.all, file="~/505/output/gt_data.csv")
 # GWAS_505_leaf.R   
 ```
 
+# histogram of different trait 
+```{r}
+# save(pheno_data_505, file="~/505/output/pheno_data_505_leaf.R")
+load("~/505/output/pheno_data_505_leaf.R")
+
+pheno_data_505
+pheno_data_505_melt <- melt(pheno_data_505[,2:4])
+
+P.oil <- ggplot(data=pheno_data_505_melt)
+P.oil <- P.oil + geom_histogram(aes(value, fill=variable))
+P.oil <- P.oil + facet_wrap(~variable, ncol=1)
+P.oil <- P.oil + labs(list(x="value", y="Number of varieties"))
+P.oil <- P.oil + theme(legend.position = "none") 
+
+P.oil
+``` 
+
+# compare leaf & late silique, how many lines are overlapped  
+```{r}
+load("~/505/output/pheno_data_505_leaf.R")
+pheno_data_505_leaf <- pheno_data_505
+
+load("~/505/output/pheno_data_505_late_silique.R")
+pheno_data_505_late_silique <- pheno_data_505
+
+# use common taxa names to compare, check missing individuals 
+load("~/505/output/leaf/sample_des_revised.Rdata")
+sample_des_revised_leaf <- sample_des_revised 
+load("~/505/output/late_silique/sample_des_revised.Rdata")
+sample_des_revised_late_silique <- sample_des_revised
+
+colnames(sample_des_revised_leaf)[1] <- "Taxa"
+colnames(sample_des_revised_late_silique)[1] <- "Taxa"
+
+lines_leaf_2 <- merge(pheno_data_505_leaf, sample_des_revised_leaf, by="Taxa")
+lines_leaf_2
+
+lines_late_silique_2 <- merge(pheno_data_505_late_silique, sample_des_revised_late_silique, by="Taxa")
+lines_late_silique_2
+
+intersect(lines_leaf_2$Name, lines_late_silique_2$Name)
+```
+
+# check missing SNPs in late silique 
+```{r}
+# Q: are SNPs found significant in leaf also detected in late silique or not? 
+
+
+
+
+
+```
+
 # display GWAS result in qqman 
 ```{r}
 library("qqman")
@@ -723,7 +777,7 @@ sum(Oleic_acid$P <= 0.00001)
 Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP 
 Oleic_acid[Oleic_acid$P <= 0.00001,]$SNP %in% Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP
 
->>>>>>> 71736b9a8da3fd4c4c4e7eb652ab56e3603f4b7b
+>>>>>>> 71736b9a8da3fd4c4c4e7eb652ab56e3603f4b7b 
 
 ```
 
