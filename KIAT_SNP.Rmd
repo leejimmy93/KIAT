@@ -235,7 +235,7 @@ p.QUAL.Ol <- p.QUAL.Ol + geom_histogram(aes(log10(QUAL), fill=Ol_gt))
 p.QUAL.Ol <- p.QUAL.Ol + facet_wrap(~Ol_gt, ncol = 1) 
 p.QUAL.Ol <- p.QUAL.Ol +labs(list(x="log10(QUAL)", y="Number of SNPs"))  
 p.QUAL.Ol <- p.QUAL.Ol + theme(legend.position = "none") 
-p.QUAL.Ol 
+p.QUAL.Ol   
 
 # plot QUAL by Ae_gt  
 library(ggplot2) 

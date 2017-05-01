@@ -432,7 +432,10 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 
 ``` 
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 85a7272415f2dc9d23046be2677e4fb5387f8baa
 # GWAS
 ```{r}
 # reformat for GWAS 
@@ -446,6 +449,9 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 #################################################### 
 ```
 
+<<<<<<< HEAD
+# GWAS result plot 
+=======
 # GWAS run
 ```{r}
 # GWAS_505_late_silique.R  
@@ -471,6 +477,7 @@ P.oil.late.silique
 ggsave(P.oil, filename="~/505/output/figure/late_silique/P.oil.png", width=6, height=10)
 
 ```
+>>>>>>> 85a7272415f2dc9d23046be2677e4fb5387f8baa
 
 
 
