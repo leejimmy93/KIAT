@@ -426,9 +426,6 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 
 ``` 
 
-
-
-
 # GWAS
 ```{r}
 # reformat for GWAS 
@@ -441,6 +438,8 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 # edit output file to remove "#" after rs & assembly 
 #################################################### 
 ```
+
+# GWAS result plot 
 
 
 
