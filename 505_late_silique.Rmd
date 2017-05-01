@@ -382,6 +382,7 @@ sample_des_d_sub$Sample.ID
 sample_des_revised <- rbind(sample_des_c_sub, sample_des_d_sub)
 sample_des_revised <- sample_des_revised[-c(48, 90:93),]
 sample_des_revised$Sample.ID
+save(sample_des_revised, file="~/505/output/late_silique/sample_des_revised.Rdata")
 
 # MDS result 
 # reformat MDS result sample ID (X remove & . to -)
@@ -427,8 +428,6 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 ``` 
 
 
-
-
 # GWAS
 ```{r}
 # reformat for GWAS 
@@ -440,6 +439,31 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 # output: 505_filtered_GQ_sorted.hmp.txt  
 # edit output file to remove "#" after rs & assembly 
 #################################################### 
+```
+
+# GWAS run
+```{r}
+# GWAS_505_late_silique.R  
+```
+
+# histogram of phenotype data 
+```{r}
+load("~/505/output/pheno_data_505_late_silique.R")
+pheno_data_505
+
+pheno_data_505_melt <- melt(pheno_data_505[,2:4])
+
+# plot 
+library(ggplot2)
+
+P.oil <- ggplot(data=pheno_data_505_melt)
+P.oil <- P.oil + geom_histogram(aes(value, fill=variable))
+P.oil <- P.oil + facet_wrap(~variable, ncol=1)
+P.oil <- P.oil + labs(list(x="value", y="Number of varieties"))
+P.oil <- P.oil + theme(legend.position = "none") 
+
+P.oil 
+
 ```
 
 
