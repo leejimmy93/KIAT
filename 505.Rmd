@@ -959,10 +959,146 @@ write.csv(sample_des_b, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data
 write.csv(sample_des_c, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_c.csv")
 ```
 
+# cluster analysis for common lines between leaf & late silique using common SNPs 
+```{r}
+# filter based on individuals 
+load("~/505/output/common.lines.Rdata")
+write.table(common.lines, file="~/505/leaf_VS_late_silique/common.lines.txt")
+# cat common.lines.txt | awk 'BEGIN{FS="\""}{print $8}' > late_silique_common_ID
+# vcftools --keep leaf_common_ID --gzvcf ../vcf_leaf_no_pop/combined/missing_0.5/505_filtered.vcf.gz --recode --recode-INFO-all --out 505_filtered_common.vcf.gz 
 
+# index both leaf & late silique vcf files 
+# bgzip -c 505_filtered_sorted.vcf > 505_filtered_sorted.vcf.gz
+# tabix -p vcf 505_filtered_sorted.vcf.gz
 
+# 1) filter based on position  
+# cat 505_filtered_common_late_silique.vcf | grep -v "#" | awk '{print $1 "\t" $2}' > POS_late_silique
+# cat 505_filtered_common_leaf.vcf | grep -v "#" | awk '{print $1 "\t" $2}' > POS_leaf
+# 
+# vcftools --positions POS_late_silique --vcf 505_filtered_common_leaf.vcf --recode --recode-INFO-all --out 505_filtered_common_leaf_2.vcf
+# vcftools --positions POS_leaf --vcf 505_filtered_common_late_silique.vcf --recode --recode-INFO-all --out 505_filtered_common_late_silique_2.vcf
 
+# index 
+# bgzip -c 505_filtered_common_leaf_2.vcf.recode.vcf > 505_filtered_common_leaf_2.vcf.gz
+# bgzip -c 505_filtered_common_late_silique_2.vcf.recode.vcf > 505_filtered_common_late_silique_2.vcf.gz
+# tabix -p vcf 505_filtered_common_leaf_2.vcf.gz
+# tabix -p vcf 505_filtered_common_late_silique_2.vcf.gz
 
+# import into R, using vcfR for manipulation 
+library("vcfR")
+
+late_silique_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_late_silique_2.vcf.gz")
+leaf_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_leaf_2.vcf.gz")
+
+reform.vcf <- function(temp){
+  vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
+  vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
+  vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele
+  vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
+  vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
+  vcfgts <- subset(extract.gt(temp, element = "GT", IDtoRowNames = F), subset = vcfbi) 
+
+  temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
+  colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
+  rnames <- rownames(temp2)
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  row.names(temp2) <- rnames
+
+return(temp2) 
+}
+
+late_silique_505_common.2 <- reform.vcf(late_silique_505_common)
+leaf_505_common.2 <- reform.vcf(leaf_505_common)
+
+# combine the two files 
+dim(late_silique_505_common.2)
+head(leaf_505_common.2)
+
+late_silique_505_common.2$feature <- paste(late_silique_505_common.2$CHROM, late_silique_505_common.2$POS, sep="-")
+leaf_505_common.2$feature <- paste(leaf_505_common.2$CHROM, leaf_505_common.2$POS, sep="-")
+
+combined_leaf_late_silique <- merge(leaf_505_common.2, late_silique_505_common.2, by="feature")
+dim(combined_leaf_late_silique)
+
+# prepare for cluster analysis 
+colnames(combined_leaf_late_silique)
+
+combined_leaf_late_silique.t <- data.frame(t(combined_leaf_late_silique))
+combined_leaf_late_silique.t[1:10, 1:10]
+rownames(combined_leaf_late_silique.t)
+dim(combined_leaf_late_silique.t)
+
+combined_leaf_late_silique.t.2 <- combined_leaf_late_silique.t[c(6:63, 68:125),] 
+dim(combined_leaf_late_silique.t.2)
+combined_leaf_late_silique.t.2[1:10, 1:10]
+
+geno.numeric <- apply(combined_leaf_late_silique.t.2, 2, function(x) as.integer(x))
+rnames <- rownames(combined_leaf_late_silique.t.2)
+rownames(geno.numeric) <- rnames
+
+geno.numeric.df <- data.frame(geno.numeric)
+geno.numeric <- as.matrix(geno.numeric.df)
+
+genDist <- as.matrix(dist(geno.numeric))
+
+#perform the multi-dimensional scaling
+geno.mds <- as.data.frame(cmdscale(genDist))
+head(geno.mds) #now we have 2 dimensions
+dim(geno.mds)
+plot(geno.mds)  
+
+geno.mds
+
+# add leaf & late silique 
+geno.mds$tissue <- c(rep("leaf", 58), rep("late_silique", 58))
+
+p.mds.country.2 <- ggplot(data=geno.mds, aes(V1, V2, color=factor(tissue)))
+p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
+p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+# p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country.2
+ggsave(p.mds.country.2, filename="~/505/output/figure/leaf/p.mds.country.2.png", height=20, width=20)
+
+# add name 
+load("~/505/output/leaf/sample_des_revised.Rdata")
+sample_des_revised.leaf <- sample_des_revised
+dim(sample_des_revised.leaf) # 94 
+
+load("~/505/output/late_silique/sample_des_revised.Rdata")
+sample_des_revised.late_silique <- sample_des_revised 
+dim(sample_des_revised.late_silique) # 88
+
+colnames(sample_des_revised.leaf)
+colnames(sample_des_revised.late_silique) 
+
+sample_des_revised <- rbind(sample_des_revised.leaf, sample_des_revised.late_silique)
+sample_des_revised
+dim(sample_des_revised) # 182 
+
+# MDS result 
+# reformat MDS result sample ID (X remove & . to -)
+geno.mds$Sample.ID <- gsub("\\.","\\-", rownames(geno.mds)) 
+geno.mds$Sample.ID <- gsub("X", "", geno.mds$Sample.ID)
+
+geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID")
+geno.mds.all.des
+dim(geno.mds.all.des)
+
+library(ggrepel)
+set.seed(111) 
+
+p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(tissue)))
+p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
+p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country.2
+ggsave(p.mds.country.2, filename="~/505/output/figure/leaf/p.mds.country.2.png", height=20, width=20)
+
+```
 
 
 
