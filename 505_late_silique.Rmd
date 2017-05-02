@@ -344,7 +344,7 @@ nrow(geno_505_hmp.late_silique)/sum(chrom.length$V2)*1000000
 # cluster analysis 
 load("~/505/output/late_silique/late_silique_505.2.Rdata")
 class(late_silique_505.2.t)
-dim(late_silique_505.2.t)
+dim(late_silique_505.2.t) #  88 347282 
 late_silique_505.2.t[1:10, 1:10]
 # late_silique_505.2.t <- as.data.frame(late_silique_505.2.t)
 # geno.numeric <- data.matrix(late_silique_505.2.t)
@@ -357,6 +357,7 @@ rownames(geno.numeric) <- rnames
 geno.numeric.df <- as.data.frame(geno.numeric)
 
 geno.numeric.df.2 <- geno.numeric.df[which(!rownames(geno.numeric.df) %in% "X505.K88"),]
+### 
 geno.numeric.2 <- as.matrix(geno.numeric.df.2)
 
 genDist <- as.matrix(dist(geno.numeric.2))
@@ -424,10 +425,90 @@ p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=facto
 # p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
 p.mds.country.2
 ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country.2.png", height=20, width=20)
-
+ 
 # cluster for only the common lines 
+load("~/505/output/common.lines.Rdata")
+common.lines$Taxa.y
 
+rownames(geno.numeric.df.2) 
+# change rownames 
+rownames(geno.numeric.df.2) <- gsub("\\.","\\-", rownames(geno.numeric.df.2))
+rownames(geno.numeric.df.2) <- gsub("X", "", rownames(geno.numeric.df.2))
 
+common.lines$Taxa.y <- as.character(common.lines$Taxa.y)
+rownames(geno.numeric.df.2) 
+common.lines$Taxa.y <- gsub("\\_","\\-", common.lines$Taxa.y)
+
+geno.numeric.df.common <- geno.numeric.df.2[rownames(geno.numeric.df.2) %in% common.lines$Taxa.y,]
+dim(geno.numeric.df.common)  
+# check to make sure I get the right subset 
+
+identical(rownames(geno.numeric.df.common)[order(rownames(geno.numeric.df.common))], common.lines$Taxa.y[order(common.lines$Taxa.y)])
+geno.numeric.common <- as.matrix(geno.numeric.df.common)
+
+genDist <- as.matrix(dist(geno.numeric.common))
+
+#perform the multi-dimensional scaling
+geno.mds <- as.data.frame(cmdscale(genDist))
+head(geno.mds) #now we have 2 dimensions
+dim(geno.mds)
+plot(geno.mds)  
+
+## add country of origin, winter or spring type to the figure ... 
+sample_des_c_revised <- read.csv("~/505/data/phenotype/batch_c_revised.csv", header=T)
+sample_des_c_sub <- sample_des_c_revised[,c("Sample.ID", "Name","Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_d_revised <- read.csv("~/505/data/phenotype/batch_d_revised.csv", header=T)
+sample_des_d_sub <- sample_des_d_revised[,c("Sample.ID", "Name", "Sample.Description.Origin", "Sample.Description.Type")]
+head(sample_des_c_sub)
+sample_des_c_sub$Sample.ID
+sample_des_d_sub$Sample.ID
+
+sample_des_revised <- rbind(sample_des_c_sub, sample_des_d_sub)
+sample_des_revised <- sample_des_revised[-c(48, 90:93),]
+sample_des_revised$Sample.ID
+save(sample_des_revised, file="~/505/output/late_silique/sample_des_revised.Rdata")
+
+# MDS result 
+# reformat MDS result sample ID (X remove & . to -)
+# geno.mds$Sample.ID <- gsub("\\.","\\-", rownames(geno.mds)) 
+# geno.mds$Sample.ID <- gsub("X", "", geno.mds$Sample.ID)
+class(geno.mds$Sample.ID) 
+geno.mds
+
+geno.mds$Sample.ID
+sample_des_revised$Sample.ID <- gsub("\\_", "\\-", sample_des_revised$Sample.ID)
+
+# merge 
+geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID")
+head(geno.mds.all.des)  
+dim(geno.mds.all.des)
+
+library(ggrepel)
+set.seed(111) 
+
+# p.mds.country <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+# p.mds.country <- p.mds.country + geom_point(size=1) 
+# p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+# p.mds.country <- p.mds.country + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+# p.mds.country 
+# ggsave(p.mds.country, filename="~/505/output/figure/late_silique/p.mds.country.png", height=20, width=20)
+
+p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
+p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country.2
+ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country.2.common.png", height=20, width=20)
+
+p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
+p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country.2
+ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country.2.png", height=20, width=20)
 
 
 ``` 
@@ -476,8 +557,36 @@ P.oil.late.silique <- P.oil.late.silique + theme(legend.position = "none")
 P.oil.late.silique 
 ggsave(P.oil, filename="~/505/output/figure/late_silique/P.oil.png", width=6, height=10)
 
+# do seperate graph for unique lines 
+common.lines
+pheno_data_505[pheno_data_505$Taxa %in% common.lines$Taxa.y,]
+
+pheno.unique.late.silique <- pheno_data_505[which(!(pheno_data_505$Taxa %in% common.lines$Taxa.y)),]
+
+pheno_data_505_melt_unique <- melt(pheno.unique.late.silique[,2:4])
+
+P.oil <- ggplot(data=pheno_data_505_melt_unique)
+P.oil <- P.oil + geom_histogram(aes(value, fill=variable))
+P.oil <- P.oil + facet_wrap(~variable, ncol=1)
+P.oil <- P.oil + labs(list(x="value", y="Number of varieties"))
+P.oil <- P.oil + theme(legend.position = "none") 
+P.oil
+
+ggsave(P.oil, filename="~/505/output/figure/leaf/P.oil.late.silique.unique.png", width=6, height=10)
+
 ```
 >>>>>>> 85a7272415f2dc9d23046be2677e4fb5387f8baa
 
+# 
+```{r}
+geno_505_hmp <- read.table("~/505/vcf_late_silique_no_pop/combined/505_filtered_sorted.hmp.txt", head=FALSE)
+# get chrom name to numerics
+geno_505_hmp$V3 <- as.numeric(geno_505_hmp$V3)
+geno_505_hmp[1,3] <- "chrom"
+geno_505_hmp <- geno_505_hmp[,-91]
+geno_505_hmp[1,]
+
+
+```
 
 
