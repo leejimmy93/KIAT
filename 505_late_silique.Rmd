@@ -444,12 +444,38 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 #################################################### 
 ```
 
-<<<<<<< HEAD
-# GWAS result plot 
-=======
 # GWAS run
 ```{r}
 # GWAS_505_late_silique.R  
+```
+
+# GWAS result plot 
+```{r} 
+library("qqman")
+Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/leaf/Erucic_acid.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+    ) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+    ) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+    ) 
+dev.off() 
 ```
 
 # histogram of phenotype data 
@@ -471,7 +497,7 @@ P.oil <- P.oil + theme(legend.position = "none")
 P.oil 
 
 ```
->>>>>>> 85a7272415f2dc9d23046be2677e4fb5387f8baa
+>>>>>>> 85a7272415f2dc9d23046be2677e4fb5387f8baa 
 
 
 

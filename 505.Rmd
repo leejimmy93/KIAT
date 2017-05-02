@@ -654,8 +654,12 @@ write.csv(temp2.t.all, file="~/505/output/gt_data.csv")
 
 # histogram of different trait 
 ```{r}
+library(ggplot2)
+library(reshape)
 # save(pheno_data_505, file="~/505/output/pheno_data_505_leaf.R")
-load("~/505/output/pheno_data_505_leaf.R")
+# load("~/505/output/pheno_data_505_leaf.R")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/leaf/pheno_data_505_late_silique.R")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/leaf/pheno_data_505_leaf.R")
 
 pheno_data_505
 pheno_data_505_melt <- melt(pheno_data_505[,2:4])
@@ -667,13 +671,25 @@ P.oil <- P.oil + labs(list(x="value", y="Number of varieties"))
 P.oil <- P.oil + theme(legend.position = "none") 
 
 P.oil
+
+# common lines 
+intersect(lines_leaf_2$Name, lines_late_silique_2$Name)
+# draw the similar figure for unique lines 
+
+
+
+
+
 ``` 
 
 # compare leaf & late silique, how many lines are overlapped  
 ```{r}
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/leaf/pheno_data_505_leaf.R")
 load("~/505/output/pheno_data_505_leaf.R")
 pheno_data_505_leaf <- pheno_data_505
 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/leaf/pheno_data_505_late_silique.R")
 load("~/505/output/pheno_data_505_late_silique.R")
 pheno_data_505_late_silique <- pheno_data_505
 
@@ -698,10 +714,24 @@ intersect(lines_leaf_2$Name, lines_late_silique_2$Name)
 # check missing SNPs in late silique 
 ```{r}
 # Q: are SNPs found significant in leaf also detected in late silique or not? 
+Erucic_acid_leaf <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/leaf/missing_0.5/GAPIT..Erucic_acid.GWAS.Results.csv", header = T) 
 
+Oil_content_leaf <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/leaf/missing_0.5/GAPIT..Oil_content.GWAS.Results.csv", header = T)
 
+Oleic_acid_leaf <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/leaf/missing_0.5/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
 
+Erucic_acid_late_silique <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
+Oil_content_late_silique <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid_late_silique <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+sum(Erucic_acid_leaf[Erucic_acid_leaf$P.value < 0.00001,]$SNP %in% Erucic_acid_late_silique$SNP)
+# 18 are present in the late silique data out of 28 SNPs 
+
+dim(Erucic_acid_late_silique[c(Erucic_acid_leaf[Erucic_acid_leaf$P.value < 0.00001,]$SNP),]) 
+
+Erucic_acid_leaf[Erucic_acid_leaf$P.value < 0.00001,]$SNP 
 
 ```
 

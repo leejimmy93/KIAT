@@ -246,7 +246,7 @@ p.QUAL.Ae <- p.QUAL.Ae +labs(list(x="log10(QUAL)", y="Number of SNPs"))
 p.QUAL.Ae <- p.QUAL.Ae + theme(legend.position = "none")
 p.QUAL.Ae 
 
-ggsave(p.QUAL.Ae, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.QUAL.Ae.png", height = 4, width = 6)
+ggsave(p.QUAL.Ae, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.QUAL.Ae.png", height = 4, width = 6) 
 
 # plot total depth by Ae_gt 
 p.tot.depth.Ae <- ggplot(data = vcf.freebayes.HQ.2.test1.Ae) 
@@ -2469,11 +2469,7 @@ ggsave(p.GQ.F2.N, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP
 # 2) avoid having SNP in the 1st 20nt of sanger sequencing, that's forward primer end position + 20 && reverse primer start postion - 20 
 # 3) if the tempelate is not unique, don't use that SNP 
 
-### To do: grep 300 SNPs, and include only SNPs in the seq name... 
-
-
-
-
+### To do: grep 300 SNPs, and include only SNPs in the seq name...  
 ```
 
 
