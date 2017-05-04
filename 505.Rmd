@@ -1142,7 +1142,7 @@ genDist
 
 ```
 
-# check the genes reside nearby the significant SNPs 
+# check the genes include the significant SNPs (my MAC)
 ```{r}
 library(IRanges)
 library(GenomicRanges)
@@ -1150,62 +1150,62 @@ library(GenomicFeatures)
 library("rtracklayer")
 
 ### get gff file with gene chrom & pos info, gff3 file must be sorted 
-
-gffRangeData <- import.gff("~/Reference/B.napus/Brassica_napus.annotation_v5.sorted.gff3") 
-gff<-as(gffRangeData, "GRanges")
-
-length(gff)
-head(gff, 3)
-
-# get only mRNA 
-gff.mRNA <- gff[elementMetadata(gff)[,2] == "mRNA"] 
-gff.mRNA.df <- as.data.frame(disjoin(gff.mRNA)) # after disjoin, output file is sorted based on POS 
-dim(gff.mRNA.df) # 101040 5
-head(gff.mRNA.df)
-tail(gff.mRNA.df) 
-
-gff.mRNA.df$Name <- elementMetadata(gff[elementMetadata(gff)[,2] == "mRNA"])$Name
-head(gff.mRNA.df)
-dim(gff.mRNA.df)
-tail(gff.mRNA.df)
+# Grange doesn't give me the corret order of genes, so I used unix command to get the gene info from sorted gff3 file 
+# cat Brassica_napus.annotation_v5.sorted.gff3 | grep "mRNA" | awk '{print $1, $4, $5, $9}' | tr "=" "\t" | tr ";" "\t" | awk '{print $1, $2, $3, $5}' > gff.mRNA
+gff.mRNA <- read.table("~/Desktop/Brassica_project/IGV_file/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+head(gff.mRNA) 
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
 
 ### get significant SNPs 
-Erucic_acid <- read.csv("~/505/output/myGAPIT/leaf/missing_rate_0.5_A01/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/leaf/missing_0.5/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
-Oleic_acid <- read.csv("~/505/output/myGAPIT/leaf/missing_rate_0.5_A01/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/leaf/missing_0.5/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
 
 head(Erucic_acid)
-Erucic_acid[Erucic_acid$P.value < 0.00001,]$SNP
 SNP.Erucic <- data.frame(CHROM = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", Erucic_acid[Erucic_acid$P.value < 0.00001,]$SNP), 
                          POS = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\4", Erucic_acid[Erucic_acid$P.value < 0.00001,]$SNP))
 
-SNP.Erucic$CHROM <- as.character(SNP.Erucic$CHROM)
-gff.mRNA.df$seqnames <- as.character(gff.mRNA.df$seqnames)
-head(SNP.Erucic)
-head(gff.mRNA.df)
+SNP.Erucic$CHROM <- paste("chr", SNP.Erucic$CHROM, sep = "")
+SNP.Erucic$POS <- as.numeric(as.character(SNP.Erucic$POS))
 
-gff.mRNA.df.chrA08 <- gff.mRNA.df[gff.mRNA.df$seqnames=="chrA08",] 
-head(gff.mRNA.df.chrA08)
-tail(gff.mRNA.df.chrA08)
+head(SNP.Erucic) 
 
-for (i in 1:nrow(SNP.Erucic)){
-  for (j in 1:nrow(gff.mRNA.df)){
-  if (
-      (SNP.Erucic$CHROM[i]==gff.mRNA.df$seqnames[j]) &  
-      (SNP.Erucic$POS[i] <= gff.mRNA.df$end[j]) & 
-      (SNP.Erucic$POS[i] >= gff.mRNA.df$start[j])
-      ){
-    SNP.Erucic$Name[i] <- gff.mRNA.df$Name[j]
-    }
-  }
-}
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
+genes
 
-# change the above code to apply 
+SNP <- GRanges(seqnames = Rle(SNP.Erucic$CHROM), ranges = IRanges(start = SNP.Erucic$POS, end = SNP.Erucic$POS), ID = paste(SNP.Erucic$CHROM, SNP.Erucic$POS, sep = "_"))
+SNP
 
-sapply()
+SNP_gene <- mergeByOverlaps(SNP, genes)
+SNP_gene
 
+SNP_gene_df <- as.data.frame(SNP_gene)
+SNP_gene_df
 
+SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
+SNP_gene_final
 
+napus_vs_ara.non_reciprocal <- read.table("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
+
+head(napus_vs_ara.non_reciprocal)
+dim(napus_vs_ara.non_reciprocal) # 64949 
+
+colnames(napus_vs_ara.non_reciprocal)[1] <- "names"
+
+SNP_gene_final_fxn <- merge(SNP_gene_final, napus_vs_ara.non_reciprocal, by = "names", all.x=T)
+SNP_gene_final_fxn$SNP.ID <- gsub("chr", "S", SNP_gene_final_fxn$SNP.ID)
+
+SNP_gene_final_fxn$Erucic_acid <- SNP_gene_final_fxn$SNP.ID %in% Erucic_acid[Erucic_acid$P.value < 0.00001,]$SNP
+
+SNP_gene_final_fxn$Oleic_acid <- SNP_gene_final_fxn$SNP.ID %in% Oleic_acid[Oleic_acid$P.value < 0.00001,]$SNP 
+
+colnames(SNP_gene_final_fxn) <- c("gene_ID", "snp_ID", "CHROM", "POS", "Arabidopsis_homolog", "function", "Erucic_acid", "Oleic_acid")
+SNP_gene_final_fxn
+
+write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/leaf/GWAS_SNP_gene_fxn.csv")
+
+# as a summary, 24 out of the 28 SNPs fall within genes, 23 of them have arabidopsis homologs.
 ```
 
 

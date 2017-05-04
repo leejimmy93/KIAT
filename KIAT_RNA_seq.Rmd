@@ -667,7 +667,7 @@ p.mds
 # clustering to check sample seperation 
 library(ggdendro)
 
-hc.parent <- hclust(dist(t(vstMat.parent)))
+hc.parent <- hclust(dist(t(vstMat.parent))) 
 
 ggdata.parent <- dendro_data(as.dendrogram(hc.parent))
 ggdata.parent$labels$gt <- gsub("(Da-Ae|Da-Ol-1)(_)(Young|flowering|early-silique|late-silique|bolting)(_)(1|2|3)","\\1",ggdata.parent$labels$label) 
@@ -1264,11 +1264,13 @@ ara.ID <- read.delim("~/Desktop/Brassica_project/reference/ara_ID.txt")
 napus_vs_ara.final <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_ara.final")
 rownames(napus_vs_ara.final) <- napus_vs_ara.final$napus_ID
 head(napus_vs_ara.final)
+dim(napus_vs_ara.final) # 18677    reciprocal blast result 
 
 napus_vs_ara.non_reciprocal <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal")
 colnames(napus_vs_ara.non_reciprocal) <- c("napus_ID", "ara_ID", "description")
 rownames(napus_vs_ara.non_reciprocal) <- napus_vs_ara.non_reciprocal$napus_ID
 head(napus_vs_ara.non_reciprocal)
+dim(napus_vs_ara.non_reciprocal) # 64949 non reciprocal blast result 
 ```
 
 # Q: whether 1cm/early or 5cm/late silique is the better choice for RNAseq for looking at differences in fatty acid synthesis. 

@@ -19,6 +19,10 @@ The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome 
 # STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles B_napus_plus_Bsub.fa --runThreadN 6 
 
 # map 3 Da-Ol-1 libraries to this synthesized hexaploid genome 
+# https://github.com/leejimmy93/KIAT/blob/master/mapping_Ol.sh 
+# by checking the Log.final.out file, the unique mapping ratio dropped a little bit, a little bit increase of total mapping ratio, no big difference though... (maybe need figure to demonstrate this...)
+
+# extract uniquely mapped reads for A+C mapped & A+C+B mapped 
 
 
 
