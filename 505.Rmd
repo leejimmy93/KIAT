@@ -1150,14 +1150,14 @@ ggdata.505.common$labels
 ggdata.505.common$labels$label <- gsub("\\.","\\-", ggdata.505.common$labels$label) 
 ggdata.505.common$labels$label <- gsub("X", "", ggdata.505.common$labels$label)
 ggdata.505.common$labels <- merge(ggdata.505.common$labels, sample_des_revised, by = "label")
-ggdata.505.common$labels
+ggdata.505.common$labels$
 
 # start ggplot here 
 p.dengro <- ggplot(data = segment(ggdata.505.common))
 p.dendro <- p.dengro + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
-p.dendro <- p.dendro + geom_text(data = label(ggdata.505.common), aes(x = x, y = y, label = name, hjust=0, color=tissue)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
+p.dendro <- p.dendro + geom_text(data = label(ggdata.505.common), aes(x = x, y = y, label = Name, hjust=0, color=tissue)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
 p.dendro
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/genome_mapped/clustering_nobolting.png", width = 15, height = 8)  
+ggsave("~/505/output/figure/clustering_common_leaf_late_silique.png", width = 15, height = 20)  
 
 ```
 
