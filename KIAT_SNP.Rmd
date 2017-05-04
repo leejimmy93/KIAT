@@ -75,7 +75,7 @@ table(vcf.freebayes.HQ.Ae$Ae_gt)
 mean(vcf.freebayes.HQ.Ae$Ae_tot.depth, na.rm=T) # 146
 
 # distribution of depth
-png("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/read.depth.png", width=4, height=3, units="in", res=300)
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/read.depth.png", width=4, height=3, units="in", res=300) 
 hist(log10(vcf.freebayes.HQ.Ae$Ae_tot.depth), xlab = "log10(read depth)", ylab="Number of SNPs", main="read depth")  
 abline(v=c(1,3), col="red")
 dev.off()
@@ -1062,38 +1062,38 @@ head(gff.mRNA.df)
 
 #######
 # something wrong here .... disjoin gives me sorted data based on ranges, whereas metadata was not sorted...
-# combing the two dataset gave me wrong result... 
+# combing the two dataset gave me wrong result...
 #######
 
 # vcf.freebayes.HQ.1.Ae.het.tmp <- vcf.freebayes.HQ.1.Ae.het[c("CHROM", "POS", "Ae_gt", "Ae_ref.depth", "Ae_alt.depth")]
 # head(vcf.freebayes.HQ.1.Ae.het.tmp)
-# 
-# vcf.freebayes.HQ.1.Ae.het.tmp.chrA01 <- 
+#
+# vcf.freebayes.HQ.1.Ae.het.tmp.chrA01 <-
 # vcf.freebayes.HQ.1.Ae.het.tmp[vcf.freebayes.HQ.1.Ae.het.tmp$CHROM=="chrA01",]
 # dim(vcf.freebayes.HQ.1.Ae.het.tmp[vcf.freebayes.HQ.1.Ae.het.tmp$CHROM=="chrA01",])
-# gff.mRNA.df.chrA01 <- 
+# gff.mRNA.df.chrA01 <-
 # gff.mRNA.df[gff.mRNA.df$seqnames=="chrA01",]
-# 
-# # assign gene name to each SNP based on range... 
+#
+# # assign gene name to each SNP based on range...
 # for (i in 1:nrow(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)){
 #   for (j in 1:nrow(gff.mRNA.df.chrA01)){
 #   if (
-#       (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$CHROM[i]==gff.mRNA.df.chrA01$seqnames[j]) &  
-#       (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$POS[i] <= gff.mRNA.df.chrA01$end[j]) & 
+#       (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$CHROM[i]==gff.mRNA.df.chrA01$seqnames[j]) &
+#       (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$POS[i] <= gff.mRNA.df.chrA01$end[j]) &
 #       (vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$POS[i] >= gff.mRNA.df.chrA01$start[j])
 #       ){
 #     vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Name[i] <- gff.mRNA.df.chrA01$Name[j]
 #     }
 #   }
 # }
-# 
+#
 # vcf.freebayes.HQ.1.Ae.het.tmp.chrA01
 # dim(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
-# 
+#
 # save(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdata")
-# load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdata")
+# load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01.Rdat")
 # View(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01)
-# vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele_ratio <- round(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_alt.depth/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_ref.depth, digits = 2) 
+# vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$allele_ratio <- round(vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_alt.depth/vcf.freebayes.HQ.1.Ae.het.tmp.chrA01$Ae_ref.depth, digits = 2)
 
 # only keep 42 columns of INFO, 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/freebayes/vcf.freebayes.HQ.1.Rdata")
