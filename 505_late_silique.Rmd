@@ -9,7 +9,7 @@ output:
 
 ### data description 
 ```{r}
-# RNA seq data from late silique, batch C: 47 lines; batch D: 41 lines, more lines will come... 
+# RNA seq data from late silique, batch C: 47 lines; batch D: 41 lines, batch E: 43 lines  
 ```
 
 # preprocess 
