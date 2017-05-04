@@ -1,0 +1,30 @@
+Title: mapping comparison A B C subgenome 
+========================================================
+
+Because Da-Ol-1 has introgression from B subgenome, we want to use our RNA-seq data to test this. 
+
+The idea is that if there is introgression from B subgenome, this will present as a chunk of genes. So reads that map to A or C genome will map to B subgeome instead. And in the final B subgnome mapping result, there will be spikes where the read depth increase a lot.  
+
+The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome (using STAR), get read depth for a sliding window of 1000bp (samtool or bedtools), then to see whether there are read preferentially map to B subgenome, for each sliding window mapping position on A + C genome, plot the differences in read depth between the two mapping result. If there are differences, plot the read depth on B subgenome only, and we expect to see a cluster of sliding window positions with high read depth. 
+
+# get B.napus + B subgenome 
+```{r}
+# 1) get B subgenome from B.juncea 
+# J11-J18 in B.juncea are B subgenome 
+# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' Bsub_ID Bju_genome.fa > Bju_B_genome
+# cat Brassica_napus_v4.1.chromosomes.fa Bju_B_genome > B_napus_plus_Bsub.fa
+
+# generate STAR genome index w/o annotation file (gff)
+# mkdir star_genome 
+# STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles B_napus_plus_Bsub.fa --runThreadN 6 
+
+# map 3 Da-Ol-1 libraries to this synthesized hexaploid genome 
+
+
+
+
+
+
+
+```
+
