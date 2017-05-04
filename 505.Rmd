@@ -1132,6 +1132,14 @@ p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=facto
 p.mds.country.2
 ggsave(p.mds.country.2, filename="~/505/output/figure/leaf/p.mds.country.2.png", height=20, width=20)
 
+## use hclust to check sample seperation pattern 
+library(ggdendro)
+hc.505 <- hclust(genDist) 
+genDist
+
+
+
+
 ```
 
 # check the genes reside nearby the significant SNPs 
