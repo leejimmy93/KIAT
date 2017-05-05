@@ -395,7 +395,7 @@ geno.mds$Sample.ID
 sample_des_revised$Sample.ID
 
 # merge 
-geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID")
+geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID") 
 head(geno.mds.all.des)
 
 
@@ -706,9 +706,39 @@ tmp <- merge(missing.leaf.18SNP.final, missing.silique.18SNP.final, by = "snpID"
 tmp.melt <- melt(tmp)
 
 p <- ggplot(data=tmp.melt)
-p <- p + geom_bar(aes(x=snpID, y=value), stat="identity")
-p <- p + facet_wrap(~variable) 
-p
+p <- p + geom_col(aes(x=snpID, y=value))
+p <- p + facet_wrap(~variable)  
+p 
+```
+
+# coverage for the two samples that are not clustering together for late silique & leaf 
+```{r}
+# two samples: 774-6C(S20)  NA259-DH02 
+
+# save(sample_des_a_revised, file="~/505/output/sample_des_a_revised.Rdata")
+# save(sample_des_b_revised, file="~/505/output/sample_des_b_revised.Rdata")
+# save(sample_des_c_revised, file="~/505/output/sample_des_c_revised.Rdata")
+# save(sample_des_d_revised, file="~/505/output/sample_des_a_revised.Rdata")
+
+tmp1 <- sample_des_revised[sample_des_revised$Name == "774-6C(S20)",] 
+tmp2 <- sample_des_revised[sample_des_revised$Name == "NA259-DH02",] 
+tmp <- rbind(tmp1, tmp2)
+tmp
+
+sample_des_a_revised.sub2 <- sample_des_a_revised[,c("Name", "TotalReads")]
+sample_des_b_revised.sub2 <- sample_des_b_revised[,c("Name", "TotalReads")]
+
+sample_des_c_revised.sub2 <- sample_des_c_revised[,c("Name", "TotalReads")]
+sample_des_d_revised.sub2 <- sample_des_d_revised[,c("Name", "TotalReads")]
+
+leaf_sample <- rbind(sample_des_a_revised.sub2, sample_des_b_revised.sub2)
+silique_sample <- rbind(sample_des_c_revised.sub2, sample_des_d_revised.sub2)
+
+colnames(tmp3)
+colnames(tmp)
+
+merge(tmp, leaf_sample, by="Name")[c(1,3),]
+merge(tmp, silique_sample, by="Name")[c(2,4),]
 ```
 
 
