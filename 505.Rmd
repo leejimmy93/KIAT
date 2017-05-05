@@ -835,6 +835,9 @@ Oleic_acid_late_silique <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505
 sum(Erucic_acid_leaf[Erucic_acid_leaf$P.value < 0.00001,]$SNP %in% Erucic_acid_late_silique$SNP)
 # 18 are present in the late silique data out of 28 SNPs 
 
+common.SNPs <- Erucic_acid_leaf[which(Erucic_acid_leaf[Erucic_acid_leaf$P.value < 0.00001,]$SNP %in% Erucic_acid_late_silique$SNP),]$SNP 
+save(common.SNPs, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/common.SNPs.Rdata")
+
 dim(Erucic_acid_late_silique[c(Erucic_acid_leaf[Erucic_acid_leaf$P.value < 0.00001,]$SNP),]) 
 
 Erucic_acid_leaf[Erucic_acid_leaf$P.value < 0.00001,]$SNP 
@@ -1225,6 +1228,14 @@ SNP_gene_final_fxn
 write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/leaf/GWAS_SNP_gene_fxn.csv")
 
 # as a summary, 24 out of the 28 SNPs fall within genes, 23 of them have arabidopsis homologs.
+```
+
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/gh.seed.bolt.table.wide.Rdata")
+gh.seed.bolt.table.wide
+gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN=="K108",]
+gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN=="K109",]
+gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN=="K88",]
 ```
 
 

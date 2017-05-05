@@ -1268,6 +1268,8 @@ dim(napus_vs_ara.final) # 18677    reciprocal blast result
 
 napus_vs_ara.non_reciprocal <- read.delim("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal")
 colnames(napus_vs_ara.non_reciprocal) <- c("napus_ID", "ara_ID", "description")
+
+write.table(napus_vs_ara.non_reciprocal, file = "~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
 rownames(napus_vs_ara.non_reciprocal) <- napus_vs_ara.non_reciprocal$napus_ID
 head(napus_vs_ara.non_reciprocal)
 dim(napus_vs_ara.non_reciprocal) # 64949 non reciprocal blast result 
@@ -2264,7 +2266,7 @@ library(ggplot2)
 
 # filter based on read count, assign group, normalize, design matrix, calculate dispersion   
 # set up group 
-# load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.Rdata")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.Rdata")
 parent.read.count.2 <- parent.read.count.2[,colSums(parent.read.count.2) > 1000000]  
 dim(parent.read.count.2) # 101040     24 
 parent.read.count.2.sample<-data.frame(file=colnames(parent.read.count.2),
@@ -2288,7 +2290,7 @@ dim(parent.read.count.2.small) # 57925    24   # 58486    27
 # voom transformation 
 # source("https://bioconductor.org/biocLite.R")
 # biocLite("DESeq2")
-# load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.small.Rdata")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.small.Rdata")
 library("DESeq2")
 
 dds.parent.2 <- DESeqDataSetFromMatrix(countData = round(parent.read.count.2.small), colData = parent.read.count.2.sample, design = ~ batch + genotype*tissue)
@@ -2301,8 +2303,8 @@ colnames(vstMat.parent.2) <- colnames(parent.read.count.2)
 
 # expression analysis using genome mapped reads 4) MDS and hierachical clustering  
 ```{r}
-# load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.2.Rdata")
-# load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.small.Rdata")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.2.Rdata")
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.2.small.Rdata")
 
 # normalize 
 dge.data.parent.2 <- DGEList(counts=parent.read.count.2.small, group=parent.read.count.2.sample$group)

@@ -23,8 +23,10 @@ The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome 
 # by checking the Log.final.out file, the unique mapping ratio dropped a little bit, a little bit increase of total mapping ratio, no big difference though... (maybe need figure to demonstrate this...)
 
 # extract uniquely mapped reads for A+C mapped & A+C+B mapped 
+# https://github.com/leejimmy93/KIAT/blob/master/extract_unique_mapping_reads.sh
+# sam_to_bam.sh 
 
-
+# 
 
 
 

@@ -2354,7 +2354,7 @@ library(Biostrings)
 source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 
 # get genome fasta sequence
-napus <-readDNAStringSet("~/Desktop/Brassica_project/IGV_file/Brassica_napus_v4.1.chromosomes.fa")
+napus <-readDNAStringSet("~/Desktop/Brassica_project/IGV_file/Brassica_napus_v4.1.chromosomes.fa") 
 
 # get GATK final vcf content 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.GATK.Rdata") 
@@ -2469,7 +2469,7 @@ ggsave(p.GQ.F2.N, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP
 # 2) avoid having SNP in the 1st 20nt of sanger sequencing, that's forward primer end position + 20 && reverse primer start postion - 20 
 # 3) if the tempelate is not unique, don't use that SNP 
 
-### To do: grep 300 SNPs, and include only SNPs in the seq name...  
+### To do: grep 300 SNPs, and include only SNPs in the seq name...   
 ```
 
 
