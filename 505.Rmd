@@ -1227,4 +1227,13 @@ write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/50
 # as a summary, 24 out of the 28 SNPs fall within genes, 23 of them have arabidopsis homologs.
 ```
 
+# 
+```{r}
+load("~/505/output/common.SNPs.Rdata")
+common.SNPs
+
+
+
+```
+
 

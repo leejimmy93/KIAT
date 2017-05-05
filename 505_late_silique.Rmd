@@ -660,10 +660,55 @@ write.table(most_highly_expressed_genes.melt, file="~/505/data/tmp")
 # cat tmp | awk '{print $4}' | sort | uniq -c | sort -n > occurrence_gene.txt
 occurrence.gene <- read.table("~/505/data/occurrence_gene.txt")
 occurrence.gene
-colnames(occurrence.gene) <- c("lib#", "geneID")
-
+colnames(occurrence.gene) <- c("lib#", "geneID") 
 ```
 
+# missing rate for the significant SNPs that present in late silique data, we didn't find them because they have high missing rate???  
+```{r}
+load("~/505/output/common.SNPs.Rdata")
+common.SNPs
 
+geno_505_hmp.late_silique <- read.table("~/505/vcf_late_silique_no_pop/combined/505_filtered_sorted.hmp.txt", head=T)
+geno_505_hmp.late_silique[1:10, 1:10] 
+colnames(geno_505_hmp.late_silique) 
+
+geno_505_hmp.late_silique.18SNP <- geno_505_hmp.late_silique[which(geno_505_hmp.late_silique$rs %in% common.SNPs),]
+
+ geno_505_hmp.leaf <- read.table("~/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.hmp.txt", head=T)
+geno_505_hmp.leaf[1:10, 1:10] 
+colnames(geno_505_hmp.leaf) 
+geno_505_hmp.leaf.18SNP <- geno_505_hmp.leaf[which(geno_505_hmp.leaf$rs %in% common.SNPs),]
+
+dim(geno_505_hmp.leaf.18SNP)
+
+missing.silique.18SNP <- c() 
+  
+for (i in 1:nrow(geno_505_hmp.late_silique.18SNP)){
+  missing.silique.18SNP[i] <- length(which(geno_505_hmp.late_silique.18SNP[i,] == "N"))/88
+}
+missing.silique.18SNP.final <- data.frame(snpID = geno_505_hmp.late_silique.18SNP$rs, 
+                                          silique.missing.rate = missing.silique.18SNP)
+
+missing.leaf.18SNP <- c()
+
+for (i in 1:nrow(geno_505_hmp.leaf.18SNP)){
+  missing.leaf.18SNP[i] <- length(which(geno_505_hmp.leaf.18SNP[i,] == "N"))/94
+}
+
+missing.leaf.18SNP
+missing.leaf.18SNP.final <- data.frame(snpID = geno_505_hmp.leaf.18SNP$rs, 
+                                       leaf.missing_rate = missing.leaf.18SNP)
+
+missing.leaf.18SNP.final
+missing.silique.18SNP.final
+
+tmp <- merge(missing.leaf.18SNP.final, missing.silique.18SNP.final, by = "snpID")  
+tmp.melt <- melt(tmp)
+
+p <- ggplot(data=tmp.melt)
+p <- p + geom_bar(aes(x=snpID, y=value), stat="identity")
+p <- p + facet_wrap(~variable) 
+p
+```
 
 
