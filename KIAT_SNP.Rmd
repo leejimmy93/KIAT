@@ -2472,6 +2472,35 @@ ggsave(p.GQ.F2.N, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP
 ### To do: grep 300 SNPs, and include only SNPs in the seq name...   
 ```
 
+# format SNP primer for oligo synthesis 
+```{r}
+primer <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/primer_SNP_validation.csv", header = T)
+
+primer
+# seq_ID is SNP ID
+loc <- expand.grid(c("A", "B", "C", "D", "E", "F", "G", "H"), 1:12)
+loc.plate <- paste(loc$Var1, loc$Var2, sep = "")
+loc.plate
+
+primer.F <- data.frame(Oligo_name = paste(primer$sample_ID, "F", sep = ""), 
+                           Oligo_seq = primer$primer.F,
+                           location = loc.plate,
+                           scale = "25nm"
+                      )
+
+primer.R <- data.frame(Oligo_name = paste(primer$sample_ID, "R", sep = ""), 
+                           Oligo_seq = primer$Primer.R,
+                           location = loc.plate,
+                           scale = "25nm"
+                       )
+
+
+primer.F[1,] 
+primer.R[1,] 
+
+write.csv(primer.F, "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/primer_F.csv")
+write.csv(primer.R, "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/primer_R.csv")
+```
 
 
 

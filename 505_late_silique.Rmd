@@ -709,6 +709,10 @@ p <- ggplot(data=tmp.melt)
 p <- p + geom_bar(aes(x=snpID, y=value), stat="identity")
 p <- p + facet_wrap(~variable) 
 p
-```
+``` 
 
+# batch E 
+```{r}
+# 1) download using 
+```
 
