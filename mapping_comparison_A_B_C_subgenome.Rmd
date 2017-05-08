@@ -30,6 +30,8 @@ The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome 
 # https://github.com/leejimmy93/KIAT/blob/master/calc_depth.sh 
 
 # 6) subset to each chromosome & calculate average depth for a window size of 1000bp 
+
+# get the difference in read depth between ABC VS AC mapped reads in 10,000 bp window size 
 # main chromosomes 
 ## A01 
 ABC_depth_A01_2 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_A01")
@@ -127,7 +129,7 @@ C08 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C08, depth_ABC=ABC_depth_C08)
 ## C09 
 ABC_depth_C09 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC09")
 AC_depth_C09 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC09")
-C09 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C09, depth_ABC=ABC_depth_C09)
+C09 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C09, depth_ABC=ABC_depth_C09) 
 
 
 ### random ######### wait... 
