@@ -14,23 +14,146 @@ The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome 
 # perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' Bsub_ID Bju_genome.fa > Bju_B_genome
 # cat Brassica_napus_v4.1.chromosomes.fa Bju_B_genome > B_napus_plus_Bsub.fa
 
-# generate STAR genome index w/o annotation file (gff)
+# 2) generate STAR genome index w/o annotation file (gff)
 # mkdir star_genome 
 # STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles B_napus_plus_Bsub.fa --runThreadN 6 
 
-# map 3 Da-Ol-1 libraries to this synthesized hexaploid genome 
+# 3) map 3 Da-Ol-1 libraries to this synthesized hexaploid genome 
 # https://github.com/leejimmy93/KIAT/blob/master/mapping_Ol.sh 
 # by checking the Log.final.out file, the unique mapping ratio dropped a little bit, a little bit increase of total mapping ratio, no big difference though... (maybe need figure to demonstrate this...)
 
-# extract uniquely mapped reads for A+C mapped & A+C+B mapped 
+# 4) extract uniquely mapped reads for A+C mapped & A+C+B mapped 
 # https://github.com/leejimmy93/KIAT/blob/master/extract_unique_mapping_reads.sh
 # sam_to_bam.sh 
 
-# 
+# 5) extract read depth for each position 
+# https://github.com/leejimmy93/KIAT/blob/master/calc_depth.sh 
+
+# 6) subset to each chromosome & calculate average depth for a window size of 1000bp 
+# main chromosomes 
+## A01 
+ABC_depth_A01_2 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_A01")
+AC_depth_A01_2 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_A01")
+data <- prep.4.plot.depth.diff(depth_AC=AC_depth_A01_2, depth_ABC=ABC_depth_A01_2)
+plot(data, xlab="A01", ylab="diff in read depth")   
+
+## A02 
+ABC_depth_A02 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA02")
+AC_depth_A02 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrA02")
+A02 <- prep.4.plot.depth.diff(depth_AC=AC_depth_A02, depth_ABC=ABC_depth_A02)
+plot(A02, xlab="A02", ylab="diff in read depth")   
+
+## A03 
+ABC_depth_A03 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA03")
+AC_depth_A03 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrA03")
+A03 <- prep.4.plot.depth.diff(depth_AC=AC_depth_A03, depth_ABC=ABC_depth_A03)
+# plot(A02, xlab="A02", ylab="diff in read depth")   
+
+## A04 
+ABC_depth_A04 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA04")
+AC_depth_A04 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrA04")
+A04 <- prep.4.plot.depth.diff(depth_AC=AC_depth_A04, depth_ABC=ABC_depth_A04)
+
+## A05 
+ABC_depth_A05 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA05")
+AC_depth_A05 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrA05")
+A05 <- prep.4.plot.depth.diff(depth_AC=AC_depth_A05, depth_ABC=ABC_depth_A05)
+
+## A06 
+ABC_depth_A06 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA06")
+AC_depth_A06 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrA06")
+A06 <- prep.4.plot.depth.diff(depth_AC=AC_depth_A04, depth_ABC=ABC_depth_A06)
+
+## A07 
+ABC_depth_A07 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA07")
+AC_depth_A07 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrA07")
+A07 <- prep.4.plot.depth.diff(depth_AC=AC_depth_A07, depth_ABC=ABC_depth_A07)
+
+## A08 
+ABC_depth_A08 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA08")
+AC_depth_A08 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrA08")
+A08 <- prep.4.plot.depth.diff(depth_AC=AC_depth_A08, depth_ABC=ABC_depth_A08)
+
+## A09 
+ABC_depth_A09 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA09")
+AC_depth_A09 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrA09")
+A09 <- prep.4.plot.depth.diff(depth_AC=AC_depth_A09, depth_ABC=ABC_depth_A09)
+
+## A10 
+ABC_depth_A10 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA10")
+AC_depth_A10 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrA10")
+A10 <- prep.4.plot.depth.diff(depth_AC=AC_depth_A10, depth_ABC=ABC_depth_A10)
+
+## C01 
+ABC_depth_C01 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC01")
+AC_depth_C01 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC01")
+C01 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C01, depth_ABC=ABC_depth_C01)
+
+## C02 
+ABC_depth_C02 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC02")
+AC_depth_C02 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC02")
+C02 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C02, depth_ABC=ABC_depth_C02)
+
+## C03 
+ABC_depth_C03 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC03")
+AC_depth_C03 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC03")
+C03 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C03, depth_ABC=ABC_depth_C03)
+
+## C04 
+ABC_depth_C04 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC04")
+AC_depth_C04 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC04")
+C04 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C04, depth_ABC=ABC_depth_C04)
+
+## C05 
+ABC_depth_C05 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC05")
+AC_depth_C05 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC05")
+C05 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C05, depth_ABC=ABC_depth_C05)
+
+## C06 
+ABC_depth_C06 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC06")
+AC_depth_C06 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC06")
+C06 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C06, depth_ABC=ABC_depth_C06)
+
+## C07 
+ABC_depth_C07 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC07")
+AC_depth_C07 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC07")
+C07 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C07, depth_ABC=ABC_depth_C07)
+
+## C08 
+ABC_depth_C08 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC08")
+AC_depth_C08 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC08")
+C08 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C08, depth_ABC=ABC_depth_C08)
+
+## C09 
+ABC_depth_C09 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrC09")
+AC_depth_C09 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC09")
+C09 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C09, depth_ABC=ABC_depth_C09)
 
 
+### random ######### wait... 
 
 
+###### function 
+total.by.window.size <- function(depth_in_bp){
+  tmp <- depth_in_bp 
+  window_size <- 10000 # widow size of 10,000bp 
+  num1 <- floor(nrow(tmp)/window_size) # 25945944 
+  num2 <- num1 + 1
+  num3 <- nrow(tmp) %% window_size
+  class_major <- rep(c(1:num1), each=10000)
+  class_minor <- rep(num2, each=num3)
+  tmp$class <- c(class_major, class_minor)
+  depth_in_window <- aggregate(tmp$V3, by=list(tmp$class), sum)
+  return(depth_in_window) 
+} 
 
+prep.4.plot.depth.diff <- function(depth_AC, depth_ABC){
+  depth_in_window_ABC <- total.by.window.size(depth_in_bp=depth_ABC)
+  depth_in_window_AC <- total.by.window.size(depth_in_bp=depth_AC)
+
+  depth_ABC_AC <- merge(depth_in_window_ABC, depth_in_window_AC, by="Group.1")
+  colnames(depth_ABC_AC) <- c("range_group", "ABC", "AC")
+  depth_ABC_AC$diff <- depth_ABC_AC$AC - depth_ABC_AC$ABC # AC minus ABC  
+} 
 ```
 
