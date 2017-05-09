@@ -131,9 +131,70 @@ ABC_depth_C09 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_ch
 AC_depth_C09 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_chrC09")
 C09 <- prep.4.plot.depth.diff(depth_AC=AC_depth_C09, depth_ABC=ABC_depth_C09) 
 
+save(data, A02, A03, A04, A05, A06, A07, A08, A09, A10, C01, C02, C03, C04, C05, C06, C07, C08, C09, file="~/mapping_comparison_A_B_C_subgenome/ABC_VS_AC_depth.Rdata")
+
+png("~/mapping_comparison_A_B_C_subgenome/output/ABC_VS_AC_depth.png", width=12, height=20, units="in", res=300)
+par(mfrow=c(10,2)) 
+plot(data, xlab="A01", ylim=c(-4e+5, 8e+5), ylab="")
+plot(A02, xlab="A02", ylim=c(-4e+5, 8e+5), ylab="")
+plot(A03, xlab="A03", ylim=c(-4e+5, 8e+5), ylab="")
+plot(A04, xlab="A04", ylim=c(-4e+5, 8e+5), ylab="")
+plot(A05, xlab="A05", ylim=c(-4e+5, 8e+5), ylab="")
+plot(A06, xlab="A06", ylim=c(-4e+5, 8e+5), ylab="")
+plot(A07, xlab="A07", ylim=c(-4e+5, 8e+5), ylab="")
+plot(A08, xlab="A08", ylim=c(-4e+5, 8e+5), ylab="")
+plot(A09, xlab="A09", ylim=c(-4e+5, 8e+5), ylab="")
+plot(A10, xlab="A10", ylim=c(-4e+5, 8e+5), ylab="")
+plot(C01, xlab="C01", ylim=c(-4e+5, 8e+5), ylab="")
+plot(C02, xlab="C02", ylim=c(-4e+5, 8e+5), ylab="")
+plot(C03, xlab="C03", ylim=c(-4e+5, 8e+5), ylab="")
+plot(C04, xlab="C04", ylim=c(-4e+5, 8e+5), ylab="")
+plot(C05, xlab="C05", ylim=c(-4e+5, 8e+5), ylab="")
+plot(C06, xlab="C06", ylim=c(-4e+5, 8e+5), ylab="")
+plot(C07, xlab="C07", ylim=c(-4e+5, 8e+5), ylab="")
+plot(C08, xlab="C08", ylim=c(-4e+5, 8e+5), ylab="")
+plot(C09, xlab="C09", ylim=c(-4e+5, 8e+5), ylab="")
+dev.off()  
+
+###### get B sub data 
+J11 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_J11")
+J11_in_window <- total.by.window.size(J11)
+
+J12 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_J12")
+J12_in_window <- total.by.window.size(J12)
+
+J13 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_J13")
+J13_in_window <- total.by.window.size(J13)
+
+J14 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_J14")
+J14_in_window <- total.by.window.size(J14)
+
+J15 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_J15")
+J15_in_window <- total.by.window.size(J15)
+
+J16 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_J16")
+J16_in_window <- total.by.window.size(J16)
+
+J17 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_J17")
+J17_in_window <- total.by.window.size(J17)
+
+J18 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_J18")
+J18_in_window <- total.by.window.size(J18)
+
+### plot the J genome result 
+png("~/mapping_comparison_A_B_C_subgenome/output/J_depth.png", width=10, height=20, units="in", res=300)
+par(mfrow=c(8,1)) 
+plot(J11_in_window, xlab="J11", ylim=c(0, 8e+5), ylab="")
+plot(J12_in_window, xlab="J12", ylim=c(0, 8e+5), ylab="")
+plot(J13_in_window, xlab="J13", ylim=c(0, 8e+5), ylab="")
+plot(J14_in_window, xlab="J14", ylim=c(0, 8e+5), ylab="")
+plot(J15_in_window, xlab="J15", ylim=c(0, 8e+5), ylab="")
+plot(J16_in_window, xlab="J16", ylim=c(0, 8e+5), ylab="")
+plot(J17_in_window, xlab="J17", ylim=c(0, 8e+5), ylab="")
+plot(J18_in_window, xlab="J18", ylim=c(0, 8e+5), ylab="")
+dev.off()  
 
 ### random ######### wait... 
-
 
 ###### function 
 total.by.window.size <- function(depth_in_bp){
