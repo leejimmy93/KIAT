@@ -220,3 +220,29 @@ prep.4.plot.depth.diff <- function(depth_AC, depth_ABC){
 } 
 ```
 
+# also get mapping result when map to ABC & AC 
+```{r}
+mapping.ABC <- read.table("~/2016_summer/raw_data/flower_Ol_with_ABC/Star_Stats.tab", header=T)
+mapping.AC <- read.table("~/2016_summer/raw_data/flower_Ol/Star_Stats.tab", header=T)
+
+head(mapping.ABC)
+head(mapping.AC)
+
+mapping.AC$Sample <- gsub("_paired.star.trim.dir", "", mapping.AC$Sample)
+mapping.ABC$type <- rep("ABC", 3)
+mapping.AC$type <- rep("AC", 3)
+
+mapping <- rbind(mapping.ABC, mapping.AC)
+mapping.sub <- mapping[,c("Sample", "Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short", "type")]
+mapping.sub.melt <- melt(mapping.sub)
+mapping.sub.melt
+
+p.mapping <- ggplot(data=mapping.sub.melt)
+p.mapping <- p.mapping + geom_col(aes(x=variable, y=value, fill=variable))
+p.mapping <- p.mapping + facet_grid(type~Sample)
+p.mapping <- p.mapping + geom_text(aes(x=variable, y=value, label=value), )
+p.mapping <- p.mapping + theme(axis.text.x = element_text(angle = 90, size = 8))
+p.mapping
+ggsave(p.mapping, filename="~/mapping_comparison_A_B_C_subgenome/output/mapping.png", height=8, width=11)
+```
+
