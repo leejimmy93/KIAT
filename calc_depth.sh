@@ -1,11 +1,11 @@
 #!/bin/bash 
 
-sample=`ls *.bam | sed 's/_Unique.sorted.bam//g'`
+sample=`ls | grep "bam"`
 echo $sample
 
 for i in $sample
 do	
 	echo $i
-	samtools depth ${i}_Unique.sorted.bam -a > ${i}_depth 
+	samtools depth ${i} -a > ${i}_depth 
 	done
 
