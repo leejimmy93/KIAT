@@ -24,7 +24,6 @@ The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome 
 
 # 4) extract uniquely mapped reads for A+C mapped & A+C+B mapped 
 # https://github.com/leejimmy93/KIAT/blob/master/extract_unique_mapping_reads.sh
-# sam_to_bam.sh 
 
 # 5) extract read depth for each position 
 # https://github.com/leejimmy93/KIAT/blob/master/calc_depth.sh 
@@ -240,9 +239,14 @@ mapping.sub.melt
 p.mapping <- ggplot(data=mapping.sub.melt)
 p.mapping <- p.mapping + geom_col(aes(x=variable, y=value, fill=variable))
 p.mapping <- p.mapping + facet_grid(type~Sample)
-p.mapping <- p.mapping + geom_text(aes(x=variable, y=value, label=value), )
+p.mapping <- p.mapping + geom_text(aes(x=variable, y=value, label=value))
 p.mapping <- p.mapping + theme(axis.text.x = element_text(angle = 90, size = 8))
 p.mapping
 ggsave(p.mapping, filename="~/mapping_comparison_A_B_C_subgenome/output/mapping.png", height=8, width=11)
 ```
+
+Based on the 1st result, we didn't see a chunk of genes in B subgenome present as a continous spike of read depth. The overall mapping ratio between B.napus + B subgenome VS B.napus are not different very much, unique mapping ratio goes down when B subgenome was added in, and multiple mapping ratio goes up a little bit. the reason we didn't see spike might because we used the default mapping parameter, which is 10bp mismatch, so now check 0 mismatch. 
+
+
+
 

@@ -53,7 +53,6 @@ head(F2_geno_data)
 
 ```
 
-
 # remove redundant SNPs
 
 some SNPs should have exactly the same genotype across all individuals, they are redundant in terms of genetic map construction, so they should be removed. find those SNPs by doing correlation test. 
@@ -138,14 +137,12 @@ twopts.f2 <- rf.2pts(data, LOD = 6, max.rf = 0.25) ##### run this on whitney....
 ?rf.2pts
 twopts.f2
 
-<<<<<<< HEAD
 # assign marker to linkage groups
 mark.all.f2 <- make.seq(twopts.f2, "all")
 mark.all.f2
 ?make.seq 
 LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
 LGs.f2
-=======
 # assign marker to linkage groups # this is not a good way, maybe should make.seq with a subset of markers, say, markers on specific chromosomes. then order marker within each chromosome. 
 
 # so get the number of markers for each chromosome 
@@ -196,14 +193,12 @@ order
 ?make.seq
 # LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
 # LGs.f2
->>>>>>> cae03dbfa6c30a1cae4ecafd1b6490e387fc21c2
 # save(LGs.f2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/LGs.f2.Rdata") 
 ``` 
 
 
 # after getting good number of linkage group, work on each LG seperately... 
 ```{r}
-<<<<<<< HEAD
 #################### A01 ##############################
 F2.data <- read.mapmaker(file="~/F2/output/F2_geno_for_one_map_final.txt")
 load("~/F2/output/twopts.f2.04.21.Rdata")
@@ -217,7 +212,6 @@ rf.graph.table(LG1.f2.arbi.C01.map)
 
 draw.map(LG.f2.arbi.A01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
->>>>>>> d29c2a4f639cffd5dce8579557b1ac3bb182f391 
 
 ######## wait for next step analysis ############ 
 LG1.f2.ord

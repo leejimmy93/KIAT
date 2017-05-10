@@ -890,9 +890,9 @@ write.csv(chrom.index, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/outpu
 ####### only look at the chromosomes with significant SNPs
 unique(Erucic_acid[Erucic_acid$P < 0.00001,]$CHR)
 unique(Oleic_acid[Oleic_acid$P < 0.00001,]$CHR)
-<<<<<<< HEAD
+
 unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs 
-=======
+
 
 png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/leaf/GWAS_oil_subset.png", width=12, height=10, units="in", res=300)
 par(mfrow=c(2,4)) 
@@ -913,11 +913,9 @@ sum(Erucic_acid$P <= 0.00001)
 sum(Oleic_acid$P <= 0.00001)
 
 # overlaps between Erucic acid & Oleic acid? 
-Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP 
+significant_SNP <- Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP
 Oleic_acid[Oleic_acid$P <= 0.00001,]$SNP %in% Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP
-
->>>>>>> 71736b9a8da3fd4c4c4e7eb652ab56e3603f4b7b 
-
+write.table(significant_SNP, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/significant_SNP.txt")
 ```
 
 # late silique data duplicate check 
@@ -1065,7 +1063,6 @@ combined_leaf_late_silique.t <- data.frame(t(combined_leaf_late_silique))
 combined_leaf_late_silique.t[1:10, 1:10]
 rownames(combined_leaf_late_silique.t)
 dim(combined_leaf_late_silique.t)
->>>>>>> a9ac494302aecdf7089f1954260fdd5a17c0e8ca
 
 combined_leaf_late_silique.t.2 <- combined_leaf_late_silique.t[c(6:63, 68:125),] 
 dim(combined_leaf_late_silique.t.2)
@@ -1230,22 +1227,26 @@ write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/50
 # as a summary, 24 out of the 28 SNPs fall within genes, 23 of them have arabidopsis homologs.
 ```
 
-<<<<<<< HEAD
+# for the several significant SNPs, are they synonymous or not? what's the possible effect on the protein function? 
+```{r}
+# SNP annotation 
+# java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted_ann.vcf
+
+# 
+
+
+```
+
+
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/gh.seed.bolt.table.wide.Rdata")
 gh.seed.bolt.table.wide
 gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN=="K108",]
 gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN=="K109",]
 gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN=="K88",]
-=======
 # 
-```{r}
 load("~/505/output/common.SNPs.Rdata")
 common.SNPs
-
-
-
->>>>>>> 64fb24f263d0a16f28d079fec74d461f596c6117
 ```
 
 

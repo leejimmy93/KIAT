@@ -8,7 +8,7 @@ output: html_document
 Goal: Shinje mentioned that Da-Ae went through 6 generations of selfing but she is afraid that some genes are still segregating. So we need to check that. For that purpose, we can call SNPs between Da-Ae and reference genome using freebayes, with biological replicates combined or seperate. For result with rep sepereated, the expectation is that there should not be heterzygosity at all. For result with reps combined, if there is heterzygosity (especially unexpcted hetezygosity and segregation), it can be an indication of segregation and contamination... I will also do this for Da-Ol. 
 
 # data 
-I will use flowering data for this anaysis 
+I use flowering data for this anaysis 
 ```{r}
 
 
