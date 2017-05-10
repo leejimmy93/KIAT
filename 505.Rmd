@@ -1230,7 +1230,7 @@ write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/50
 # as a summary, 24 out of the 28 SNPs fall within genes, 23 of them have arabidopsis homologs.
 ```
 
-<<<<<<< HEAD
+# 108, 109, and 88 phenotype data 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/gh.seed.bolt.table.wide.Rdata")
 gh.seed.bolt.table.wide
@@ -1242,10 +1242,87 @@ gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN=="K88",]
 ```{r}
 load("~/505/output/common.SNPs.Rdata")
 common.SNPs
+```
 
+# check the expression for genes include significant SNPs 
+For the 24 genes that include the significant SNPs, we want to know whether they are differentially expressed among different lines, and what are their expression levels. 
+```{r}
+library("edgeR")
 
+read.count <- read.table("~/505/data/bioftp.org/TBD170026_20170202/read.count.505.tsv", header=T, row.names=1)
+head(read.count)
+dim(read.count)
 
->>>>>>> 64fb24f263d0a16f28d079fec74d461f596c6117
+read.count.sample <- data.frame(group=factor(colnames(read.count)))
+read.count.sample
+
+# filter based on read count
+read.count.small <- read.count[rowSums(read.count > 10) >= 3,]
+dim(read.count.small) # 53824    94 
+
+# normalize 
+dge.read.count <- DGEList(counts=read.count.small, group=read.count.small$group)
+dge.read.count <- calcNormFactors(dge.read.count, method = "TMM")
+hist(dge.read.count$samples$norm.factors)
+
+# GLM model w/o reps 
+design.read.count <- model.matrix(~0+group, data = read.count.sample)
+bcv <- 0.4
+dge.read.count <- estimateGLMCommonDisp(dge.read.count, design.read.count,verbose = T) # Disp = 0.13675 , BCV = 0.3698
+dge.read.count$common.dispersion <- bcv ^ 2 
+
+### mds plot 
+mds <- plotMDS(dge.read.count, method = "bcv",labels = dge.read.count$samples$group)
+x <- as.data.frame(mds$x)
+y <- as.data.frame(mds$y)
+distance_matrix <- merge(x, y, by="row.names")
+distance_matrix$Row.names
+
+distance_matrix$Row.names <- gsub("\\.","\\-", distance_matrix$Row.names) 
+distance_matrix$Row.names <- gsub("Sample_", "", distance_matrix$Row.names)
+
+# merge sample info 
+load("~/505/output/leaf/sample_des_revised.Rdata")
+sample_des_revised
+
+colnames(distance_matrix)[1] <- "Sample.ID"
+distance_matrix.all <- merge(distance_matrix, sample_des_revised, by = "Sample.ID")
+
+library(ggrepel)
+set.seed(111) 
+
+p.mds.country <- ggplot(data=distance_matrix.all, aes(mds$x, mds$y, color=factor(Sample.Description.Origin)))
+p.mds.country <- p.mds.country + geom_point(size=1) 
+p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country <- p.mds.country + geom_text_repel(aes(x=mds$x, y=mds$y, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country 
+ggsave(p.mds.country, filename="~/505/output/figure/p.mds.country.expression.png", height=20, width=20)
+
+## fit model & look for DEGs
+fit.read.count <- glmFit(dge.read.count, design.read.count)
+
+# detect DEGs, finding genes different between any of the two lines 
+lrt.read.count <- glmLRT(fit.read.count, coef=2:94) 
+topTags(lrt.read.count)
+FDR <- p.adjust(lrt.read.count$table$PValue, method="fdr")
+
+## pull out the TMM normalized expression value for the 24 genes 
+SNP.gene.fxn <-read.csv("~/505/output/leaf/GWAS_SNP_gene_fxn.csv", header=T)
+SNP.gene.fxn
+# how to look at the result? categorize trait into categorical value? and compare between categories?
+tmp <- as.data.frame(dge.read.count$counts[which(rownames(dge.read.count$counts) %in% SNP.gene.fxn$gene_ID),])
+tmp2 <- read.count.small[which(rownames(read.count.small) %in% SNP.gene.fxn$gene_ID),]
+
+``` 
+
+# SNP annotation for significant SNPs 
+```{r}
+annotation.28SNP <- read.table("~/505/vcf_leaf_no_pop/combined/missing_0.5/sinigicant_SNP_ann", header=F) 
+dim(annotation.28SNP)
+
+annotation.28SNP.sub <- annotation.28SNP[,c(1:8)] 
+
 ```
 
 
