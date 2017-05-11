@@ -1,0 +1,12 @@
+---
+title: "one_map_simulate_data"
+author: "Ruijuan Li"
+date: "5/11/2017"
+output: html_document
+---
+
+```{r}
+
+
+```
+

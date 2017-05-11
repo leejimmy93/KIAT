@@ -16,15 +16,16 @@ library(tcltk)
 library(tkrplot)
 library(onemap)  
 library(ggplot2)
-library(reshape)
+library(reshape) 
 library(dplyr)
+library(tidyverse)
 ```
 
-# import & foramt data (MAC version)
+# import & format data (MAC version)
 ```{r}
 F2_geno_data <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Final_SNP_Calls", header = T)
 head(F2_geno_data) 
-dim(F2_geno_data) 
+dim(F2_geno_data) # 18226   172 
 class(F2_geno_data)
 
 rownames(F2_geno_data) <- paste(F2_geno_data$CHROM, F2_geno_data$POS, sep = "_")
@@ -32,10 +33,23 @@ F2_geno_data <- F2_geno_data[, -c(1:6)]
 dim(F2_geno_data) # 18226   166 
 colnames(F2_geno_data) <- gsub("([[:print:]]+)(\\.)([[:digit:]])", "\\3", colnames(F2_geno_data))
 head(F2_geno_data)  
+```
 
-## sample 200 markers to try this method ... 
-# test <- sample_n(F2_geno_data, size = 200, replace = F) 
-# dim(test)
+# check missing rate & remove data with high missing rate above 0.85 
+```{r}
+F2_geno_data_with_missing_rate <- mutate(F2_geno_data, 
+       missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/94, 2))
+
+hist(F2_geno_data_with_missing_rate$missing_rate)
+max(F2_geno_data_with_missing_rate$missing_rate) # 0.83, the highest missing rate is 0.83 
+
+# remove markers with missing rate greater than 0.85 
+F2_geno_data_with_missing_rate_filtered <- filter(F2_geno_data_with_missing_rate, missing_rate < 0.15)
+dim(F2_geno_data_with_missing_rate_filtered) # 3077 167
+
+F2_geno_data_with_missing_rate_filtered.final <- subset(F2_geno_data_with_missing_rate_filtered, select=-missing_rate)
+
+dim(F2_geno_data_with_missing_rate_filtered.final) # 3077 166 
 ```
 
 # import & foramt data (whitney version)
@@ -110,7 +124,7 @@ F2_geno_data_2[is.na(F2_geno_data_2)] <- "-"
 F2_geno_data_2 <- gsub("0/0", "A", F2_geno_data_2) 
 F2_geno_data_2 <- gsub("0/1", "H", F2_geno_data_2)
 F2_geno_data_2 <- gsub("1/1", "B", F2_geno_data_2)
-# F2_geno_data <- t(F2_geno_data)
+# F2_geno_data <- t(F2_geno_data) 
 
 F2_geno_data_2 <- as.data.frame(F2_geno_data_2)
 dim(F2_geno_data_2) #  
@@ -124,8 +138,10 @@ write.table(rownames(F2_geno_data_2), file = "/Network/Servers/avalanche.plb.ucd
 
 # paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt 
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt 
+```
 
-
+# calculate two point rf & assign to linkage groups 
+```{r}
 ########### start to build linkage group ################################
 data <- read.mapmaker(file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_geno_for_one_map_final.txt")
 # data
@@ -137,14 +153,15 @@ twopts.f2 <- rf.2pts(data, LOD = 6, max.rf = 0.25) ##### run this on whitney....
 ?rf.2pts
 twopts.f2
 
-# assign marker to linkage groups
-mark.all.f2 <- make.seq(twopts.f2, "all")
-mark.all.f2
-?make.seq 
-LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
-LGs.f2
+# # assign marker to linkage groups ############ using the onemap method cannot assign them to individual linkage groups ########## 
+# mark.all.f2 <- make.seq(twopts.f2, "all")
+# mark.all.f2
+# ?make.seq 
+# LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
+# LGs.f2
 # assign marker to linkage groups # this is not a good way, maybe should make.seq with a subset of markers, say, markers on specific chromosomes. then order marker within each chromosome. 
 
+#################### assign marker to specific linkage groups based on their chromosome assignement
 # so get the number of markers for each chromosome 
 load("~/F2/output/F2_geno_data_2.Rdata")
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
@@ -173,6 +190,12 @@ sum(F2_geno_data_2$Chr=="chrC07") # 209 5241-5449
 sum(F2_geno_data_2$Chr=="chrC08") # 185 5450-5634
 sum(F2_geno_data_2$Chr=="chrC09") # 131 5635-5765 
 
+# https://github.com/leejimmy93/KIAT/map_A01.R .... mapC09.R 
+```
+
+# get marker index within each chromosome 
+```{r}
+###################### below can be useful when I only need marker order within each chromosome ## 
 # figure out the index positon within each chromosome for all chromosomes 
 F2_geno_data_info <- F2_geno_data_2[,c("Chr", "Pos", "index")]
 
@@ -189,15 +212,8 @@ for (i in 1:length(out)){
 order 
 ```
 
-```{r} 
-?make.seq
-# LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
-# LGs.f2
-# save(LGs.f2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/LGs.f2.Rdata") 
-``` 
-
-
 # after getting good number of linkage group, work on each LG seperately... 
+A01 
 ```{r}
 #################### A01 ##############################
 F2.data <- read.mapmaker(file="~/F2/output/F2_geno_for_one_map_final.txt")
@@ -243,6 +259,36 @@ LG1.f2.final
 # ripple
 ripple.seq(LG1.f2.final, ws = 5, LOD = 6) 
 
+#########
+###### don't consider mapping postion at all
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG1.f2.ord.A01.Rdata")
+LG1.f2.ord.A01
+
+# set map function 
+set.map.fun(type="kosambi")
+
+# safe mode order (only marker with unique positions)
+LG1.f2.safe.A01 <- make.seq(LG1.f2.ord.A01, "safe")
+LG1.f2.safe.A01
+# all order (all markers)
+LG1.f2.final.A01 <- make.seq(LG1.f2.ord.A01, "force")
+LG1.f2.final.A01
+
+# print the recombination fraction mix 
+rf.graph.table(LG1.f2.safe.A01) 
+par(mfrow=c(1,1))
+draw.map(LG1.f2.safe.A01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+# map estimation for arbitrary order 
+LG1.f2.arbi.A01 <- make.seq(twopts.f2.04.24, order[[1]])
+LG1.f2.arbi.A01.map <- map(LG1.f2.arbi.A01)
+rf.graph.table(LG1.f2.arbi.A01.map) 
+
+draw.map(LG1.f2.arbi.A01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+
+```
+
+```{r}
 ################# A02 ##################################
 # map_A02.R 
 
@@ -256,7 +302,34 @@ LG2.f2.final
 
 # ripple
 ripple.seq(LG2.f2.final, ws = 5, LOD = 6) 
+###
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG1.f2.ord.A02.Rdata")
+LG1.f2.ord.A02
 
+# set map function 
+set.map.fun(type="kosambi")
+
+# safe mode order (only marker with unique positions)
+LG1.f2.safe.A02 <- make.seq(LG1.f2.ord.A02, "safe")
+LG1.f2.safe.A02
+# all order (all markers)
+LG1.f2.final.A02 <- make.seq(LG1.f2.ord.A02, "force")
+LG1.f2.final.A02
+
+# print the recombination fraction mix 
+rf.graph.table(LG1.f2.final.A02) 
+par(mfrow=c(1,1))
+draw.map(LG1.f2.safe.A02, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+# map estimation for arbitrary order 
+LG1.f2.arbi.A02 <- make.seq(twopts.f2.04.24, order[[1]])
+LG1.f2.arbi.A02.map <- map(LG1.f2.arbi.A02)
+rf.graph.table(LG1.f2.arbi.A02.map) 
+
+draw.map(LG1.f2.arbi.A02.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)   
+```
+
+```{r}
 ######################## A03 ########################
 
 # map_A03.R 
@@ -422,19 +495,56 @@ LG10.f2.safe
 # all order
 LG10.f2.final <- make.seq(LG10.f2.ord, "force")
 LG10.f2.final
+```
 
+# C01 
+```{r}
 ################# C01 ##############################
 # map_C01.R 
 F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt")
+F2.data 
+# This is an object of class 'f2.onemap'
+#     No. individuals:     166 
+#     No. markers:         5765 
+#     Percent genotyped:   69 # the simulated data in onemap is 85% genotyped, maybe I should drop those with low percent? 
+# 
+#     Number of markers per type:
+#        AA : AB : BB -->  5765
+# 
+# This data contains no phenotypic information
 
+# load two-point rf result 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/twopts.f2.04.21.Rdata")
 
+# order maker within chromosome 
 ###### don't consider mapping postion at all
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG1.f2.ord.C01.Rdata")
 LG1.f2.ord.C01
 
 # set map function 
 set.map.fun(type="kosambi")
+
+# order marker 
+LG1.f2.C01 <- make.seq(LG1.f2.ord.C01)
+LG1.f2.C01
+
+LG1.f2.C01.rcd <- order.seq(input.seq = LG1.f2.C01, n.init = 5, 
+                            subset.search = "twopt",
+                            twopt.alg = "rcd", THRES = 3,
+                            draw.try = T, wait = 1
+                            )
+
+LG1.f2.C01.rcd
+
+LG1.f2.C01.rcd <- order.seq(input.seq = LG1.f2.C01, n.init = 5, 
+                            subset.search = "twopt",
+                            twopt.alg = "rcd", THRES = 3,
+                            draw.try = T, wait = 1,
+                            touchdown = T
+                            )
+
+ripple.seq(LG1.f2.C01, ws=5, LOD=3)
+LG1.f2.C01
 
 # safe mode order (only marker with unique positions)
 LG1.f2.safe.C01 <- make.seq(LG1.f2.ord.C01, "safe")
@@ -446,7 +556,6 @@ LG1.f2.final.C01
 # print the recombination fraction mix 
 rf.graph.table(LG1.f2.safe.C01) 
 par(mfrow=c(1,1))
-draw.map(LG1.f2.final.C01, names= F, grid=F, cex.mrk=0.5)
 draw.map(LG1.f2.safe.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 # map estimation for arbitrary order 
@@ -456,6 +565,14 @@ rf.graph.table(LG1.f2.arbi.C01.map)
 
 draw.map(LG1.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
+# set map function 
+set.map.fun(type = "haldane")
+
+
+
+```
+
+```{r}
 ################# LG12/A10 ##############################
 LG12.f2 <- make.seq(LGs.f2, 12)
 LG12.f2
