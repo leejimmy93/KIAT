@@ -247,6 +247,7 @@ ggsave(p.mapping, filename="~/mapping_comparison_A_B_C_subgenome/output/mapping.
 
 Based on the 1st result, we didn't see a chunk of genes in B subgenome present as a continous spike of read depth. The overall mapping ratio between B.napus + B subgenome VS B.napus are not different very much, unique mapping ratio goes down when B subgenome was added in, and multiple mapping ratio goes up a little bit. the reason we didn't see spike might because we used the default mapping parameter, which is 10bp mismatch, so now check 0 mismatch. 
 
+update: after using 0 mismismatch, no reads were uniquely mapped to B subgenome, suggesting that there is no B subgenome present in Da-Ol-1 
 
 
 
