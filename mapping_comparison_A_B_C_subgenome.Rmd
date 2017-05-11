@@ -249,5 +249,14 @@ Based on the 1st result, we didn't see a chunk of genes in B subgenome present a
 
 update: after using 0 mismismatch, no reads were uniquely mapped to B subgenome, suggesting that there is no B subgenome present in Da-Ol-1 
 
+1) /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/mapping_comparison_A_B_C_subgenome/mismatch_0/mapping_Ol_mismatch0_ABC.sh 
+
+mapping_Ol_mismatch0.sh
+
+2) /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/mapping_comparison_A_B_C_subgenome/mismatch_0/calc_depth.sh 
+
+3) /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/mapping_comparison_A_B_C_subgenome/mismatch_0/subset_by_chromosome.sh 
+
+
 
 
