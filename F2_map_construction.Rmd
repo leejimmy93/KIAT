@@ -208,7 +208,7 @@ load("~/F2/output/LG1.f2.ord.A01.Rdata")
 LG.f2.arbi.A01 <- make.seq(twopts.f2.04.24, order[[1]])
 
 LG.f2.arbi.A01.map <- map(LG.f2.arbi.A01)
-rf.graph.table(LG1.f2.arbi.C01.map) 
+rf.graph.table(LG.f2.arbi.A01.map) 
 
 draw.map(LG.f2.arbi.A01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
