@@ -116,7 +116,21 @@ save(F2_geno_data_2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Ma
 
 # format data for onemap 
 ```{r}
-# F2_geno_data <- test 
+install.packages("tidyverse")
+library("tidyverse")
+
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_geno_data_2.Rdata")
+dim(F2_geno_data_2) # 5765 166 
+
+F2_geno_data_2_with_missing_rate <- mutate(F2_geno_data_2, 
+       missing_rate = round(apply(F2_geno_data_2, 1, function(x) sum(is.na(x)))/94, 2))
+
+hist(F2_geno_data_2_with_missing_rate$missing_rate)
+max(F2_geno_data_2_with_missing_rate$missing_rate) 
+
+dim(filter(F2_geno_data_2_with_missing_rate, missing_rate < 0.2))
+
+
 
 # formating data for onemap 
 F2_geno_data_2 <- as.matrix(F2_geno_data_2)
