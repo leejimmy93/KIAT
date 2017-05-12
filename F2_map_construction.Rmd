@@ -210,8 +210,8 @@ sum(F2_geno_data_2$Chr=="chrC09") # 44 2889-2932
 # figure out the index positon within each chromosome for all chromosomes 
 F2_geno_data_info <- F2_geno_data_2[,c("Chr", "Pos", "index")]
 
-out <- split( F2_geno_data_info , f = F2_geno_data_info$Chr)
-length(out)
+out <- split( F2_geno_data_info, f = F2_geno_data_info$Chr)
+length(out) # 19 
 
 order <- list()
 
@@ -287,11 +287,11 @@ par(mfrow=c(1,1))
 draw.map(LG1.f2.safe.A01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 # map estimation for arbitrary order 
-LG1.f2.arbi.A01 <- make.seq(twopts.f2.04.24, order[[1]])
-LG1.f2.arbi.A01.map <- map(LG1.f2.arbi.A01)
-rf.graph.table(LG1.f2.arbi.A01.map) 
+LG.f2.arbi.A01 <- make.seq(twopts.f2.LOD3_rf0.5, order[[1]])
+LG.f2.arbi.A01.map <- map(LG.f2.arbi.A01)
+rf.graph.table(LG.f2.arbi.A01.map) 
 
-draw.map(LG1.f2.arbi.A01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+draw.map(LG.f2.arbi.A01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
 
 ####### new stuff
 F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt")
@@ -525,28 +525,32 @@ F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output
 F2.data 
 # This is an object of class 'f2.onemap'
 #     No. individuals:     166 
-#     No. markers:         5765 
-#     Percent genotyped:   69 # the simulated data in onemap is 85% genotyped, maybe I should drop those with low percent? 
+#     No. markers:         2932 
+#     Percent genotyped:   96 
 # 
 #     Number of markers per type:
-#        AA : AB : BB -->  5765
+#        AA : AB : BB -->  2932
 # 
 # This data contains no phenotypic information
 
 # load two-point rf result 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/twopts.f2.04.21.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/twopts.LOD3_rf0.5.Rdata")
 
 # order maker within chromosome 
 ###### don't consider mapping postion at all
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG1.f2.ord.C01.Rdata")
-LG1.f2.ord.C01
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/LG.f2.ord.C01.Rdata")
+LG.f2.ord.C01 
 
 # set map function 
 set.map.fun(type="kosambi")
 
 # order marker 
-LG1.f2.C01 <- make.seq(LG1.f2.ord.C01)
-LG1.f2.C01
+LG.f2.C01 <- make.seq(LG.f2.ord.C01)
+LG.f2.C01
+rf.graph.table(LG.f2.C01) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
 
 LG1.f2.C01.rcd <- order.seq(input.seq = LG1.f2.C01, n.init = 5, 
                             subset.search = "twopt",
@@ -570,8 +574,11 @@ LG1.f2.C01
 LG1.f2.safe.C01 <- make.seq(LG1.f2.ord.C01, "safe")
 LG1.f2.safe.C01
 # all order (all markers)
-LG1.f2.final.C01 <- make.seq(LG1.f2.ord.C01, "force")
-LG1.f2.final.C01
+LG.f2.force.C01 <- make.seq(LG.f2.ord.C01, "force")
+LG.f2.force.C01
+rf.graph.table(LG.f2.force.C01) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.force.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 # print the recombination fraction mix 
 rf.graph.table(LG1.f2.safe.C01) 
@@ -579,16 +586,22 @@ par(mfrow=c(1,1))
 draw.map(LG1.f2.safe.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 # map estimation for arbitrary order 
-LG1.f2.arbi.C01 <- make.seq(twopts.f2.LOD3_rf0.5, order[[11]])
-LG1.f2.arbi.C01.map <- map(LG1.f2.arbi.C01)
+LG.f2.arbi.C01 <- make.seq(twopts.f2.LOD3_rf0.5, order[[11]])
+LG.f2.arbi.C01.map <- map(LG.f2.arbi.C01)
 rf.graph.table(LG1.f2.arbi.C01.map) 
 
 draw.map(LG1.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
 # set map function 
-set.map.fun(type = "haldane")
+set.map.fun(type = "haldane") 
+
+########## the previous one 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_before_filter/twopts.f2.04.21.Rdata")
 
 
+LG.f2.arbi.C01 <- make.seq(twopts.f2.LOD3_rf0.5, order[[11]])
+LG.f2.arbi.C01.map <- map(LG.f2.arbi.C01)
+rf.graph.table(LG1.f2.arbi.C01.map) 
 
 ```
 
