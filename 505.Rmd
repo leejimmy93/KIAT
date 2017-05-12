@@ -1314,27 +1314,44 @@ ggsave(p.mds.country, filename="~/505/output/figure/p.mds.country.expression.png
 fit.read.count <- glmFit(dge.read.count, design.read.count)
 
 # detect DEGs, finding genes different between any of the two lines 
-lrt.read.count <- glmLRT(fit.read.count, coef=2:94) 
+lrt.read.count <- glmLRT(fit.read.count, coef=2:94) # find any genes that are differentially expressed compared to the reference genotype (the intercept) 
 topTags(lrt.read.count)
-FDR <- p.adjust(lrt.read.count$table$PValue, method="fdr")
+DEgene.505 <- topTags(lrt.read.count,n = Inf)$table[topTags(lrt.read.count,n = Inf)$table$FDR<0.001,]
+dim(DEgene.505) # 53824 
+``` 
 
-## pull out the TMM normalized expression value for the 24 genes 
+# correlation between gene expression & phenotypic trait value 
+```{r}
+# voom transformation of raw read count data 
+# source("http://bioconductor.org/biocLite.R")
+# biocLite("DESeq2")
+library("DESeq2")  
+
+
+
+
+## pull out the TMM normalized expression value for the 20 unique genes 
 SNP.gene.fxn <-read.csv("~/505/output/leaf/GWAS_SNP_gene_fxn.csv", header=T)
-SNP.gene.fxn
+SNP.gene.fxn 
 # how to look at the result? categorize trait into categorical value? and compare between categories?
 tmp <- as.data.frame(dge.read.count$counts[which(rownames(dge.read.count$counts) %in% SNP.gene.fxn$gene_ID),])
 tmp2 <- read.count.small[which(rownames(read.count.small) %in% SNP.gene.fxn$gene_ID),]
+dim(tmp2)
+length(unique(SNP.gene.fxn$gene_ID)) 
 
-``` 
+
+
+
+
+
+```
 
 # SNP annotation for significant SNPs 
-```{r}
+```{r} 
 annotation.28SNP <- read.table("~/505/vcf_leaf_no_pop/combined/missing_0.5/sinigicant_SNP_ann", header=F) 
 dim(annotation.28SNP)
 
 annotation.28SNP.sub <- annotation.28SNP[,c(1:8)] 
-
->>>>>>> c7ffd0e697012c8c12719f56a29fdaf86ba41434
 ```
 
 
