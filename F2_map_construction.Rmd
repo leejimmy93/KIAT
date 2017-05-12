@@ -40,16 +40,22 @@ head(F2_geno_data)
 F2_geno_data_with_missing_rate <- mutate(F2_geno_data, 
        missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/94, 2))
 
+rownames(F2_geno_data_with_missing_rate) <- rownames(F2_geno_data)
 hist(F2_geno_data_with_missing_rate$missing_rate)
 max(F2_geno_data_with_missing_rate$missing_rate) # 0.83, the highest missing rate is 0.83 
 
 # remove markers with missing rate greater than 0.85 
-F2_geno_data_with_missing_rate_filtered <- filter(F2_geno_data_with_missing_rate, missing_rate < 0.15)
+F2_geno_data_with_missing_rate_filtered <- F2_geno_data_with_missing_rate[F2_geno_data_with_missing_rate$missing_rate < 0.15,]
+rownames(F2_geno_data_with_missing_rate_filtered)
+
 dim(F2_geno_data_with_missing_rate_filtered) # 3077 167
+hist(F2_geno_data_with_missing_rate_filtered$missing_rate)
 
 F2_geno_data_with_missing_rate_filtered.final <- subset(F2_geno_data_with_missing_rate_filtered, select=-missing_rate)
+rownames(F2_geno_data_with_missing_rate_filtered.final)
 
 dim(F2_geno_data_with_missing_rate_filtered.final) # 3077 166 
+rownames(F2_geno_data_with_missing_rate_filtered.final) 
 ```
 
 # import & foramt data (whitney version)
@@ -67,70 +73,70 @@ head(F2_geno_data)
 
 ```
 
-# remove redundant SNPs
-
+# calculate pairwise corrlelation and remove SNPs with corrlelation greater or equal to 0.9
 some SNPs should have exactly the same genotype across all individuals, they are redundant in terms of genetic map construction, so they should be removed. find those SNPs by doing correlation test. 
-
 ```{r}
-# problem: 
-# 1)  12 markers are not polymorphism across individuals 
-# 2)  because there are missing data present in the matrix, when computing for correlation, only non missing data are accepted, so the pairwise correlation resulted in many markers that end up with same genotypes for the shared non-missing data, this cause error in cor() functon, I suppressed the "0 as standard deviation" warning message. finally found out there are 43422 pairs of SNPs that have this kind of problem 
+F2_geno_data_t <- as.data.frame(t(F2_geno_data_with_missing_rate_filtered.final))
+F2_geno_data_t.numeric <- data.matrix(F2_geno_data_t)
 
-# script "SNP_pairwise_correlatition.R" deal with problem 1 & 2 
-# output file /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_SNP_correlation.Rdata is the correlation matrix for individuals in F2 population... 
-# output file SNP.not.poly.Rdata has the 12 SNPs that are not polymorphism across F2 pops 
+# delete markers with all same genotypes across individuals 
+test <- apply(F2_geno_data_t.numeric, 2, function(x) length(unique(x[!is.na(x)])))
+filter.polymorphsm <- test != 1 
 
-# 3) 579 pairs of SNPs have correlation of 1 
-# script "identify_identical_SNP.R" identifys SNPs with pairwise correlation of 1 
-# output dup.pair.Rdata (identical pairs); rem.Rdata (SNPs that should be removed) 
+F2_geno_data_t.numeric.2 <- F2_geno_data_t.numeric[,filter.polymorphsm]
+dim(F2_geno_data_t.numeric.2) # 166 3075  
 
-load("~/F2/output/F2_SNP_correlation.Rdata")
-# code to remove duplicated SNPs 
-length(which(F2_SNP_correlation >= 0.9 & lower.tri(F2_SNP_correlation))) # 579 SNPs with exactly the same genotype across F2 individuals
+# also output save markers with same genotype across individuals
+polymorphism <- test == 1
+SNP.not.poly <- colnames(F2_geno_data_t.numeric)[polymorphism]
+length(SNP.not.poly) # two markers are not polymorphism across individuals 
+save(SNP.not.poly, file="SNP.not.poly.Rdata")
 
-dup.cordinate <- which(F2_SNP_correlation ==1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
+# correlation test
+options(warn=-1) # suppress warning message
+F2_SNP_correlation <- cor(F2_geno_data_t.numeric.2, use = "pairwise.complete.obs")
+save(F2_SNP_correlation, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_SNP_correlation.Rdata")
+options(warn=0) # unsuppress warning message
+dim(F2_SNP_correlation) # 3075 3075 
+
+# calcualte number of SNPs with correlation of 1
+nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T)) # 150 pairs of SNPs have identical genotype data 
+
+# find SNPs with correlation of 1 and remove them 
+dup.cordinate <- which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
+length(dup.cordinate) # 300 
 dup.cordinate.df <- as.data.frame(dup.cordinate)
 sample.ID <- colnames(F2_SNP_correlation)
-length(sample.ID) # 18214
 
+# extract duplicate pair information based on their coordicate
 dup.pair <- data.frame(matrix(nrow = nrow(dup.cordinate), ncol = 2))
 for (i in 1:nrow(dup.cordinate)){
  dup.pair[i,1] <- sample.ID[dup.cordinate[i,1]]
  dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
 }
 
+length(dup.pair[,2]) # 150 
 rem <- unique(dup.pair[,2])
-### remove the redundant SNPs
+length(rem) # 143 markers are removed due to pairwise correlation of 1 
 
-load("~/F2/output/rem.Rdata")
-load("~/F2/output/SNP.not.poly.Rdata")
-# remove identical SNPs 
-F2_geno_data_1 <- F2_geno_data[!(rownames(F2_geno_data) %in% rem),]  
+# save data
+save(dup.pair, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/dup.pair.Rdata")
+save(rem, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/rem.Rdata") 
+
+### 
+F2_geno_data_1 <- F2_geno_data_with_missing_rate_filtered.final[!(rownames(F2_geno_data_with_missing_rate_filtered.final) %in% rem),]  
 
 # remove non polymorphism SNPs 
 F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
 
-dim(F2_geno_data_2) # 5765   166
-save(F2_geno_data_2, file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs 
+dim(F2_geno_data_2) # 2932  166, end up with 2932 SNPs for map construction 
+
+save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs with missing data less than 0.85   
 ```
 
-# format data for onemap 
+# format data for onemap  
 ```{r}
-install.packages("tidyverse")
-library("tidyverse")
-
-load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_geno_data_2.Rdata")
-dim(F2_geno_data_2) # 5765 166 
-
-F2_geno_data_2_with_missing_rate <- mutate(F2_geno_data_2, 
-       missing_rate = round(apply(F2_geno_data_2, 1, function(x) sum(is.na(x)))/94, 2))
-
-hist(F2_geno_data_2_with_missing_rate$missing_rate)
-max(F2_geno_data_2_with_missing_rate$missing_rate) 
-
-dim(filter(F2_geno_data_2_with_missing_rate, missing_rate < 0.2))
-
-
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
 
 # formating data for onemap 
 F2_geno_data_2 <- as.matrix(F2_geno_data_2)
@@ -138,71 +144,62 @@ F2_geno_data_2[is.na(F2_geno_data_2)] <- "-"
 F2_geno_data_2 <- gsub("0/0", "A", F2_geno_data_2) 
 F2_geno_data_2 <- gsub("0/1", "H", F2_geno_data_2)
 F2_geno_data_2 <- gsub("1/1", "B", F2_geno_data_2)
-# F2_geno_data <- t(F2_geno_data) 
 
 F2_geno_data_2 <- as.data.frame(F2_geno_data_2)
-dim(F2_geno_data_2) #  
-write.table(F2_geno_data_2, file = "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/F2_geno_data.txt")
+dim(F2_geno_data_2) # 2932 166  
+write.table(F2_geno_data_2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data.txt")
 # change file format in linux 
 # cat F2_geno_data.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
-# tail -18226 tmp > tmp.1 
+# tail -2932 tmp > tmp.1 
 
-write.table(rownames(F2_geno_data_2), file = "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/marker_info.txt" )
-# cat marker_info.txt | awk '{print "*"$2}' | tail -18226 | sed 's/"//g' > marker_info_reform.txt
+write.table(rownames(F2_geno_data_2), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info.txt" )
+# cat marker_info.txt | awk '{print "*"$2}' | tail -2932 | sed 's/"//g' > marker_info_reform.txt
 
 # paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt 
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt 
 ```
 
-# calculate two point rf & assign to linkage groups 
+# calculate two point rf & assign to linkage groups (on whitney)
 ```{r}
-########### start to build linkage group ################################
-data <- read.mapmaker(file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_geno_for_one_map_final.txt")
-# data
-# save(data, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/data.Rdata") # the data saved here can be used later for map construction 
+# F2_map_construction_LOD3_rf0.5_missing_0.15.R 
+# scp rf.Rdata to my MAC
+# after checking the group result, only one linkage group was formed... 
+```
 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/data.Rdata")
-# estimate two-point rf
-twopts.f2 <- rf.2pts(data, LOD = 6, max.rf = 0.25) ##### run this on whitney....  
-?rf.2pts
-twopts.f2
-
-# # assign marker to linkage groups ############ using the onemap method cannot assign them to individual linkage groups ########## 
-# mark.all.f2 <- make.seq(twopts.f2, "all")
-# mark.all.f2
-# ?make.seq 
-# LGs.f2 <- group(mark.all.f2, LOD = 6, max.rf = 0.25)
-# LGs.f2
-# assign marker to linkage groups # this is not a good way, maybe should make.seq with a subset of markers, say, markers on specific chromosomes. then order marker within each chromosome. 
-
-#################### assign marker to specific linkage groups based on their chromosome assignement
-# so get the number of markers for each chromosome 
+# assign markers to different linkage groups based on their chromsome assignment 
+```{r}
+# get the number of markers for each chromosome 
 load("~/F2/output/F2_geno_data_2.Rdata")
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
-dim(F2_geno_data_2) 
-head(F2_geno_data)
+dim(F2_geno_data_2) # 2932 166
+head(F2_geno_data_2) 
+
 F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2))
 F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2)) 
 F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
-sum(F2_geno_data_2$Chr=="chrA01") # 403 
-sum(F2_geno_data_2$Chr=="chrA02") # 248 404-651
-sum(F2_geno_data_2$Chr=="chrA03") # 504 652-1155
-sum(F2_geno_data_2$Chr=="chrA04") # 287 1156-1442
-sum(F2_geno_data_2$Chr=="chrA05") # 282 1443-1724
-sum(F2_geno_data_2$Chr=="chrA06") # 446 1725-2170
-sum(F2_geno_data_2$Chr=="chrA07") # 429 2171-2599
-sum(F2_geno_data_2$Chr=="chrA08") # 239 2600-2838
-sum(F2_geno_data_2$Chr=="chrA09") # 554 2839-3392
-sum(F2_geno_data_2$Chr=="chrA10") # 367 3393-3759
-sum(F2_geno_data_2$Chr=="chrC01") # 227 3760-3986
-sum(F2_geno_data_2$Chr=="chrC02") # 237 3987-4223
-sum(F2_geno_data_2$Chr=="chrC03") # 444 4224-4667
-sum(F2_geno_data_2$Chr=="chrC04") # 202 4668-4869
-sum(F2_geno_data_2$Chr=="chrC05") # 174 4870-5043
-sum(F2_geno_data_2$Chr=="chrC06") # 197 5044-5240
-sum(F2_geno_data_2$Chr=="chrC07") # 209 5241-5449
-sum(F2_geno_data_2$Chr=="chrC08") # 185 5450-5634
-sum(F2_geno_data_2$Chr=="chrC09") # 131 5635-5765 
+
+head(F2_geno_data_2[F2_geno_data_2$Chr=="chrA04",],1)
+tail(F2_geno_data_2[F2_geno_data_2$Chr=="chrC09",],1)
+
+sum(F2_geno_data_2$Chr=="chrA01") # 1-192  
+sum(F2_geno_data_2$Chr=="chrA02") # 78 193-270
+sum(F2_geno_data_2$Chr=="chrA03") # 267 271-537
+sum(F2_geno_data_2$Chr=="chrA04") # 136 538-673
+sum(F2_geno_data_2$Chr=="chrA05") # 129 674-802
+sum(F2_geno_data_2$Chr=="chrA06") # 379 803-1181
+sum(F2_geno_data_2$Chr=="chrA07") # 242 1182-1423
+sum(F2_geno_data_2$Chr=="chrA08") # 151 1424-1574
+sum(F2_geno_data_2$Chr=="chrA09") # 307 1575-1881
+sum(F2_geno_data_2$Chr=="chrA10") # 253 1882-2134
+sum(F2_geno_data_2$Chr=="chrC01") # 106 2135-2240
+sum(F2_geno_data_2$Chr=="chrC02") # 59 2241-2299
+sum(F2_geno_data_2$Chr=="chrC03") # 158 2300-2457
+sum(F2_geno_data_2$Chr=="chrC04") # 143 2458-2600
+sum(F2_geno_data_2$Chr=="chrC05") # 43 2601-2643
+sum(F2_geno_data_2$Chr=="chrC06") # 85 2644-2728
+sum(F2_geno_data_2$Chr=="chrC07") # 100 2729-2828
+sum(F2_geno_data_2$Chr=="chrC08") # 60 2829-2888
+sum(F2_geno_data_2$Chr=="chrC09") # 44 2889-2932  
 
 # https://github.com/leejimmy93/KIAT/map_A01.R .... mapC09.R 
 ```
@@ -230,12 +227,8 @@ order
 A01 
 ```{r}
 #################### A01 ##############################
-F2.data <- read.mapmaker(file="~/F2/output/F2_geno_for_one_map_final.txt")
-load("~/F2/output/twopts.f2.04.21.Rdata")
-load("~/F2/output/LG1.f2.ord.A01.Rdata")
-# map_A01.R 
-
-LG.f2.arbi.A01 <- make.seq(twopts.f2.04.24, order[[1]])
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/twopts.LOD3_rf0.5.Rdata")
+LG.f2.arbi.A01 <- make.seq(twopts.f2.LOD3_rf0.5, order[[1]])
 
 LG.f2.arbi.A01.map <- map(LG.f2.arbi.A01)
 rf.graph.table(LG.f2.arbi.A01.map) 
@@ -299,6 +292,19 @@ LG1.f2.arbi.A01.map <- map(LG1.f2.arbi.A01)
 rf.graph.table(LG1.f2.arbi.A01.map) 
 
 draw.map(LG1.f2.arbi.A01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+
+####### new stuff
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/twopts.LOD3_rf0.5.Rdata")
+
+mark.f2.A01 <- make.seq(twopts.f2.LOD3_rf0.5, 1:192)
+
+LG.f2.ord.A01 <- order.seq(input.seq = mark.f2.A01, n.init = 5,
+                        subset.search = "twopt",
+                        twopt.alg = "rcd", THRES = 6,
+                        draw.try = T, wait = 1,
+                        touchdown = T)
+
 
 ```
 
@@ -573,7 +579,7 @@ par(mfrow=c(1,1))
 draw.map(LG1.f2.safe.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 # map estimation for arbitrary order 
-LG1.f2.arbi.C01 <- make.seq(twopts.f2.04.24, order[[11]])
+LG1.f2.arbi.C01 <- make.seq(twopts.f2.LOD3_rf0.5, order[[11]])
 LG1.f2.arbi.C01.map <- map(LG1.f2.arbi.C01)
 rf.graph.table(LG1.f2.arbi.C01.map) 
 

@@ -6,7 +6,15 @@ output: html_document
 ---
 
 ```{r}
-
-
+library(onemap)
+data("fake.f2.onemap")
+fake.f2.onemap
+twopts.f2 <- rf.2pts(fake.f2.onemap)
+mark.all.f2 <- make.seq(twopts.f2, "all")
+LGs.f2 <- group(mark.all.f2, LOD=3, max.rf=0.5)
+LGs.f2
+set.map.fun(type="haldane")
+LG2.f2 <- make.seq(LGs.f2, 2)
+LG2.f2
 ```
 

@@ -1251,8 +1251,6 @@ gh.seed.bolt.table.wide[gh.seed.bolt.table.wide$SN=="K88",]
 # 
 load("~/505/output/common.SNPs.Rdata")
 common.SNPs
-<<<<<<< HEAD
-=======
 ```
 
 # check the expression for genes include significant SNPs 
@@ -1269,7 +1267,7 @@ read.count.sample
 
 # filter based on read count
 read.count.small <- read.count[rowSums(read.count > 10) >= 3,]
-dim(read.count.small) # 53824    94 
+dim(read.count.small) # 53824    94  
 
 # normalize 
 dge.read.count <- DGEList(counts=read.count.small, group=read.count.small$group)
@@ -1352,6 +1350,10 @@ annotation.28SNP <- read.table("~/505/vcf_leaf_no_pop/combined/missing_0.5/sinig
 dim(annotation.28SNP)
 
 annotation.28SNP.sub <- annotation.28SNP[,c(1:8)] 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3cb176ca171dbf9c518ad9f860c62f4f7d2f6dc2
 ```
 
 
