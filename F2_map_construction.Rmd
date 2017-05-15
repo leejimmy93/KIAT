@@ -17,7 +17,6 @@ library(tkrplot)
 library(onemap)  
 library(ggplot2)
 library(reshape) 
-# unloadNamespace("tidyverse")
 ```
 
 # import & format data (MAC version)
@@ -324,7 +323,7 @@ load("~/F2/output/missing_rate_0.15/twopts.f2.05.12.Rdata")
 # mark.f2.A02 <- make.seq(twopts.f2.05.12, 193:270)
 # LG.f2.ord.A02 <- order.seq(input.seq = mark.f2.A02, n.init = 5,
 #                         subset.search = "twopt",
-#                         twopt.alg = "rcd", THRES = 6, # this 6 might need to be changed to 3 afterwards
+#                         twopt.alg = "rcd", THRES = 6, 
 #                         draw.try = T, wait = 1,
 #                         touchdown = T)
 
@@ -333,8 +332,8 @@ load("~/F2/output/missing_rate_0.15/LG.f2.ord.A02.Rdata")
 LG.f2.A02 <- make.seq(LG.f2.ord.A02) 
 LG.f2.A02
 rf.graph.table(LG.f2.A02) 
-par(mfrow=c(1,1))
-draw.map(LG.f2.A02, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+par(mfrow=c(1,1)) 
+draw.map(LG.f2.A02, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
 # all order
 LG.f2.A02.final <- make.seq(LG.f2.ord.A02, "force")
@@ -342,8 +341,17 @@ LG.f2.A02.final
 rf.graph.table(LG.f2.A02.final) 
 draw.map(LG.f2.A02.final, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
+### remove markers with double crossover 
+LG.f2.A02.final$seq.num
+
+
+
+
+
+
+
 # ripple
-ripple.seq(LG2.f2.final, ws = 5, LOD = 6) 
+ripple.seq(LG.f2.A02.final, ws = 5, LOD = 6) 
 
 # set map function 
 set.map.fun(type="kosambi")
@@ -354,7 +362,7 @@ LG.f2.arbi.A02
 LG.f2.arbi.A02.map <- map(LG.f2.arbi.A02)  
 rf.graph.table(LG.f2.arbi.A02.map) 
 
-draw.map(LG1.f2.arbi.A02.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)   
+draw.map(LG.f2.arbi.A02.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)   
 ```
 
 ```{r}
@@ -978,6 +986,10 @@ LG.f2.C01
 rf.graph.table(LG.f2.C01) 
 par(mfrow=c(1,1))
 draw.map(LG.f2.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+
+maps <- list(LG.f2.A07, LG.f2.A08, LG.f2.A09)
+draw.map(maps, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75) 
+
 ```
 
 

@@ -13,8 +13,79 @@ twopts.f2 <- rf.2pts(fake.f2.onemap)
 mark.all.f2 <- make.seq(twopts.f2, "all")
 LGs.f2 <- group(mark.all.f2, LOD=3, max.rf=0.5)
 LGs.f2
+
+# genetic map of linkage group 2  
 set.map.fun(type="haldane")
 LG2.f2 <- make.seq(LGs.f2, 2)
 LG2.f2
+
+LG2.rcd.f2 <- rcd(LG2.f2)
+
+LG2.f2.ord <- order.seq(input.seq=LG2.f2, n.init = 5,
+                         subset.search = "twopt",
+                         twopt.alg = "rcd", THRES = 3,
+                         draw.try = TRUE, wait = 1)
+LG2.f2.ord
+LG2.f2.safe <- make.seq(LG2.f2.ord,"safe") 
+(LG2.f2.all <- make.seq(LG2.f2.ord,"force"))
+
+LG2.f2.ord <- order.seq(input.seq=LG2.f2, n.init = 5,
+                         subset.search = "twopt",
+                         twopt.alg = "rcd", THRES = 3,
+                         draw.try = TRUE, wait = 1,
+                         touchdown=TRUE) 
+# touchdown: logical. If FALSE (default), the try.seq step is run only once, with the value of THRES. If TRUE, try.seq runs with THRES and then once more, with THRES-1. The latter calculations take longer, but usually are able to map more markers.  
+
+(LG2.f2.final<-make.seq(LG2.f2.ord, "force"))
+ripple.seq(LG2.f2.final, ws=5, LOD=3) 
+
+LG2.f2.final
+
+# linkage group 1 
+LG1.f2 <- make.seq(LGs.f2, 1)
+
+LG1.f2.ord <- order.seq(input.seq=LG1.f2, n.init = 5,
+                         subset.search = "twopt",
+                         twopt.alg = "rcd", THRES = 3,
+                         draw.try = TRUE, wait = 1,
+                         touchdown=TRUE)
+
+(LG1.f2.final <- make.seq(LG1.f2.ord,"force"))
+
+ripple.seq(ws=5, LG1.f2.final)
+
+# linage group 3 
+LG3.f2 <- make.seq(LGs.f2, 3)
+
+LG3.f2.ord <- order.seq(input.seq=LG3.f2, n.init = 5,
+                         subset.search = "twopt",
+                         twopt.alg = "rcd", THRES = 3,
+                         draw.try = TRUE, wait = 1,
+                         touchdown=TRUE)
+
+(LG3.f2.final <- make.seq(LG3.f2.ord,"force"))
+ripple.seq(ws=5, LG3.f2.final)
+
+# with arbitrary order 
+LG3seq.f2 <- make.seq(twopts.f2,c(47,38,59,16,62,21,20,48,22))
+(LG3seq.f2.map <- map(LG3seq.f2))
+marker.type(LG3seq.f2.map)
+# add or drop marker 
+(LG3seq.f2.map <- add.marker(LG3seq.f2.map, c(18,56,50)))
+# drop marker 
+(LG3seq.f2.map <- drop.marker(LG3seq.f2.map, c(59,21)))
+
+# plot rf matrix 
+temp.seq<-drop.marker(LG3.f2.final, 38) 
+(temp.seq<-add.marker(temp.seq, 38)) # place marker 38 to the end of the map 
+(LG3.f2.wrong<-map(temp.seq))
+
+rf.graph.table(LG3.f2.wrong)
+
+temp.seq <- drop.marker(LG3.f2.wrong,38)
+temp.map <- map(temp.seq)
+temp.try <- try.seq(temp.map, 38, draw.try=TRUE)
+(LG3.f2.final<-make.seq(temp.try, 4))
+
 ```
 
