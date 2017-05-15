@@ -17,8 +17,6 @@ library(tkrplot)
 library(onemap)  
 library(ggplot2)
 library(reshape) 
-library(dplyr)
-library(tidyverse) 
 # unloadNamespace("tidyverse")
 ```
 
@@ -338,10 +336,6 @@ rf.graph.table(LG.f2.A02)
 par(mfrow=c(1,1))
 draw.map(LG.f2.A02, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
-# safe mode order
-LG.f2.A02.safe <- make.seq(LG.f2.ord.A02, "safe")
-LG.f2.A02.safe
-
 # all order
 LG.f2.A02.final <- make.seq(LG.f2.ord.A02, "force")
 LG.f2.A02.final
@@ -357,8 +351,8 @@ set.map.fun(type="kosambi")
 # map estimation for arbitrary order 
 LG.f2.arbi.A02 <- make.seq(twopts.f2.05.12, order[[2]])
 LG.f2.arbi.A02 
-LG.f2.arbi.A02.map <- map(LG.f2.arbi.A02)
-rf.graph.table(LG1.f2.arbi.A02.map) 
+LG.f2.arbi.A02.map <- map(LG.f2.arbi.A02)  
+rf.graph.table(LG.f2.arbi.A02.map) 
 
 draw.map(LG1.f2.arbi.A02.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)   
 ```
