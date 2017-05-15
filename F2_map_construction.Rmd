@@ -302,6 +302,12 @@ LG.f2.ord.A01 <- order.seq(input.seq = mark.f2.A01, n.init = 5,
 ```{r}
 ################# A02 ##################################
 # map_A02.R 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A02.Rdata")
+LG.f2.A02 <- make.seq(LG.f2.ord.A02) 
+LG.f2.A02
+rf.graph.table(LG.f2.A02) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.A02, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 
 # safe mode order
@@ -932,12 +938,6 @@ rf.graph.table(LG.f2.A01)
 par(mfrow=c(1,1))
 draw.map(LG.f2.A01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A02.Rdata")
-LG.f2.A02 <- make.seq(LG.f2.ord.A02) 
-LG.f2.A02
-rf.graph.table(LG.f2.A02) 
-par(mfrow=c(1,1))
-draw.map(LG.f2.A02, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A03.Rdata")
 LG.f2.A03 <- make.seq(LG.f2.ord.A03) 
