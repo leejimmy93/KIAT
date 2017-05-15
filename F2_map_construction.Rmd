@@ -357,6 +357,7 @@ set.map.fun(type="kosambi")
 
 # map estimation for arbitrary order 
 LG.f2.arbi.A02 <- make.seq(twopts.f2.05.12, order[[2]])
+LG.f2.arbi.A02 
 LG.f2.arbi.A02.map <- map(LG.f2.arbi.A02)
 rf.graph.table(LG1.f2.arbi.A02.map) 
 
