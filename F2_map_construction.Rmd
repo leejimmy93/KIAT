@@ -299,9 +299,36 @@ LG.f2.ord.A01 <- order.seq(input.seq = mark.f2.A01, n.init = 5,
 
 ```
 
+# A02
 ```{r}
 ################# A02 ##################################
-# map_A02.R 
+######## import data #######
+# marker data 
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
+F2.data 
+# This is an object of class 'f2.onemap'
+#     No. individuals:     166 
+#     No. markers:         2932 
+#     Percent genotyped:   96 
+# 
+#     Number of markers per type:
+#        AA : AB : BB -->  2932
+# 
+# This data contains no phenotypic information
+
+# two-point rf data  
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
+
+########## order maker within chromosome #############
+###### don't consider mapping postion at all
+# https://github.com/leejimmy93/KIAT/blob/master/map_construction_missing_0.15/map_A02_2.R_final 
+# mark.f2.A02 <- make.seq(twopts.f2.05.12, 193:270)
+# LG.f2.ord.A02 <- order.seq(input.seq = mark.f2.A02, n.init = 5,
+#                         subset.search = "twopt",
+#                         twopt.alg = "rcd", THRES = 6, # this 6 might need to be changed to 3 afterwards
+#                         draw.try = T, wait = 1,
+#                         touchdown = T)
+
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A02.Rdata")
 LG.f2.A02 <- make.seq(LG.f2.ord.A02) 
 LG.f2.A02
@@ -309,13 +336,15 @@ rf.graph.table(LG.f2.A02)
 par(mfrow=c(1,1))
 draw.map(LG.f2.A02, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
-
 # safe mode order
-LG2.f2.safe <- make.seq(LG2.f2.ord, "safe")
-LG2.f2.safe
+LG.f2.A02.safe <- make.seq(LG.f2.ord.A02, "safe")
+LG.f2.A02.safe
+
 # all order
-LG2.f2.final <- make.seq(LG2.f2.ord, "force")
-LG2.f2.final
+LG.f2.A02.final <- make.seq(LG.f2.ord.A02, "force")
+LG.f2.A02.final
+rf.graph.table(LG.f2.A02.final) 
+draw.map(LG.f2.A02.final, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
 # ripple
 ripple.seq(LG2.f2.final, ws = 5, LOD = 6) 
@@ -326,21 +355,9 @@ LG1.f2.ord.A02
 # set map function 
 set.map.fun(type="kosambi")
 
-# safe mode order (only marker with unique positions)
-LG1.f2.safe.A02 <- make.seq(LG1.f2.ord.A02, "safe")
-LG1.f2.safe.A02
-# all order (all markers)
-LG1.f2.final.A02 <- make.seq(LG1.f2.ord.A02, "force")
-LG1.f2.final.A02
-
-# print the recombination fraction mix 
-rf.graph.table(LG1.f2.final.A02) 
-par(mfrow=c(1,1))
-draw.map(LG1.f2.safe.A02, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
-
 # map estimation for arbitrary order 
-LG1.f2.arbi.A02 <- make.seq(twopts.f2.04.24, order[[1]])
-LG1.f2.arbi.A02.map <- map(LG1.f2.arbi.A02)
+LG.f2.arbi.A02 <- make.seq(twopts.f2.05.12, order[[2]])
+LG.f2.arbi.A02.map <- map(LG.f2.arbi.A02)
 rf.graph.table(LG1.f2.arbi.A02.map) 
 
 draw.map(LG1.f2.arbi.A02.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)   
@@ -373,53 +390,7 @@ LG4.f2.safe <- make.seq(LG4.f2.ord, "safe")
 LG4.f2.safe
 # all order
 LG4.f2.final <- make.seq(LG4.f2.ord, "force")
-LG4.f2.final
-
-######################################
-#Markers               Position           
-#
-#60 FPBPN1720              0.00           
-#59 FPBPN1183             21.79           
-#58 FPBPN1466             23.96           
-#22 FPBRN0403             99.48           
-#23 FPBPN0589            123.34           
-#24 FPBPN0595            124.96           
-#25 FPBPN0006            132.46           
-#26 FPBPN0294            138.91           
-#27 FPBPN0205            151.91           
-#28 FPBRN0426            171.45           
-#29 FPBPN1534            177.44           
-#30 FPBPN1503            178.58           
-#31 FPBPN1712            187.25           
-#32 FPBRN0434            192.02           
-#33 FPBRN0876            207.88           
-#40 FPBPN1533            270.61           
-#41 FPBPN0296            272.67           
-#42 FPBPN0399            284.70           
-#43 FPBPN1863            304.96           
-#44 FPBRN0153            311.49           
-#45 FPBPN0005            324.22           
-#46 FPBRN0154            325.08           
-#47 FPBPN0291            330.16           
-#48 FPBPN0283            331.39           
-#53 FPBPN1083            335.94           
-#49 FPBPN0790            339.05           
-#50 FPBPN1637            341.32           
-#51 FPBPN1563            345.21           
-#52 FPBPN1651            346.72           
-#54 FPBPN1982            357.41           
-#55 FPBPN1702            360.15           
-#56 FPBPN0045            365.75           
-#34 FPBPN1414            380.72           
-#35 FPBPN0559            390.62           
-#36 FPBPN1369            395.71           
-#37 FPBPN0197            400.49           
-#38 FPBPN0164            409.48           
-#39 FPBPN1107            419.04           
-#57 FPBPN0082            440.07           
-#
-#39 markers            log-likelihood: -2303.75 
-###############################################
+LG4.f2.final 
 
 # ripple
 ripple.seq(LG4.f2.final, ws = 5, LOD = 6)
@@ -517,8 +488,10 @@ LG10.f2.final
 # C01 
 ```{r}
 ################# C01 ##############################
-# map_C01.R 
-F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt")
+
+######## import data #######
+# marker data 
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
 F2.data 
 # This is an object of class 'f2.onemap'
 #     No. individuals:     166 
@@ -530,11 +503,19 @@ F2.data
 # 
 # This data contains no phenotypic information
 
-# load two-point rf result 
+# two-point rf data  
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
 
-# order maker within chromosome 
+########## order maker within chromosome #############
 ###### don't consider mapping postion at all
+# https://github.com/leejimmy93/KIAT/blob/master/map_construction_missing_0.15/map_C01_2.R_final 
+# mark.f2.C01 <- make.seq(twopts.f2.05.12, 2135:2240)
+# LG.f2.ord.C01 <- order.seq(input.seq = mark.f2.C01, n.init = 5,
+#                         subset.search = "twopt",
+#                         twopt.alg = "rcd", THRES = 6, # notice I used 6 here, may need to change later... 
+#                         draw.try = T, wait = 1,
+#                         touchdown = T) 
+
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C01.Rdata")
 LG.f2.ord.C01 
 
@@ -547,6 +528,8 @@ LG.f2.C01
 rf.graph.table(LG.f2.C01) 
 par(mfrow=c(1,1))
 draw.map(LG.f2.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+
 
 
 LG1.f2.C01.rcd <- order.seq(input.seq = LG1.f2.C01, n.init = 5, 
@@ -953,13 +936,6 @@ rf.graph.table(LG.f2.A04)
 par(mfrow=c(1,1))
 draw.map(LG.f2.A04, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A04.Rdata")
-LG.f2.A04 <- make.seq(LG.f2.ord.A04) 
-LG.f2.A04
-rf.graph.table(LG.f2.A04) 
-par(mfrow=c(1,1))
-draw.map(LG.f2.A04, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
-
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A05.Rdata")
 LG.f2.A05 <- make.seq(LG.f2.ord.A05) 
 LG.f2.A05
@@ -1002,6 +978,12 @@ rf.graph.table(LG.f2.A10)
 par(mfrow=c(1,1))
 draw.map(LG.f2.A10, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C01.Rdata")
+LG.f2.C01 <- make.seq(LG.f2.ord.C01) 
+LG.f2.C01
+rf.graph.table(LG.f2.C01) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 ```
 
 
