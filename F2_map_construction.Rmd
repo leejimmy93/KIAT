@@ -246,7 +246,7 @@ LG1.f2.ord
 
 # safe mode order (safe order should be recommended because we have enough marker here)
 LG1.f2.safe <- make.seq(LG1.f2.ord, "safe")
-LG1.f2.safe
+LG1.f2.safe 
 # all order
 LG1.f2.final <- make.seq(LG1.f2.ord, "force") 
 LG1.f2.final
@@ -257,7 +257,7 @@ ripple.seq(LG1.f2.final, ws = 5, LOD = 6)
 #########
 ###### don't consider mapping postion at all
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/LG.f2.ord.A01.Rdata")
-LG.f2.ord.A01
+LG.f2.ord.A01 
 
 # set map function 
 set.map.fun(type="kosambi")
@@ -340,15 +340,6 @@ LG.f2.A02.final <- make.seq(LG.f2.ord.A02, "force")
 LG.f2.A02.final
 rf.graph.table(LG.f2.A02.final) 
 draw.map(LG.f2.A02.final, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
-
-### remove markers with double crossover 
-LG.f2.A02.final$seq.num
-
-
-
-
-
-
 
 # ripple
 ripple.seq(LG.f2.A02.final, ws = 5, LOD = 6) 
@@ -914,82 +905,167 @@ LG1.f2.final
 ripple.seq(LG1.f2.final, ws = 5, LOD = 3) 
 ``` 
 
-
+# just export the orignal order 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A01.Rdata")
-LG.f2.A01 <- make.seq(LG.f2.ord.A01) 
-LG.f2.A01
-rf.graph.table(LG.f2.A01) 
+LG.f2.A01.force <- make.seq(LG.f2.ord.A01, "force") 
+LG.f2.A01.force
+rf.graph.table(LG.f2.A01.force) 
 par(mfrow=c(1,1))
-draw.map(LG.f2.A01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+draw.map(LG.f2.A01.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A02.Rdata")
+LG.f2.A02.force <- make.seq(LG.f2.ord.A02, "force") 
+rf.graph.table(LG.f2.A02.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.A02.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A03.Rdata")
-LG.f2.A03 <- make.seq(LG.f2.ord.A03) 
-LG.f2.A03
-rf.graph.table(LG.f2.A03) 
+LG.f2.A03.force <- make.seq(LG.f2.ord.A03, "force") 
+rf.graph.table(LG.f2.A03.force) 
 par(mfrow=c(1,1))
-draw.map(LG.f2.A02, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+draw.map(LG.f2.A02.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A04.Rdata")
-LG.f2.A04 <- make.seq(LG.f2.ord.A04) 
-LG.f2.A04
-rf.graph.table(LG.f2.A04) 
+LG.f2.A04.force <- make.seq(LG.f2.ord.A04, "force") 
+rf.graph.table(LG.f2.A04.force) 
 par(mfrow=c(1,1))
-draw.map(LG.f2.A04, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+draw.map(LG.f2.A04.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A05.Rdata")
-LG.f2.A05 <- make.seq(LG.f2.ord.A05) 
-LG.f2.A05
-rf.graph.table(LG.f2.A05) 
+LG.f2.A05.force <- make.seq(LG.f2.ord.A05, "force") 
+rf.graph.table(LG.f2.A05.force) 
 par(mfrow=c(1,1))
-draw.map(LG.f2.A05, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+draw.map(LG.f2.A05.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A06.Rdata")
-LG.f2.A06 <- make.seq(LG.f2.ord.A06) 
-LG.f2.A06
-rf.graph.table(LG.f2.A06) 
+LG.f2.A06.force <- make.seq(LG.f2.ord.A06, "force") 
+LG.f2.A06.force
+rf.graph.table(LG.f2.A06.force) 
 par(mfrow=c(1,1))
-draw.map(LG.f2.A06, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+draw.map(LG.f2.A06.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A07.Rdata")
-LG.f2.A07 <- make.seq(LG.f2.ord.A07) 
-LG.f2.A07
-rf.graph.table(LG.f2.A07) 
+LG.f2.A07.force <- make.seq(LG.f2.ord.A07, "force") 
+rf.graph.table(LG.f2.A07.force) 
 par(mfrow=c(1,1))
-draw.map(LG.f2.A07, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+draw.map(LG.f2.A07.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A08.Rdata")
-LG.f2.A08 <- make.seq(LG.f2.ord.A08) 
-LG.f2.A08
-rf.graph.table(LG.f2.A08) 
+LG.f2.A08.force <- make.seq(LG.f2.ord.A08, "force") 
+rf.graph.table(LG.f2.A08.force) 
 par(mfrow=c(1,1))
-draw.map(LG.f2.A08, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+draw.map(LG.f2.A08.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A09.Rdata")
-LG.f2.A09 <- make.seq(LG.f2.ord.A09) 
-LG.f2.A09
-rf.graph.table(LG.f2.A09) 
+LG.f2.A09.force <- make.seq(LG.f2.ord.A09, "force") 
+rf.graph.table(LG.f2.A09.force) 
 par(mfrow=c(1,1))
-draw.map(LG.f2.A09, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+draw.map(LG.f2.A09.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A10.Rdata")
-LG.f2.A10 <- make.seq(LG.f2.ord.A10) 
-LG.f2.A10
-rf.graph.table(LG.f2.A10) 
+LG.f2.A10.force <- make.seq(LG.f2.ord.A10, "force") 
+rf.graph.table(LG.f2.A10.force) 
 par(mfrow=c(1,1))
-draw.map(LG.f2.A10, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+draw.map(LG.f2.A10.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C01.Rdata")
-LG.f2.C01 <- make.seq(LG.f2.ord.C01) 
-LG.f2.C01
-rf.graph.table(LG.f2.C01) 
-par(mfrow=c(1,1))
-draw.map(LG.f2.C01, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+maps <- list(LG.f2.A01.force, LG.f2.A02.force, LG.f2.A03.force, LG.f2.A04.force, LG.f2.A05.force, LG.f2.A06.force, LG.f2.A07.force, LG.f2.A08.force, LG.f2.A09.force, LG.f2.A10.force)
+draw.map(maps, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal = T) 
 
-maps <- list(LG.f2.A07, LG.f2.A08, LG.f2.A09)
-draw.map(maps, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75) 
-
+write.map(maps, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/map.onemap.1st.map")
 ```
+
+########### R/qtl ######################## 
+Because I didn't see much potential in using one map to build a reasonable map, I decide to use R/qtl to build the map 
+
+# install & import libs
+```{r}
+library("qtl")
+```
+
+# import data 
+```{r}
+map.F2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/map.onemap.1st.map")
+
+# newmap <- est.map(map.F2, tol=1e-6, map.function="kosambi") 
+# newmap doesn't look better at all 
+```
+
+# a bunch of checks in R/qtl 
+```{r}
+summary(map.F2)
+
+# 1) segregation distortion 
+test <- geno.table(map.F2)
+test[test$P.value < 0.01,]
+
+# 2) compare individual's genotype similarity. Assumption: no two individuals with very similary genotypes
+cg <- comparegeno(map.F2) 
+dim(cg) 
+hist(cg, breaks = 200,
+     xlab="Proportion of identical genotypes")
+rug(cg)
+which(cg >0.9, arr.ind = TRUE) # no individuals with high genotype similarities
+
+# No apparent problem, make a plot to see the data
+plot.rf(map.F2, col.scheme = "redblue", alternate.chrid = T)
+
+# looks like they are on the right chromosomes but wrong order within each chromosome
+
+# estimate the genetic map
+nm <- est.map(map.F2)
+plot(nm, alternate.chrid = T) 
+pull.map(cross_m, chr = c("A03","A05")) # longer length was plot than what was indicated in the data? 
+pull.map(cross_m) 
+```
+
+# check double cross over 
+```{r}
+cross.drop.marker <- map.F2
+
+for (chr in names(cross.drop.marker$geno)) { # for each chromosome in cross genotype data
+  my.chr <- get(chr,cross.drop.marker$geno) # return the genotype data, including data & map
+  print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+  if(ncol(my.chr$data) > 3) { 
+    my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+      apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+        if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+        if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+        if ( length(unique(gt))  == 3) return(NA)
+        return(gt[2])
+      })
+    })
+  }
+  cross.drop.marker$geno <- within(cross.drop.marker$geno,assign(chr,my.chr))
+  print(paste(chr,"NA after",sum(is.na(get(chr,cross.drop.marker$geno)$data))))
+} 
+
+write.csv(pull.geno(cross.drop.marker),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/cross.drop.marker.csv")
+
+newmap.drop.marker <- est.map(cross.drop.marker,verbose=T,error.prob=.01) # why going through 
+# the last section of code doesn't assign new map 
+plot.map(map.F2, alternate.chrid = T) # the old genetic map
+plot.map(map.F2,newmap.drop.marker, alternate.chrid = T) # genetic map comparison
+
+geno.image(cross.drop.marker, alternate.chrid = T) # grid with color pixels for different genotypes
+
+save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

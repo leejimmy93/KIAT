@@ -10,8 +10,115 @@ Goal: Shinje mentioned that Da-Ae went through 6 generations of selfing but she 
 # data 
 I use flowering data for this anaysis 
 ```{r}
-
-
-
-
+# https://github.com/leejimmy93/KIAT/blob/master/SNP_calling_Ae_flowering_combined_withGQ.sh
+# https://github.com/leejimmy93/KIAT/blob/master/SNP_calling_Ae_flowering_seperate_withGQ.sh 
 ``` 
+
+# SNP filtering 
+```{r}
+# https://github.com/leejimmy93/KIAT/blob/master/filter_Ae_flowering.sh 
+```
+
+# analysis 
+import data 
+```{r}
+source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+
+# import 
+Ae_flowering_combined <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/Da-Ae_Da_Ol-1_heterzygosity_check/Ae_combined_filtered.recode.vcf", as.is=T,na.strings = ".:.:.:.:.:.:.")
+
+Ae_flowering_rep1 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/Da-Ae_Da_Ol-1_heterzygosity_check/6_filtered.recode.vcf", as.is = T, na.strings = ".:.:.:.:.:.:.")
+
+Ae_flowering_rep2 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/Da-Ae_Da_Ol-1_heterzygosity_check/Ae_Gae_2_filtered.recode.vcf", as.is = T, na.strings = ".:.:.:.:.:.:.")
+
+Ae_flowering_rep3 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/Da-Ae_Da_Ol-1_heterzygosity_check/Ae_Gae_3_filtered.recode.vcf", as.is = T, na.strings = ".:.:.:.:.:.:.")
+
+dim(Ae_flowering_combined); dim(Ae_flowering_rep1); dim(Ae_flowering_rep2); dim(Ae_flowering_rep3)
+# [1] 145556     10
+# [1] 82117    10
+# [1] 62509    10
+# [1] 52531    10
+
+head(Ae_flowering_combined)
+```
+
+reformat data 
+```{r}
+####### function ######################################
+SNP.freebayes.reformat.Ae <- function(vcf, vcf.header){ 
+  colnames(vcf) <- vcf.header
+  head(vcf)
+  colnames(vcf)[10] <- "Ae"
+  
+  vcf$Ae[is.na(vcf$Ae)] <- "NA:NA:NA:NA:NA:NA:NA"
+  
+  Ae.tmp.unique <- matrix(
+    unlist(strsplit(vcf$Ae,split = ":")),
+    nrow=nrow(vcf),  
+    byrow=TRUE
+  )
+  
+  colnames(Ae.tmp.unique) <- paste("Ae",c("gt", "gt.qual", "tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+  
+  vcf.reform <- cbind(vcf,Ae.tmp.unique,stringsAsFactors=FALSE)
+  
+  vcf.reform[,c("Ae_tot.depth","Ae_gt.qual","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual")] <- 
+    apply(vcf.reform[,c("Ae_tot.depth","Ae_gt.qual","Ae_ref.depth","Ae_ref.qual","Ae_alt.depth","Ae_alt.qual")],
+          2,
+          as.numeric) 
+  
+return(vcf.reform)
+  }
+
+###################################################
+
+# combined 
+# get header 
+header.combined <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/Da-Ae_Da_Ol-1_heterzygosity_check/Ae_combined_filtered.recode.vcf",intern = TRUE) 
+header.combined <- sub("#","",header.combined) #get rid of the pound sign
+header.combined <- unlist(strsplit(header.combined,split="\t"))
+header.combined
+
+# use function to reformat vcf file 
+Ae_flowering_combined.reform <- SNP.freebayes.reformat.Ae(vcf = Ae_flowering_combined, vcf.header = header.combined)
+dim(Ae_flowering_combined.reform) # 145556     18    
+table(Ae_flowering_combined.reform$Ae_gt)
+
+# rep1 
+# get header 
+header.rep1 <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/Da-Ae_Da_Ol-1_heterzygosity_check/6_filtered.recode.vcf",intern = TRUE) 
+header.rep1 <- sub("#","",header.rep1) #get rid of the pound sign
+header.rep1 <- unlist(strsplit(header.rep1,split="\t"))
+header.rep1
+
+# use function to reformat vcf file 
+Ae_flowering_rep1.reform <- SNP.freebayes.reformat.Ae(vcf = Ae_flowering_rep1, vcf.header = header.rep1)
+dim(Ae_flowering_rep1.reform) # 145556     18    
+table(Ae_flowering_rep1.reform$Ae_gt)
+
+# rep2 
+# get header 
+header.rep2 <- system("grep '#C'  ~/Desktop/Brassica_project/KIAT_RNA_seq/Da-Ae_Da_Ol-1_heterzygosity_check/Ae_Gae_2_filtered.recode.vcf",intern = TRUE) 
+header.rep2 <- sub("#","",header.rep2) #get rid of the pound sign
+header.rep2 <- unlist(strsplit(header.rep2,split="\t"))
+header.rep2
+
+# use function to reformat vcf file 
+Ae_flowering_rep2.reform <- SNP.freebayes.reformat.Ae(vcf = Ae_flowering_rep2, vcf.header = header.rep2)
+dim(Ae_flowering_rep2.reform) # 145556     18    
+table(Ae_flowering_rep2.reform$Ae_gt)
+
+# rep3 
+# get header 
+header.rep3 <- system("grep '#C' ~/Desktop/Brassica_project/KIAT_RNA_seq/Da-Ae_Da_Ol-1_heterzygosity_check/Ae_Gae_3_filtered.recode.vcf",intern = TRUE) 
+header.rep3 <- sub("#","",header.rep3) #get rid of the pound sign
+header.rep3 <- unlist(strsplit(header.rep3,split="\t"))
+header.rep3
+
+# use function to reformat vcf file 
+Ae_flowering_rep3.reform <- SNP.freebayes.reformat.Ae(vcf = Ae_flowering_rep3, vcf.header = header.rep3)
+dim(Ae_flowering_rep3.reform) # 145556     18    
+table(Ae_flowering_rep3.reform$Ae_gt)  
+```
+
+

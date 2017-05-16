@@ -516,7 +516,6 @@ SNP.freebayes.reformat.Ol <- function(vcf, vcf.header){
 ### with GQ 
 SNP.freebayes.reformat.Ae.GQ <- function(vcf, vcf.header){ 
   colnames(vcf) <- vcf.header
-  head(vcf)
   
   vcf$unknown[is.na(vcf$unknown)] <- "NA:NA:NA:NA:NA:NA:NA:NA:NA"
   

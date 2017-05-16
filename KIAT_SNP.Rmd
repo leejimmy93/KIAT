@@ -17,6 +17,7 @@ output:
 # 3) process raw vcf file
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/analysis/freebayes/process_vcf.sh 
 # 4) extract only SNPs 
+# extract_SNP.sh input.vcf output 
 
 # 5) get only biallelic SNPs 
 # extract_biallelic.sh input.vcf output.vcf 

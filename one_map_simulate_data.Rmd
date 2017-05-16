@@ -85,7 +85,7 @@ rf.graph.table(LG3.f2.wrong)
 temp.seq <- drop.marker(LG3.f2.wrong,38)
 temp.map <- map(temp.seq)
 temp.try <- try.seq(temp.map, 38, draw.try=TRUE)
-(LG3.f2.final<-make.seq(temp.try, 4))
+(LG3.f2.final<-make.seq(temp.try, 4)) 
 
 ```
 
