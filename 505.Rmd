@@ -1358,10 +1358,122 @@ gh.seed.bolt.table.wide.merge$Sample.ID
 colnames(gh.seed.bolt.table.wide.merge) <- c("SN", "Sample.ID", "No.of.sowing", "name", "bolting", "Erucic_acid", "Oil_content", "Oleic_acid", "flowing", "germination_rate", "No.of.germination.seeds", "No.of.sowing.seeds")
 
 head(gh.seed.bolt.table.wide.merge)
-gh.seed.bolt.table.wide.merge.t <- data.frame(t(gh.seed.bolt.table.wide.merge))
-head(gh.seed.bolt.table.wide.merge.t)
-colnames(gh.seed.bolt.table.wide.merge.t) <- gh.seed.bolt.table.wide.merge$Sample.ID
+vstMat.20gene.t <- data.frame(t(vstMat.20gene))
+vstMat.20gene.t$Sample.ID <- rownames(vstMat.20gene.t) 
+vstMat.20gene.t
 
+trait.gene <- merge(vstMat.20gene.t, gh.seed.bolt.table.wide.merge, by="Sample.ID")
+dim(trait.gene) # 94 32 
+summary(trait.gene)
+trait.gene.sub <- trait.gene[!is.na(trait.gene$Erucic_acid),]
+dim(trait.gene.sub)
+summary(trait.gene.sub) 
+
+colnames(trait.gene)
+
+# finally get to cor.test() part 
+# 1) get pearson correlation test result 
+pearson.estimate <- data.frame()
+
+for (i in 1:3){
+  for (j in 1:20){
+    pearson.estimate[i,j] <- cor(trait.gene.sub[,1+j], trait.gene.sub[,25+i])
+  }
+}
+
+pearson.estimate
+dim(pearson.estimate) # 3 20 
+rownames(pearson.estimate) <- colnames(trait.gene.sub)[26:28]
+colnames(pearson.estimate) <- colnames(trait.gene.sub)[2:21] 
+
+# how to get p-value all together 
+pearson.pvalue <- data.frame()
+tmp <- data.frame()
+
+for (i in 1:3){
+  for (j in 1:20){
+    tmp <- cor.test(trait.gene.sub[,1+j], trait.gene.sub[,25+i])
+    pearson.pvalue[i,j] <- tmp$p.value
+  }
+}
+
+pearson.pvalue
+dim(pearson.pvalue) # 3 20 
+rownames(pearson.pvalue) <- colnames(trait.gene.sub)[26:28]
+colnames(pearson.pvalue) <- colnames(trait.gene.sub)[2:21] 
+
+# reform for ggplot 
+pearson.estimate$trait <- rownames(pearson.estimate)
+pearson.estimate
+pearson.result <- melt(pearson.estimate, id.vars="trait") 
+pearson.result$pvalue <- as.data.frame(melt(pearson.pvalue))[,"value"]
+pearson.result$sig <- ifelse(pearson.result$pvalue < 0.05, "*", " ")
+pearson.result
+save(pearson.result, file="~/505/output/pearson.reult.Rdata")
+
+# 2) get spearman corrlelation test result 
+spearman.estimate <- data.frame()
+
+for (i in 1:3){
+  for (j in 1:20){
+    spearman.estimate[i,j] <- cor(trait.gene.sub[,1+j], trait.gene.sub[,25+i], method="spearman")
+  }
+}
+
+spearman.estimate
+dim(spearman.estimate) # 3 20 
+rownames(spearman.estimate) <- colnames(trait.gene.sub)[26:28]
+colnames(spearman.estimate) <- colnames(trait.gene.sub)[2:21] 
+
+# how to get p-value all together 
+spearman.pvalue <- data.frame()
+tmp <- data.frame()
+
+for (i in 1:3){
+  for (j in 1:20){
+    tmp <- cor.test(trait.gene.sub[,1+j], trait.gene.sub[,25+i], method="spearman")
+    spearman.pvalue[i,j] <- tmp$p.value
+  }
+}
+
+spearman.pvalue
+dim(spearman.pvalue) # 3 20 
+rownames(spearman.pvalue) <- colnames(trait.gene.sub)[26:28]
+colnames(spearman.pvalue) <- colnames(trait.gene.sub)[2:21] 
+
+# reform for ggplot 
+spearman.estimate$trait <- rownames(spearman.estimate)
+spearman.estimate
+spearman.result <- melt(spearman.estimate, id.vars="trait") 
+spearman.result$pvalue <- as.data.frame(melt(spearman.pvalue))[,"value"]
+spearman.result$sig <- ifelse(spearman.result$pvalue < 0.05, "*", " ")
+spearman.result
+save(spearman.result, file="~/505/output/spearman.reult.Rdata")
+
+# 3) get figure out 
+library(ggplot2)
+
+head(pearson.result)
+p.pearson <- ggplot(data=pearson.result) 
+p.pearson <- p.pearson + geom_col(aes(x=variable, y=value))
+p.pearson <- p.pearson + geom_text(aes(x=variable, y=value, label=sig), col="red", size=5, position=position_dodge(width=1))
+p.pearson <- p.pearson + facet_grid(trait ~ variable)
+p.pearson <- p.pearson + geom_hline(yintercept=0)
+p.pearson <- p.pearson + labs(x="", y="pearson corrlelation value") 
+p.pearson 
+
+ggsave(p.pearson, filename="~/505/output/figure/p.pearson.png", width=22, height=7)  
+
+head(pearson.result)
+p.spearman <- ggplot(data=spearman.result) 
+p.spearman <- p.spearman + geom_col(aes(x=variable, y=value))
+p.spearman <- p.spearman + geom_text(aes(x=variable, y=value, label=sig), col="red", size=5, position=position_dodge(width=1))
+p.spearman <- p.spearman + facet_grid(trait ~ variable)
+p.spearman <- p.spearman + geom_hline(yintercept=0)
+p.spearman <- p.spearman + labs(x="", y="spearman corrlelation value") 
+p.spearman 
+
+ggsave(p.spearman, filename="~/505/output/figure/p.spearman.png", width=22, height=7)
 ```
 
 # SNP annotation for significant SNPs 
