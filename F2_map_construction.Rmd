@@ -17,6 +17,7 @@ library(tkrplot)
 library(onemap)  
 library(ggplot2)
 library(reshape) 
+# library(tidyverse) 
 ```
 
 # import & format data (MAC version)
@@ -30,7 +31,7 @@ rownames(F2_geno_data) <- paste(F2_geno_data$CHROM, F2_geno_data$POS, sep = "_")
 F2_geno_data <- F2_geno_data[, -c(1:6)]
 dim(F2_geno_data) # 18226   166 
 colnames(F2_geno_data) <- gsub("([[:print:]]+)(\\.)([[:digit:]])", "\\3", colnames(F2_geno_data))
-head(F2_geno_data)  
+colnames(F2_geno_data)  
 ```
 
 # check missing rate & remove data with high missing rate above 0.85 
@@ -38,7 +39,7 @@ head(F2_geno_data)
 F2_geno_data_with_missing_rate <- mutate(F2_geno_data, 
        missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/94, 2))
 
-rownames(F2_geno_data_with_missing_rate) <- rownames(F2_geno_data)
+rownames(F2_geno_data_with_missing_rate) <- rownames(F2_geno_data) 
 hist(F2_geno_data_with_missing_rate$missing_rate)
 max(F2_geno_data_with_missing_rate$missing_rate) # 0.83, the highest missing rate is 0.83 
 
@@ -144,7 +145,7 @@ write.table(rownames(F2_geno_data_2), file = "~/Desktop/Brassica_project/KIAT_RN
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt 
 ```
 
-# calculate two point rf & assign to linkage groups (on whitney)
+# calculate two point rf & assign to linkage groups (on whitney) 
 ```{r}
 # F2_map_construction_LOD3_rf0.5_missing_0.15.R 
 # scp rf.Rdata to my MAC
@@ -156,9 +157,9 @@ write.table(rownames(F2_geno_data_2), file = "~/Desktop/Brassica_project/KIAT_RN
 # get the number of markers for each chromosome 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
 dim(F2_geno_data_2) # 2932 166
-head(F2_geno_data_2) 
+head(F2_geno_data_2)  
 
-F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2))
+F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2)) 
 F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2)) 
 F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
 
@@ -353,7 +354,21 @@ LG.f2.arbi.A02
 LG.f2.arbi.A02.map <- map(LG.f2.arbi.A02)  
 rf.graph.table(LG.f2.arbi.A02.map) 
 
-draw.map(LG.f2.arbi.A02.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)   
+draw.map(LG.f2.arbi.A02.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+
+#####
+mark.f2.A02 <- make.seq(twopts.f2.05.12, 193:270)
+LG.f2.ord.A02.1 <- order.seq(input.seq = mark.f2.A02, n.init = 5,
+                        subset.search = "twopt",
+                        twopt.alg = "rcd", THRES = 7,
+                        draw.try = T, wait = 1
+                        )
+
+LG.f2.A02.2 <- make.seq(LG.f2.ord.A02.1, "safe")
+LG.f2.A02.2
+rf.graph.table(LG.f2.A02)  
+draw.map(LG.f2.A02.2, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+
 ```
 
 ```{r}
@@ -568,18 +583,6 @@ draw.map(LG.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizo
 
 # set map function 
 set.map.fun(type = "haldane") 
-
-########## the previous one 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_before_filter/twopts.f2.04.21.Rdata")
-F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_before_filter/F2_geno_for_one_map_final.txt")
-
-max(order[[11]])
-
-LG.f2.arbi.C01 <- make.seq(twopts.f2.LOD3_rf0.5, order[[11]])
-LG.f2.arbi.C01 
-LG.f2.arbi.C01.map <- map(LG.f2.arbi.C01)
-rf.graph.table(LG1.f2.arbi.C01.map) 
-
 ```
 
 ```{r}
@@ -907,6 +910,22 @@ ripple.seq(LG1.f2.final, ws = 5, LOD = 3)
 
 # just export the orignal order 
 ```{r}
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
+F2.data 
+# This is an object of class 'f2.onemap'
+#     No. individuals:     166 
+#     No. markers:         2932 
+#     Percent genotyped:   96 
+# 
+#     Number of markers per type:
+#        AA : AB : BB -->  2932
+# 
+# This data contains no phenotypic information
+
+# two-point rf data  
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
+
+####### A subgenome ############### 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A01.Rdata")
 LG.f2.A01.force <- make.seq(LG.f2.ord.A01, "force") 
 LG.f2.A01.force
@@ -969,10 +988,77 @@ rf.graph.table(LG.f2.A10.force)
 par(mfrow=c(1,1))
 draw.map(LG.f2.A10.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
-maps <- list(LG.f2.A01.force, LG.f2.A02.force, LG.f2.A03.force, LG.f2.A04.force, LG.f2.A05.force, LG.f2.A06.force, LG.f2.A07.force, LG.f2.A08.force, LG.f2.A09.force, LG.f2.A10.force)
-draw.map(maps, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal = T) 
+map.Asub <- list(LG.f2.A01.force, LG.f2.A02.force, LG.f2.A03.force, LG.f2.A04.force, LG.f2.A05.force, LG.f2.A06.force, LG.f2.A07.force, LG.f2.A08.force, LG.f2.A09.force, LG.f2.A10.force)
+draw.map(map.Asub, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal = T) 
 
-write.map(maps, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/map.onemap.1st.map")
+write.map(map.Asub, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/map.Asub.map")
+
+######## C subgenome #################
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C01.Rdata")
+LG.f2.C01.force <- make.seq(LG.f2.ord.C01, "force") 
+LG.f2.C01.force
+rf.graph.table(LG.f2.C01.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C01.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C02.Rdata")
+LG.f2.C02.force <- make.seq(LG.f2.ord.C02, "force") 
+rf.graph.table(LG.f2.C02.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C02.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C03.Rdata")
+LG.f2.C03.force <- make.seq(LG.f2.ord.C03, "force") 
+rf.graph.table(LG.f2.C03.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C03.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C04.Rdata")
+LG.f2.C04.force <- make.seq(LG.f2.ord.C04, "force") 
+rf.graph.table(LG.f2.C04.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C04.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C05.Rdata")
+LG.f2.C05.force <- make.seq(LG.f2.ord.C05, "force") 
+rf.graph.table(LG.f2.C05.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C05.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C06.Rdata")
+LG.f2.C06.force <- make.seq(LG.f2.ord.C06, "force") 
+LG.f2.C06.force
+rf.graph.table(LG.f2.C06.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C06.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C07.Rdata")
+LG.f2.C07.force <- make.seq(LG.f2.ord.C07, "force") 
+rf.graph.table(LG.f2.C07.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C07.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C08.Rdata")
+LG.f2.C08.force <- make.seq(LG.f2.ord.C08, "force") 
+rf.graph.table(LG.f2.C08.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C08.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C09.Rdata")
+LG.f2.C09.force <- make.seq(LG.f2.ord.C09, "force") 
+rf.graph.table(LG.f2.C09.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C09.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+map.Csub <- list(LG.f2.C01.force, LG.f2.C02.force, LG.f2.C03.force, LG.f2.C04.force, LG.f2.C05.force, LG.f2.C06.force, LG.f2.C07.force, LG.f2.C08.force, LG.f2.C09.force)
+draw.map(map.Csub, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal = T) 
+
+write.map(map.Csub, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/map.Csub.map") 
+
+map.AC <- list(LG.f2.A01.force, LG.f2.A02.force, LG.f2.A03.force, LG.f2.A04.force, LG.f2.A05.force, LG.f2.A06.force, LG.f2.A07.force, LG.f2.A08.force, LG.f2.A09.force, LG.f2.A10.force, LG.f2.C01.force, LG.f2.C02.force, LG.f2.C03.force, LG.f2.C04.force, LG.f2.C05.force, LG.f2.C06.force, LG.f2.C07.force, LG.f2.C08.force, LG.f2.C09.force)
+draw.map(map.AC, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal = T) 
+
+write.map(map.AC, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/map.AC.map") 
 ```
 
 ########### R/qtl ######################## 
@@ -994,10 +1080,28 @@ map.F2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/ou
 # a bunch of checks in R/qtl 
 ```{r}
 summary(map.F2)
+plotMap(map.F2)
+plot.rf(map.F2)
+
+totmar(map.F2)
 
 # 1) segregation distortion 
 test <- geno.table(map.F2)
-test[test$P.value < 0.01,]
+seg_dist <- test[test$P.value < 0.01,]
+seg_dist
+dim(seg_dist) # 246 markers 
+
+##### drop markers with segregation distortion 
+# map.F2.after.drop <- drop.marker(map.F2, rownames(seg_dist)) # doesn't work... 
+map.F2
+
+rffull.Asub <- pull.rf(map.F2)
+
+# work with each chromosome seperately 
+# plot.rf(map.F2, chr = "chrA02")
+rfA02 <- pull.rf(map.F2, chr = 'chrA02')
+chrA02 <- markernames(map.F2, chr = 'chrA02')
+chrA02
 
 # 2) compare individual's genotype similarity. Assumption: no two individuals with very similary genotypes
 cg <- comparegeno(map.F2) 

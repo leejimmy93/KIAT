@@ -751,5 +751,11 @@ merge(tmp, silique_sample, by="Name")[c(2,4),]
 # batch E 
 ```{r}
 # 1) download using 
+# 2) trimming
+# 3) mapping 
+# 4) Prep4Freebayes 
+
+# update tomorrow... 
+
 ```
 

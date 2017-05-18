@@ -257,6 +257,13 @@ mapping_Ol_mismatch0.sh
 
 3) /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/mapping_comparison_A_B_C_subgenome/mismatch_0/subset_by_chromosome.sh 
 
+# do the same thing for 505 
+for the late silique batchE, map to ABC genome... on cluster 
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array_ABC.slurm
+```{r}
+
+```
+
 
 
 

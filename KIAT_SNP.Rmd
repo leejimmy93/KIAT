@@ -165,7 +165,7 @@ head(vcf.freebayes.HQ.1.Ae)
 dim(vcf.freebayes.HQ.1.Ae) # 493019     67 
 vcf.freebayes.HQ.1.reform.Ae <- vcf.freebayes.HQ.1.Ae
 
-vcf.freebayes.HQ.1.reform.Ae$MAF_Ae <- round(pmin(vcf.freebayes.HQ.1.reform.Ae$Ae_alt.depth, vcf.freebayes.HQ.1.reform.Ae$Ae_ref.depth)/vcf.freebayes.HQ.1.reform.Ae$Ae_tot.depth, digits = 2) 
+vcf.freebayes.HQ.1.reform.Ae$MAF_Ae <- round(pmin(vcf.freebayes.HQ.1.reform.Ae$Ae_alt.depth,  vcf.freebayes.HQ.1.reform.Ae$Ae_ref.depth)/vcf.freebayes.HQ.1.reform.Ae$Ae_tot.depth, digits = 2) 
 
 hist(vcf.freebayes.HQ.1.reform.Ae$MAF_Ae)
 
