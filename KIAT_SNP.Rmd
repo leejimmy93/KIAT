@@ -2503,6 +2503,25 @@ write.csv(primer.F, "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/pri
 write.csv(primer.R, "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/primer_R.csv")
 ```
 
+Use Uprendra's data to try my pipeline 
+```{r}
+# 1) select data for STAR mapping, all I have is single end data 
+# dir=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_fall/BIS180L/trimming_mapping/split_fq 
+# data: IMB211_NDP_1_PETIOLE.fq; IMB211_NDP_2_PETIOLE.fq; IMB211_NDP_3_PETIOLE.fq; R500_NDP_1_PETIOLE.fq; R500_NDP_2_PETIOLE.fq; R500_NDP_3_PETIOLE.fq 
+
+# 2) build star genome of B.rapa 
+# download B.rapa v2.1 (PacBio data) tried to build star genome, but was limited by memory 
+# there is already a star genome built, maybe that one was based on V1.5??? 
+
+# combined fq data --> mapping use STAR 
+# 
+
+# prep4freebayes --> sort bam file --> SNP calling (final bam file should be sorted again, otherwise error !!!)
+
+
+
+
+```
 
 
 
