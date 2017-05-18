@@ -746,15 +746,17 @@ colnames(tmp)
 merge(tmp, leaf_sample, by="Name")[c(1,3),]
 merge(tmp, silique_sample, by="Name")[c(2,4),]
 ```
->>>>>>> 888fe76c262c8f444a8f405c486ff7390b20bcc3
 
 # batch E 
 ```{r}
-# 1) download using 
-# 2) trimming
+# 1) download using download_arry.slurm
+# 2) trimming https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/trimming.slurm
+# pay attention to number of cores and time, sometimes jobs can be cancled due to limited memory or time 
 # 3) mapping 
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array.slurm
 # 4) Prep4Freebayes 
-
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array.slurm
+# remember to import bamaddrg to the environment before running the script 
 # update tomorrow... 
 
 ```
