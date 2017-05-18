@@ -2518,11 +2518,63 @@ Use Uprendra's data to try my pipeline
 
 # prep4freebayes --> sort bam file --> SNP calling (final bam file should be sorted again, otherwise error !!!)
 
+######## analyze vcf result 
+# import data 
+R500_IMB211 <- read.table("~/SNP_parent/Upendra_data/R500_IMB211_filtered.vcf", as.is=T, na.strings=".")
+dim(R500_IMB211)
+head(R500_IMB211)
 
+# get header 
+header <- system("grep '#C' ~/SNP_parent/Upendra_data/R500_IMB211.vcf",intern = TRUE) 
+header <- sub("#","",header) #get rid of the pound sign
+header <- unlist(strsplit(header,split="\t"))
+header
 
+####### reformat data 
+# function 
+SNP.freebayes.reformat <- function(vcf, vcf.header){ 
+  colnames(vcf) <- vcf.header
+  
+  vcf$R500[is.na(vcf$R500)] <- "NA:NA:NA:NA:NA:NA:NA:NA"
+  vcf$IMB211[is.na(vcf$IMB211)] <- "NA:NA:NA:NA:NA:NA:NA:NA"
+  
+  R500.tmp.unique <- matrix(
+    unlist(strsplit(vcf$R500,split = ":")),
+    nrow=nrow(vcf),  
+    byrow=TRUE
+  )
 
+  IMB211.tmp.unique <- matrix(
+    unlist(strsplit(vcf$IMB211,split = ":")),
+    nrow=nrow(vcf),  
+    byrow=TRUE
+  ) 
+  
+  colnames(R500.tmp.unique) <- paste("R500",c("gt", "gt.qual", "tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+  colnames(IMB211.tmp.unique) <- paste("IMB211",c("gt", "gt.qual", "tot.depth","ref.depth","ref.qual","alt.depth","alt.qual","gen.lik"),sep="_")
+  
+  vcf.reform <- cbind(vcf,R500.tmp.unique,IMB211.tmp.unique,stringsAsFactors=FALSE)
+  
+  vcf.reform[,c("R500_tot.depth","R500_gt.qual","R500_ref.depth","R500_ref.qual","R500_alt.depth","R500_alt.qual")] <- 
+    apply(vcf.reform[,c("R500_tot.depth","R500_gt.qual","R500_ref.depth","R500_ref.qual","R500_alt.depth","R500_alt.qual")],
+          2,
+          as.numeric) 
+  
+  vcf.reform[,c("IMB211_tot.depth","IMB211_gt.qual","IMB211_ref.depth","IMB211_ref.qual","IMB211_alt.depth","IMB211_alt.qual")] <- 
+    apply(vcf.reform[,c("IMB211_tot.depth","IMB211_gt.qual","IMB211_ref.depth","IMB211_ref.qual","IMB211_alt.depth","IMB211_alt.qual")],
+          2,
+          as.numeric) 
+  
+return(vcf.reform)
+  } 
+
+#########
+
+R500_IMB211.reform <- SNP.freebayes.reformat(vcf = R500_IMB211, vcf.header = header)
+dim(R500_IMB211.reform) # 145556     18    
+table(R500_IMB211.reform$R500_gt) 
+table(R500_IMB211.reform$IMB211_gt)    
 ```
-
 
 
 

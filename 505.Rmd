@@ -1227,19 +1227,14 @@ write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/50
 # as a summary, 24 out of the 28 SNPs fall within genes, 23 of them have arabidopsis homologs.
 ```
 
-<<<<<<< HEAD
 # for the several significant SNPs, are they synonymous or not? what's the possible effect on the protein function? 
 ```{r}
 # SNP annotation 
 # java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted_ann.vcf
 
-# 
-
-
 ```
 
 
-=======
 # 108, 109, and 88 phenotype data 
 >>>>>>> c7ffd0e697012c8c12719f56a29fdaf86ba41434
 ```{r}
@@ -1268,6 +1263,7 @@ read.count.sample
 # filter based on read count
 read.count.small <- read.count[rowSums(read.count > 10) >= 3,]
 dim(read.count.small) # 53824    94  
+save(read.count.small, file="~/505/output/leaf/read.count.small.Rdata")
 
 # normalize 
 dge.read.count <- DGEList(counts=read.count.small, group=read.count.small$group)
@@ -1324,23 +1320,163 @@ dim(DEgene.505) # 53824
 # source("http://bioconductor.org/biocLite.R")
 # biocLite("DESeq2")
 library("DESeq2")  
+load("~/505/output/leaf/read.count.small.Rdata")
 
+dds.505.leaf <- DESeqDataSetFromMatrix(countData = round(read.count.small), colData = read.count.sample, design = ~0+group)
 
+vsd.505.leaf <- varianceStabilizingTransformation(dds.505.leaf)
+vstMat.505.leaf <- assay(vsd.505.leaf)
+colnames(vstMat.505.leaf) <- colnames(read.count.small)
+# save(vstMat.505.leaf, file = "~/505/output/leaf/vstMat.505.leaf.Rdata")
+load("~/505/output/leaf/vstMat.505.leaf.Rdata")
 
+colnames(vstMat.505.leaf) <- gsub("Sample_", "", colnames(vstMat.505.leaf))
+colnames(vstMat.505.leaf) <- gsub("\\.", "\\-", colnames(vstMat.505.leaf))
+colnames(vstMat.505.leaf)
 
-## pull out the TMM normalized expression value for the 20 unique genes 
+## pull out the vst transformed expression value for the 20 unique genes 
 SNP.gene.fxn <-read.csv("~/505/output/leaf/GWAS_SNP_gene_fxn.csv", header=T)
-SNP.gene.fxn 
-# how to look at the result? categorize trait into categorical value? and compare between categories?
-tmp <- as.data.frame(dge.read.count$counts[which(rownames(dge.read.count$counts) %in% SNP.gene.fxn$gene_ID),])
-tmp2 <- read.count.small[which(rownames(read.count.small) %in% SNP.gene.fxn$gene_ID),]
-dim(tmp2)
-length(unique(SNP.gene.fxn$gene_ID)) 
+vstMat.20gene <- as.data.frame(vstMat.505.leaf[which(rownames(vstMat.505.leaf) %in% SNP.gene.fxn$gene_ID),])
+dim(vstMat.20gene) # 20 94 
+head(vstMat.20gene)
 
+# get the phenotypic trait values 
+load("~/505/data/phenotype/gh.seed.bolt.table.wide.Rdata")
+sample_des_revised.leaf
+gh.seed.bolt.table.wide
 
+sample_des_a_sub2 <- sample_des_a_revised[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_a_sub2 <- sample_des_a_sub2[!is.na(sample_des_a_sub2$Sample.ID),]
+sample_des_b_sub2 <- sample_des_b_revised[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_sub2 <- rbind(sample_des_a_sub2, sample_des_b_sub2)
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
 
+sample_des_sub2$SN
+gh.seed.bolt.table.wide.merge <- merge(sample_des_sub2, gh.seed.bolt.table.wide, by = "SN")
+gh.seed.bolt.table.wide.merge$Sample.ID
 
+colnames(gh.seed.bolt.table.wide.merge) <- c("SN", "Sample.ID", "No.of.sowing", "name", "bolting", "Erucic_acid", "Oil_content", "Oleic_acid", "flowing", "germination_rate", "No.of.germination.seeds", "No.of.sowing.seeds")
 
+head(gh.seed.bolt.table.wide.merge)
+vstMat.20gene.t <- data.frame(t(vstMat.20gene))
+vstMat.20gene.t$Sample.ID <- rownames(vstMat.20gene.t) 
+vstMat.20gene.t
+
+trait.gene <- merge(vstMat.20gene.t, gh.seed.bolt.table.wide.merge, by="Sample.ID")
+dim(trait.gene) # 94 32 
+summary(trait.gene)
+trait.gene.sub <- trait.gene[!is.na(trait.gene$Erucic_acid),]
+dim(trait.gene.sub)
+summary(trait.gene.sub) 
+
+colnames(trait.gene)
+
+# finally get to cor.test() part 
+# 1) get pearson correlation test result 
+pearson.estimate <- data.frame()
+
+for (i in 1:3){
+  for (j in 1:20){
+    pearson.estimate[i,j] <- cor(trait.gene.sub[,1+j], trait.gene.sub[,25+i])
+  }
+}
+
+pearson.estimate
+dim(pearson.estimate) # 3 20 
+rownames(pearson.estimate) <- colnames(trait.gene.sub)[26:28]
+colnames(pearson.estimate) <- colnames(trait.gene.sub)[2:21] 
+
+# how to get p-value all together 
+pearson.pvalue <- data.frame()
+tmp <- data.frame()
+
+for (i in 1:3){
+  for (j in 1:20){
+    tmp <- cor.test(trait.gene.sub[,1+j], trait.gene.sub[,25+i])
+    pearson.pvalue[i,j] <- tmp$p.value
+  }
+}
+
+<<<<<<< HEAD
+=======
+pearson.pvalue
+dim(pearson.pvalue) # 3 20 
+rownames(pearson.pvalue) <- colnames(trait.gene.sub)[26:28]
+colnames(pearson.pvalue) <- colnames(trait.gene.sub)[2:21] 
+
+# reform for ggplot 
+pearson.estimate$trait <- rownames(pearson.estimate)
+pearson.estimate
+pearson.result <- melt(pearson.estimate, id.vars="trait") 
+pearson.result$pvalue <- as.data.frame(melt(pearson.pvalue))[,"value"]
+pearson.result$sig <- ifelse(pearson.result$pvalue < 0.05, "*", " ")
+pearson.result
+save(pearson.result, file="~/505/output/pearson.reult.Rdata")
+
+# 2) get spearman corrlelation test result 
+spearman.estimate <- data.frame()
+
+for (i in 1:3){
+  for (j in 1:20){
+    spearman.estimate[i,j] <- cor(trait.gene.sub[,1+j], trait.gene.sub[,25+i], method="spearman")
+  }
+}
+
+spearman.estimate
+dim(spearman.estimate) # 3 20 
+rownames(spearman.estimate) <- colnames(trait.gene.sub)[26:28]
+colnames(spearman.estimate) <- colnames(trait.gene.sub)[2:21] 
+
+# how to get p-value all together 
+spearman.pvalue <- data.frame()
+tmp <- data.frame()
+
+for (i in 1:3){
+  for (j in 1:20){
+    tmp <- cor.test(trait.gene.sub[,1+j], trait.gene.sub[,25+i], method="spearman")
+    spearman.pvalue[i,j] <- tmp$p.value
+  }
+}
+
+spearman.pvalue
+dim(spearman.pvalue) # 3 20 
+rownames(spearman.pvalue) <- colnames(trait.gene.sub)[26:28]
+colnames(spearman.pvalue) <- colnames(trait.gene.sub)[2:21] 
+
+# reform for ggplot 
+spearman.estimate$trait <- rownames(spearman.estimate)
+spearman.estimate
+spearman.result <- melt(spearman.estimate, id.vars="trait") 
+spearman.result$pvalue <- as.data.frame(melt(spearman.pvalue))[,"value"]
+spearman.result$sig <- ifelse(spearman.result$pvalue < 0.05, "*", " ")
+spearman.result
+save(spearman.result, file="~/505/output/spearman.reult.Rdata")
+
+# 3) get figure out 
+library(ggplot2)
+
+head(pearson.result)
+p.pearson <- ggplot(data=pearson.result) 
+p.pearson <- p.pearson + geom_col(aes(x=variable, y=value))
+p.pearson <- p.pearson + geom_text(aes(x=variable, y=value, label=sig), col="red", size=5, position=position_dodge(width=1))
+p.pearson <- p.pearson + facet_grid(trait ~ variable)
+p.pearson <- p.pearson + geom_hline(yintercept=0)
+p.pearson <- p.pearson + labs(x="", y="pearson corrlelation value") 
+p.pearson 
+
+ggsave(p.pearson, filename="~/505/output/figure/p.pearson.png", width=22, height=7)  
+
+head(pearson.result)
+p.spearman <- ggplot(data=spearman.result) 
+p.spearman <- p.spearman + geom_col(aes(x=variable, y=value))
+p.spearman <- p.spearman + geom_text(aes(x=variable, y=value, label=sig), col="red", size=5, position=position_dodge(width=1))
+p.spearman <- p.spearman + facet_grid(trait ~ variable)
+p.spearman <- p.spearman + geom_hline(yintercept=0)
+p.spearman <- p.spearman + labs(x="", y="spearman corrlelation value") 
+p.spearman 
+
+ggsave(p.spearman, filename="~/505/output/figure/p.spearman.png", width=22, height=7)
+>>>>>>> 3c6d53514e89c8ceb44298a94bd32e1e164469fe
 ```
 
 # SNP annotation for significant SNPs 
@@ -1349,10 +1485,8 @@ annotation.28SNP <- read.table("~/505/vcf_leaf_no_pop/combined/missing_0.5/sinig
 dim(annotation.28SNP)
 
 annotation.28SNP.sub <- annotation.28SNP[,c(1:8)] 
-<<<<<<< HEAD
-=======
-
->>>>>>> 3cb176ca171dbf9c518ad9f860c62f4f7d2f6dc2
+annotation.28SNP.sub
+filter(annotation.28SNP, V3=="SC09_19073712") %>% select(V8) 
 ```
 
 ```{r}
