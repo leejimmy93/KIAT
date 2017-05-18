@@ -1341,7 +1341,6 @@ length(unique(SNP.gene.fxn$gene_ID))
 
 
 
-
 ```
 
 # SNP annotation for significant SNPs 
@@ -1354,6 +1353,14 @@ annotation.28SNP.sub <- annotation.28SNP[,c(1:8)]
 =======
 
 >>>>>>> 3cb176ca171dbf9c518ad9f860c62f4f7d2f6dc2
+```
+
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/pearson.reult.Rdata")
+pearson.result
+p.pearson <- ggplot(data = pearson.result)
+p.pearson <- 
+
 ```
 
 
