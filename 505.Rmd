@@ -1227,19 +1227,14 @@ write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/50
 # as a summary, 24 out of the 28 SNPs fall within genes, 23 of them have arabidopsis homologs.
 ```
 
-<<<<<<< HEAD
 # for the several significant SNPs, are they synonymous or not? what's the possible effect on the protein function? 
 ```{r}
 # SNP annotation 
 # java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted_ann.vcf
 
-# 
-
-
 ```
 
 
-=======
 # 108, 109, and 88 phenotype data 
 >>>>>>> c7ffd0e697012c8c12719f56a29fdaf86ba41434
 ```{r}
@@ -1268,6 +1263,7 @@ read.count.sample
 # filter based on read count
 read.count.small <- read.count[rowSums(read.count > 10) >= 3,]
 dim(read.count.small) # 53824    94  
+save(read.count.small, file="~/505/output/leaf/read.count.small.Rdata")
 
 # normalize 
 dge.read.count <- DGEList(counts=read.count.small, group=read.count.small$group)
@@ -1324,23 +1320,47 @@ dim(DEgene.505) # 53824
 # source("http://bioconductor.org/biocLite.R")
 # biocLite("DESeq2")
 library("DESeq2")  
+load("~/505/output/leaf/read.count.small.Rdata")
 
+dds.505.leaf <- DESeqDataSetFromMatrix(countData = round(read.count.small), colData = read.count.sample, design = ~0+group)
 
+vsd.505.leaf <- varianceStabilizingTransformation(dds.505.leaf)
+vstMat.505.leaf <- assay(vsd.505.leaf)
+colnames(vstMat.505.leaf) <- colnames(read.count.small)
+# save(vstMat.505.leaf, file = "~/505/output/leaf/vstMat.505.leaf.Rdata")
+load("~/505/output/leaf/vstMat.505.leaf.Rdata")
 
+colnames(vstMat.505.leaf) <- gsub("Sample_", "", colnames(vstMat.505.leaf))
+colnames(vstMat.505.leaf) <- gsub("\\.", "\\-", colnames(vstMat.505.leaf))
+colnames(vstMat.505.leaf)
 
-## pull out the TMM normalized expression value for the 20 unique genes 
+## pull out the vst transformed expression value for the 20 unique genes 
 SNP.gene.fxn <-read.csv("~/505/output/leaf/GWAS_SNP_gene_fxn.csv", header=T)
-SNP.gene.fxn 
-# how to look at the result? categorize trait into categorical value? and compare between categories?
-tmp <- as.data.frame(dge.read.count$counts[which(rownames(dge.read.count$counts) %in% SNP.gene.fxn$gene_ID),])
-tmp2 <- read.count.small[which(rownames(read.count.small) %in% SNP.gene.fxn$gene_ID),]
-dim(tmp2)
-length(unique(SNP.gene.fxn$gene_ID)) 
+vstMat.20gene <- as.data.frame(vstMat.505.leaf[which(rownames(vstMat.505.leaf) %in% SNP.gene.fxn$gene_ID),])
+dim(vstMat.20gene) # 20 94 
+head(vstMat.20gene)
 
+# get the phenotypic trait values 
+load("~/505/data/phenotype/gh.seed.bolt.table.wide.Rdata")
+sample_des_revised.leaf
+gh.seed.bolt.table.wide
 
+sample_des_a_sub2 <- sample_des_a_revised[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_a_sub2 <- sample_des_a_sub2[!is.na(sample_des_a_sub2$Sample.ID),]
+sample_des_b_sub2 <- sample_des_b_revised[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_sub2 <- rbind(sample_des_a_sub2, sample_des_b_sub2)
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
 
+sample_des_sub2$SN
+gh.seed.bolt.table.wide.merge <- merge(sample_des_sub2, gh.seed.bolt.table.wide, by = "SN")
+gh.seed.bolt.table.wide.merge$Sample.ID
 
+colnames(gh.seed.bolt.table.wide.merge) <- c("SN", "Sample.ID", "No.of.sowing", "name", "bolting", "Erucic_acid", "Oil_content", "Oleic_acid", "flowing", "germination_rate", "No.of.germination.seeds", "No.of.sowing.seeds")
 
+head(gh.seed.bolt.table.wide.merge)
+gh.seed.bolt.table.wide.merge.t <- data.frame(t(gh.seed.bolt.table.wide.merge))
+head(gh.seed.bolt.table.wide.merge.t)
+colnames(gh.seed.bolt.table.wide.merge.t) <- gh.seed.bolt.table.wide.merge$Sample.ID
 
 ```
 
@@ -1350,10 +1370,8 @@ annotation.28SNP <- read.table("~/505/vcf_leaf_no_pop/combined/missing_0.5/sinig
 dim(annotation.28SNP)
 
 annotation.28SNP.sub <- annotation.28SNP[,c(1:8)] 
-<<<<<<< HEAD
-=======
-
->>>>>>> 3cb176ca171dbf9c518ad9f860c62f4f7d2f6dc2
+annotation.28SNP.sub
+filter(annotation.28SNP, V3=="SC09_19073712") %>% select(V8) 
 ```
 
 
