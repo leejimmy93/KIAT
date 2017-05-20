@@ -1349,7 +1349,7 @@ sample_des_a_sub2 <- sample_des_a_revised[,c("Sample.ID", "No..of.Sowing", "Name
 sample_des_a_sub2 <- sample_des_a_sub2[!is.na(sample_des_a_sub2$Sample.ID),]
 sample_des_b_sub2 <- sample_des_b_revised[,c("Sample.ID", "No..of.Sowing", "Name")]
 sample_des_sub2 <- rbind(sample_des_a_sub2, sample_des_b_sub2)
-sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="") 
 
 sample_des_sub2$SN
 gh.seed.bolt.table.wide.merge <- merge(sample_des_sub2, gh.seed.bolt.table.wide, by = "SN")
