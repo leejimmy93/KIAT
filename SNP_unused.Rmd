@@ -605,6 +605,8 @@ plot.w.ref.unique<-plot_grid(
 
 plot.w.ref.unique 
 save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/SNP_calling/output/Ae_Ol_ref", plot.w.ref, ncol = 1, nrow = 2,base_aspect_ratio = 0.8) 
+
+tmp <- cbind(index,findInterval(index$POS, bins))
 ```
 
 
