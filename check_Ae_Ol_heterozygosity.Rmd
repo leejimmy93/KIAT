@@ -226,7 +226,9 @@ Reads uniquely mapped to C subgenome:
 # For SNPs that are heterzygous in rep combined sample, what are their genotypes in the rep seperate samples. 
 ```{r}
 # keep only common SNPs for the 4 dataset (1 rep combined & 3 rep seperate samples)
+# https://github.com/leejimmy93/KIAT/blob/master/get_common_SNP.sh
 
+# analyze vcf file 
 
 
 
