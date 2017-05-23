@@ -223,4 +223,11 @@ Reads uniquely mapped to A subgenome:
 Reads uniquely mapped to C subgenome: 
 36,333,626
 
-The number of reads mapped to C subgenome is higher than expected.  
+# For SNPs that are heterzygous in rep combined sample, what are their genotypes in the rep seperate samples. 
+```{r}
+
+
+
+
+```
+

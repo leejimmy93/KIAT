@@ -757,7 +757,15 @@ merge(tmp, silique_sample, by="Name")[c(2,4),]
 # 4) Prep4Freebayes 
 # https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array.slurm
 # remember to import bamaddrg to the environment before running the script 
-# update tomorrow... 
+# 5) Split by chromosome
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Bam_Split_By_Chrom.slurm
+
+# 6) move file to the same directory where the previous 88 sample resides, however, because I sorted the bam file after extracting uniquely mapped reads for the 43 samples + sample-K88, Freebayes does not tolerate inconsistent order. Now re-run the 43 samples + sample-K88 using the same script for the 88 - sample-K88. 
+
+
+
+
+
 
 ```
 
