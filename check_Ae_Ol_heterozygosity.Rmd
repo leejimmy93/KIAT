@@ -228,8 +228,78 @@ Reads uniquely mapped to C subgenome:
 # keep only common SNPs for the 4 dataset (1 rep combined & 3 rep seperate samples)
 # https://github.com/leejimmy93/KIAT/blob/master/get_common_SNP.sh
 
-# analyze vcf file 
+# import into R, using vcfR for manipulation
+library("vcfR")
+library(tidyverse)
 
+Ae_Gae_1_common <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/6_commin.vcf.gz")
+Ae_Gae_2_common <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/Ae_Gae_2_commin.vcf.gz")
+Ae_Gae_3_common <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/Ae_Gae_3_commin.vcf.gz")
+Ae_combined <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/Ae_combined_commin.vcf.gz")
+
+# function 
+reform.vcf <- function(temp){
+  vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
+  vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
+  vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele
+  vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
+  vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
+  vcfgts <- subset(extract.gt(temp, element = "GT", IDtoRowNames = F), subset = vcfbi) 
+
+  temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
+  colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
+  rnames <- rownames(temp2)
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  row.names(temp2) <- rnames
+
+return(temp2) 
+}
+
+Ae_Gae_1_common.2 <- reform.vcf(Ae_Gae_1_common)
+Ae_Gae_2_common.2 <- reform.vcf(Ae_Gae_2_common)
+Ae_Gae_3_common.2 <- reform.vcf(Ae_Gae_3_common)
+Ae_combined.2 <- reform.vcf(Ae_combined)
+
+Ae_Gae_1_common.2$feature <- paste(Ae_Gae_1_common.2$CHROM, Ae_Gae_1_common.2$POS)
+Ae_Gae_2_common.2$feature <- paste(Ae_Gae_2_common.2$CHROM, Ae_Gae_2_common.2$POS)
+Ae_Gae_3_common.2$feature <- paste(Ae_Gae_3_common.2$CHROM, Ae_Gae_3_common.2$POS)
+Ae_combined.2$feature <- paste(Ae_combined.2$CHROM, Ae_combined.2$POS)
+
+Ae_Gae_1_2_combined <- merge(Ae_Gae_1_common.2, Ae_Gae_2_common.2, by="feature")
+Ae_Gae_3_combined_combined <- merge(Ae_Gae_3_common.2, Ae_combined.2, by="feature")
+Ae_all <- merge(Ae_Gae_1_2_combined, Ae_Gae_3_combined_combined, by ="feature")
+dim(Ae_all)
+head(Ae_all)
+
+Ae_all.2 <- Ae_all %>% 
+  select(CHROM.x.x, POS.x.x, X6_paired.star.trim.dir, Ae_Gae_2_paired.star.trim.dir, Ae_Gae_3_paired.star.trim.dir, Ae_flowering_combined)
+
+dim(Ae_all.2)
+colnames(Ae_all.2) <- c("CHROM", "POS", "rep1", "rep2", "rep3", "combined")
+head(Ae_all.2)
+
+table(Ae_all.2$combined) # 0 means heterzygous 
+
+Ae_all.3 <- Ae_all.2 %>% 
+  filter(!is.na(rep1) & !is.na(rep2) & !is.na(rep3) & !is.na(combined))
+
+dim(Ae_all.3) 
+head(Ae_all.3)
+
+### for 
+Ae_all.3.het <- filter(Ae_all.3, combined == "0")
+dim(Ae_all.3.het) # 10212 6 
+head(Ae_all.3.het)
+table(Ae_all.3.het$combined)
+table(Ae_all.3.het$rep1)
+table(Ae_all.3.het$rep2)
+table(Ae_all.3.het$rep3)
+# no homozygous reference because this was called seperately 
+
+Ae_all.3.het <- data.frame(apply(Ae_all.3.het[,c("rep1", "rep2", "rep3", "combined")], 
+                      2, as.numeric))
 
 
 ```
