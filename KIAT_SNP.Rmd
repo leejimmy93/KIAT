@@ -2574,6 +2574,16 @@ R500_IMB211.reform <- SNP.freebayes.reformat(vcf = R500_IMB211, vcf.header = hea
 dim(R500_IMB211.reform) # 145556     18    
 table(R500_IMB211.reform$R500_gt) 
 table(R500_IMB211.reform$IMB211_gt)    
+
+######## 
+# MAF distribution for heterzygous call 
+R500_IMB211.reform$MAF_R500 <- round(pmin(R500_IMB211.reform$R500_alt.depth,  R500_IMB211.reform$R500_ref.depth)/R500_IMB211.reform$R500_tot.depth, digits = 2) 
+
+R500_IMB211.reform$R500_allele_ratio <- round(R500_IMB211.reform$R500_alt.depth/R500_IMB211.reform$R500_ref.depth, digits = 2)
+
+hist(R500_IMB211.reform$MAF_R500)
+# hist(R500_IMB211.reform[R500_IMB211.reform$R500_gt=="0/1",]$R500_allele_ratio)
+hist(R500_IMB211.reform[R500_IMB211.reform$R500_gt=="0/1",]$MAF_R500)
 ```
 
 
