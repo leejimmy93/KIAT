@@ -362,9 +362,7 @@ table(Ae_all.3.het$rep3)
 # no homozygous reference because this was called seperately 
 
 Ae_all.3.het <- data.frame(apply(Ae_all.3.het[,c("rep1", "rep2", "rep3", "combined")], 
-                      2, as.numeric))
-
-
+                      2, as.numeric)) 
 ```
 
 Had meeting with Luca, Julin, and Richard lab about this problem. 
@@ -376,9 +374,21 @@ For the copy number variation, John will check the read coverage using 10x data,
 
 For the read mapping problem, I will use single end for mapping and SNP calling, to see whether the problem still persist. 
 
-# 
+# data 
+Da-Ae flowering data
 ```{r}
+# 6
+# Ae_Gae_2
+# Ae_Gae_3 
 
+# 1) use only trimmed reads pair1 for mapping 
+# https://github.com/leejimmy93/KIAT/blob/master/single_end_mapping.sh
+
+# 2) combine bam file & extract uniquely mapped reads for Freebayes SNP calling
+
+# 3) Freebayes SNP calling 
+
+# 4) analyze SNP calling result 
 ```
 
 
