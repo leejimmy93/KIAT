@@ -157,7 +157,6 @@ write.table(rownames(F2_geno_data_2), file = "~/Desktop/Brassica_project/KIAT_RN
 # get the number of markers for each chromosome 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
 dim(F2_geno_data_2) # 2932 166
-head(F2_geno_data_2)  
 
 F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2)) 
 F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2)) 
@@ -216,7 +215,11 @@ save(order, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_ra
 A01 
 ```{r}
 #################### A01 ##############################
+# load data 
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
+
+# mapping order 
 LG.f2.arbi.A01 <- make.seq(twopts.f2.05.12, order[[1]])
 
 LG.f2.arbi.A01.map <- map(LG.f2.arbi.A01)
@@ -224,17 +227,11 @@ rf.graph.table(LG.f2.arbi.A01.map)
 
 draw.map(LG.f2.arbi.A01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
-
-######## wait for next step analysis ############ 
-LG1.f2.ord
-
 # safe mode order (safe order should be recommended because we have enough marker here)
-LG1.f2.safe <- make.seq(LG1.f2.ord, "safe")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A01.Rdata")
+LG1.f2.safe <- make.seq(LG.f2.ord.A01, "safe")
+
 LG1.f2.safe 
-
-
-LG1.f2 <- make.seq(LGs.f2, 1) 
-LG1.f2
 
 # use touchdown
 LG1.f2.ord <- order.seq(input.seq = LG1.f2, n.init = 5,
@@ -317,7 +314,7 @@ F2.data
 
 # two-point rf data  
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
-load("~/F2/output/missing_rate_0.15/twopts.f2.05.12.Rdata")
+# load("~/F2/output/missing_rate_0.15/twopts.f2.05.12.Rdata")
 ########## order maker within chromosome #############
 ###### don't consider mapping postion at all
 # https://github.com/leejimmy93/KIAT/blob/master/map_construction_missing_0.15/map_A02_2.R_final 
@@ -369,128 +366,6 @@ LG.f2.A02.2
 rf.graph.table(LG.f2.A02)  
 draw.map(LG.f2.A02.2, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
-```
-
-```{r}
-######################## A03 ########################
-
-# map_A03.R 
-
-
-# safe mode order
-LG3.f2.safe <- make.seq(LG3.f2.ord, "safe")
-LG3.f2.safe
-# all order
-LG3.f2.final <- make.seq(LG3.f2.ord, "force")
-LG3.f2.final
-
-# ripple
-ripple.seq(LG3.f2.final, ws = 3, LOD = 6) 
-
-######################## A04 ######################
-########### use Kosambi map function ################
-# map_A01.R 
-
-LG4.f2.ord
-
-# safe mode order
-LG4.f2.safe <- make.seq(LG4.f2.ord, "safe")
-LG4.f2.safe
-# all order
-LG4.f2.final <- make.seq(LG4.f2.ord, "force")
-LG4.f2.final 
-
-# ripple
-ripple.seq(LG4.f2.final, ws = 5, LOD = 6)
-
-################### use haldane map function ##########
-set.map.fun(type = "haldane")
-
-LG4h.f2 <- make.seq(LGs.f2, 4)
-LG4h.f2
-
-# use touchdown
-LG4h.f2.ord <- order.seq(input.seq = LG4h.f2, n.init = 5,
-                        subset.search = "twopt",
-                        twopt.alg = "rcd", THRES = 6,
-                        draw.try = T, wait = 1,
-                        touchdown = T)
-
-LG4h.f2.ord
-
-# safe mode order
-LG4h.f2.safe <- make.seq(LG4h.f2.ord, "safe")
-LG4h.f2.safe
-# all order
-LG4h.f2.final <- make.seq(LG4h.f2.ord, "force")
-LG4h.f2.final
-### almost no difference between haldane & kosambi fxn, except that 
-# kosambi gives shorter map distance... the marker order is a little 
-# different (not much) from FnP's order got from mapdisto kosambi funcion. 
-######################################################
-
-###################### A05 ########################
-
-# map_A05.R 
-
-# safe mode order
-LG5.f2.safe <- make.seq(LG5.f2.ord, "safe")
-LG5.f2.safe
-# all order
-LG5.f2.final <- make.seq(LG5.f2.ord, "force")
-LG5.f2.final
-
-################# A06 ##############################
-# map_A06.R 
-
-# safe mode order
-LG6.f2.safe <- make.seq(LG6.f2.ord, "safe")
-LG6.f2.safe
-# all order
-LG6.f2.final <- make.seq(LG6.f2.ord, "force")
-LG6.f2.final
-
-################# A07 ##############################
-# map_A07.R  
-
-
-# safe mode order
-LG7.f2.safe <- make.seq(LG7.f2.ord, "safe")
-LG7.f2.safe
-# all order
-LG7.f2.final <- make.seq(LG7.f2.ord, "force")
-LG7.f2.final
-
-################# A08 ##############################
-# map_A08.R 
-
-
-# safe mode order
-LG8.f2.safe <- make.seq(LG8.f2.ord, "safe")
-LG8.f2.safe
-# all order
-LG8.f2.final <- make.seq(LG8.f2.ord, "force")
-LG8.f2.final
-
-################# A09 ##############################
-# map_A09.R 
-
-# safe mode order
-LG9.f2.safe <- make.seq(LG9.f2.ord, "safe")
-LG9.f2.safe
-# all order
-LG9.f2.final <- make.seq(LG9.f2.ord, "force")
-LG9.f2.final
-
-################# A10 ##############################
-# map_A10.R 
-
-# safe mode order
-LG10.f2.safe <- make.seq(LG10.f2.ord, "safe")
-LG10.f2.safe
-# all order
-LG10.f2.final <- make.seq(LG10.f2.ord, "force")
-LG10.f2.final
 ```
 
 # C01 
@@ -585,328 +460,95 @@ draw.map(LG.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizo
 set.map.fun(type = "haldane") 
 ```
 
+# C05 (a total of 43 markers)
 ```{r}
-################# LG12/A10 ##############################
-LG12.f2 <- make.seq(LGs.f2, 12)
-LG12.f2
+######## import data #######
+# marker data 
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
+F2.data 
 
-# use touchdown
-LG12.f2.ord <- order.seq(input.seq = LG12.f2, n.init = 5,
+# two-point rf data  
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
+
+########## order maker within chromosome #############
+###### don't consider mapping postion at all
+# https://github.com/leejimmy93/KIAT/blob/master/map_construction_missing_0.15/map_C05_2.R_final 
+# mark.f2.C05 <- make.seq(twopts.f2.05.12, 2601:2643)
+# LG.f2.ord.C05 <- order.seq(input.seq = mark.f2.C05, n.init = 5,
+#                         subset.search = "twopt",
+#                         twopt.alg = "rcd", THRES = 6,
+#                         draw.try = T, wait = 1,
+#                         touchdown = T) 
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.C05.Rdata")
+LG.f2.ord.C05
+
+# set map function 
+set.map.fun(type="kosambi")  
+
+# order marker 
+LG.f2.C05 <- make.seq(LG.f2.ord.C05) 
+LG.f2.C05
+rf.graph.table(LG.f2.C05) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C05, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+# looks off
+
+# use higher LOD score to gather markers with "right" order to start from 
+mark.f2.C05 <- make.seq(twopts.f2.05.12, 2601:2643)
+LG.f2.ord.C05.2 <- order.seq(input.seq = mark.f2.C05, n.init = 5,
                         subset.search = "twopt",
                         twopt.alg = "rcd", THRES = 6,
-                        draw.try = T, wait = 1,
-                        touchdown = T)
+                        draw.try = T, wait = 1
+                        )
 
-LG12.f2.ord
+LG.f2.C05.2 <- make.seq(LG.f2.ord.C05.2) 
+LG.f2.C05.2
+rf.graph.table(LG.f2.C05.2) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C05.2, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+# this method dosn't seem work... order looks off still 
 
-# safe mode order
-LG12.f2.safe <- make.seq(LG12.f2.ord, "safe")
-LG12.f2.safe
-# all order
-LG12.f2.final <- make.seq(LG12.f2.ord, "force")
-LG12.f2.final
-
-################# LG13/C01 ##############################
-LG13.f2 <- make.seq(LGs.f2, 13)
-LG13.f2
-
-# use touchdown
-LG13.f2.ord <- order.seq(input.seq = LG13.f2, n.init = 5,
+# seems like a lower LOD can make the map look better, reduce LOD threshold to 3 and use touchdown 
+LG.f2.ord.C05.3 <- order.seq(input.seq = mark.f2.C05, n.init = 5,
                         subset.search = "twopt",
-                        twopt.alg = "rcd", THRES = 6,
+                        twopt.alg = "rcd", THRES = 3,
                         draw.try = T, wait = 1,
-                        touchdown = T)
+                        touchdown = T
+                        )
 
-LG13.f2.ord
+LG.f2.C05.3 <- make.seq(LG.f2.ord.C05.3) 
+LG.f2.C05.3
+rf.graph.table(LG.f2.C05.3) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C05.3, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+####### actually no big difference... just use the 1st one, flip one of the marker chuncks 
+LG.f2.C05.force <- make.seq(LG.f2.ord.C05, "force") 
+LG.f2.C05.force
+rf.graph.table(LG.f2.C05.force) 
+par(mfrow=c(1,1))
+draw.map(LG.f2.C05.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+# looks off
+# move the last two markers to the begining of the map chrC05_163897 (2609) & chrC05_323355 (2625)
+LG.f2.C05.force$seq.num[1:41]
+C01.order.1 <- c(2609, 2625, LG.f2.C05.force$seq.num[1:41])
 
-# safe mode order
-LG13.f2.safe <- make.seq(LG13.f2.ord, "safe")
-LG13.f2.safe
-# all order
-LG13.f2.final <- make.seq(LG13.f2.ord, "force")
-LG13.f2.final
+LG.f2.arbi.C05 <- make.seq(twopts.f2.05.12, C01.order.1)
 
-################# LG14/C01-1 ##############################
-LG14.f2 <- make.seq(LGs.f2, 14)
-LG14.f2
+LG.f2.arbi.C01
+LG.f2.arbi.C01.map <- map(LG.f2.arbi.C01) 
+rf.graph.table(LG.f2.arbi.C01.map) 
 
-# use touchdown
-LG14.f2.ord <- order.seq(input.seq = LG14.f2, n.init = 5,
-                        subset.search = "twopt",
-                        twopt.alg = "rcd", THRES = 6,
-                        draw.try = T, wait = 1,
-                        touchdown = T)
+draw.map(LG.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
-LG14.f2.ord
-
-# safe mode order
-LG14.f2.safe <- make.seq(LG14.f2.ord, "safe")
-LG14.f2.safe
-# all order
-LG14.f2.final <- make.seq(LG14.f2.ord, "force")
-LG14.f2.final
-
-################# LG15/C02 ##############################
-LG15.f2 <- make.seq(LGs.f2, 15)
-LG15.f2
-
-# use touchdown
-LG15.f2.ord <- order.seq(input.seq = LG15.f2, n.init = 5,
-                        subset.search = "twopt",
-                        twopt.alg = "rcd", THRES = 6,
-                        draw.try = T, wait = 1,
-                        touchdown = T)
-
-LG15.f2.ord
-
-# safe mode order
-LG15.f2.safe <- make.seq(LG15.f2.ord, "safe")
-LG15.f2.safe
-# all order
-LG15.f2.final <- make.seq(LG15.f2.ord, "force")
-LG15.f2.final
-
-################# LG16/C02-2 ##############################
-LG16.f2 <- make.seq(LGs.f2, 16)
-LG16.f2
-
-# use touchdown
-LG16.f2.ord <- order.seq(input.seq = LG16.f2, n.init = 5,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG16.f2.ord
-
-# safe mode order
-LG16.f2.safe <- make.seq(LG16.f2.ord, "safe")
-LG16.f2.safe
-# all order
-LG16.f2.final <- make.seq(LG16.f2.ord, "force")
-LG16.f2.final
-
-################# LG17/C02-3 ##############################
-LG17.f2 <- make.seq(LGs.f2, 17)
-LG17.f2
-
-# use touchdown
-LG17.f2.ord <- order.seq(input.seq = LG17.f2, n.init = 2,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG17.f2.ord
-
-# safe mode order
-LG17.f2.safe <- make.seq(LG17.f2.ord, "safe")
-LG17.f2.safe
-# all order
-LG17.f2.final <- make.seq(LG17.f2.ord, "force")
-LG17.f2.final
-
-################# LG18/C003 ##############################
-LG18.f2 <- make.seq(LGs.f2, 18)
-LG18.f2
-
-# use touchdown
-LG18.f2.ord <- order.seq(input.seq = LG18.f2, n.init = 5,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG18.f2.ord
-
-# safe mode order
-LG18.f2.safe <- make.seq(LG18.f2.ord, "safe")
-LG18.f2.safe
-# all order
-LG18.f2.final <- make.seq(LG18.f2.ord, "force")
-LG18.f2.final
-
-################# LG19/C04 ##############################
-LG19.f2 <- make.seq(LGs.f2, 19)
-LG19.f2
-
-# use touchdown
-LG19.f2.ord <- order.seq(input.seq = LG19.f2, n.init = 5,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG19.f2.ord
-
-# safe mode order
-LG19.f2.safe <- make.seq(LG19.f2.ord, "safe")
-LG19.f2.safe
-# all order
-LG19.f2.final <- make.seq(LG19.f2.ord, "force")
-LG19.f2.final
-
-################# LG20/C05 ##############################
-LG20.f2 <- make.seq(LGs.f2, 20)
-LG20.f2
-
-# use touchdown
-LG20.f2.ord <- order.seq(input.seq = LG20.f2, n.init = 5,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG20.f2.ord
-
-# safe mode order
-LG20.f2.safe <- make.seq(LG20.f2.ord, "safe")
-LG20.f2.safe
-# all order
-LG20.f2.final <- make.seq(LG20.f2.ord, "force")
-LG20.f2.final
-
-################# LG21/C06 ##############################
-LG21.f2 <- make.seq(LGs.f2, 21)
-LG21.f2
-
-# use touchdown
-LG21.f2.ord <- order.seq(input.seq = LG21.f2, n.init = 5,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG21.f2.ord
-
-# safe mode order
-LG21.f2.safe <- make.seq(LG21.f2.ord, "safe")
-LG21.f2.safe
-# all order
-LG21.f2.final <- make.seq(LG21.f2.ord, "force")
-LG21.f2.final
-
-################# LG22/C07 ##############################
-LG22.f2 <- make.seq(LGs.f2, 22)
-LG22.f2
-
-# use touchdown
-LG22.f2.ord <- order.seq(input.seq = LG22.f2, n.init = 5,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG22.f2.ord
-
-# safe mode order
-LG22.f2.safe <- make.seq(LG22.f2.ord, "safe")
-LG22.f2.safe
-# all order
-LG22.f2.final <- make.seq(LG22.f2.ord, "force")
-LG22.f2.final
-
-################# LG23/C08 ##############################
-LG23.f2 <- make.seq(LGs.f2, 23)
-LG23.f2
-
-# use touchdown
-LG23.f2.ord <- order.seq(input.seq = LG23.f2, n.init = 5,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG23.f2.ord
-
-# safe mode order
-LG23.f2.safe <- make.seq(LG23.f2.ord, "safe")
-LG23.f2.safe
-# all order
-LG23.f2.final <- make.seq(LG23.f2.ord, "force")
-LG23.f2.final
-
-################# LG24/C09 ##############################
-LG24.f2 <- make.seq(LGs.f2, 24)
-LG24.f2
-
-# use touchdown
-LG24.f2.ord <- order.seq(input.seq = LG24.f2, n.init = 5,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG24.f2.ord
-
-# safe mode order
-LG24.f2.safe <- make.seq(LG24.f2.ord, "safe")
-LG24.f2.safe
-# all order
-LG24.f2.final <- make.seq(LG24.f2.ord, "force")
-LG24.f2.final
-
-################# LG25/C09-1 ##############################
-LG25.f2 <- make.seq(LGs.f2, 25)
-LG25.f2
-
-# use touchdown
-LG25.f2.ord <- order.seq(input.seq = LG25.f2, n.init = 5,
-                         subset.search = "twopt",
-                         twopt.alg = "rcd", THRES = 6,
-                         draw.try = T, wait = 1,
-                         touchdown = T)
-
-LG25.f2.ord
-
-# safe mode order
-LG25.f2.safe <- make.seq(LG25.f2.ord, "safe")
-LG25.f2.safe
-# all order
-LG25.f2.final <- make.seq(LG25.f2.ord, "force")
-LG25.f2.final
+# set map function 
+set.map.fun(type = "haldane") 
 
 
 
 
-###################################################
-########### drop marker with double crossover ###########
-data <- read.mapmaker(file = "F2_415_dropp_geno_Ruijuan.txt")
-data
+```
 
-# estimate two-point rf
-twopts.f2 <- rf.2pts(data, LOD = 3, max.rf = 0.5)
-?rf.2pts
-
-# assign marker to linkage groups
-mark.all.f2 <- make.seq(twopts.f2, "all")
-?make.seq
-LGs.f2 <- group(mark.all.f2, LOD = 3, max.rf = 0.5)
-LGs.f2
-
-#################### LG1 ##############################
-LG1.f2 <- make.seq(LGs.f2, 1)
-LG1.f2
-
-# use touchdown
-LG1.f2.ord <- order.seq(input.seq = LG1.f2, n.init = 5,
-                        subset.search = "twopt",
-                        twopt.alg = "rcd", THRES = 6,
-                        draw.try = T, wait = 1,
-                        touchdown = T)
-
-LG1.f2.ord
-
-# safe mode order
-LG1.f2.safe <- make.seq(LG1.f2.ord, "safe")
-LG1.f2.safe
-# all order
-LG1.f2.final <- make.seq(LG1.f2.ord, "force")
-LG1.f2.final
-
-# ripple
-ripple.seq(LG1.f2.final, ws = 5, LOD = 3) 
-``` 
 
 # just export the orignal order 
 ```{r}
@@ -923,7 +565,7 @@ F2.data
 # This data contains no phenotypic information
 
 # two-point rf data  
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata") 
 
 ####### A subgenome ############### 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/LG.f2.ord.A01.Rdata")
@@ -1064,14 +706,12 @@ write.map(map.AC, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/map.AC.map"
 ########### R/qtl ######################## 
 Because I didn't see much potential in using one map to build a reasonable map, I decide to use R/qtl to build the map 
 
-# install & import libs
+# data import 
 ```{r}
 library("qtl")
-```
 
 # import data 
-```{r}
-map.F2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/map.onemap.1st.map")
+map.F2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/map.AC.map")
 
 # newmap <- est.map(map.F2, tol=1e-6, map.function="kosambi") 
 # newmap doesn't look better at all 
@@ -1081,7 +721,7 @@ map.F2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/ou
 ```{r}
 summary(map.F2)
 plotMap(map.F2)
-plot.rf(map.F2)
+# plot.rf(map.F2)
 
 totmar(map.F2)
 
@@ -1089,13 +729,13 @@ totmar(map.F2)
 test <- geno.table(map.F2)
 seg_dist <- test[test$P.value < 0.01,]
 seg_dist
-dim(seg_dist) # 246 markers 
+dim(seg_dist) # 340 markers 
 
 ##### drop markers with segregation distortion 
 # map.F2.after.drop <- drop.marker(map.F2, rownames(seg_dist)) # doesn't work... 
 map.F2
 
-rffull.Asub <- pull.rf(map.F2)
+# rffull.Asub <- pull.rf(map.F2)
 
 # work with each chromosome seperately 
 # plot.rf(map.F2, chr = "chrA02")

@@ -125,7 +125,7 @@ Ae_flowering_combined.reform$Ae_het <- ifelse(Ae_flowering_combined.reform$Ae_gt
 Ae_flowering_combined.reform$Ae_het
 
 # calculate het ratio for a window size of 1Mb 
-binsize <- 1000000
+binsize <- 1000000 
 
 Ae_flowering_combined.reform <- Ae_flowering_combined.reform[grep("random", Ae_flowering_combined.reform$CHROM, invert = T),]
 dim(Ae_flowering_combined.reform) # 117569     21
@@ -144,7 +144,7 @@ pl.SNP.Ae <- pl.SNP.Ae + geom_histogram(aes(x=POS,y=..count.., fill=subgenome), 
 pl.SNP.Ae <- pl.SNP.Ae + facet_grid(chr_ID ~subgenome)
 pl.SNP.Ae <- pl.SNP.Ae + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
 pl.SNP.Ae <- pl.SNP.Ae + theme(legend.position = "none")
-pl.SNP.Ae 
+# pl.SNP.Ae 
 
 Ae_flowering_combined.reform.Ae.het <- 
 Ae_flowering_combined.reform %>%
@@ -158,7 +158,7 @@ pl.SNP.Ae.het <- pl.SNP.Ae.het + geom_histogram(aes(x=POS, fill=subgenome), binw
 pl.SNP.Ae.het <- pl.SNP.Ae.het + facet_grid(chr_ID ~subgenome)
 pl.SNP.main.2.unique <- pl.SNP.Ae.het + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
 pl.SNP.Ae.het <- pl.SNP.Ae.het + theme(legend.position = "none")
-pl.SNP.Ae.het
+# pl.SNP.Ae.het
 
 # overlay the two 
 library(ggplot2)
@@ -168,8 +168,8 @@ pl.SNP.Ae.ratio <- pl.SNP.Ae.ratio + facet_grid(chr_ID ~subgenome)
 pl.SNP.Ae.ratio <- pl.SNP.Ae.ratio + labs(list(title = "", x = "physical position on chromosome", y = "number of SNPs"))
 pl.SNP.Ae.ratio <- pl.SNP.Ae.ratio + theme(legend.position = "none")
 pl.SNP.Ae.ratio <- pl.SNP.Ae.ratio + geom_histogram(data = Ae_flowering_combined.reform.Ae.het, aes(x=POS,y=..count.., fill=subgenome), binwidth = binsize, alpha=0.8)
-pl.SNP.Ae.ratio 
-ggsave(pl.SNP.Ae.ratio, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/pl.SNP.Ae.ratio.png", width = 10, height = 15)
+# pl.SNP.Ae.ratio 
+# ggsave(pl.SNP.Ae.ratio, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/pl.SNP.Ae.ratio.png", width = 10, height = 15)
 
 # ratio of heterozygous SNPs (het SNP/ total number of SNPs in a window size of 1Mb)
 het.data <- ggplot_build(pl.SNP.Ae.het)
@@ -184,9 +184,9 @@ het.ratio
 length(het.ratio) # 1178
 
 bin.number <- length(unique(SNP.data.final$xmax)) # 1178, so every existing chromosome need to have 62 bins 
+bin.number
 
-CHROM=c(paste("chrA", rep("01", 62), sep = ""), paste("chrC", rep("01", 62), sep = ""), paste("chrA", rep("02", 62), sep = ""), paste("chrC", rep("02", 62), sep = ""), paste("chrA", rep("03", 62), sep = ""), paste("chrC", rep("03", 62), sep = ""), paste("chrA", rep("04", 62), sep = ""), paste("chrC", rep("04", 62), sep = ""), paste("chrA", rep("05", 62), sep = ""), paste("chrC", rep("05", 62), sep = ""), paste("chrA", rep("06", 62), sep = ""), paste("chrC", rep("06", 62), sep = ""), paste("chrA", rep("07", 62), sep = ""), paste("chrC", rep("07", 62), sep = ""), paste("chrA", rep("08", 62), sep = ""), paste("chrC", rep("08", 62), sep = ""), paste("chrA", rep("09", 62), sep = ""), paste("chrC", rep("09", 62), sep = ""),
-paste("chrA", rep("10", 62), sep = ""))
+CHROM=c(paste("chrA", rep("01", bin.number), sep = ""), paste("chrC", rep("01", bin.number), sep = ""), paste("chrA", rep("02", bin.number), sep = ""), paste("chrC", rep("02", bin.number), sep = ""), paste("chrA", rep("03", bin.number), sep = ""), paste("chrC", rep("03", bin.number), sep = ""), paste("chrA", rep("04", bin.number), sep = ""), paste("chrC", rep("04", bin.number), sep = ""), paste("chrA", rep("05", bin.number), sep = ""), paste("chrC", rep("05", bin.number), sep = ""), paste("chrA", rep("06", bin.number), sep = ""), paste("chrC", rep("06", bin.number), sep = ""), paste("chrA", rep("07", bin.number), sep = ""), paste("chrC", rep("07", bin.number), sep = ""), paste("chrA", rep("08", bin.number), sep = ""), paste("chrC", rep("08", bin.number), sep = ""), paste("chrA", rep("09", bin.number), sep = ""), paste("chrC", rep("09", bin.number), sep = ""), paste("chrA", rep("10", bin.number), sep = ""))
 
 het.ratio.final <- data.frame(CHROM=CHROM,
                     bin=rep(1:bin.number, 19),
@@ -209,8 +209,71 @@ pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + labs(list(title = "", x
 pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + theme(legend.position = "none")
 pl.SNP.Ae.het.ratio.final 
 
-ggsave(pl.SNP.Ae.het.ratio.final, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/pl.SNP.Ae.ratio.final.png", width = 10, height = 15)
+# ggsave(pl.SNP.Ae.het.ratio.final, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/pl.SNP.Ae.ratio.final.png", width = 10, height = 15)
 
+## the above is too complicated and only works for 1mb window size, use another way for other windows size 
+dim(Ae_flowering_combined.reform) 
+head(Ae_flowering_combined.reform)
+
+tmp <- 
+  Ae_flowering_combined.reform %>%
+  group_by(CHROM) %>%
+  count(cut_width(POS, 50000)) 
+
+tmp1 <- 
+  Ae_flowering_combined.reform %>%
+  group_by(CHROM) %>%
+  count(cut_width(POS, 50000), wt = Ae_het)  
+
+dim(tmp)
+dim(tmp1)
+
+colnames(tmp) <- c("CHROM", "POS", "countSNP")
+colnames(tmp1) <- c("CHROM", "POS", "counthet")
+
+test <- cbind(tmp, tmp1)
+test$het_ratio <- test$counthet/test$countSNP
+dim(test)
+head(test) 
+
+# reform & plot 
+test$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", test$CHROM)
+test$chr_ID <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", test$CHROM) 
+
+library(ggplot2)
+pl.SNP.Ae.het.ratio.final <- ggplot(data = test)
+pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + geom_col(aes(x=POS,y=het_ratio, fill=subgenome)) 
+pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + facet_grid(chr_ID ~subgenome)
+# pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + labs(list(title = "", x = "bin in 1Mb", y = "ratio of heterozygosity"))
+pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + theme(legend.position = "none")
+pl.SNP.Ae.het.ratio.final  
+
+## try Julin's suggestion, use package zoo or CAtools
+# install.packages("zoo")
+library(zoo)
+
+### eg. 
+x.Date <- as.Date(paste(2004, rep(1:4, 4:1), sample(1:28, 10), sep = "-"))
+x.Date
+x <- zoo(rnorm(12), x.Date)
+x
+?zoo
+
+rollmean(x, 3)
+rollmax(x, 3)
+rollmedian(x, 3)
+rollsum(x, 3)
+?rollmean 
+
+xm <- zoo(matrix(1:12, 4, 3), x.Date[1:4])
+xm
+rollmean(xm, 3)
+rollmax(xm, 3)
+rollmedian(xm, 3)
+rollsum(xm, 3)
+
+rollapply(xm, 3, mean) # uses rollmean
+rollapply(xm, 3, function(x) mean(x)) # does not use rollmean 
 ```
 
 By checking the result from last code chunk, subgenome C has higher het ratio although its SNP density is lower, probably because it has more repeated regions, which cause reads from A subgeome more falsefully mapped to different/similar regions of C subgenome. So many of detected SNPs on C sub genome are then appeared as het. Reads from C also map to A but they are more clustered, because A subgeome is more unqiue compared to C subgenome. 
@@ -303,6 +366,22 @@ Ae_all.3.het <- data.frame(apply(Ae_all.3.het[,c("rep1", "rep2", "rep3", "combin
 
 
 ```
+
+Had meeting with Luca, Julin, and Richard lab about this problem. 
+Luca said homeologous exchange should not be the cause of het calls here, because then only the homeologous part will map to the other genome, still should retain homozygosity. 
+1) Instead, het calls can be caused by copy number vaiation, where there is more gene/gene parts duplicated in our sample but absent in the reference genome. Those genes can be mapped to the unique region on the reference genome but will make those regions as het calls. 
+2) this can also be caused by mapping, since I used paired end for mapping, how unique mapping where defined? we don't know. It is possible that only one end of the paired reads were uniqly mapped but the other is not. such that, the other end were mapped to the "wrong" position on the reference genome and cause het calls. 
+
+For the copy number variation, John will check the read coverage using 10x data, map them to the refence genome and see the read depth across the reference genome, are they varing across the genome, how? 
+
+For the read mapping problem, I will use single end for mapping and SNP calling, to see whether the problem still persist. 
+
+# 
+```{r}
+
+```
+
+
 
 
 
