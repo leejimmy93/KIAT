@@ -494,8 +494,8 @@ par(mfrow=c(1,1))
 draw.map(LG.f2.C05, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 # looks off
 
-# use higher LOD score to gather markers with "right" order to start from 
-mark.f2.C05 <- make.seq(twopts.f2.05.12, 2601:2643)
+# use higher LOD score to gather markers with "right" order to start from, LOD score of 6 no touchdown 
+mark.f2.C05 <- make.seq(twopts.f2.05.12, 2601:2643) 
 LG.f2.ord.C05.2 <- order.seq(input.seq = mark.f2.C05, n.init = 5,
                         subset.search = "twopt",
                         twopt.alg = "rcd", THRES = 6,
@@ -531,22 +531,29 @@ draw.map(LG.f2.C05.force, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizonta
 # looks off
 # move the last two markers to the begining of the map chrC05_163897 (2609) & chrC05_323355 (2625)
 LG.f2.C05.force$seq.num[1:41]
-C01.order.1 <- c(2609, 2625, LG.f2.C05.force$seq.num[1:41])
+C01.order.1 <- c(2609, 2625, 2602, 2603, 2608, 2627, 2635, 2636, 2637, 2641, 2634, 2638, LG.f2.C05.force$seq.num[1:31])
 
 LG.f2.arbi.C05 <- make.seq(twopts.f2.05.12, C01.order.1)
 
-LG.f2.arbi.C01
-LG.f2.arbi.C01.map <- map(LG.f2.arbi.C01) 
-rf.graph.table(LG.f2.arbi.C01.map) 
+LG.f2.arbi.C05
+LG.f2.arbi.C05.map <- map(LG.f2.arbi.C05) 
+rf.graph.table(LG.f2.arbi.C05.map) 
 
-draw.map(LG.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+draw.map(LG.f2.arbi.C05.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 
-# set map function 
-set.map.fun(type = "haldane") 
+LG.f2.arbi.C05$seq.num
+order.2 <- c(LG.f2.arbi.C05$seq.num[6:12], LG.f2.arbi.C05$seq.num[1:5], LG.f2.arbi.C05$seq.num[13:41])
+LG.f2.arbi.C05.2 <- make.seq(twopts.f2.05.12, order.2)
 
+LG.f2.arbi.C05.map.2 <- map(LG.f2.arbi.C05.2) 
+rf.graph.table(LG.f2.arbi.C05.map.2) 
 
+LG.f2.arbi.C05.2$seq.num
+LG.f2.arbi.C05.3 <- drop.marker(LG.f2.arbi.C05.map.2, c(2604, 2605, 2626, 2631, 2632, 2630))
+LG.f2.arbi.C05.map.3 <- map(LG.f2.arbi.C05.3) 
+rf.graph.table(LG.f2.arbi.C05.map.3) 
 
-
+LG.f2.arbi.C05.3$seq.num
 ```
 
 

@@ -385,10 +385,26 @@ Da-Ae flowering data
 # https://github.com/leejimmy93/KIAT/blob/master/single_end_mapping.sh
 
 # 2) combine bam file & extract uniquely mapped reads for Freebayes SNP calling
+# Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/flower_Ae/single_end_mapping/Prep4Freebayes.sh* 
 
-# 3) Freebayes SNP calling 
+# **** I have problem here, errors 
+# 1) [W::sam_parse1] urecognized reference name; treated as unmapped
+# 2) WARNING(freebayes): Could not find any mapped reads in target region
+# ERROR(freebayes): Could not get first alignment from target
 
-# 4) analyze SNP calling result 
+## so I cannot use the merge bam file method? should combine fastq file in the begining? but why this works for the paired end data? wierd... 
+#######################################################################################
+
+# now combine fastq in the begining 
+# on whitney 
+# https://github.com/leejimmy93/KIAT/blob/master/merge_trim_mapping.sh
+
+# transfer to cabernet for SNP calling, etc, bc it can give me err message if something failed... 
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Prep4Freebayes.slurm
+
+# SNP calling 
+
+
 ```
 
 
