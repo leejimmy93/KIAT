@@ -513,10 +513,6 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 
 ``` 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 85a7272415f2dc9d23046be2677e4fb5387f8baa
 # GWAS
 ```{r}
 # reformat for GWAS 
@@ -990,9 +986,193 @@ p.average.mapping
 # filter.sh 
 # (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
 # output: 505.filtered.vcf.gz 
+```
 
+# stats, wait for late 
+```{r}
+#   
+```
+
+# chromosome distribution 
+```{r}
 
 ```
 
+# cluster analysis 
+```{r} 
+# reform_505_late_silique.R to reform vcf file for GWAS 
+# output: late_silique_505.2 
+
+# cluster analysis 
+load("~/505/output/late_silique/late_silique_505.2.Rdata")
+class(late_silique_505.2.t)
+dim(late_silique_505.2.t) #  88 347282 
+late_silique_505.2.t[1:10, 1:10]
+# late_silique_505.2.t <- as.data.frame(late_silique_505.2.t)
+# geno.numeric <- data.matrix(late_silique_505.2.t)
+# geno.numeric[1:10, 1:10]
+
+geno.numeric <- apply(late_silique_505.2.t, 2, function(x) as.integer(x))
+rnames <- rownames(late_silique_505.2.t)
+rownames(geno.numeric) <- rnames
+
+geno.numeric.df <- as.data.frame(geno.numeric)
+
+geno.numeric.df.2 <- geno.numeric.df[which(!rownames(geno.numeric.df) %in% "X505.K88"),]
+### 
+geno.numeric.2 <- as.matrix(geno.numeric.df.2)
+
+genDist <- as.matrix(dist(geno.numeric.2))
+
+#perform the multi-dimensional scaling
+geno.mds <- as.data.frame(cmdscale(genDist))
+head(geno.mds) #now we have 2 dimensions
+dim(geno.mds)
+plot(geno.mds)  
+
+############  
+save(geno.numeric, file="~/505/output/late_silique_505_geno_numeric.Rdata") 
+
+## add country of origin, winter or spring type to the figure ... 
+sample_des_c_revised <- read.csv("~/505/data/phenotype/batch_c_revised.csv", header=T)
+sample_des_c_sub <- sample_des_c_revised[,c("Sample.ID", "Name","Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_d_revised <- read.csv("~/505/data/phenotype/batch_d_revised.csv", header=T)
+sample_des_d_sub <- sample_des_d_revised[,c("Sample.ID", "Name", "Sample.Description.Origin", "Sample.Description.Type")]
+head(sample_des_c_sub)
+sample_des_c_sub$Sample.ID
+sample_des_d_sub$Sample.ID
+
+sample_des_revised <- rbind(sample_des_c_sub, sample_des_d_sub)
+sample_des_revised <- sample_des_revised[-c(48, 90:93),]
+sample_des_revised$Sample.ID
+save(sample_des_revised, file="~/505/output/late_silique/sample_des_revised.Rdata")
+
+# MDS result 
+# reformat MDS result sample ID (X remove & . to -)
+geno.mds$Sample.ID <- gsub("\\.","\\-", rownames(geno.mds)) 
+geno.mds$Sample.ID <- gsub("X", "", geno.mds$Sample.ID)
+class(geno.mds$Sample.ID)
+
+geno.mds$Sample.ID
+sample_des_revised$Sample.ID
+
+# merge 
+geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID") 
+head(geno.mds.all.des)
+
+
+library(ggrepel)
+set.seed(111) 
+
+p.mds.country <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country <- p.mds.country + geom_point(size=1) 
+p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country <- p.mds.country + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country 
+ggsave(p.mds.country, filename="~/505/output/figure/late_silique/p.mds.country.png", height=20, width=20)
+
+p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
+p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country.2
+ggsave(p.mds.country.2, filename="~/505/output/figure/leaf/p.mds.country.2.png", height=20, width=20)
+
+p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
+p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country.2
+ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country.2.png", height=20, width=20)
+ 
+# cluster for only the common lines 
+load("~/505/output/common.lines.Rdata")
+common.lines$Taxa.y
+
+rownames(geno.numeric.df.2) 
+# change rownames 
+rownames(geno.numeric.df.2) <- gsub("\\.","\\-", rownames(geno.numeric.df.2))
+rownames(geno.numeric.df.2) <- gsub("X", "", rownames(geno.numeric.df.2))
+
+common.lines$Taxa.y <- as.character(common.lines$Taxa.y)
+rownames(geno.numeric.df.2) 
+common.lines$Taxa.y <- gsub("\\_","\\-", common.lines$Taxa.y)
+
+geno.numeric.df.common <- geno.numeric.df.2[rownames(geno.numeric.df.2) %in% common.lines$Taxa.y,]
+dim(geno.numeric.df.common)  
+# check to make sure I get the right subset 
+
+identical(rownames(geno.numeric.df.common)[order(rownames(geno.numeric.df.common))], common.lines$Taxa.y[order(common.lines$Taxa.y)])
+geno.numeric.common <- as.matrix(geno.numeric.df.common)
+
+genDist <- as.matrix(dist(geno.numeric.common))
+
+#perform the multi-dimensional scaling
+geno.mds <- as.data.frame(cmdscale(genDist))
+head(geno.mds) #now we have 2 dimensions
+dim(geno.mds)
+plot(geno.mds)  
+
+## add country of origin, winter or spring type to the figure ... 
+sample_des_c_revised <- read.csv("~/505/data/phenotype/batch_c_revised.csv", header=T)
+sample_des_c_sub <- sample_des_c_revised[,c("Sample.ID", "Name","Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_d_revised <- read.csv("~/505/data/phenotype/batch_d_revised.csv", header=T)
+sample_des_d_sub <- sample_des_d_revised[,c("Sample.ID", "Name", "Sample.Description.Origin", "Sample.Description.Type")]
+head(sample_des_c_sub)
+sample_des_c_sub$Sample.ID
+sample_des_d_sub$Sample.ID
+
+sample_des_revised <- rbind(sample_des_c_sub, sample_des_d_sub)
+sample_des_revised <- sample_des_revised[-c(48, 90:93),]
+sample_des_revised$Sample.ID
+save(sample_des_revised, file="~/505/output/late_silique/sample_des_revised.Rdata")
+
+# MDS result 
+# reformat MDS result sample ID (X remove & . to -)
+# geno.mds$Sample.ID <- gsub("\\.","\\-", rownames(geno.mds)) 
+# geno.mds$Sample.ID <- gsub("X", "", geno.mds$Sample.ID)
+class(geno.mds$Sample.ID) 
+geno.mds
+
+geno.mds$Sample.ID
+sample_des_revised$Sample.ID <- gsub("\\_", "\\-", sample_des_revised$Sample.ID)
+
+# merge 
+geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID")
+head(geno.mds.all.des)  
+dim(geno.mds.all.des)
+
+library(ggrepel)
+set.seed(111) 
+
+# p.mds.country <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+# p.mds.country <- p.mds.country + geom_point(size=1) 
+# p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+# p.mds.country <- p.mds.country + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+# p.mds.country 
+# ggsave(p.mds.country, filename="~/505/output/figure/late_silique/p.mds.country.png", height=20, width=20)
+
+p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
+p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country.2
+ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country.2.common.png", height=20, width=20)
+
+p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
+p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+p.mds.country.2
+ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country.2.png", height=20, width=20)
+
+
+``` 
 
 
