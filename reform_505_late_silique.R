@@ -25,7 +25,7 @@ temp <- late_silique_505
   rownames(temp2) <- paste(temp2$CHROM, temp2$POS, sep="_")
 
 # GD file
-late_silique_505.2 <- temp2[, 5:92]
+late_silique_505.2 <- temp2[, -(1:4)]
 late_silique_505.2.t <- t(late_silique_505.2)
 save(late_silique_505.2.t, file = "~/505/output/131_sample/late_silique_505.2.Rdata")
 write.table(late_silique_505.2.t, file = "~/505/output/131_sample/late_silique_505.2.txt")

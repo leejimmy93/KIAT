@@ -1004,7 +1004,7 @@ p.average.mapping
 # output: late_silique_505.2 
 
 # cluster analysis 
-load("~/505/output/late_silique/late_silique_505.2.Rdata")
+load("~/505/output/131_sample/late_silique_505.2.Rdata")
 class(late_silique_505.2.t)
 dim(late_silique_505.2.t) #  88 347282 
 late_silique_505.2.t[1:10, 1:10]
@@ -1018,9 +1018,9 @@ rownames(geno.numeric) <- rnames
 
 geno.numeric.df <- as.data.frame(geno.numeric)
 
-geno.numeric.df.2 <- geno.numeric.df[which(!rownames(geno.numeric.df) %in% "X505.K88"),]
+# geno.numeric.df.2 <- geno.numeric.df[which(!rownames(geno.numeric.df) %in% "X505.K88"),]
 ### 
-geno.numeric.2 <- as.matrix(geno.numeric.df.2)
+geno.numeric.2 <- as.matrix(geno.numeric.df)
 
 genDist <- as.matrix(dist(geno.numeric.2))
 
