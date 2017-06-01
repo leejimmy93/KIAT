@@ -2,8 +2,8 @@
 library("vcfR")
 
 # import & reformat vcf file 
-late_silique_505 <- read.vcfR("~/505/vcf_late_silique_no_pop/combined/505_filtered.vcf.gz")
-save(late_silique_505, file="~/505/output/late_silique_505.Rdata")
+late_silique_505 <- read.vcfR("~/505/vcf_late_silique_131_sample/combined/505_filtered.vcf.gz")
+save(late_silique_505, file="~/505/output/131_sample/late_silique_505.Rdata")
 
 # reform the data 
 temp <- late_silique_505
@@ -27,8 +27,8 @@ temp <- late_silique_505
 # GD file
 late_silique_505.2 <- temp2[, 5:92]
 late_silique_505.2.t <- t(late_silique_505.2)
-save(late_silique_505.2.t, file = "~/505/output/late_silique_505.2.Rdata")
-write.table(late_silique_505.2.t, file = "~/505/output/late_silique_505.2.txt")
+save(late_silique_505.2.t, file = "~/505/output/131_sample/late_silique_505.2.Rdata")
+write.table(late_silique_505.2.t, file = "~/505/output/131_sample/late_silique_505.2.txt")
 
 # GM file
 

@@ -513,10 +513,6 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 
 ``` 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 85a7272415f2dc9d23046be2677e4fb5387f8baa
 # GWAS
 ```{r}
 # reformat for GWAS 
