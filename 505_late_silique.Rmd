@@ -706,12 +706,10 @@ tmp <- merge(missing.leaf.18SNP.final, missing.silique.18SNP.final, by = "snpID"
 tmp.melt <- melt(tmp)
 
 p <- ggplot(data=tmp.melt)
-<<<<<<< HEAD
 p <- p + geom_bar(aes(x=snpID, y=value), stat="identity")
 p <- p + facet_wrap(~variable) 
 p
-``` 
-=======
+
 p <- p + geom_col(aes(x=snpID, y=value))
 p <- p + facet_wrap(~variable)  
 p 
@@ -762,10 +760,239 @@ merge(tmp, silique_sample, by="Name")[c(2,4),]
 
 # 6) move file to the same directory where the previous 88 sample resides, however, because I sorted the bam file after extracting uniquely mapped reads for the 43 samples + sample-K88, Freebayes does not tolerate inconsistent order. Now re-run the 43 samples + sample-K88 using the same script for the 88 - sample-K88. 
 
+# 7) SNP calling
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Freebayes_Array_no_pop_late_silique.slurm
+```
+
+# analyze mapping result of batchE (including batch C + D)
+```{r} 
+# star_extract_stats.sh get star mapping stats 
+
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+
+# sample description 
+sample_des_c <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_c.csv", header = T) 
+sample_des_c$batch <- rep("C", nrow(sample_des_c))
+sample_des_c_sub <- sample_des_c[,c("Sample.ID","TotalReads","batch")]
+sample_des_d <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_d.csv", header = T)
+sample_des_d$batch <- rep("D", nrow(sample_des_d))
+sample_des_d_sub <- sample_des_d[,c("Sample.ID","TotalReads","batch")]
+head(sample_des_d_sub)
+sample_des_e <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_e.csv", header = T)
+sample_des_e$batch <- rep("E", nrow(sample_des_e))
+sample_des_e_sub <- sample_des_e[,c("Sample.ID","TotalReads","batch")]
+head(sample_des_e_sub)
+
+# mapping result
+mapping_result <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/Star_Stats.tab", header = T)
+
+mapping_result_e <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/Star_Stats_e.tab", header = T)
+
+# mapping_result <- 
+mapping_result <- rbind(mapping_result, mapping_result_e)
+head(mapping_result)
+mapping_result$Sample.ID <- gsub("(Sample_)([[:print:]])", "\\2", mapping_result$Sample) 
+
+# merge sample description & mapping result for batch A and batch B 
+batch.c.stats <- merge(sample_des_c_sub, mapping_result, by="Sample.ID")
+batch.d.stats <- merge(sample_des_d_sub, mapping_result, by="Sample.ID")
+batch.e.stats <- merge(sample_des_e_sub, mapping_result, by="Sample.ID")
+
+mapping_result_505 <- rbind(batch.c.stats, batch.d.stats, batch.e.stats)
+
+mapping_result_505$batch
+mapping_result_505$Number_Input_Reads/(mapping_result_505$TotalReads/2)
+
+### calculate average 
+mean(mapping_result_505[mapping_result_505$batch=="C",]$TotalReads/2) # 29598998
+mean(mapping_result_505[mapping_result_505$batch=="D",]$TotalReads/2) # 27072598 
+mean(mapping_result_505[mapping_result_505$batch=="E",]$TotalReads/2) # 28474316 
+
+# number of total reads 
+library(ggplot2) 
+p.total.reads <- ggplot(data=mapping_result_505)
+p.total.reads <- p.total.reads + geom_bar(aes(x=reorder(Sample.ID, TotalReads/2), y=TotalReads/2, fill=batch), stat = "identity")
+p.total.reads <- p.total.reads + labs(list(title = "", x = "", y = "Number of raw reads"))
+p.total.reads <- p.total.reads + theme(axis.text.x = element_text(angle = 90, size = 8)) 
+p.total.reads   
+# ggsave(p.total.reads, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/total_reads_CDE.png", height = 8, width = 11) 
+
+# look at HQ, mapped, multimapped in detail for each sample (memory too low, cannot view histogram of total reads...)
+colnames(mapping_result_505)
+mapping_result_505_sub <- data.frame(Sample.ID = mapping_result_505$Sample.ID, 
+                                     batch=mapping_result_505$batch,
+                                    trimmed.off = mapping_result_505$TotalReads/2 - mapping_result_505$Number_Input_Reads,
+                                    unmapped = mapping_result_505$Number_Input_Reads * (as.numeric(mapping_result_505$Percent_Unmapped_Mismatches + mapping_result_505$Percent_Unmapped_Other + mapping_result_505$Percent_Unmapped_Too_Short)/100), 
+                                    multi_too_many_mapped = mapping_result_505$Number_Multi_Mapped + mapping_result_505$Number_Too_Many_Multi_Mapped, 
+                                    unqiuemapped = mapping_result_505$Number_Unique_Mapped
+) 
+
+mapping_result_505_sub 
+dim(mapping_result_505_sub) # 131 6 
+
+library(reshape2)
+mapping_result_505_sub.long <- melt(mapping_result_505_sub, id.vars = c("Sample.ID", "batch"))
+mapping_result_505_sub.long.c <- mapping_result_505_sub.long[mapping_result_505_sub.long$batch=="C",]
+mapping_result_505_sub.long.d <- mapping_result_505_sub.long[mapping_result_505_sub.long$batch=="D",]
+mapping_result_505_sub.long.e <- mapping_result_505_sub.long[mapping_result_505_sub.long$batch=="E",]
 
 
+pl.mapping.indi.c <- ggplot(data = mapping_result_505_sub.long.c)
+pl.mapping.indi.c <- pl.mapping.indi.c + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
+pl.mapping.indi.c <- pl.mapping.indi.c + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 4.5e+7) 
+# p.total.reads <- p.total.reads + theme(axis.text.x = element_text(angle = 90, size = 8)) 
+pl.mapping.indi.c
 
+pl.mapping.indi.d <- ggplot(data = mapping_result_505_sub.long.d)
+pl.mapping.indi.d <- pl.mapping.indi.d + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
+pl.mapping.indi.d <- pl.mapping.indi.d + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 4.5e+7)
+pl.mapping.indi.d 
+
+pl.mapping.indi.e <- ggplot(data = mapping_result_505_sub.long.e)
+pl.mapping.indi.e <- pl.mapping.indi.e + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
+pl.mapping.indi.e <- pl.mapping.indi.e + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 4.5e+7)
+pl.mapping.indi.e 
+ 
+library(cowplot)
+pl.mapping.indi <- plot_grid(
+  pl.mapping.indi.c +labs(title="mapping result of batch c")+theme(legend.position = "none"),
+  pl.mapping.indi.d +labs(title="mapping result of batch d") +theme(legend.position = "none"),
+  pl.mapping.indi.e +labs(title="mapping result of batch e") +theme(legend.position = "none"),
+  align = 'vh', ncol=3, nrow = 1, labels=c("",""))
+
+get_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+
+legend <- get_legend(pl.mapping.indi.c)
+
+# pl.mapping.indi <- plot_grid(arrangeGrob(pl.mapping.indi.a + theme(legend.position="none") + labs(title="mapping result of batch a"),
+#                          pl.mapping.indi.b + theme(legend.position="none") + labs(title="mapping result of batch b"),
+#                          nrow=1),
+#              legend, nrow=2,heights=c(10, 1))
+
+pl.mapping.indi.final <- plot_grid(pl.mapping.indi, legend, rel_widths = c(3, 1))
+
+pl.mapping.indi.final 
+# save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/pl_mapping_indi_CDE.png", pl.mapping.indi.final, base_aspect_ratio = 1, base_width = 12)  
+
+
+# look at histogram of HQ reads 
+colnames(mapping_result_505)
+p.HQ.perc <- ggplot(data=mapping_result_505)
+p.HQ.perc <- p.HQ.perc + geom_histogram(aes(x=mapping_result_505$Number_Input_Reads/(mapping_result_505$TotalReads/2), fill=batch), binwidth = 0.01) 
+p.HQ.perc <- p.HQ.perc + labs(list(title = "histogram of HQ reads percentage", x = "Percent of high qulity reads", y = "number of samples"))
+p.HQ.perc 
+# ggsave(p.HQ.perc, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/HQ_hist_CDE.png", height = 8, width = 11) 
+
+# histogram of unqiue mapped reads 
+p.uniq.mapping <- ggplot(data=mapping_result_505)
+p.uniq.mapping <- p.uniq.mapping + geom_histogram(aes(x=Percent_Unique_Mapped, fill=batch), binwidth = 2.5) 
+p.uniq.mapping <- p.uniq.mapping + labs(list(title = "histogram of uniquely mapped reads percentage", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping  
+# ggsave(p.uniq.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/unique_mapped_CDE.png", height = 8, width = 11) 
+
+# hisogram of multimapped & too many reads 
+p.multi.too.many.mapping <- ggplot(data=mapping_result_505)
+p.multi.too.many.mapping <- p.multi.too.many.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Multi_Mapped+mapping_result_505$Percent_Too_Many_Multi_Mapped, fill=batch), binwidth = 2.5) 
+p.multi.too.many.mapping <- p.multi.too.many.mapping + labs(list(title = "", x = "Percent of multi & too many mapped reads", y = "number of samples"))
+
+# histogram of multi mapped 
+p.multi.mapping <- ggplot(data=mapping_result_505)
+p.multi.mapping <- p.multi.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Multi_Mapped, fill=batch), binwidth = 2.5) 
+p.multi.mapping <- p.multi.mapping + labs(list(title = "histogram of multi mapped reads percentage", x = "Percent of multi mapped reads", y = "number of samples"))
+p.multi.mapping
+# ggsave(p.multi.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/multi_mapped_CDE.png", height = 8, width = 11) 
+
+# histogram of too many mapped 
+p.toomany.mapping <- ggplot(data=mapping_result_505)
+p.toomany.mapping <- p.toomany.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Too_Many_Multi_Mapped, fill=batch), binwidth = 2.5) 
+p.toomany.mapping <- p.toomany.mapping + labs(list(title = "histogram of too many mapped reads percentage", x = "Percent of toomany mapped reads", y = "number of samples"))
+p.toomany.mapping
+# ggsave(p.toomany.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/toomany_mapped_CDE.png", height = 8, width = 11) 
+
+# histogram of unmapped 
+p.un.mapping <- ggplot(data=mapping_result_505)
+p.un.mapping <- p.un.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Unmapped_Mismatches+mapping_result_505$Percent_Unmapped_Other+mapping_result_505$Percent_Unmapped_Too_Short, fill=batch), binwidth = 2.5) 
+p.un.mapping <- p.un.mapping + labs(list(title = "histogram of unmapped reads percentage", x = "Percent of unmapped reads", y = "number of samples"))
+p.un.mapping
+# ggsave(p.un.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/un_mapped_CDE.png", height = 8, width = 11)
+
+# mapping stats 
+colnames(mapping_result_505)
+# average percentage of HQ, unique, multi, toomany, unmapped 
+average.mapping <- aggregate(mapping_result_505[,c("TotalReads","Number_Input_Reads", "Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short")], list(mapping_result_505$batch), mean)
+
+rownames(average.mapping) <- average.mapping$Group.1
+average.mapping$Percent_HQ <- average.mapping$Number_Input_Reads/(average.mapping$TotalReads/2)*100
+average.mapping
+
+average.mapping.long <- melt(average.mapping[,c("Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short","Percent_HQ","Group.1")], id.vars = "Group.1")
+
+average.mapping.long
+
+p.average.mapping <- ggplot(data = average.mapping.long)
+p.average.mapping <- p.average.mapping + geom_bar(aes(x=variable, y=value, fill=variable), stat = "identity")
+p.average.mapping <- p.average.mapping + facet_wrap(~Group.1, ncol = 2)
+p.average.mapping <- p.average.mapping + labs(list(title = "mapping stats of 505", x = "", y = "percentage"))
+p.average.mapping <- p.average.mapping + theme(axis.text.x = element_text(angle = 90), legend.position = "none")
+p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long, aes(x=variable, y=value, label=factor(round(value,0)))) 
+p.average.mapping
+# ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_mapping_CDE.png", height = 6, width = 9) 
+
+### split this figure to HQ ratio & mapping ratio (two plots)
+average.mapping.long.HQ <- 
+  average.mapping.long[average.mapping.long$variable=="Percent_HQ",]
+
+average.mapping.long.HQ
+
+p.average.HQ <- ggplot(data = average.mapping.long.HQ)
+p.average.HQ <- p.average.HQ + geom_bar(aes(x=Group.1, y=value, fill=variable), stat = "identity")
+# p.average.mapping <- p.average.mapping + facet_wrap(~Group.1, ncol = 2)
+p.average.HQ <- p.average.HQ + labs(list(title = "", x = "", y = "percentage of total raw reads"))
+p.average.HQ <- p.average.HQ + theme(legend.position = "none")
+p.average.HQ <- p.average.HQ + geom_text(data = average.mapping.long.HQ, aes(x=Group.1, y=value, label=factor(round(value,0)))) 
+p.average.HQ
+
+# ggsave(p.average.HQ, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_HQ_late_silique_CDE.png", height = 4, width = 2) 
+
+average.mapping.long.mapping <- 
+  average.mapping.long[average.mapping.long$variable!="Percent_HQ",]
+
+p.average.mapping <- ggplot(data = average.mapping.long.mapping)
+p.average.mapping <- p.average.mapping + geom_bar(aes(x=variable, y=value, fill=variable), stat = "identity")
+p.average.mapping <- p.average.mapping + facet_wrap(~Group.1, ncol = 2)
+p.average.mapping <- p.average.mapping + labs(list(title = "", x = "", y = "percentage of HQ reads"))
+p.average.mapping <- p.average.mapping + theme(axis.text.x = element_text(angle = 90), legend.position = "none")
+p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long.mapping, aes(x=variable, y=value, label=factor(round(value,0)))) 
+p.average.mapping 
+
+# ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_mapping_late_silique_CDE.png", height = 6, width = 5)  
+```
+
+# analyze data for GWAS 
+```{r} 
+# 1) scp from cluster to whitney 
+# scp * ruijuanli@whitney.plb.ucdavis.edu:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_no_pop
+
+# compress & index 
+# compress_index_vcf.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/compress_index_vcf.sh)
+
+# combine into one big vcf file 
+# concat.sh
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/concat.sh)
+# output: 505.vcf.gz  
+
+# 6) filter 
+# filter.sh 
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
+# output: 505.filtered.vcf.gz 
 
 
 ```
+
+
 
