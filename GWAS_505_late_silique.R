@@ -21,7 +21,7 @@ source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory 
-setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample")
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/run_2")
 
 ######### load data
 # genotype data 
@@ -73,7 +73,9 @@ Y=myY,
 G=myG, 
 PCA.total=3,
 Geno.View.output=FALSE, 
-PCA.View.output=FALSE 
+PCA.View.output=FALSE,
+Model.selection = TRUE,
+kinship.algorithm = "EMMA" 
 )  
 
 print("finished, YAAH!")
