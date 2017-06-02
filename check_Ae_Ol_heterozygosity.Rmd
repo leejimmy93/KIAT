@@ -403,8 +403,22 @@ Da-Ae flowering data
 # https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Prep4Freebayes.slurm
 
 # SNP calling 
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Freebayes_single_end.slurm
 
+# SNP filter 
+# https://github.com/leejimmy93/KIAT/blob/master/filter_Ae_flowering.sh
+```
 
+# analyze single end data to check het ratio 
+```{r}
+library("vcfR")
+library(tidyverse)
+
+Ae_flower_single <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/single_end_mapping/Ae_flowering_single_filtered.recode.vcf.gz")
+
+Ae_flower_single.2 <- reform.vcf(Ae_flower_single)
+table(Ae_flower_single.2$Ae_flower_single)
+# still a lot of het... # 0 means heterzygous, 1 means homozygous alternate... 
 ```
 
 

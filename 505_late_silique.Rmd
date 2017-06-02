@@ -1099,4 +1099,26 @@ p.mds.country.2
 ``` 
 
 # GWAS ... 
+```{r}
+# reformat for GWAS 
+# get hapmap file using tassel 
+
+######## use tassel to get hapmap format ########### 
+# run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered.vcf.gz -outputFile 505_filtered_sorted -fileType VCF
+# run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_sorted.vcf -export -exportType Hapmap -runfork1 
+# output: 505_filtered_sorted.hmp.txt  
+# edit output file to remove "#" after rs & assembly 
+#################################################### 
+```
+
+# GWAS run
+```{r}
+# GWAS_505_late_silique.R   
+```
+
+
+
+
+
+
 
