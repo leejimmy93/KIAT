@@ -74,8 +74,7 @@ G=myG,
 PCA.total=3,
 Geno.View.output=FALSE, 
 PCA.View.output=FALSE,
-Model.selection = TRUE,
-kinship.algorithm = "EMMA" 
+Model.selection = TRUE 
 )  
 
 print("finished, YAAH!")
