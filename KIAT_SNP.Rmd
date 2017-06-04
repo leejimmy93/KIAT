@@ -2477,7 +2477,6 @@ ggsave(p.GQ.F2.N, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP
 ```{r}
 primer <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/primer_SNP_validation.csv", header = T)
 
-primer
 # seq_ID is SNP ID
 loc <- expand.grid(c("A", "B", "C", "D", "E", "F", "G", "H"), 1:12)
 loc.plate <- paste(loc$Var1, loc$Var2, sep = "")
@@ -2501,6 +2500,16 @@ primer.R[1,]
 
 write.csv(primer.F, "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/primer_F.csv")
 write.csv(primer.R, "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/primer_R.csv")
+
+# checking PCR product 
+primer$location <- loc.plate
+order <- expand.grid(1:12, c("A", "B", "C", "D", "E", "F", "G", "H"))
+order.well <- paste(order$Var2, order$Var1, sep = "")
+
+primer$location <- factor(primer$location, levels = order.well)
+primer <- primer[order(primer$location),]
+colnames(primer)
+matrix(primer[,c("ampmlicon.size")], 4, 24)
 ```
 
 Use Uprendra's data to try my pipeline 

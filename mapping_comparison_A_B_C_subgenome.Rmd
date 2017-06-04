@@ -262,8 +262,22 @@ for the late silique batchE, map to ABC genome... on cluster
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array_ABC.slurm
 ```{r}
 # https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array_ABC.slurm
+## by checking the result, K15 didn't finish mapping successfully. for this kind of analysis, don't need to care about it very much, leave as it is now... 
+
+# extract uniquely mapped reads --> calculate read depth for each position --> subset by genome 
+
 ```
 
+```{r}
+require(graphics)
 
+set.seed(123)
+x <- rnorm(50, mean = c(rep(0, 25), rep(3, 25)))
+p <- 2*pnorm(sort(-abs(x)))
+
+round(p, 3)
+round(p.adjust(p), 3)
+round(p.adjust(p, "BH"), 3) 
+```
 
 
