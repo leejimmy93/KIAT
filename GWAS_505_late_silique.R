@@ -21,7 +21,7 @@ source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory 
-setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/run_2")
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/run_3")
 
 ######### load data
 # genotype data 
@@ -71,7 +71,7 @@ myG <- geno_505_hmp
 myGAPIT <- GAPIT( 
 Y=myY,
 G=myG, 
-PCA.total=3,
+PCA.total=0,
 Geno.View.output=FALSE, 
 PCA.View.output=FALSE,
 Model.selection = TRUE 
