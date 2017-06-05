@@ -12,5 +12,7 @@ output: html_document
 
 # B.oleracea genome file link 
 # http://brassicadb.org/brad/datasets/pub/Genomes/Brassica_oleracea/V1.1/BOL.seq.lst.new.chr20110802_check.fa.gz 
+
+# after combing these two files, all the sequence ID start with Scaffold are from B.rapa 
 ```
 
