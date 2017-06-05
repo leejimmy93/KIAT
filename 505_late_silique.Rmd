@@ -1114,6 +1114,11 @@ p.mds.country.2
 # GWAS run
 ```{r}
 # GWAS_505_late_silique.R   
+# run_1, all default parameter in GAPIT
+# run_2, model selection activated 
+# run_3, using PCA = 0 
+no siginificant SNPs identified --> model selection activated 
+
 ```
 
 
