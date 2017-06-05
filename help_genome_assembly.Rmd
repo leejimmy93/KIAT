@@ -1,0 +1,12 @@
+---
+title: "help_genome_assembly"
+author: "Ruijuan Li"
+date: "6/5/2017"
+output: html_document
+---
+
+# download B.rapa & B.olereacea genome fasta file 
+```{r}
+
+```
+
