@@ -1069,7 +1069,6 @@ sample_des_revised$Sample.ID
 geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID") 
 head(geno.mds.all.des)
 
-
 library(ggrepel)
 set.seed(111) 
 
@@ -1079,7 +1078,7 @@ p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
 p.mds.country <- p.mds.country + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
 p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
 p.mds.country 
-# ggsave(p.mds.country, filename="~/505/output/figure/late_silique/p.mds.country.png", height=20, width=20)
+ggsave(p.mds.country, filename="~/505/output/figure/131_sample/p.mds.country.png", height=20, width=20)
 
 p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
 p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
@@ -1087,7 +1086,7 @@ p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set
 p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
 # p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
 p.mds.country.2
-# ggsave(p.mds.country.2, filename="~/505/output/figure/leaf/p.mds.country.2.png", height=20, width=20)
+ggsave(p.mds.country.2, filename="~/505/output/figure/131_sample/p.mds.country.2.png", height=20, width=20)
 
 p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
 p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
@@ -1118,10 +1117,43 @@ p.mds.country.2
 # run_2, model selection activated 
 # run_3, using PCA = 0 
 no siginificant SNPs identified --> model selection activated 
-
 ```
 
+# display GWAS result 
+```{r}
+# install.packages("qqman")
+library("qqman")
+Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_1/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
+Oil_content <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_1/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_1/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/output/figure/131_sample/Erucic_acid.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+    ) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+    ) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+    ) 
+dev.off() 
+
+# check the significant SNPs
+unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs 
+```
+
+# bad, still no significant SNPs, check to see why!!!
+# 1) 
 
 
 
