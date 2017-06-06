@@ -17,7 +17,7 @@ library(tkrplot)
 library(onemap)  
 library(ggplot2)
 library(reshape) 
-# library(tidyverse) 
+library(tidyverse) 
 ```
 
 # import & format data (MAC version)
@@ -807,8 +807,27 @@ save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/outp
 ```{r}
 # talking to Maria, she suggested to use madmapper to assign linkage group before order marker within each chromosome. 
 
+# after practicing madmapper with eg data, now I am running it on my data 
+```
+
+[http://cgpdb.ucdavis.edu/XLinkage/MadMapper/Genetic_Map_MadMapper_Arabidopsis.html]
+
+# running madmapper 
+# 1) format marker data to madmapper accepted format 
+```{r}
+# cat F2_geno_data.txt | sed 's/"//g' | tr " " "\t" > F2_geno_data_m.txt 
+# vim edit add ";" to the 1st line 
+# seq 166 | tr "\n" "\t" > number_line_header 
+# vim edit add ";" to number_line_header
+# cat number_line_header F2_geno_data_m.txt
+# mv F2_geno_data_m.txt F2_geno_data_m.loc 
+```
+
+# madmapper 
+```{r} 
 
 ```
+
 
 
 

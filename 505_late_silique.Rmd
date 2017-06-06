@@ -764,7 +764,7 @@ merge(tmp, silique_sample, by="Name")[c(2,4),]
 ```{r} 
 # star_extract_stats.sh get star mapping stats 
 
-source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R") 
 
 # sample description 
 sample_des_c <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_c.csv", header = T) 
@@ -811,7 +811,7 @@ p.total.reads <- p.total.reads + geom_bar(aes(x=reorder(Sample.ID, TotalReads/2)
 p.total.reads <- p.total.reads + labs(list(title = "", x = "", y = "Number of raw reads"))
 p.total.reads <- p.total.reads + theme(axis.text.x = element_text(angle = 90, size = 8)) 
 p.total.reads   
-# ggsave(p.total.reads, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/total_reads_CDE.png", height = 8, width = 11) 
+ggsave(p.total.reads, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/total_reads_CDE.png", height = 8, width = 11) 
 
 # look at HQ, mapped, multimapped in detail for each sample (memory too low, cannot view histogram of total reads...)
 colnames(mapping_result_505)
@@ -835,18 +835,18 @@ mapping_result_505_sub.long.e <- mapping_result_505_sub.long[mapping_result_505_
 
 pl.mapping.indi.c <- ggplot(data = mapping_result_505_sub.long.c)
 pl.mapping.indi.c <- pl.mapping.indi.c + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
-pl.mapping.indi.c <- pl.mapping.indi.c + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 4.5e+7) 
-# p.total.reads <- p.total.reads + theme(axis.text.x = element_text(angle = 90, size = 8)) 
+pl.mapping.indi.c <- pl.mapping.indi.c + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 4)) + ylim(0, 4.5e+7) 
+# p.total.reads <- p.total.reads + theme(axis.text.x = element_text(angle = 90, size = 6)) 
 pl.mapping.indi.c
 
 pl.mapping.indi.d <- ggplot(data = mapping_result_505_sub.long.d)
 pl.mapping.indi.d <- pl.mapping.indi.d + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
-pl.mapping.indi.d <- pl.mapping.indi.d + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 4.5e+7)
+pl.mapping.indi.d <- pl.mapping.indi.d + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 4)) + ylim(0, 4.5e+7)
 pl.mapping.indi.d 
 
 pl.mapping.indi.e <- ggplot(data = mapping_result_505_sub.long.e)
 pl.mapping.indi.e <- pl.mapping.indi.e + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
-pl.mapping.indi.e <- pl.mapping.indi.e + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 4.5e+7)
+pl.mapping.indi.e <- pl.mapping.indi.e + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 4)) + ylim(0, 4.5e+7)
 pl.mapping.indi.e 
  
 library(cowplot)
@@ -864,15 +864,10 @@ get_legend<-function(a.gplot){
 
 legend <- get_legend(pl.mapping.indi.c)
 
-# pl.mapping.indi <- plot_grid(arrangeGrob(pl.mapping.indi.a + theme(legend.position="none") + labs(title="mapping result of batch a"),
-#                          pl.mapping.indi.b + theme(legend.position="none") + labs(title="mapping result of batch b"),
-#                          nrow=1),
-#              legend, nrow=2,heights=c(10, 1))
-
 pl.mapping.indi.final <- plot_grid(pl.mapping.indi, legend, rel_widths = c(3, 1))
 
 pl.mapping.indi.final 
-# save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/pl_mapping_indi_CDE.png", pl.mapping.indi.final, base_aspect_ratio = 1, base_width = 12)  
+save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/pl_mapping_indi_CDE.png", pl.mapping.indi.final, base_aspect_ratio = 1, base_width = 12)  
 
 
 # look at histogram of HQ reads 
