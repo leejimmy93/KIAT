@@ -1,0 +1,18 @@
+---
+title: "help_genome_assembly"
+author: "Ruijuan Li"
+date: "6/5/2017"
+output: html_document
+---
+
+# download B.rapa & B.olereacea genome fasta file 
+```{r}
+# B.rapa genome file link  
+# http://brassicadb.org/brad/datasets/pub/Genomes/Brassica_rapa/V2.0/V2.1/Chr/BrapaV2.1PacBio.Chr.fa.gz
+
+# B.oleracea genome file link 
+# http://brassicadb.org/brad/datasets/pub/Genomes/Brassica_oleracea/V1.1/BOL.seq.lst.new.chr20110802_check.fa.gz 
+
+# after combing these two files, all the sequence ID start with Scaffold are from B.rapa 
+```
+
