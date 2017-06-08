@@ -903,55 +903,13 @@ for (i in 1:length(LG.C)) {
 }
 
 group.C
-save(group.A, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.Rdata")
+save(group.A, group.C, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.Rdata")
 ```
 
-# order within each chromosome 
-```{r}
-# scp group.A & group.C to whitney 
-# https://github.com/leejimmy93/KIAT/blob/master/F2/map_A.R
-# https://github.com/leejimmy93/KIAT/blob/master/F2/map_C.R 
-```
 
-# analyze result C sub genome 
-# import data 
-```{r}
-######## import data #######
-# marker data 
-F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
-F2.data 
-# This is an object of class 'f2.onemap'
-#     No. individuals:     166  
-#     No. markers:         2932 
-#     Percent genotyped:   96 
-# 
-#     Number of markers per type:
-#        AA : AB : BB -->  2932
-# 
-# This data contains no phenotypic information
 
-# two-point rf data  
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
 
-# order data 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/madmapper/LG.f2.ord.C.Rdata")
 
-# get order 
-LG.f2.C <- list()
-
-for (i in 1:length(LG.f2.ord.C)){
-  LG.f2.C[[i]] <- make.seq(LG.f2.ord.C[[i]], "force") 
-}
-
-rf.graph.table(LG.f2.C[[i]])
-par(mfrow=c(1,1))
-draw.map(LG.f2.C, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
-```
-
-# A subgenome
-```{r}
-
-```
 
 
 
