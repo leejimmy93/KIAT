@@ -1152,8 +1152,43 @@ dev.off()
 unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs 
 ```
 
-# bad, still no significant SNPs, check to see why!!!
-# 1) 
+# compare leaf & late silique 131 samples, how many lines are overlapped  
+```{r}
+load("~/505/output/pheno_data_505_leaf.R")
+pheno_data_505_leaf <- pheno_data_505
+
+load("~/505/output/131_sample/pheno_data_505_131_sample.R")
+pheno_data_505_late_silique <- pheno_data_505
+
+# use common taxa names to compare, check missing individuals 
+load("~/505/output/leaf/sample_des_revised.Rdata")
+sample_des_revised_leaf <- sample_des_revised 
+load("~/505/output/131_sample/sample_des_revised.Rdata")
+sample_des_revised_late_silique <- sample_des_revised
+
+colnames(sample_des_revised_leaf)[1] <- "Taxa"
+colnames(sample_des_revised_late_silique)[1] <- "Taxa"
+
+lines_leaf_2 <- merge(pheno_data_505_leaf, sample_des_revised_leaf, by="Taxa")
+lines_leaf_2
+
+lines_late_silique_2 <- merge(pheno_data_505_late_silique, sample_des_revised_late_silique, by="Taxa")
+lines_late_silique_2
+
+# common lines
+common_leaf_131_sample <- intersect(lines_leaf_2$Name, lines_late_silique_2$Name) 
+save(common_leaf_131_sample, file="~/505/output/common_leaf_131_sample.Rdata") 
+# unique lines in leaf 
+unique_leaf <- lines_leaf_2$Name[!(lines_leaf_2$Name %in% common_leaf_131_sample)] 
+# 
+
+
+
+common.lines <- merge(lines_leaf_2, lines_late_silique_2, by="Name")[,c("Name", "Taxa.x", "Taxa.y")]
+common.lines 
+save(common.lines, file="~/505/output/common.lines.leaf.131.sample.Rdata") 
+```
+
 
 
 
