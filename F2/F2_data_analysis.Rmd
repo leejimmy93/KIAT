@@ -1,0 +1,270 @@
+---
+title: "F2_data_analysis"
+author: "Ruijuan Li"
+date: "12/5/2016"
+output: html_document
+---
+
+# download 
+```{r}
+# wget -r ftp://FNP_KSJ:FNp_71aofb@bioftp.org/TBD160783_20161129/ (screen -r 35891.ttys009.coloma) 
+# wget -r ftp://FNP_KSJ:FNp_71aofb@bioftp.org/TBD160897_20161221/ (35901.ttys009.coloma)
+```
+
+# QC 
+```{r}
+# QC already done by Korean side, I checked result by using make_summary_report.sh, OK 
+# finished mapping using kallisto 
+```
+
+# trimming & mapping kallisto 
+```{r}
+### bunchrun_kallisto.sh 
+### count number of HQ reads 
+# count_HQ_reads.sh 
+
+### get readcount output 
+# ls Sample*/HQ_single_end_count | sed 's/\/HQ_single_end_count//g' | sed 's/Sample_//g' > ID 
+# cat Sample*/HQ_single_end_count > reads_number
+# paste ID reads_number > HQ_reads_lib  
+```
+
+# F2 data stats 
+```{r}
+F2.stats.1 <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/Sequencing_Statistics_Result_F2.csv")
+F2.stats.2 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/HQ_reads_lib")
+
+head(F2.stats.1)
+head(F2.stats.2)
+
+colnames(F2.stats.2)[1] <- "Sample.ID"
+colnames(F2.stats.2)[2] <- "HQ.reads"
+
+F2.stats <- merge(F2.stats.1[,c("Sample.ID", "TotalReads")], F2.stats.2, by="Sample.ID")
+summary(F2.stats)
+
+F2.stats$TotalReads.2 <- as.numeric(as.character(F2.stats$TotalReads))/2
+F2.stats$HQ_percent <- round(F2.stats$HQ.reads/F2.stats$TotalReads.2, digits = 2)
+head(F2.stats)
+
+F2.stats <- F2.stats[,c("Sample.ID", "TotalReads.2", "HQ.reads", "HQ_percent")]
+head(F2.stats)
+
+colnames(F2.stats)[2] <- "TotalReads" 
+write.csv(F2.stats, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.stats.csv")
+
+F2.stats.modified <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/modified.F2.stats.csv")
+head(F2.stats.modified)
+
+batch.a <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/Sequencing_Statistics_Result_16.12.05 (1).csv")
+colnames(batch.a)[1] <- "Sample_ID"
+
+batch.b <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/Sequencing_Statistics_Result_16.12.23 (1).csv")
+colnames(batch.b)[1] <- "Sample_ID"
+
+batch.a.stats <- merge(F2.stats.modified, batch.a, by="Sample_ID")
+batch.a.stats$batch <- rep("a", nrow(batch.a.stats))
+
+batch.b.stats <- merge(F2.stats.modified, batch.b, by="Sample_ID")
+batch.b.stats$batch <- rep("b", nrow(batch.b.stats))
+  
+F2.stats.modified.2 <- rbind(batch.a.stats, batch.b.stats)
+head(F2.stats.modified.2)
+
+F2.stats.modified.2$batch
+
+library(ggplot2) 
+p.uniq.mapping <- ggplot(data=F2.stats.modified.2)
+p.uniq.mapping <- p.uniq.mapping + geom_histogram(aes(x=Percent_Unique_Mapped, fill=batch), binwidth = 2.5) 
+p.uniq.mapping <- p.uniq.mapping + labs(list(title = "", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping  
+ggsave(p.uniq.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.uniq.mapping.1.png", height = 8, width = 11) 
+
+p.uniq.mapping.2 <- ggplot(data=F2.stats.modified.2)
+p.uniq.mapping.2 <- p.uniq.mapping.2 + geom_histogram(aes(x=Percent_Unique_Mapped), binwidth = 2.5) 
+p.uniq.mapping.2 <- p.uniq.mapping.2 + labs(list(title = "", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping.2  
+ggsave(p.uniq.mapping.2, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.uniq.mapping.png", height = 8, width = 11) 
+
+p.all.reads <- ggplot(data = F2.stats.modified.2)
+p.all.reads <- p.all.reads + geom_bar(aes(x=Sample_ID, y=TotalReads.x, fill=batch), stat = "identity")
+p.all.reads
+
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-106",]
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-72",]
+
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-38",]
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-105",]
+
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-10",]
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-118",] 
+
+sort(F2.stats.modified.2$TotalReads.x) 
+?sort
+
+```
+
+# batch effect of F2 
+```{r}
+# map single reads 
+single.mapping.result.A <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/batch_effect/Batch_A_Star_Stats.tab", header = T)
+single.mapping.result.B <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/batch_effect/Batch_B_Star_Stats.tab", header = T)
+
+single.mapping.result.A$batch <- rep("a", 5)
+single.mapping.result.B$batch <- rep("b", 5)
+
+single.mapping.result <- rbind(single.mapping.result.A, single.mapping.result.B)
+head(single.mapping.result)
+single.mapping.result$Sample_ID <- gsub("(Sample_)([[:print:]]+)(\\.)(single)","\\2",single.mapping.result$Sample) 
+single.mapping.result$Sample_ID
+
+library(ggplot2) 
+p.uniq.mapping.single <- ggplot(data=single.mapping.result)
+p.uniq.mapping.single <- p.uniq.mapping.single + geom_bar(aes(x=reorder(Sample_ID, Percent_Unique_Mapped), y=Percent_Unique_Mapped, fill=batch), stat = "identity") 
+p.uniq.mapping.single <- p.uniq.mapping.single + labs(list(title = "", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping.single  
+ggsave(p.uniq.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.uniq.mapping.single.png", height = 8, width = 11) 
+
+p.multi.mapping.single <- ggplot(data=single.mapping.result)
+p.multi.mapping.single <- p.multi.mapping.single + geom_bar(aes(x=reorder(Sample_ID, Percent_Multi_Mapped), y=Percent_Multi_Mapped, fill=batch), stat = "identity") 
+p.multi.mapping.single <- p.multi.mapping.single + labs(list(title = "", x = "Percent of multi mapped reads", y = "number of samples"))
+p.multi.mapping.single  
+ggsave(p.multi.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.multi.mapping.single.png", height = 8, width = 11)
+
+p.toomany.mapping.single <- ggplot(data=single.mapping.result)
+p.toomany.mapping.single <- p.toomany.mapping.single + geom_bar(aes(x=reorder(Sample_ID, Percent_Too_Many_Multi_Mapped), y=Percent_Too_Many_Multi_Mapped, fill=batch), stat = "identity") 
+p.toomany.mapping.single <- p.toomany.mapping.single + labs(list(title = "", x = "Percent of toomany mapped reads", y = "number of samples"))
+p.toomany.mapping.single 
+ggsave(p.toomany.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.toomany.mapping.single.png", height = 8, width = 11)
+
+p.unmapped.mapping.single <- ggplot(data=single.mapping.result)
+p.unmapped.mapping.single <- p.unmapped.mapping.single + geom_bar(aes(x=reorder(Sample_ID, Percent_Unmapped_Too_Short), y=Percent_Unmapped_Too_Short, fill=batch), stat = "identity") 
+p.unmapped.mapping.single <- p.unmapped.mapping.single + labs(list(title = "", x = "Percent of unmapped reads", y = "number of samples"))
+p.unmapped.mapping.single 
+ggsave(p.unmapped.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.unmapped.mapping.single.png", height = 8, width = 11)
+
+# remove reads less than 70bp 
+mapping.result.70 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/batch_effect/Star_Stats.tab", header = T)
+mapping.result.70$Sample
+head(mapping.result.70)
+mapping.result.70$batch <- c("a", "b", "b", "b", "a", "a")
+
+p.uniq.mapping.single <- ggplot(data=mapping.result.70)
+p.uniq.mapping.single <- p.uniq.mapping.single + geom_bar(aes(x=reorder(Sample, Percent_Unique_Mapped), y=Percent_Unique_Mapped, fill=batch), stat = "identity") 
+p.uniq.mapping.single <- p.uniq.mapping.single + labs(list(title = "", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping.single  
+ggsave(p.uniq.mapping.single, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.uniq.mapping.70.png", height = 8, width = 11) 
+
+p.multi.mapping.70 <- ggplot(data=mapping.result.70)
+p.multi.mapping.70 <- p.multi.mapping.70 + geom_bar(aes(x=reorder(Sample, Percent_Multi_Mapped), y=Percent_Multi_Mapped, fill=batch), stat = "identity") 
+p.multi.mapping.70 <- p.multi.mapping.70 + labs(list(title = "", x = "Percent of multi mapped reads", y = "number of samples"))
+p.multi.mapping.70 
+ggsave(p.multi.mapping.70, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.multi.mapping.70.png", height = 8, width = 11)
+
+p.toomany.mapping.70 <- ggplot(data=mapping.result.70)
+p.toomany.mapping.70 <- p.toomany.mapping.70 + geom_bar(aes(x=reorder(Sample, Percent_Too_Many_Multi_Mapped), y=Percent_Too_Many_Multi_Mapped, fill=batch), stat = "identity") 
+p.toomany.mapping.70 <- p.toomany.mapping.70 + labs(list(title = "", x = "Percent of toomany mapped reads", y = "number of samples"))
+p.toomany.mapping.70 
+ggsave(p.toomany.mapping.70, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.toomany.mapping.70.png", height = 8, width = 11)
+
+p.unmapped.mapping.70 <- ggplot(data=mapping.result.70)
+p.unmapped.mapping.70 <- p.unmapped.mapping.70 + geom_bar(aes(x=reorder(Sample, Percent_Unmapped_Too_Short), y=Percent_Unmapped_Too_Short, fill=batch), stat = "identity") 
+p.unmapped.mapping.70 <- p.unmapped.mapping.70 + labs(list(title = "", x = "Percent of unmapped reads", y = "number of samples"))
+p.unmapped.mapping.70 
+ggsave(p.unmapped.mapping.70, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/F2.unmapped.mapping.70.png", height = 8, width = 11)
+
+# compare average of mapping result between batch a and b 
+average.mapping.single <- aggregate(single.mapping.result[,c("Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short")], list(single.mapping.result$batch), mean)
+rownames(average.mapping.single) <- average.mapping.single$Group.1
+
+library(reshape2)
+average.mapping.single.melt <- melt(average.mapping.single, id.vars = "Group.1")
+average.mapping.single.melt
+average.mapping.single.melt$type <- c(rep("Unique",2), rep("multi",2), rep("too many", 2), rep("unmapped",2))
+
+p.average.mapping.single <- ggplot(data = average.mapping.single.melt)
+p.average.mapping.single <- p.average.mapping.single + geom_bar(aes(x=type, y=value, fill=type), stat = "identity")
+p.average.mapping.single <- p.average.mapping.single + facet_wrap(~Group.1, ncol = 2)
+p.average.mapping.single <- p.average.mapping.single + labs(list(title = "", x = "", y = "percentage"))
+p.average.mapping.single <- p.average.mapping.single + theme(axis.text.x = element_text(angle = 90))
+p.average.mapping.single <- p.average.mapping.single + geom_text(data = average.mapping.single.melt, aes(x=type, y=value, label=factor(round(value,0))))
+p.average.mapping.single
+ggsave(p.average.mapping.single, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/average.mapping.single.png", height = 5, width = 4) 
+
+# draw a same plot for paired end mapping
+average.mapping.paired <- aggregate(F2.stats.modified.2[,c("Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short")], list(F2.stats.modified.2$batch), mean)
+
+average.mapping.paired.melt <- melt(average.mapping.paired, id.vars = "Group.1")
+average.mapping.paired.melt
+average.mapping.paired.melt$type <- c(rep("Unique",2), rep("multi",2), rep("too many", 2), rep("unmapped",2))
+
+p.average.mapping.paired <- ggplot(data = average.mapping.paired.melt)
+p.average.mapping.paired <- p.average.mapping.paired + geom_bar(aes(x=type, y=value, fill=type), stat = "identity")
+p.average.mapping.paired <- p.average.mapping.paired + facet_wrap(~Group.1, ncol = 2)
+p.average.mapping.paired <- p.average.mapping.paired + labs(list(title = "", x = "", y = "percentage"))
+p.average.mapping.paired <- p.average.mapping.paired + theme(axis.text.x = element_text(angle = 90))
+p.average.mapping.paired <- p.average.mapping.paired + geom_text(data = average.mapping.paired.melt, aes(x=type, y=value, label=factor(round(value,0))))
+# p.total_mapping <- p.total_mapping + geom_text(data = total_mapping, aes(x=factor(V2), y=value, label=factor(value))
+p.average.mapping.paired
+ggsave(p.average.mapping.paired, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/average.mapping.paired.png", height = 5, width = 4)  
+
+### plot throwing out reads strategy 
+colnames(mapping.result.70)[1] <- "Sample.ID" 
+mapping.result.70.all <- merge(mapping.result.70, F2.stats, by="Sample.ID")
+mapping.result.70.all$HQ_percent <- mapping.result.70.all$Number_Input_Reads/mapping.result.70.all$TotalReads
+mapping.result.70.all
+
+average.mapping.70 <- aggregate(mapping.result.70.all[,c("Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short", "HQ_percent")], list(mapping.result.70.all$batch), mean)
+average.mapping.70$HQ_percent <- average.mapping.70$HQ_percent * 100
+
+average.mapping.70.melt <- melt(average.mapping.70, id.vars = "Group.1")
+average.mapping.70.melt
+
+average.mapping.70.melt$type <- c(rep("Unique",2), rep("multi",2), rep("too many", 2), rep("unmapped",2), rep("high qulity", 2))
+
+
+p.average.mapping.70 <- ggplot(data = average.mapping.70.melt)
+p.average.mapping.70 <- p.average.mapping.70 + geom_bar(aes(x=type, y=value, fill=type), stat = "identity")
+p.average.mapping.70 <- p.average.mapping.70 + facet_wrap(~Group.1, ncol = 2)
+p.average.mapping.70 <- p.average.mapping.70 + labs(list(title = "", x = "", y = "percentage"))
+p.average.mapping.70 <- p.average.mapping.70 + theme(axis.text.x = element_text(angle = 90))
+p.average.mapping.70 <- p.average.mapping.70 + geom_text(data = average.mapping.70.melt, aes(x=type, y=value, label=factor(round(value,0))))
+p.average.mapping.70
+ggsave(p.average.mapping.70, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/average.mapping.70.png", height = 5, width = 4) 
+
+### make a same plot for trimming using 36 bp as cutoff 
+average.mapping.36 <- aggregate(F2.stats.modified.2[,c("Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short", "HQ_percent")], list(F2.stats.modified.2$batch), mean)
+average.mapping.36$HQ_percent <- average.mapping.36$HQ_percent * 100
+
+average.mapping.36.melt <- melt(average.mapping.36, id.vars = "Group.1")
+average.mapping.36.melt
+
+average.mapping.36.melt$type <- c(rep("Unique",2), rep("multi",2), rep("too many", 2), rep("unmapped",2), rep("high qulity", 2))
+
+p.average.mapping.36 <- ggplot(data = average.mapping.36.melt)
+p.average.mapping.36 <- p.average.mapping.36 + geom_bar(aes(x=type, y=value, fill=type), stat = "identity")
+p.average.mapping.36 <- p.average.mapping.36 + facet_wrap(~Group.1, ncol = 2)
+p.average.mapping.36 <- p.average.mapping.36 + labs(list(title = "", x = "", y = "percentage"))
+p.average.mapping.36 <- p.average.mapping.36 + theme(axis.text.x = element_text(angle = 90))
+p.average.mapping.36 <- p.average.mapping.36 + geom_text(data = average.mapping.36.melt, aes(x=type, y=value, label=factor(round(value,0))))
+p.average.mapping.36
+ggsave(p.average.mapping.36, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/average.mapping.36.png", height = 5, width = 4)  
+
+F2.stats.modified.2[F2.stats.modified.2$Sample_ID=="138-156",]$batch 
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

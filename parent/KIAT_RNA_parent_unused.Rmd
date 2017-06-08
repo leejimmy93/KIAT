@@ -1,0 +1,50 @@
+---
+title: "KIAR_RNA_parent_unused"
+author: "Ruijuan Li"
+date: "9/26/2016"
+output: html_document
+---
+
+```{r}
+### plot smear 
+# young
+detags.young.1 <- rownames(lrt.young)[as.logical(de.young)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.young.1.png")
+plotSmear(lrt.young, de.tags=detags.young.1, main="young")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
+
+# bolting 
+detags.bolting.1 <- rownames(lrt.bolting)[as.logical(de.bolting)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.bolting.1.png")
+plotSmear(lrt.bolting, de.tags=detags.bolting.1, main="bolting")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
+
+# early silique 
+detags.early.silique.1 <- rownames(lrt.early.silique)[as.logical(de.early.silique)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.early.silique.1.png")
+plotSmear(lrt.early.silique, de.tags=detags.early.silique.1, main="early silique")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
+
+# late silique 
+detags.late.silique.1 <- rownames(lrt.late.silique)[as.logical(de.late.silique)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.late.silique.1.png")
+plotSmear(lrt.late.silique, de.tags=detags.late.silique.1, main="late silique")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
+
+# flowering 
+detags.flowering.1 <- rownames(lrt.flowering)[as.logical(de.flowering)]
+png(filename = "/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/detags.flowering.1.png")
+plotSmear(lrt.flowering, de.tags=detags.flowering.1, main="flowering")
+abline(h = c(-2, 2), col = "blue")
+dev.off()
+
+```
+
+
+
+
+
