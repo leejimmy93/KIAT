@@ -267,8 +267,16 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array_ABC.sl
 # extract uniquely mapped reads 
 # https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/extract_uniqule_mapped_reads.slurm
 
-# subset by genome --> calculate read depth for each position   
+# index unique bam file, subset by genome --> calculate read depth for each position 
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/calc_depth_subset_by_chr.slurm
+
+# check the B subgenome coverage result 
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/check_B_sub_coverage.slurm
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/check_B_sub_coverage.sh 
+### why every line has B subgenome????!!!!!!!! 
+
+# test this pipeline on Da-Ol-1 
+
+
+
 ```
-
-
-

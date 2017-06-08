@@ -412,7 +412,7 @@ Da-Ae flowering data
 # analyze single end data to check het ratio 
 ```{r}
 library("vcfR")
-library(tidyverse)
+library(tidyverse) 
 
 Ae_flower_single <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/single_end_mapping/Ae_flowering_single_filtered.recode.vcf.gz")
 

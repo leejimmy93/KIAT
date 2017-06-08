@@ -877,9 +877,11 @@ LG.C07.2 <- madmapper.result$V26[2856:2901]
 LG.C08.3 <- madmapper.result$V26[2902:2906]
 LG.C09.2 <- madmapper.result$V26[2907:2932] 
 
-LG <- list(LG.A01, LG.A01.2, LG.A02, LG.A02.2, LG.A03, LG.A03.2, LG.A04, LG.A04.2, LG.A05, LG.A05.2, LG.A05.3, LG.A06, LG.A06.2, LG.A07, LG.A07.2, LG.A08, LG.A08.2, LG.A09, LG.A09.2, LG.A10, LG.A10.2, LG.C01, LG.C01.2, LG.C01.2, LG.C02, LG.C02.2, LG.C03, LG.C03.2, LG.C03.3, LG.C04, LG.C04.2, LG.C04.2, LG.C04.C05, LG.C05, LG.C05.2, LG.C06, LG.C06.2, LG.C07, LG.C07.2, LG.C08, LG.C08.2, LG.C08.3, LG.C09, LG.C09.2)
-length(LG) # 44 linkage groups 
+LG.A <- list(LG.A01, LG.A01.2, LG.A02, LG.A02.2, LG.A03, LG.A03.2, LG.A04, LG.A04.2, LG.A05, LG.A05.2, LG.A05.3, LG.A06, LG.A06.2, LG.A07, LG.A07.2, LG.A08, LG.A08.2, LG.A09, LG.A09.2, LG.A10, LG.A10.2)
 
+LG.C <- list(LG.C01, LG.C01.2, LG.C02, LG.C02.2, LG.C03, LG.C03.2, LG.C03.3, LG.C04, LG.C04.2, LG.C04.C05, LG.C05, LG.C05.2, LG.C06, LG.C06.2, LG.C07, LG.C07.2, LG.C08, LG.C08.2, LG.C08.3, LG.C09, LG.C09.2)
+length(LG.A) # 21 linkage groups 
+length(LG.C) # 21 linkage groups 
 ```
 
 # get index for the above markers in different linkage group 
@@ -887,14 +889,21 @@ length(LG) # 44 linkage groups
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
 twopts.f2.05.12$marnames
 
-group <- list()
+group.A <- list()
 
-for (i in 1:length(LG)) {
-  group[[i]] <-  which(twopts.f2.05.12$marnames %in% LG[[i]])
+for (i in 1:length(LG.A)) {
+  group.A[[i]] <-  which(twopts.f2.05.12$marnames %in% LG.A[[i]])
+}
+group.A
+
+group.C <- list()
+
+for (i in 1:length(LG.C)) {
+  group.C[[i]] <-  which(twopts.f2.05.12$marnames %in% LG.C[[i]])
 }
 
-group
-save(group, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.Rdata")
+group.C
+save(group.A, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.Rdata")
 ```
 
 
