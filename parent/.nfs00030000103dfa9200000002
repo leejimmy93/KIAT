@@ -16,7 +16,7 @@ for i in $sample
 		for j in $chrom
 		do
         	samtools view -@ 2 -b $i ${j} > ${j}.bam
-        	samtools depth ${j}.bam -a > ${j}.depth  
+        	samtools depth split_then_calc${j}.bam -a > ${j}.depth  
 	done
 done
 
