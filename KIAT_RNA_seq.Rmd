@@ -447,7 +447,7 @@ sum(Ol_class_code$V1)
 # --> blastx smaller fasta files against nr database using slurm shedular array  
 
 
-# PASA annotation..., fianl result is what? updated cds.fa? 
+# PASA annotation..., final result is what? updated cds.fa? 
 
 
 
