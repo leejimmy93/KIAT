@@ -522,8 +522,8 @@ ggsave(p.mds.country.2, filename="~/505/output/figure/late_silique/p.mds.country
 # run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_GQ.vcf.gz -outputFile 505_filtered_GQ_sorted -fileType VCF
 # run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_GQ_sorted.vcf -export -exportType Hapmap -runfork1 
 # output: 505_filtered_GQ_sorted.hmp.txt  
-# edit output file to remove "#" after rs & assembly 
-#################################################### 
+# edit output file to remove "#" after rs & assembly  
+####################################################  
 ```
 
 # GWAS run

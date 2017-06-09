@@ -274,11 +274,23 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array_ABC.sl
 # https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/check_B_sub_coverage.slurm
 # https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/check_B_sub_coverage.sh 
 ### why every line has B subgenome????!!!!!!!! 
+```
 
+```{r}
 # test this pipeline on Da-Ol-1 
 # mapping using 
 # /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/mapping_comparison_A_B_C_subgenome/mismatch_0/mapping_Ol_mismatch0_ABC.sh
+# calculate depth using 
+# https://github.com/leejimmy93/KIAT/blob/master/parent/check_B_subgenome_Da_Ol.sh
+# again get coverage on B subgenome.... I must made some mistake in the earlier analysis, sad... 
+
+# To do, replicate my mistake tomorrow... is that true or due to a different method?  
 
 
 
 ```
+
+
+
+
+
