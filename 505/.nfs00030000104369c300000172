@@ -21,7 +21,7 @@ source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory 
-setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/leaf_92")
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/")
 
 ######### load data
 # genotype data 
@@ -49,13 +49,12 @@ pheno_data_505 <- gh.seed.bolt.table.wide.merge[,c("Sample.ID", "FATTY ACID_Eruc
 colnames(pheno_data_505) <- c("Taxa", "Erucic_acid", "Oil_content", "Oleic_acid")
 pheno_data_505
 
-# get the 92 common lines between leaf & late silique
-pheno_data_505_92 <- pheno_data_505[which(pheno_data_505$Taxa %in% common.lines$Taxa.x),]
-rownames(pheno_data_505_92) <- 1:nrow(pheno_data_505_92)
-
-# 
-myY <- pheno_data_505_92
+myY <- pheno_data_505
 myG <- geno_505_hmp
+
+# subset to get only 1st chromosome result 
+# myG.01 <- myG[myG$V3==1,]
+# myG.01.final <- data.frame(rbind(myG[1,], myG.01)) 
 
 # run GAPIT 
 myGAPIT <- GAPIT( 
