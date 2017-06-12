@@ -1177,13 +1177,19 @@ save(common_leaf_131_sample, file="~/505/output/common_leaf_131_sample.Rdata")
 unique_leaf <- lines_leaf_2$Name[!(lines_leaf_2$Name %in% common_leaf_131_sample)] 
 # 
 
-
-
 common.lines <- merge(lines_leaf_2, lines_late_silique_2, by="Name")[,c("Name", "Taxa.x", "Taxa.y")]
 common.lines 
 save(common.lines, file="~/505/output/common.lines.leaf.131.sample.Rdata") 
 ```
 
+# GWAS on the same 92 lines between leaf & late silique 
+```{r}
+# 1) prep for GWAS 
+# https://github.com/leejimmy93/KIAT/blob/master/505/prep_geno_92_sample.sh
+
+# 2) GWAS leaf & late silique 
+
+```
 
 
 

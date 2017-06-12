@@ -223,7 +223,7 @@ tmp <-
 tmp1 <- 
   Ae_flowering_combined.reform %>%
   group_by(CHROM) %>%
-  count(cut_width(POS, 50000), wt = Ae_het)  
+  count(cut_width(POS, 50000), wt = Ae_het)   
 
 dim(tmp)
 dim(tmp1)
