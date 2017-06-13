@@ -1191,6 +1191,14 @@ save(common.lines, file="~/505/output/common.lines.leaf.131.sample.Rdata")
 
 # use common.lines for GWAS in both leaf & late silique sample 
 ```{r}
+load("~/505/output/common.lines.leaf.131.sample.Rdata")
+write.table(common.lines, file="~/505/leaf_VS_late_silique/common.lines.92.txt")
+cat common.lines.92.txt | awk 'BEGIN{FS="\""}{print $8}' > late_silique_common_ID_92
+cat common.lines.92.txt | awk 'BEGIN{FS="\""}{print $6}' | grep -v "Taxa" > leaf_common_ID_92
+
+vcftools --keep leaf_common_ID_92 --gzvcf ../vcf_leaf_no_pop/combined/missing_0.5/505_filtered.vcf.gz --recode --recode-INFO-all --out 505_filtered_common_leaf_92
+
+
 
 
 ```

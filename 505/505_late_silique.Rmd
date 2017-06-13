@@ -1394,11 +1394,92 @@ ggsave("~/505/output/figure/clustering_common_leaf_late_silique_92.png", width =
 # GWAS using common SNPs and common lines 
 ```{r}
 # get hmp files for both leaf & late silique 
+# https://github.com/leejimmy93/KIAT/blob/master/505/vcf_to_hmp.sh
 
+# GWAS
+# https://github.com/leejimmy93/KIAT/blob/master/505/GWAS_505_late_silique_92sample_102303.R
+# https://github.com/leejimmy93/KIAT/blob/master/505/GWAS_505_leaf_92sample_102303.R 
 
+# plot manhattan result 
+library("qqman")
 
+####### leaf 
+Erucic_acid <- read.csv("~/505/output/myGAPIT/leaf_92_102303/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
+Oil_content <- read.csv("~/505/output/myGAPIT/leaf_92_102303/GAPIT..Oil_content.GWAS.Results.csv", header = T)
 
+Oleic_acid <- read.csv("~/505/output/myGAPIT/leaf_92_102303/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/output/figure/leaf_92_102303/Erucic_acid.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+) 
+dev.off()  
+
+# check the number of SNPs 
+sum(Erucic_acid$P <= 0.00001) # 39 
+sum(Oleic_acid$P <= 0.00001) # 3
+
+####### late_silique
+Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_92_102303/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/505/output/myGAPIT/late_silique_92_102303/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_92_102303/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/output/figure/late_silique_92_102303/Erucic_acid.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+) 
+dev.off()  
 ```
+
+# are the significant SNPs for different leaf dataset very similar? (temp test)
+```{r}
+significant_SNP_leaf_94_all_SNP <- read.table("~/505/output/significant_SNP.txt")
+significant_SNP_leaf_94_all_SNP <- significant_SNP_leaf_94_all_SNP$x
+
+# significant_SNP_leaf_92_all_SNP <- Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP # leaf 92 all SNP result 
+
+# significant_SNP_leaf_92_common_SNP <- Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP # leaf 92_common SNP result 
+
+save(significant_SNP_leaf_92_common_SNP, significant_SNP_leaf_92_all_SNP, file="~/505/output/significant_SNP.Rdata")
+
+length(significant_SNP_leaf_92_all_SNP)
+length(significant_SNP_leaf_92_common_SNP)
+
+tmp <- intersect(significant_SNP_leaf_92_common_SNP, significant_SNP_leaf_92_all_SNP)
+intersect(significant_SNP_leaf_94_all_SNP, tmp) # 9 SNPs are common across all leaf datasets 
+```
+
+
+
+
 
 
