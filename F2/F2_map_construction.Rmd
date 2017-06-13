@@ -17,7 +17,7 @@ library(tkrplot)
 library(onemap)  
 library(ggplot2)
 library(reshape) 
-library(tidyverse) 
+# library(tidyverse) 
 ```
 
 # import & format data (MAC version)
@@ -217,7 +217,7 @@ A01
 #################### A01 ##############################
 # load data 
 F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata") # LOD=3, max rf=0.5 
 
 # mapping order 
 LG.f2.arbi.A01 <- make.seq(twopts.f2.05.12, order[[1]])
@@ -972,9 +972,22 @@ write.map(LG.f2.A, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.ma
 library("qtl")
 
 # read in file & double crossover check 
+# import data 
+LG.f2.A <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.map")
 
+summary(LG.f2.A)
+plotMap(LG.f2.A)
+# plot.rf(LG.f2.A)
 
+totmar(LG.f2.A)
 
+LG.f2.C <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.map")
+
+summary(LG.f2.C)
+plotMap(LG.f2.C)
+plot.rf(LG.f2.C)
+
+totmar(LG.f2.C) 
 
 
 
@@ -992,13 +1005,6 @@ geno.image(cross.drop.marker, alternate.chrid = T) # grid with color pixels for 
 save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
 ```
  
-
-
-
-
-
-
-
 
 
 
