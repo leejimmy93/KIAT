@@ -946,6 +946,7 @@ for (i in 1:length(LG.f2.ord.C)){
 rf.graph.table(LG.f2.C[[i]])
 par(mfrow=c(1,1))
 draw.map(LG.f2.C, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.C, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.map") 
 ```
 
 # A subgenome
@@ -963,12 +964,35 @@ for (i in 1:length(LG.f2.ord.A)){
 rf.graph.table(LG.f2.A[[9]])
 par(mfrow=c(1,1))
 draw.map(LG.f2.A, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+write.map(LG.f2.A, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.map") 
 ```
 
-# drop markers & remove markers with double crossover 
+# remove markers with double crossover, use Julin's code & R/qtl package 
 ```{r}
+library("qtl")
 
+# read in file & double crossover check 
+
+
+
+
+
+
+
+
+write.csv(pull.geno(cross.drop.marker),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/cross.drop.marker.csv")
+
+newmap.drop.marker <- est.map(cross.drop.marker,verbose=T,error.prob=.01) # why going through 
+# the last section of code doesn't assign new map 
+plot.map(map.F2, alternate.chrid = T) # the old genetic map
+plot.map(map.F2,newmap.drop.marker, alternate.chrid = T) # genetic map comparison
+
+geno.image(cross.drop.marker, alternate.chrid = T) # grid with color pixels for different genotypes
+
+save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
 ```
+ 
+
 
 
 

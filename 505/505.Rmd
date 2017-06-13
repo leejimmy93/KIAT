@@ -1493,7 +1493,6 @@ filter(annotation.28SNP, V3=="SC09_19073712") %>% select(V8)
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/pearson.reult.Rdata")
 pearson.result
 p.pearson <- ggplot(data = pearson.result)
-p.pearson <- 
 
 ```
 

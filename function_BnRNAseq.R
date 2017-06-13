@@ -600,35 +600,28 @@ get.vcf <- function(test.2, vcf){
   return(vcf.new) 
 }
  
-#### plot manhattan result 
-library("qqman")
-plot_manhattan_oil <- function(sample_ID){
-
-  Erucic_acid <- read.csv("~/505/output/myGAPIT/sample_ID/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
-
-  Oil_content <- read.csv("~/505/output/myGAPIT/sample_ID/GAPIT..Oil_content.GWAS.Results.csv", header = T)
-
-  Oleic_acid <- read.csv("~/505/output/myGAPIT/sample_ID/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
-
-  colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
-  colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
-  colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
-
-  png("~/505/output/figure/sample_ID/Erucic_acid.png", width=12, height=10, units="in", res=300)
-  par(mfrow=c(3,1)) 
-  manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
-            cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
-  ) 
-
-  manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
-            cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
-  ) 
-
-  manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
-            cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
-  ) 
-  dev.off()  
-}
+### double crossover check 
+# check double crossover function, replace double crossover with missing data 
+check.double.crossover <- function(cross.drop.marker){
+  
+  for (chr in names(cross.drop.marker$geno)) { # for each chromosome in cross genotype data
+    my.chr <- get(chr,cross.drop.marker$geno) # return the genotype data, including data & map
+    print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+    if(ncol(my.chr$data) > 3) { 
+      my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+        apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+          if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+          if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+          if ( length(unique(gt))  == 3) return(NA)
+          return(gt[2])
+        })
+      })
+    }
+    cross.drop.marker$geno <- within(cross.drop.marker$geno,assign(chr,my.chr))
+    print(paste(chr,"NA after",sum(is.na(get(chr,cross.drop.marker$geno)$data))))
+  } 
+  return(cross.drop.marker)
+} 
 
 
 
