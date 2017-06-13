@@ -1196,18 +1196,18 @@ save(common.lines, file="~/505/output/common.lines.leaf.131.sample.Rdata")
 ```{r}
 library("qqman")
 
-#### leaf ###  
-Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_1/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+##### leaf ###  
+Erucic_acid <- read.csv("~/505/output/myGAPIT/leaf_92/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
-Oil_content <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_1/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+Oil_content <- read.csv("~/505/output/myGAPIT/leaf_92/GAPIT..Oil_content.GWAS.Results.csv", header = T)
 
-Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_1/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+Oleic_acid <- read.csv("~/505/output/myGAPIT/leaf_92/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
 
 colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
 colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
 colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
 
-png("~/505/output/figure/131_sample/Erucic_acid.png", width=12, height=10, units="in", res=300)
+png("~/505/output/figure/leaf_92/Erucic_acid.png", width=12, height=10, units="in", res=300)
 par(mfrow=c(3,1)) 
 manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
@@ -1222,11 +1222,181 @@ manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6,
     ) 
 dev.off() 
 
-# check the significant SNPs
-unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs  
+# check the number of SNPs 
+sum(Erucic_acid$P <= 0.00001) # 80 significant SNPs? 
+sum(Oleic_acid$P <= 0.00001)
+
+# overlaps between Erucic acid & Oleic acid? 
+significant_SNP <- Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP
+Oleic_acid[Oleic_acid$P <= 0.00001,]$SNP %in% Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP
+
+####### late silique 
+Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_92//GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/505/output/myGAPIT/late_silique_92/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_92/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/output/figure/late_silique_92/Erucic_acid.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+    ) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+    ) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+    ) 
+dev.off() 
+
+# check the number of SNPs 
+sum(Erucic_acid$P <= 0.00001) 
+sum(Oleic_acid$P <= 0.00001)
 ```
 
+# cluster using common SNPs for the common 92 lines 
+```{r} 
+# 1) filter based on position  
 
 
+# import into R, using vcfR for manipulation 
+library("vcfR")
+
+late_silique_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_late_silique_92.vcf.recode.vcf.gz")
+leaf_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_leaf_92.vcf.recode.vcf.gz")
+
+reform.vcf <- function(temp){
+  vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
+  vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
+  vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele
+  vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
+  vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
+  vcfgts <- subset(extract.gt(temp, element = "GT", IDtoRowNames = F), subset = vcfbi) 
+
+  temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
+  colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
+  rnames <- rownames(temp2)
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  row.names(temp2) <- rnames 
+
+return(temp2) 
+}
+
+late_silique_505_common.2 <- reform.vcf(late_silique_505_common)
+leaf_505_common.2 <- reform.vcf(leaf_505_common)
+
+# combine the two files 
+dim(late_silique_505_common.2)
+
+late_silique_505_common.2$feature <- paste(late_silique_505_common.2$CHROM, late_silique_505_common.2$POS, sep="-")
+leaf_505_common.2$feature <- paste(leaf_505_common.2$CHROM, leaf_505_common.2$POS, sep="-")
+
+combined_leaf_late_silique <- merge(leaf_505_common.2, late_silique_505_common.2, by="feature")
+dim(combined_leaf_late_silique)
+
+# prepare for cluster analysis 
+colnames(combined_leaf_late_silique)
+
+combined_leaf_late_silique.t <- data.frame(t(combined_leaf_late_silique))
+combined_leaf_late_silique.t[1:10, 1:10]
+rownames(combined_leaf_late_silique.t)
+dim(combined_leaf_late_silique.t)
+
+# combined_leaf_late_silique.t.2 <- combined_leaf_late_silique.t[c(6:63, 68:125),]
+
+combined_leaf_late_silique.t.2 <- combined_leaf_late_silique.t[!(rownames(combined_leaf_late_silique.t) %in% grep("feature|CHROM|POS|REF|ALT", rownames(combined_leaf_late_silique.t), value=T)),]
+dim(combined_leaf_late_silique.t.2)
+combined_leaf_late_silique.t.2[1:10, 1:10]
+
+geno.numeric <- apply(combined_leaf_late_silique.t.2, 2, function(x) as.integer(x))
+rnames <- rownames(combined_leaf_late_silique.t.2)
+rownames(geno.numeric) <- rnames
+
+geno.numeric.df <- data.frame(geno.numeric)
+geno.numeric <- as.matrix(geno.numeric.df)
+
+genDist <- as.matrix(dist(geno.numeric))
+
+#perform the multi-dimensional scaling
+geno.mds <- as.data.frame(cmdscale(genDist))
+head(geno.mds) #now we have 2 dimensions
+dim(geno.mds)
+plot(geno.mds)  
+
+geno.mds
+
+# add leaf & late silique 
+commom_line_count <- 92
+geno.mds$tissue <- c(rep("leaf", commom_line_count), rep("late_silique", commom_line_count))
+
+# add name 
+load("~/505/output/leaf/sample_des_revised.Rdata")
+sample_des_revised.leaf <- sample_des_revised
+dim(sample_des_revised.leaf) # 94 
+
+load("~/505/output/131_sample/sample_des_revised.Rdata")
+sample_des_revised.late_silique <- sample_des_revised 
+dim(sample_des_revised.late_silique) # 88
+
+colnames(sample_des_revised.leaf)
+colnames(sample_des_revised.late_silique) 
+
+sample_des_revised <- rbind(sample_des_revised.leaf, sample_des_revised.late_silique)
+sample_des_revised
+dim(sample_des_revised) # 182 
+
+# MDS result 
+# reformat MDS result sample ID (X remove & . to -)
+geno.mds$Sample.ID <- gsub("\\.","\\-", rownames(geno.mds)) 
+geno.mds$Sample.ID <- gsub("X", "", geno.mds$Sample.ID)
+
+geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID")
+geno.mds.all.des
+dim(geno.mds.all.des)
+
+## use hclust to check sample seperation pattern 
+library(ggdendro)
+dim(genDist) 
+
+hc.505.common <- hclust(dist(geno.numeric))
+ggdata.505.common <- dendro_data(as.dendrogram(hc.505.common))
+
+ggdata.505.common$labels$tissue[grep("X505", ggdata.505.common$labels$label)] <- "late_silique"
+ggdata.505.common$labels$tissue[grep("X505", ggdata.505.common$labels$label, invert=T)] <- "leaf"
+
+### add names to different samples 
+save(sample_des_revised, file="~/505/output/sample_des_revised_common_leaf_silique.Rdata")
+colnames(sample_des_revised)[1] <- "label"
+
+ggdata.505.common$labels
+ggdata.505.common$labels$label <- gsub("\\.","\\-", ggdata.505.common$labels$label) 
+ggdata.505.common$labels$label <- gsub("X", "", ggdata.505.common$labels$label)
+ggdata.505.common$labels <- merge(ggdata.505.common$labels, sample_des_revised, by = "label")
+# ggdata.505.common$labels$
+
+# start ggplot here 
+p.dengro <- ggplot(data = segment(ggdata.505.common))
+p.dendro <- p.dengro + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
+p.dendro <- p.dendro + geom_text(data = label(ggdata.505.common), aes(x = x, y = y, label = Name, hjust=0, color=tissue)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
+p.dendro
+ggsave("~/505/output/figure/clustering_common_leaf_late_silique_92.png", width = 15, height = 28)  
+```
+
+# cluster using current SNPs for the common 92 lines, do same line cluster from different tissue types cluster together?  
+```{r}
+
+
+
+
+```
 
 
