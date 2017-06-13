@@ -1264,10 +1264,10 @@ sum(Oleic_acid$P <= 0.00001)
 # cluster using common SNPs for the common 92 lines 
 ```{r} 
 # 1) filter based on position  
-
+# https://github.com/leejimmy93/KIAT/blob/master/505/get_common_POS_92.sh
 
 # import into R, using vcfR for manipulation 
-library("vcfR")
+library("vcfR") 
 
 late_silique_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_late_silique_92.vcf.recode.vcf.gz")
 leaf_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_leaf_92.vcf.recode.vcf.gz")
@@ -1391,8 +1391,10 @@ p.dendro
 ggsave("~/505/output/figure/clustering_common_leaf_late_silique_92.png", width = 15, height = 28)  
 ```
 
-# cluster using current SNPs for the common 92 lines, do same line cluster from different tissue types cluster together?  
+# GWAS using common SNPs and common lines 
 ```{r}
+# get hmp files for both leaf & late silique 
+
 
 
 
