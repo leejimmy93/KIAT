@@ -1475,10 +1475,95 @@ length(significant_SNP_leaf_92_all_SNP)
 length(significant_SNP_leaf_92_common_SNP)
 
 tmp <- intersect(significant_SNP_leaf_92_common_SNP, significant_SNP_leaf_92_all_SNP)
-intersect(significant_SNP_leaf_94_all_SNP, tmp) # 9 SNPs are common across all leaf datasets 
+significant_SNP_9 <- intersect(significant_SNP_leaf_94_all_SNP, tmp) # 9 SNPs are common across all leaf datasets 
+significant_SNP_9
+significant_SNP_leaf_94_all_SNP 
 ```
 
+# check genotype for the 9 common significant SNPs
+```{r}
+library("tidyverse")
+leaf_92_common <- read_table2("~/505/leaf_VS_late_silique/505_filtered_common_leaf_92.hmp.txt")
+late_silique_92_common <- read_table2("~/505/leaf_VS_late_silique/505_filtered_common_late_silique_92.hmp.txt")
 
+# extract significant SNPs 
+late_silique_sigSNP_9 <- late_silique_92_common[late_silique_92_common$rs %in% significant_SNP_9,]
+rownames(late_silique_sigSNP_9) <- late_silique_sigSNP_9$rs
+View(late_silique_sigSNP_9)
+leaf_sigSNP_9 <- leaf_92_common[leaf_92_common$rs %in% significant_SNP_9,]
+rownames(leaf_sigSNP_9) <- leaf_sigSNP_9$rs
+View(leaf_sigSNP_9)
+
+# replace sampleID with SN ID
+late_silique_sigSNP_9.t <- as.data.frame(t(late_silique_sigSNP_9))
+late_silique_sigSNP_9.t$Taxa.y <- rownames(late_silique_sigSNP_9.t)
+
+leaf_sigSNP_9.t <- as.data.frame(t(leaf_sigSNP_9))
+leaf_sigSNP_9.t$Taxa.x <- rownames(leaf_sigSNP_9.t)
+
+load("~/505/leaf_VS_late_silique/SN_Taxa_leaf_silique.Rdata")
+SN_Taxa_leaf_silique
+
+tmp1 <- merge(leaf_sigSNP_9.t, SN_Taxa_leaf_silique, by="Taxa.x")
+tmp2 <- merge(late_silique_sigSNP_9.t, SN_Taxa_leaf_silique, by="Taxa.y")
+sigSNP_9 <- merge(tmp1, tmp2, by="SN")
+View(sigSNP_9)
+
+write.csv(sigSNP_9, "~/505/output/sigSNP_9.csv")
+```
+
+# check phenotype 
+```{r}
+# late silique 
+sample_des_c <- read.csv("~/505/data/phenotype/batch_c.csv", header=T)
+sample_des_d <- read.csv("~/505/data/phenotype/batch_d.csv", header=T)
+sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", header=T)
+
+sample_des_c_sub2 <- sample_des_c[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_d_sub2 <- sample_des_d[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_e_sub2 <- sample_des_e[,c("Sample.ID", "No..of.Sowing", "Name")]
+
+sample_des_d_sub2 <- sample_des_d_sub2[c(1:41),]
+sample_des_sub2 <- rbind(sample_des_c_sub2, sample_des_d_sub2, sample_des_e_sub2)
+
+# add name to to replace SN
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
+gh.seed.bolt.table.wide.merge <- merge(sample_des_sub2, gh.seed.bolt.table.wide, by = "SN")
+pheno_data_505 <- gh.seed.bolt.table.wide.merge[,c("SN", "Sample.ID", "Name","FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
+colnames(pheno_data_505) <- c("SN","Taxa", "Name","Erucic_acid", "Oil_content", "Oleic_acid")
+pheno_data_505
+K250_K251 <- data.frame(SN = c("K250", "K251"),
+      Taxa = c("505_K_250", "505_K_251"),
+      Name = c("K250", "K251"), 
+  		Erucic_acid = rep(NA, 2),
+			Oil_content = rep(NA, 2),
+			Oleic_acid = rep(NA, 2))
+pheno_data_505.silique <- rbind(pheno_data_505, K250_K251)
+
+# leaf 
+sample_des_a_revised <- read.csv("~/505/data/phenotype/batch_a_revised.csv", header=T)
+sample_des_b_revised <- read.csv("~/505/data/phenotype/batch_b_revised.csv", header=T)
+
+sample_des_a_sub2 <- sample_des_a_revised[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_a_sub2 <- sample_des_a_sub2[!is.na(sample_des_a_sub2$Sample.ID),]
+sample_des_b_sub2 <- sample_des_b_revised[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_sub2 <- rbind(sample_des_a_sub2, sample_des_b_sub2)
+
+# add name to to replace SN
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
+gh.seed.bolt.table.wide.merge <- merge(sample_des_sub2, gh.seed.bolt.table.wide, by = "SN")
+pheno_data_505.leaf <- gh.seed.bolt.table.wide.merge[,c("SN","Sample.ID","Name", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
+colnames(pheno_data_505.leaf) <- c("SN","Taxa", "Name","Erucic_acid", "Oil_content", "Oleic_acid")
+pheno_data_505.leaf 
+
+dim(pheno_data_505.leaf)
+dim(pheno_data_505.silique)
+tmp <- merge(pheno_data_505.leaf, pheno_data_505.silique, by="SN")
+SN_Taxa_leaf_silique <- tmp[,c("SN", "Taxa.x", "Taxa.y")]
+save(SN_Taxa_leaf_silique, file="~/505/leaf_VS_late_silique/SN_Taxa_leaf_silique.Rdata")
+View(gh.seed.bolt.table.wide) 
+# conclusion: phenotype data has no problem  
+```
 
 
 
