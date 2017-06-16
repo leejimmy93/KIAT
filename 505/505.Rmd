@@ -370,7 +370,7 @@ temp <- leaf_505
   temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
   row.names(temp2) <- rnames
 
-#  save(temp2, file="~/505/output/leaf/temp2.Rdata")
+#  save(temp2, file="~/505/output/leaf/temp2.Rdata") 
 
   load("~/505/output/leaf/temp2.Rdata") 
 
