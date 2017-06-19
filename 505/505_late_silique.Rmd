@@ -253,7 +253,24 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 
 # stats, wait for late 
 ```{r}
-# output: many stats start with 505_filtered  
+# mean read depth before read depth trimming 
+mean.depth <- read.table("~/505/vcf_late_silique_131_sample/combined/505.ldepth.mean", header=T)
+head(mean.depth)
+mean(mean.depth$MEAN_DEPTH) # 15.58821 
+
+png("~/505/output/figure/read.depth.png", width=4, height=3, units="in", res=300) 
+hist(log10(mean.depth$MEAN_DEPTH), xlab = "log10(read depth)", ylab="Number of SNPs", main="read depth", breaks=50)
+abline(v=c(log10(5),log10(500)), col="red", lwd=2)
+dev.off()
+
+dim(mean.depth) # 434331      4 
+# decide to use 5 to 500 as the threshold for depth 
+
+
+
+
+
+# output: many stats start with 505_filtered 
 ```
 
 ```{r}
@@ -1526,7 +1543,7 @@ rownames(vcf_sigSNP_9.silique) <- vcf_sigSNP_9.silique$feature2
 vcf_sigSNP_9.silique.t <- as.data.frame(t(vcf_sigSNP_9.silique))
 rownames(vcf_sigSNP_9.silique.t) <- gsub("\\.","\\-", rownames(vcf_sigSNP_9.silique.t))
 rownames(vcf_sigSNP_9.silique.t) <- gsub("X", "", rownames(vcf_sigSNP_9.silique.t))  
-vcf_sigSNP_9.silique.t
+vcf_sigSNP_9.silique.t 
 
 # leaf 
 leaf_505_common.2.new <-  
@@ -1604,6 +1621,7 @@ K250_K251 <- data.frame(SN = c("K250", "K251"),
 			Oil_content = rep(NA, 2),
 			Oleic_acid = rep(NA, 2))
 pheno_data_505.silique <- rbind(pheno_data_505, K250_K251)
+save(pheno_data_505.silique, file="~/505/output/131_sample/pheno_data_505.silique.Rdata")
 
 # leaf 
 sample_des_a_revised <- read.csv("~/505/data/phenotype/batch_a_revised.csv", header=T)
@@ -1620,6 +1638,7 @@ gh.seed.bolt.table.wide.merge <- merge(sample_des_sub2, gh.seed.bolt.table.wide,
 pheno_data_505.leaf <- gh.seed.bolt.table.wide.merge[,c("SN","Sample.ID","Name", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
 colnames(pheno_data_505.leaf) <- c("SN","Taxa", "Name","Erucic_acid", "Oil_content", "Oleic_acid")
 pheno_data_505.leaf 
+save(pheno_data_505.leaf, file="~/505/output/leaf/pheno_data_505.leaf.Rdata")
 
 dim(pheno_data_505.leaf)
 dim(pheno_data_505.silique)
@@ -1628,6 +1647,100 @@ SN_Taxa_leaf_silique <- tmp[,c("SN", "Taxa.x", "Taxa.y")]
 save(SN_Taxa_leaf_silique, file="~/505/leaf_VS_late_silique/SN_Taxa_leaf_silique.Rdata")
 View(gh.seed.bolt.table.wide) 
 # conclusion: phenotype data has no problem  
+```
+
+# another thing worth check is to see the depth between leaf & silique data, also check the heterzygosity ratio for leaf & late silique data, because my impression is that most inconsistency are due to missing data or het calls 
+# different parameters should be used for SNP filtering. 
+```{r}
+
+
+
+```
+
+# t-test on the 9 sigSNPs for leaf & silique 
+The hypothesis is that leaf data has higher depth than silique data, so overall its P-value is more significant than silique data. So if we do t-test on a single SNP, compare it between leaf & silique data, the P-value should be smaller for leaf than in silique. (GWAS is just a collection of t-test using phenotype as the result, genotype as the predictor? I am actually not sure this is true, check notes need to... )  
+```{r}
+## load data 
+# common phentype data 
+load("~/505/output/pheno_data_505_late_silique.R")
+load("~/505/output/pheno_data_505_leaf.R")
+
+pheno_data_505_late_silique
+pheno_data_505_leaf
+
+load("~/505/output/common.lines.leaf.131.sample.Rdata")
+pheno_data_505_92_leaf <- pheno_data_505_leaf[which(pheno_data_505_leaf$Taxa %in% common.lines$Taxa.x),]
+pheno_data_505_92_leaf
+rownames(pheno_data_505_92_leaf) <- 1:nrow(pheno_data_505_92_leaf)
+
+pheno_data_505_92_late_silique <- pheno_data_505_late_silique[which(pheno_data_505_late_silique$Taxa %in% common.lines$Taxa.y),]
+pheno_data_505_92_late_silique
+rownames(pheno_data_505_92_late_silique) <- 1:nrow(pheno_data_505_92_late_silique)
+
+## common genotype data (vcf format, genotype as numeric values) 
+library("tidyverse")
+leaf_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_leaf_92.vcf.recode.vcf.gz")
+late_silique_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_late_silique_92.vcf.recode.vcf.gz")
+
+significant_SNP_9
+
+# vcf reform
+leaf_505_common.2.2 <- reform.vcf(leaf_505_common)
+late_silique_505_common.2.2 <- reform.vcf(late_silique_505_common) 
+
+# extract significant SNPs 
+leaf_505_common.t <- vcf_sigSNP_extract(vcf=leaf_505_common.2.2, significant_SNP_9)
+leaf_505_common.t <- leaf_505_common.t[-c(1:3),]
+dim(leaf_505_common.t)  # 92 9 
+late_silique_505_common.t <- vcf_sigSNP_extract(vcf=late_silique_505_common.2.2, significant_SNP_9)
+late_silique_505_common.t <- late_silique_505_common.t[-c(1:3),]
+dim(late_silique_505_common.t) # 92 9 
+
+# modify all to numeric vectors (t-test only accept numeric value)
+late_silique_505_common.t.numeric <- 
+apply(late_silique_505_common.t, 2, as.character) %>%
+  apply(2, as.numeric) %>% 
+  as.data.frame()
+
+rownames(late_silique_505_common.t.numeric) <- rownames(late_silique_505_common.t)
+
+leaf_505_common.t.numeric <- 
+apply(leaf_505_common.t, 2, as.character) %>%
+  apply(2, as.numeric) %>%
+  as.data.frame()
+
+rownames(leaf_505_common.t.numeric) <- rownames(leaf_505_common.t)
+
+## T-test   
+significant_SNP
+
+Pvalue.leaf <- data.frame()
+
+for (i in significant_SNP){
+  tmp <- t.test(leaf_505_common.t.numeric[,i], pheno_data_505_92_leaf$Erucic_acid) 
+  Pvalue.leaf[i,1] <- tmp$p.value
+}
+
+Pvalue.late_silique <- data.frame()
+
+for (i in significant_SNP){
+  tmp <- t.test(late_silique_505_common.t.numeric[,i], pheno_data_505_92_late_silique$Erucic_acid) 
+  Pvalue.late_silique[i,1] <- tmp$p.value
+}
+
+colnames(Pvalue.leaf) <- "leaf"
+colnames(Pvalue.late_silique) <- "late_silique"
+
+ttest_Pvalues <- merge(Pvalue.leaf, Pvalue.late_silique, by="row.names")
+ttest_Pvalues
+# I don't think t-test the is test used in GWAS... 
+
+```
+
+### substitute leaf & late silique's 9 SNPs genotype & check association 
+```{r}
+
+
 ```
 
 ### appendix for functions
@@ -1690,6 +1803,29 @@ IUPAC.code <- function(temp2){
 
 return(temp2)
 }
+
+vcf <- late_silique_505_common.2.2
+dim(vcf)
+significant_SNP <- significant_SNP_9
+
+vcf_sigSNP_extract <- function(vcf, significant_SNP){
+  vcf.new <-  
+  vcf %>% 
+    unite(feature2, CHROM, POS)
+
+  vcf.new$feature2 <- gsub("chr", "S", vcf.new$feature2)
+  vcf.new$feature2 <- toupper(vcf.new$feature2)
+
+  vcf_sigSNP <- vcf.new[vcf.new$feature2 %in% significant_SNP,]
+  rownames(vcf_sigSNP) <- vcf_sigSNP$feature2
+
+  vcf_sigSNP.t <- as.data.frame(t(vcf_sigSNP))
+  rownames(vcf_sigSNP.t) <- gsub("\\.","\\-", rownames(vcf_sigSNP.t))
+  rownames(vcf_sigSNP.t) <- gsub("X", "", rownames(vcf_sigSNP.t))  
+  
+  return(vcf_sigSNP.t)
+}  
+
 ```
 
 

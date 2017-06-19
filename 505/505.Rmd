@@ -249,7 +249,7 @@ stats mainly for filtered dataset, stats here are from data w/o GQ, but it is st
 
 ```{r}
 # mean read depth before read depth trimming 
-mean.depth <- read.table("~/505/vcf/combined/505_filtered_MAF_Q_depth_missingness.ldepth.mean", header=T)
+mean.depth <- read.table("~/505/vcf_leaf/combined/505_filtered_MAF_Q_depth_missingness.ldepth.mean", header=T)
 head(mean.depth)
 mean(mean.depth$MEAN_DEPTH) # 34.53817 
 
