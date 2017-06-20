@@ -1696,44 +1696,47 @@ late_silique_505_common.t <- vcf_sigSNP_extract(vcf=late_silique_505_common.2.2,
 late_silique_505_common.t <- late_silique_505_common.t[-c(1:3),]
 dim(late_silique_505_common.t) # 92 9 
 
-# modify all to numeric vectors (t-test only accept numeric value)
-late_silique_505_common.t.numeric <- 
-apply(late_silique_505_common.t, 2, as.character) %>%
-  apply(2, as.numeric) %>% 
-  as.data.frame()
+# combine phenotype & genotype data 
+late_silique_505_common.t$Taxa <- rownames(late_silique_505_common.t)
+for_ttest_late_silique <- merge(late_silique_505_common.t, pheno_data_505_92_late_silique, by="Taxa")
 
-rownames(late_silique_505_common.t.numeric) <- rownames(late_silique_505_common.t)
+leaf_505_common.t$Taxa <- rownames(leaf_505_common.t)
+for_ttest_leaf <- merge(leaf_505_common.t, pheno_data_505_92_leaf, by="Taxa")
 
-leaf_505_common.t.numeric <- 
-apply(leaf_505_common.t, 2, as.character) %>%
-  apply(2, as.numeric) %>%
-  as.data.frame()
+dim(for_ttest_leaf)
+colnames(for_ttest_leaf)
 
-rownames(leaf_505_common.t.numeric) <- rownames(leaf_505_common.t)
-
-## T-test   
+## anova 
+# cannot perform t-test bc. grouping factor is not 2 
 significant_SNP
+traits <- colnames(pheno_data_505_leaf)[2:4]
 
-Pvalue.leaf <- data.frame()
+anova_result_leaf <- data.frame()
 
-for (i in significant_SNP){
-  tmp <- t.test(leaf_505_common.t.numeric[,i], pheno_data_505_92_leaf$Erucic_acid) 
-  Pvalue.leaf[i,1] <- tmp$p.value
+for (j in traits){
+  for (i in significant_SNP){
+      tmp <- aov(for_ttest_leaf[,j] ~ for_ttest_leaf[,i]) 
+      anova_result_leaf[i,j] <- unlist(summary(tmp))["Pr(>F)1"]  
+    } 
+}
+anova_result_leaf
+
+anova_result_late_silique <- data.frame()
+
+for (j in traits){
+  for (i in significant_SNP){
+      tmp <- aov(for_ttest_late_silique[,j] ~ for_ttest_late_silique[,i]) 
+      anova_result_late_silique[i,j] <- unlist(summary(tmp))["Pr(>F)1"]  
+    } 
 }
 
-Pvalue.late_silique <- data.frame()
+anova_result_late_silique
 
-for (i in significant_SNP){
-  tmp <- t.test(late_silique_505_common.t.numeric[,i], pheno_data_505_92_late_silique$Erucic_acid) 
-  Pvalue.late_silique[i,1] <- tmp$p.value
-}
+### transform data for ggplot 
 
-colnames(Pvalue.leaf) <- "leaf"
-colnames(Pvalue.late_silique) <- "late_silique"
 
-ttest_Pvalues <- merge(Pvalue.leaf, Pvalue.late_silique, by="row.names")
-ttest_Pvalues
-# I don't think t-test the is test used in GWAS... 
+
+
 
 ```
 
