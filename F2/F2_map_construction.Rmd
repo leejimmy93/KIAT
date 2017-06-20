@@ -556,7 +556,6 @@ rf.graph.table(LG.f2.arbi.C05.map.3)
 LG.f2.arbi.C05.3$seq.num
 ```
 
-
 # just export the orignal order 
 ```{r}
 F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
@@ -866,7 +865,7 @@ LG.A05.3 <- madmapper.result$V26[2109:2166]
 LG.A06.2 <- madmapper.result$V26[2167:2293]
 LG.A07.2 <- madmapper.result$V26[2294:2358]
 LG.A08 <- madmapper.result$V26[2359:2424]
-LG.A08.2 <- madmapper.result$V26[2425:2508]
+LG.A08.2 <- madmapper.result$V26[2425:2508] 
 LG.C02 <- madmapper.result$V26[2509:2546]
 LG.A10.2 <- madmapper.result$V26[2547:2640]
 LG.C02.2 <- madmapper.result$V26[2641:2662]
@@ -943,10 +942,22 @@ for (i in 1:length(LG.f2.ord.C)){
   LG.f2.C[[i]] <- make.seq(LG.f2.ord.C[[i]], "force") 
 }
 
-rf.graph.table(LG.f2.C[[i]])
+# rf.graph.table(LG.f2.C[[i]])
 par(mfrow=c(1,1))
 draw.map(LG.f2.C, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
 write.map(LG.f2.C, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.map") 
+
+# use safe mode 
+LG.f2.C.safe <- list()
+
+for (i in 1:length(LG.f2.ord.C)){
+  LG.f2.C.safe[[i]] <- make.seq(LG.f2.ord.C[[i]], "safe") 
+} 
+
+rf.graph.table(LG.f2.C.safe[[i]])
+par(mfrow=c(1,1))
+draw.map(LG.f2.C.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.C.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
 ```
 
 # A subgenome
@@ -967,7 +978,7 @@ draw.map(LG.f2.A, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
 write.map(LG.f2.A, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.map") 
 ```
 
-# remove markers with double crossover, use Julin's code & R/qtl package 
+# R/qtl package to plot LOD & rf headmap to check marker order & assignment to LG correctness  
 ```{r}
 library("qtl")
 
@@ -989,22 +1000,27 @@ plot.rf(LG.f2.C)
 
 totmar(LG.f2.C) 
 
+LG.f2.C.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
 
+summary(LG.f2.C.safe)
+plotMap(LG.f2.C.safe)
+plot.rf(LG.f2.C.safe)
 
+totmar(LG.f2.C.safe) 
 
-
-write.csv(pull.geno(cross.drop.marker),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/cross.drop.marker.csv")
-
-newmap.drop.marker <- est.map(cross.drop.marker,verbose=T,error.prob=.01) # why going through 
-# the last section of code doesn't assign new map 
-plot.map(map.F2, alternate.chrid = T) # the old genetic map
-plot.map(map.F2,newmap.drop.marker, alternate.chrid = T) # genetic map comparison
-
-geno.image(cross.drop.marker, alternate.chrid = T) # grid with color pixels for different genotypes
+geno.image(LG.f2.C, alternate.chrid = T) # grid with color pixels for different genotypes
+geno.image(LG.f2.A, alternate.chrid = T) # grid with color pixels for different genotypes
 
 save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
 ```
  
+# MDS of markers from the same chromosome but different LGs, use marker to seperate   
+```{r}
+
+
+
+
+```
 
 
 
