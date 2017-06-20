@@ -1732,13 +1732,36 @@ for (j in traits){
 
 anova_result_late_silique
 
-### transform data for ggplot 
+### transform data for better result presentation 
+anova_result_leaf.new <- 
+anova_result_leaf %>%
+  mutate(SNP = rownames(anova_result_leaf))
 
+anova_result_leaf.new.melt <- melt(anova_result_leaf.new)
+colnames(anova_result_leaf.new.melt)[3] <- "leaf"
 
+anova_result_leaf.new.melt.new <- 
+anova_result_leaf.new.melt %>%
+  unite(ID, SNP, variable, sep="-")  
 
+anova_result_late_silique.new <- 
+anova_result_late_silique %>%
+  mutate(SNP = rownames(anova_result_late_silique))
 
+anova_result_late_silique.new.melt <- melt(anova_result_late_silique.new)
+colnames(anova_result_late_silique.new.melt)[3] <- "late_silique"
 
-```
+anova_result_late_silique.new.melt.new <- 
+anova_result_late_silique.new.melt %>%
+  unite(ID, SNP, variable, sep="-")  
+
+anova_result <- 
+merge(anova_result_leaf.new.melt.new, anova_result_late_silique.new.melt.new, by="ID")
+
+anova_result$note <- ifelse(anova_result$leaf < anova_result$late_silique, "T", "F")
+anova_result 
+write.csv(anova_result, "~/505/output/anova_result.csv")
+``` 
 
 ### substitute leaf & late silique's 9 SNPs genotype & check association 
 ```{r}
