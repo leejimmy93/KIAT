@@ -1514,6 +1514,138 @@ View(sigSNP_9)
 write.csv(sigSNP_9, "~/505/output/sigSNP_9.csv")
 ```
 
+### substitute leaf & late silique's 9 SNPs genotype & check association 
+The idea is that there might be other factor influence the GWAS result... (Julin suggested) (a lot of input data in this chunk are legacy of the last chunk)
+```{r}
+# hmp file 
+dim(leaf_92_common) # 102303 103 
+dim(late_silique_92_common) # 102303    103 
+leaf_92_common[1:10, 1:20]
+
+# replace Taxa ID with SN# 
+SN_Taxa_leaf_silique
+temp1 <- data.frame(Taxa.x = colnames(leaf_92_common))
+temp1$index <- rownames(temp1)
+head(temp1)
+temp1.2 <- merge(temp1, SN_Taxa_leaf_silique, by="Taxa.x", all=T)
+
+for (i in 1:nrow(temp1.2)){ 
+  temp1.2$SN_new[i] <- ifelse(!is.na(temp1.2$SN[i]), temp1.2$SN[i], as.character(temp1.2[i, "Taxa.x"]))  
+}
+
+colnames_new_leaf <- temp1.2[order(as.numeric(temp1.2$index)),]$SN_new
+colnames(leaf_92_common) <- colnames_new_leaf
+
+### late silique 
+temp2 <- data.frame(Taxa.y = colnames(late_silique_92_common))
+temp2$index <- rownames(temp2)
+head(temp2)
+head(SN_Taxa_leaf_silique)
+temp2.2 <- merge(temp2, SN_Taxa_leaf_silique, by="Taxa.y", all=T)
+
+for (i in 1:nrow(temp2.2)){ 
+  temp2.2$SN_new[i] <- ifelse(!is.na(temp2.2$SN[i]), temp2.2$SN[i], as.character(temp2.2[i, "Taxa.y"]))  
+}
+
+colnames_new_late_silique <- temp2.2[order(as.numeric(temp2.2$index)),]$SN_new
+colnames(late_silique_92_common) <- colnames_new_late_silique
+late_silique_92_common[1:10, 1:20]
+
+# add tissue to each file 
+leaf_92_common$tissue <- rep("leaf", nrow(leaf_92_common))
+leaf_92_common$index <- as.numeric(rownames(leaf_92_common))
+late_silique_92_common$tissue <- rep("late_silique", nrow(late_silique_92_common))
+late_silique_92_common$index <- as.numeric(rownames(late_silique_92_common))
+common_92 <- rbind(leaf_92_common, late_silique_92_common)
+
+# significant SNPs 
+significant_SNP
+
+# swap genotype for the 9 significant SNPs
+# 9 sigSNP from leaf & other from late silique 
+sigSNP <- common_92[common_92$rs %in% significant_SNP & common_92$tissue=="leaf",]
+other <- common_92[!(common_92$rs %in% significant_SNP) & common_92$tissue=="late_silique",]
+all <- rbind(sigSNP, other)
+all.sorted <- all[order(all$index),]
+all.sorted[1:10, 1:10]
+sig_leaf_other_silique <- 
+  all.sorted %>%
+  select(-(tissue:index))
+dim(sig_leaf_other_silique) # 102303 103 
+write.table(sig_leaf_other_silique, sep="\t", "~/505/leaf_VS_late_silique/sig_leaf_other_silique.hmp", row.names = F) 
+# cat sig_leaf_other_silique.hmp | sed 's/"//g' > sig_leaf_other_silique.hmp.txt 
+
+# 9 sigSNP from silique & other from leaf 
+sigSNP <- common_92[common_92$rs %in% significant_SNP & common_92$tissue=="late_silique",]
+other <- common_92[!(common_92$rs %in% significant_SNP) & common_92$tissue=="leaf",]
+all <- rbind(sigSNP, other) 
+all.sorted <- all[order(all$index),]
+all.sorted[1:10, 1:10]
+sig_silique_other_leaf <- 
+  all.sorted %>%
+  select(-(tissue:index))
+dim(sig_silique_other_leaf) # 102303 103 
+write.table(sig_silique_other_leaf, sep="\t", "~/505/leaf_VS_late_silique/sig_silique_other_leaf.hmp", row.names = F) 
+# cat sig_silique_other_leaf.hmp | sed 's/"//g' > sig_silique_other_leaf.hmp.txt 
+
+# GWAS 
+# run in whitney 
+
+# display result 
+# sig leaf other silique 
+Erucic_acid <- read.csv("~/505/output/myGAPIT/sig_leaf_other_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/505/output/myGAPIT/sig_leaf_other_silique/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/output/myGAPIT/sig_leaf_other_silique/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/output/figure/sig_leaf_other_silique.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+) 
+dev.off() 
+
+# sig silique other leaf 
+Erucic_acid <- read.csv("~/505/output/myGAPIT/sig_silique_other_leaf/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/505/output/myGAPIT/sig_silique_other_leaf/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/output/myGAPIT/sig_silique_other_leaf/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/output/figure/sig_silique_other_leaf.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+) 
+dev.off() 
+
+``` 
+
 # check genotype for the 9 sigSNPs in the vcf file  
 found that there might be problem when converting vcf to hmp format, get M,R,N etc in the genotype calls, which shoud not be there, so check the vcf genotype for the 9 sigSNPs in both leaf & silique data 
 ```{r}
@@ -1643,6 +1775,15 @@ save(pheno_data_505.leaf, file="~/505/output/leaf/pheno_data_505.leaf.Rdata")
 dim(pheno_data_505.leaf)
 dim(pheno_data_505.silique)
 tmp <- merge(pheno_data_505.leaf, pheno_data_505.silique, by="SN")
+
+common_92_pheno <- 
+  tmp %>%
+  select(SN, Erucic_acid.x, Oil_content.x, Oleic_acid.x)
+
+colnames(common_92_pheno) <- c("Taxa", "Erucic_acid", "Oil_content", "Oleic_acid")
+head(common_92_pheno)
+save(common_92_pheno, file="~/505/leaf_VS_late_silique/common_92_pheno.Rdata")
+
 SN_Taxa_leaf_silique <- tmp[,c("SN", "Taxa.x", "Taxa.y")]
 save(SN_Taxa_leaf_silique, file="~/505/leaf_VS_late_silique/SN_Taxa_leaf_silique.Rdata")
 View(gh.seed.bolt.table.wide) 
@@ -1762,12 +1903,6 @@ anova_result$note <- ifelse(anova_result$leaf < anova_result$late_silique, "T", 
 anova_result 
 write.csv(anova_result, "~/505/output/anova_result.csv")
 ``` 
-
-### substitute leaf & late silique's 9 SNPs genotype & check association 
-```{r}
-
-
-```
 
 ### appendix for functions
 ```{r}
