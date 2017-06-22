@@ -1588,6 +1588,33 @@ dim(sig_silique_other_leaf) # 102303 103
 write.table(sig_silique_other_leaf, sep="\t", "~/505/leaf_VS_late_silique/sig_silique_other_leaf.hmp", row.names = F) 
 # cat sig_silique_other_leaf.hmp | sed 's/"//g' > sig_silique_other_leaf.hmp.txt 
 
+# swap back 
+# leaf 
+sigSNP <- common_92[common_92$rs %in% significant_SNP & common_92$tissue=="leaf",]
+other <- common_92[!(common_92$rs %in% significant_SNP) & common_92$tissue=="leaf",]
+all <- rbind(sigSNP, other) 
+all.sorted <- all[order(all$index),]
+all.sorted[1:10, 1:10]
+sig_leaf_other_leaf <- 
+  all.sorted %>%
+  select(-(tissue:index))
+dim(sig_leaf_other_leaf) # 102303 103 
+write.table(sig_leaf_other_leaf, sep="\t", "~/505/leaf_VS_late_silique/sig_leaf_other_leaf.hmp", row.names = F) 
+# cat sig_leaf_other_leaf.hmp | sed 's/"//g' > sig_leaf_other_leaf.hmp.txt 
+
+# silique 
+sigSNP <- common_92[common_92$rs %in% significant_SNP & common_92$tissue=="late_silique",]
+other <- common_92[!(common_92$rs %in% significant_SNP) & common_92$tissue=="late_silique",]
+all <- rbind(sigSNP, other) 
+all.sorted <- all[order(all$index),]
+all.sorted[1:10, 1:10]
+sig_silique_other_silique <- 
+  all.sorted %>%
+  select(-(tissue:index))
+dim(sig_silique_other_silique) # 102303 103 
+write.table(sig_silique_other_silique, sep="\t", "~/505/leaf_VS_late_silique/sig_silique_other_silique.hmp", row.names = F) 
+# cat sig_silique_other_silique.hmp | sed 's/"//g' > sig_silique_other_silique.hmp.txt 
+
 # GWAS 
 # run in whitney 
 
@@ -1642,8 +1669,9 @@ manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6,
 manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
           cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
 ) 
-dev.off() 
+dev.off()  
 
+# swap genotypes & swap back found the no significant SNPs might be caused by not-matching column ID? redo GWAS for late silique ... 
 ``` 
 
 # check genotype for the 9 sigSNPs in the vcf file  
