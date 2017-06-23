@@ -1572,8 +1572,15 @@ leaf_92_common$index <- as.numeric(rownames(leaf_92_common))
 late_silique_92_common$tissue <- rep("late_silique", nrow(late_silique_92_common))
 late_silique_92_common$index <- as.numeric(rownames(late_silique_92_common))
 
-colnames(leaf_92_common) 
+### merge two data frames 
+late_silique_92_common_sorted <- late_silique_92_common[,order(match(colnames(late_silique_92_common), colnames(leaf_92_common)))]
+match(colnames(late_silique_92_common), colnames(leaf_92_common))
+colnames(late_silique_92_common_sorted)
+colnames(leaf_92_common)
+
+order <- colnames(leaf_92_common) 
 colnames(late_silique_92_common)
+match(leaf_92_common, late_silique_92_common)
 
 common_92 <- rbind(leaf_92_common, late_silique_92_common)
 
