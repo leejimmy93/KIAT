@@ -1164,6 +1164,11 @@ dev.off()
 unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs 
 ```
 
+# re-run GWAS for late silique dataset 
+```{r}
+
+```
+
 # compare leaf & late silique 131 samples, how many lines are overlapped  
 ```{r}
 load("~/505/output/pheno_data_505_leaf.R")
@@ -1518,16 +1523,22 @@ write.csv(sigSNP_9, "~/505/output/sigSNP_9.csv")
 The idea is that there might be other factor influence the GWAS result... (Julin suggested) (a lot of input data in this chunk are legacy of the last chunk)
 ```{r}
 # hmp file 
+library("tidyverse")
+leaf_92_common <- read_table2("~/505/leaf_VS_late_silique/505_filtered_common_leaf_92.hmp.txt")
+late_silique_92_common <- read_table2("~/505/leaf_VS_late_silique/505_filtered_common_late_silique_92.hmp.txt")
+
 dim(leaf_92_common) # 102303 103 
 dim(late_silique_92_common) # 102303    103 
 leaf_92_common[1:10, 1:20]
 
 # replace Taxa ID with SN# 
-SN_Taxa_leaf_silique
+head(SN_Taxa_leaf_silique)
 temp1 <- data.frame(Taxa.x = colnames(leaf_92_common))
 temp1$index <- rownames(temp1)
 head(temp1)
+dim(temp1)
 temp1.2 <- merge(temp1, SN_Taxa_leaf_silique, by="Taxa.x", all=T)
+temp1.2
 
 for (i in 1:nrow(temp1.2)){ 
   temp1.2$SN_new[i] <- ifelse(!is.na(temp1.2$SN[i]), temp1.2$SN[i], as.character(temp1.2[i, "Taxa.x"]))  
@@ -1535,6 +1546,8 @@ for (i in 1:nrow(temp1.2)){
 
 colnames_new_leaf <- temp1.2[order(as.numeric(temp1.2$index)),]$SN_new
 colnames(leaf_92_common) <- colnames_new_leaf
+leaf_92_common[1:10, 1:20]
+# write.table(leaf_92_common, sep="\t", "~/505/leaf_VS_late_silique/tmp1.hmp", row.names = F) 
 
 ### late silique 
 temp2 <- data.frame(Taxa.y = colnames(late_silique_92_common))
@@ -1549,14 +1562,36 @@ for (i in 1:nrow(temp2.2)){
 
 colnames_new_late_silique <- temp2.2[order(as.numeric(temp2.2$index)),]$SN_new
 colnames(late_silique_92_common) <- colnames_new_late_silique
-late_silique_92_common[1:10, 1:20]
+late_silique_92_common[1:10, 1:20] 
+# write.table(late_silique_92_common, sep="\t", "~/505/leaf_VS_late_silique/tmp2.hmp", row.names = F) 
+########### the above is correct ############ double checked !!!! 
 
 # add tissue to each file 
 leaf_92_common$tissue <- rep("leaf", nrow(leaf_92_common))
 leaf_92_common$index <- as.numeric(rownames(leaf_92_common))
 late_silique_92_common$tissue <- rep("late_silique", nrow(late_silique_92_common))
 late_silique_92_common$index <- as.numeric(rownames(late_silique_92_common))
+
+### merge two data frames 
+late_silique_92_common_sorted <- late_silique_92_common[,order(match(colnames(late_silique_92_common), colnames(leaf_92_common)))]
+match(colnames(late_silique_92_common), colnames(leaf_92_common))
+colnames(late_silique_92_common_sorted)
+colnames(leaf_92_common)
+
+order <- colnames(leaf_92_common) 
+colnames(late_silique_92_common)
+match(leaf_92_common, late_silique_92_common)
+
 common_92 <- rbind(leaf_92_common, late_silique_92_common)
+
+dim(common_92) # 204606    105 
+colnames(common_92)
+
+tmp3 <- 
+common_92 %>% 
+  select(-tissue, -index)
+write.table(tmp3, sep="\t", "~/505/leaf_VS_late_silique/tmp3.hmp", row.names = F) 
+
 
 # significant SNPs 
 significant_SNP
@@ -1565,6 +1600,9 @@ significant_SNP
 # 9 sigSNP from leaf & other from late silique 
 sigSNP <- common_92[common_92$rs %in% significant_SNP & common_92$tissue=="leaf",]
 other <- common_92[!(common_92$rs %in% significant_SNP) & common_92$tissue=="late_silique",]
+sigSNP$tissue
+unique(other$tissue)
+
 all <- rbind(sigSNP, other)
 all.sorted <- all[order(all$index),]
 all.sorted[1:10, 1:10]
@@ -1578,6 +1616,8 @@ write.table(sig_leaf_other_silique, sep="\t", "~/505/leaf_VS_late_silique/sig_le
 # 9 sigSNP from silique & other from leaf 
 sigSNP <- common_92[common_92$rs %in% significant_SNP & common_92$tissue=="late_silique",]
 other <- common_92[!(common_92$rs %in% significant_SNP) & common_92$tissue=="leaf",]
+sigSNP$tissue
+unique(other$tissue)
 all <- rbind(sigSNP, other) 
 all.sorted <- all[order(all$index),]
 all.sorted[1:10, 1:10]
@@ -1587,6 +1627,51 @@ sig_silique_other_leaf <-
 dim(sig_silique_other_leaf) # 102303 103 
 write.table(sig_silique_other_leaf, sep="\t", "~/505/leaf_VS_late_silique/sig_silique_other_leaf.hmp", row.names = F) 
 # cat sig_silique_other_leaf.hmp | sed 's/"//g' > sig_silique_other_leaf.hmp.txt 
+
+# swap back 
+# leaf 
+dim(common_92) 
+sigSNP <- common_92[common_92$rs %in% significant_SNP & common_92$tissue=="leaf",]
+other <- common_92[!(common_92$rs %in% significant_SNP) & common_92$tissue=="leaf",]
+sigSNP$tissue
+unique(other$tissue)
+
+all <- rbind(sigSNP, other) 
+all.sorted <- all[order(all$index),]
+all.sorted[1:10, 1:10]
+sig_leaf_other_leaf <- 
+  all.sorted %>%
+  select(-(tissue:index))
+dim(sig_leaf_other_leaf) # 102303 103 
+sig_leaf_other_leaf[1:10, 1:20] 
+leaf_92_common <- read_table2("~/505/leaf_VS_late_silique/505_filtered_common_leaf_92.hmp.txt")
+
+before <- leaf_92_common
+after <- sig_leaf_other_leaf
+
+colnames(before) <- NA
+colnames(after) <- NA
+identical(before, after)
+after[1:10, 1:20]
+before[1:10, 1:20]
+
+write.table(sig_leaf_other_leaf, sep="\t", "~/505/leaf_VS_late_silique/sig_leaf_other_leaf.hmp", row.names = F) 
+# cat sig_leaf_other_leaf.hmp | sed 's/"//g' > sig_leaf_other_leaf.hmp.txt 
+
+# silique 
+sigSNP <- common_92[common_92$rs %in% significant_SNP & common_92$tissue=="late_silique",]
+other <- common_92[!(common_92$rs %in% significant_SNP) & common_92$tissue=="late_silique",]
+sigSNP$tissue
+unique(other$tissue)
+all <- rbind(sigSNP, other) 
+all.sorted <- all[order(all$index),]
+all.sorted[1:10, 1:10]
+sig_silique_other_silique <- 
+  all.sorted %>% 
+  select(-(tissue:index))
+dim(sig_silique_other_silique) # 102303 103 
+write.table(sig_silique_other_silique, sep="\t", "~/505/leaf_VS_late_silique/sig_silique_other_silique.hmp", row.names = F) 
+# cat sig_silique_other_silique.hmp | sed 's/"//g' > sig_silique_other_silique.hmp.txt 
 
 # GWAS 
 # run in whitney 
@@ -1642,7 +1727,61 @@ manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6,
 manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
           cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
 ) 
-dev.off() 
+dev.off()  
+
+# swap genotypes & swap back found the no significant SNPs might be caused by not-matching column ID? redo GWAS for late silique ...
+
+# sig leaf other leaf 
+Erucic_acid <- read.csv("~/505/output/myGAPIT/sig_leaf_other_leaf/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/505/output/myGAPIT/sig_leaf_other_leaf/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/output/myGAPIT/sig_leaf_other_leaf/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/output/figure/sig_leaf_other_leaf.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+) 
+dev.off()  
+
+# sig silique other silique
+Erucic_acid <- read.csv("~/505/output/myGAPIT/sig_silique_other_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/505/output/myGAPIT/sig_silique_other_silique/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/output/myGAPIT/sig_silique_other_silique/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/output/figure/sig_silique_other_silique.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+) 
+dev.off()  
 
 ``` 
 
