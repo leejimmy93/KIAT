@@ -1,0 +1,87 @@
+---
+title: "Transcritpome_assembly"
+author: "Ruijuan Li"
+date: "6/26/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+# download data & trimming 
+```{r}
+# 1) download raw fastq data using wget 
+
+# 2) check data quality using fastqc 
+
+# 3) Trimm off low quality reads & adapter contamination 
+# trimmomatic PE Sample_${sample}/${sample}_1.fq.gz Sample_${sample}/${sample}_2.fq.gz Sample_${sample}/${sample}_paired_1.fq.gz Sample_${sample}/${sample}_unpaired_1.fq.gz Sample_${sample}/${sample}_paired_2.fq.gz Sample_${sample}/${sample}_unpaired_2.fq.gz ILLUMINACLIP:Bradseq_adapter.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
+
+# 4) map high quality reads to reference genome using STAR
+# 4.1) add "gene_id" colomn to gff3 file 
+# run with modified gff3 file 
+# STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --sjdbGTFfile Brassica_napus.annotation_v5_modified_modified.gff3 --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS (screen -r 10070.ttys003.coloma) 
+
+# 4.2)  mapping 
+# "STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx" 
+
+# 5) assembly 
+# 5.1) use IGV to decide library type 
+# after visualize genome, bam file, and gff file, we decide our library type is fr-secondstrand 
+# 5.2) assemble each library seperately using cufflinks 
+# transcriptome assembly using original gff3 file
+# cufflinks  -o /share/malooflab/Ruijuan/parent_assembly/${sample}/cufflink_output/ \
+# 	   --junc-alpha 0.001 \
+# 	   --label CUFF \
+# 	   --max-bundle-length 3500000 \
+# 	   --max-intron-length 300000 \
+# 	   --max-mle-iterations 5000 \
+# 	   --min-frags-per-transfrag 10 \
+# 	   --min-intron-length 50 \
+# 	   --min-isoform-fraction 0.1 \
+# 	   --no-update-check \
+# 	   --num-importance-samples 1000 \
+# 	   --num-threads 20 \
+# 	   --overhang-tolerance 8 \
+# 	   --pre-mrna-fraction 0.15 \
+# 	   --small-anchor-fraction 0.09 \
+# 	   --trim-3-avgcov-thresh 10 \
+# 	   --trim-3-dropoff-frac 0.1 \
+# 	   --library-type fr-secondstrand \
+# 	   -g /share/malooflab/Ruijuan/reference/Brassica_napus.annotation_v5.gff3 \
+# 	   -b /home/ruijuanli/2017_winter/assembly/Brassica_napus_v4.1.chromosomes.fa \
+# 	    /share/malooflab/Ruijuan/parent_assembly/${sample}/Aligned.sortedByCoord.out.bam
+
+# 6) merge seperate assembly into one using cuffmerge 
+# cuffmerge 
+# https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_RNA_transcriptome/run_cuffmerge_Ae.sh 
+
+# https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_RNA_transcriptome/run_cuffmerge_Ol.sh
+
+# 7) compare to current annotation for the reference genome  
+# cuffcompare 
+
+# https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_RNA_transcriptome/run_cuffcompare_Ae.sh
+# https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_RNA_transcriptome/run_cuffcompare_Ol.sh 
+
+# 8) remove redundant isoforms from novel transcripts using CAP3 
+# https://github.com/leejimmy93/KIAT_whitney/blob/master/parent_RNA_transcriptome/run_cap3.sh
+
+# 9) predict ORF from non-redundant transcript dataset using transdecoder 
+# TransDecoder.LongOrfs -t Ae.u.fa 
+# TransDecoder.LongOrfs -t Ol.u.fa 
+
+# 10) blastp against nr protein database to get an idea of what genes they are 
+# blastp -query longest_orfs.pep  -db /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/NCBI/nr/nr  -max_target_seqs 1 -outfmt 6 -evalue 1e-6 -num_threads 6 -out ${i}_nr.out 
+```
+
+# structure annotation (possible tool: PASA)
+```{r}
+
+```
+
+# functional annotation (possible tool: Blast2GO)
+```{r}
+
+```
+
+

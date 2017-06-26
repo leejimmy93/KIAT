@@ -104,7 +104,7 @@ get_legend<-function(a.gplot){
   legend <- tmp$grobs[[leg]]
   return(legend)}
 
-legend <- get_legend(pl.mapping.indi.a)
+legend <- get_legend(pl.mapping.indi.a) 
 
 # pl.mapping.indi <- plot_grid(arrangeGrob(pl.mapping.indi.a + theme(legend.position="none") + labs(title="mapping result of batch a"),
 #                          pl.mapping.indi.b + theme(legend.position="none") + labs(title="mapping result of batch b"),

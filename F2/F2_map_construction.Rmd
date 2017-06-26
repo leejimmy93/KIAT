@@ -2,7 +2,7 @@
 title: "F2_map_construction"
 author: "Ruijuan Li"
 date: "4/18/2017"
-output: html_document
+output: html_document 
 ---
 
 # Goal
@@ -117,7 +117,7 @@ F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
 dim(F2_geno_data_2) # 2932  166, end up with 2932 SNPs for map construction 
 
 save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs with missing data less than 0.85   
-```
+``` 
 
 # format data for onemap  
 ```{r}
@@ -886,7 +886,7 @@ length(LG.C) # 21 linkage groups
 # get index for the above markers in different linkage group 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
-twopts.f2.05.12$marnames
+twopts.f2.05.12$marnames 
 
 group.A <- list()
 
@@ -1017,19 +1017,54 @@ save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/outp
 # MDS 
 The idea is that because Alex's pipeline seperate my marker into multiple LGs for each chromosome, although markers from the same chromosome do cluster together. By checking the LOD score & rf matrix, I found that markers from the same chromosome, which were assigned to different LGs are genetically linked by LOD score, but their rf is very low too. 
 
-Julin hypothezied that this might be caused by the different rf between markers that were present in the chromosome through evolution and markers that were integrated in to the chromosome in this newly synthetic polyploid B.napus. We will arrange a meeting with Luca Comai to discuss this possibility. 
+Julin hypothezied that this might be caused by the different rf between markers that were present in the chromosome through evolution and markers that were integrated into the chromosome in this newly synthetic polyploid B.napus. We will arrange a meeting with Luca Comai to discuss this possibility. 
 
 At the same time, Julin asked me to do MDS using markers from the same chromosome but assigned to different LGs, to see whether they form two clusters by LGs. 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
 dim(F2_geno_data_2) # 2932 166
 
-# use C subgenome LG 
+# use C subgenome LG15 & LG16 
+LG.C_15_16 <- F2_geno_data_2[rownames(F2_geno_data_2) %in% LG.C[[15]] | rownames(F2_geno_data_2) %in% LG.C[[16]],]
 
+LG.C_15_16.trans <- transform_geno(temp2 = LG.C_15_16)
 
+# MDS 
+MDS.result <- MDS(genotype_file = LG.C_15_16.trans)
+plot(MDS(genotype_file = LG.C_15_16.trans))
+
+# plot 
+MDS.result$LG <- ifelse(rownames(MDS.result) %in% LG.C[[15]], "15", "16")
+ggplot(data = MDS.result, mapping = aes(x=V1, y = V2, color=LG)) + geom_point()
+
+### to demonstrate this more, plot all the C subgenome markers in MDS 1stly 
+length(unlist(LG.C)) 
+
+LG.C_all <- F2_geno_data_2[rownames(F2_geno_data_2) %in% unlist(LG.C),] 
 ```
 
+# appendix 
+```{r}
 
+transform_geno <- function(temp2){
+  rnames <- rownames(temp2)
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","0",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","2",x)))
+  row.names(temp2) <- rnames 
+  return(temp2)
+} 
+
+MDS <- function(genotype_file){
+  genDist <- as.matrix(dist(genotype_file))
+  #perform the multi-dimensional scaling
+  geno.mds <- as.data.frame(cmdscale(genDist))
+  plot(geno.mds)  
+
+  return(geno.mds) 
+}
+
+```
 
 
 

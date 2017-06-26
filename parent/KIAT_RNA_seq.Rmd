@@ -8,8 +8,7 @@ output: html_document
 # download data, QC, and mapping (using kallisto)
 ```{r}
 # 1) download file from ftp using ftp_file_transfer.sh # ftp works only under whitney. 
-# 1.1) unzip files using gunzip *  
-# 2) get first 1000 sequences for each file extract_1000_reads.sh, actually worked with all data instead of the 1st 1000 seqs
+# 2) unzip files using gunzip *  
 # 3) QC file using fastQC: fastqc *.fq -o /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/fastqc_result
 # 4) download Brassica_napus.annotation_v5.cds.fa to whitney 
 # 5) collapse fastqc summary result into one file & get overrepresented sequences using ./make_summary_report.sh 
@@ -29,10 +28,6 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 
 # 7) checked the source of overrepresented sequences using web nucleotide blast tool, found that most of them are from 
 # cholorplast, mitochondra, rRNA, tansposon, etc. Some are illumina or TruSeq adapters 
-
-# blast sequences against Trimmomatic adapters suggest that TruSeq3-PE-2.fa should be used to trimm the data. (Q: how to deal with the others? will they affect the final result? search... )
-
-# Qs on plstids seqs contamination: 1) why are there these sequences? check the lib making step 2) will they affect downstream analysis if kept? CDS mapping VS genome mapping 3) If yes, how to remove them? (I need to figure these Qs out.)
 
 # 8) using kallisto to build the reference cds index 
 # kallisto index -k 19 -i Brassica_napus.annotation_v5.cds.19.kai /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa
@@ -308,23 +303,28 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/p
 ### talked with Julin: use IGV to visualize the sequence alignment to decide library type 
 # then after visualize genome, bam file, and gff file, we decide our library type is fr-secondstrand 
 
-########### running cufflinks:
-# cufflinks -u -p 10 -o cufflink_output --max-bundle-frags 10000000 --library-type fr-secondstrand -g /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 -b /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa Aligned.sortedByCoord.out.bam  
-
-####### cufflinks takes forever to run, why? 
-# by checking the progress of cufflinks, I found that it took 15 days to get one transcript.gtf file for one lib. and mostly the progress is stucked at the last 5%. Why? Also at the begnining of the command, it says "segementation fault, core dumped", but still makes progress. previously, I had cufflinks running on one core and only takes 3 days to finish 11 libs. And I was using exactly the same command. Why??? 
-
-# test on one lib: 2_paired.star.trim.dir 
-# change the core number to 6 because John is using 8, if I still ask for 10, it might cause problem. Also add 
-# && 
-# echo "success"
-# to the end of the command to make sure I get it run correctly. now it is running for sample 2, waiting for the result, fingers crossed!!! 
-# since cufflinks can only use one core during some step, the best practice should be make make it several cufflinks run in parallel, each using one core? 
-# this still runs very slow.... 
-
-### after talking to Richard group, we decide to stop Trinity and run cufflinks only on 14 cores to see whether this will speed up assembly. 
-# library, now still runs very slow, now I decide not to use --max-bundle-frags option to see whether this can speed up the assembly. 
-
+# transcriptome assembly using original gff3 file
+# cufflinks  -o /share/malooflab/Ruijuan/parent_assembly/${sample}/cufflink_output/ \
+# 	   --junc-alpha 0.001 \
+# 	   --label CUFF \
+# 	   --max-bundle-length 3500000 \
+# 	   --max-intron-length 300000 \
+# 	   --max-mle-iterations 5000 \
+# 	   --min-frags-per-transfrag 10 \
+# 	   --min-intron-length 50 \
+# 	   --min-isoform-fraction 0.1 \
+# 	   --no-update-check \
+# 	   --num-importance-samples 1000 \
+# 	   --num-threads 20 \
+# 	   --overhang-tolerance 8 \
+# 	   --pre-mrna-fraction 0.15 \
+# 	   --small-anchor-fraction 0.09 \
+# 	   --trim-3-avgcov-thresh 10 \
+# 	   --trim-3-dropoff-frac 0.1 \
+# 	   --library-type fr-secondstrand \
+# 	   -g /share/malooflab/Ruijuan/reference/Brassica_napus.annotation_v5.gff3 \
+# 	   -b /home/ruijuanli/2017_winter/assembly/Brassica_napus_v4.1.chromosomes.fa \
+# 	    /share/malooflab/Ruijuan/parent_assembly/${sample}/Aligned.sortedByCoord.out.bam
 ``` 
 
 # cuffmerge 
