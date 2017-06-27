@@ -1398,8 +1398,8 @@ p.dendro
 ggsave("~/505/output/figure/clustering_common_leaf_late_silique_92.png", width = 15, height = 28)  
 ```
 
-# GWAS using common SNPs and common lines 
-```{r}
+# GWAS using common SNPs and common lines  
+```{r} 
 # get hmp files for both leaf & late silique 
 # https://github.com/leejimmy93/KIAT/blob/master/505/vcf_to_hmp.sh
 
