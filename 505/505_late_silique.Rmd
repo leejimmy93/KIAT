@@ -1842,66 +1842,6 @@ head(myG2$V16)
 
 identical(myG[-1,11+1], myG2[-1,11+1])
 identical(as.character(myG[-1,11+1]), as.character(myG2[-1,11+1])) 
-
-###### replace genotype ID with SN# for the 131 samples and see whether get significant SNPs 
-load("~/505/output/131_sample/pheno_data_505.silique.Rdata") 
-pheno_data_505.silique
-pheno_data_505.silique.SN <- pheno_data_505.silique[,-c(2:3)]
-head(pheno_data_505.silique.SN)
-colnames(pheno_data_505.silique.SN)[1] <- "Taxa"
-save(pheno_data_505.silique.SN, file="~/505/data/pheno_data_505.silique.SN.Rdata")
-
-SN_Taxa_131_sample <- pheno_data_505.silique[,c(1:2)]
-SN_Taxa_131_sample
-
-geno_505_131sample <- read_table2("~/505/vcf_late_silique_131_sample/combined/505_filtered_sorted.hmp.txt") 
-
-temp1 <- data.frame(Taxa = colnames(geno_505_131sample))
-temp1$index <- rownames(temp1)
-temp1
-
-temp1.2 <- merge(temp1, SN_Taxa_131_sample, by="Taxa", all=T)
-temp1.2
-
-for (i in 1:nrow(temp1.2)){ 
-  temp1.2$SN_new[i] <- ifelse(!is.na(temp1.2$SN[i]), temp1.2$SN[i], as.character(temp1.2[i, "Taxa"]))  
-}
-
-colnames_131_sample <- temp1.2[order(as.numeric(temp1.2$index)),]$SN_new
-colnames(geno_505_131sample) <- colnames_131_sample
-geno_505_131sample[1:10, 1:20]
-
-write.table(geno_505_131sample, sep="\t", "~/505/leaf_VS_late_silique/geno_505_131sample.hmp", row.names = F) 
-# cat geno_505_131sample.hmp | sed 's/"//g' > geno_505_131sample.hmp.txt 
-
-# GWAS using this new dataset 
-# GWAS result 
-
-Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
-
-Oil_content <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oil_content.GWAS.Results.csv", header = T)
-
-Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
-
-colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
-colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
-colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
-
-png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample_SN.png", width=12, height=10, units="in", res=300)
-par(mfrow=c(2,1)) 
-manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
-          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
-) 
-
-manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
-          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
-) 
-
-# manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
-#           cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
-# ) 
-dev.off()  
-
 ```
 
 # check genotype for the 9 sigSNPs in the vcf file  
@@ -2159,6 +2099,87 @@ The no signal for GWAS was caused by data processing. when I import the phenotyp
 
 Lessons learned: should use stringAsFactors=F, as.is=T, OR tidyverse package to avoid problem of factors. 
 
+# the right GWAS 
+```{r}
+###### replace genotype ID with SN# for the 131 samples and see whether get significant SNPs 
+load("~/505/output/131_sample/pheno_data_505.silique.Rdata") 
+pheno_data_505.silique
+pheno_data_505.silique.SN <- pheno_data_505.silique[,-c(2:3)]
+head(pheno_data_505.silique.SN)
+colnames(pheno_data_505.silique.SN)[1] <- "Taxa"
+save(pheno_data_505.silique.SN, file="~/505/data/pheno_data_505.silique.SN.Rdata")
+
+SN_Taxa_131_sample <- pheno_data_505.silique[,c(1:2)]
+SN_Taxa_131_sample
+
+geno_505_131sample <- read_table2("~/505/vcf_late_silique_131_sample/combined/505_filtered_sorted.hmp.txt") 
+
+temp1 <- data.frame(Taxa = colnames(geno_505_131sample))
+temp1$index <- rownames(temp1)
+temp1
+
+temp1.2 <- merge(temp1, SN_Taxa_131_sample, by="Taxa", all=T)
+temp1.2
+
+for (i in 1:nrow(temp1.2)){ 
+  temp1.2$SN_new[i] <- ifelse(!is.na(temp1.2$SN[i]), temp1.2$SN[i], as.character(temp1.2[i, "Taxa"]))  
+}
+
+colnames_131_sample <- temp1.2[order(as.numeric(temp1.2$index)),]$SN_new
+colnames(geno_505_131sample) <- colnames_131_sample
+geno_505_131sample[1:10, 1:20]
+
+write.table(geno_505_131sample, sep="\t", "~/505/leaf_VS_late_silique/geno_505_131sample.hmp", row.names = F) 
+# cat geno_505_131sample.hmp | sed 's/"//g' > geno_505_131sample.hmp.txt 
+
+# GWAS using this new dataset 
+# GWAS result 
+
+Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample_SN.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(2,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+) 
+
+# manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+#           cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+# ) 
+dev.off()  
+```
+
+# examine GWAS result 
+```{r}
+sum(Erucic_acid$P <= 0.00001) # 256
+sum(Oleic_acid$P <= 0.00001) # 125
+
+Erucic_acid[Erucic_acid$P <= 0.00001,] 
+
+# overlaps between Erucic acid & Oleic acid? 
+significant_SNP <- unique(c(as.character(Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP), as.character(Oleic_acid[Oleic_acid$P <= 0.00001,]$SNP))) 
+significant_SNP[order(significant_SNP)]
+
+
+Oleic_acid[Oleic_acid$P <= 0.00001,]$SNP %in% Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP
+write.table(significant_SNP, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/significant_SNP.txt")
+
+
+
+```
+
 ### appendix for functions
 ```{r}
 # reformat vcf file, return numeric values 
@@ -2241,7 +2262,6 @@ vcf_sigSNP_extract <- function(vcf, significant_SNP){
   
   return(vcf_sigSNP.t)
 }  
-
 ```
 
 
