@@ -2289,19 +2289,36 @@ write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/50
 # java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted_ann.vcf 
 
 # analyze snpEff annotation file 
+# grep -f significant_SNP_219 /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_sorted_ann.vcf | awk '{print $3 "|" $4 "|" $5 "|" $8}' | awk 'BEGIN{FS="|"}{print $1, $2, $3, $5}' > significant_SNP_219_annotation 
 
+sig_SNP_ann <- read_table2("~/505/output/131_sample/significant_SNP_219_annotation", col_names=F)
+head(sig_SNP_ann)  
+colnames(sig_SNP_ann) <- c("snp_ID", "ref", "alt", "mutation_type")
 
+unique(sig_SNP_ann$X4)
+# [1] "missense_variant"                         "stop_gained"                             
+# [3] "upstream_gene_variant"                    "synonymous_variant"                      
+# [5] "splice_region_variant&synonymous_variant" "downstream_gene_variant"                 
+# [7] "splice_region_variant&intron_variant"     "stop_lost"                               
+# [9] "stop_gained&splice_region_variant"        "stop_retained_variant"                   
+# [11] "intron_variant"                          
 
+SNP_gene_final_fxn <- read.csv("~/505/output/131_sample/GWAS_SNP_gene_fxn.csv")
+head(SNP_gene_final_fxn)
 
+SNP_gene_final_fxn.2 <- merge(SNP_gene_final_fxn, sig_SNP_ann, by="snp_ID")
+SNP_gene_final_fxn.2 
 ```
 
 # check the expression for genes include significant SNPs 
 For the 24 genes that include the significant SNPs, we want to know whether they are differentially expressed among different lines, and what are their expression levels. 
+```{r}
+# add expressions? most of them will be differentially expressed 
+```
 
 # correlation between gene expression & phenotypic trait value 
 
 # SNP annotation for significant SNPs 
-
 
 
 ### appendix for functions

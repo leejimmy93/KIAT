@@ -1479,16 +1479,6 @@ ggsave(p.spearman, filename="~/505/output/figure/p.spearman.png", width=22, heig
 >>>>>>> 3c6d53514e89c8ceb44298a94bd32e1e164469fe
 ```
 
-# SNP annotation for significant SNPs 
-```{r} 
-annotation.28SNP <- read.table("~/505/vcf_leaf_no_pop/combined/missing_0.5/sinigicant_SNP_ann", header=F) 
-dim(annotation.28SNP)
-
-annotation.28SNP.sub <- annotation.28SNP[,c(1:8)] 
-annotation.28SNP.sub
-filter(annotation.28SNP, V3=="SC09_19073712") %>% select(V8) 
-```
-
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/pearson.reult.Rdata")
 pearson.result
