@@ -408,8 +408,11 @@ sample_des_revised$Sample.ID
 
 # merge 
 geno.mds.all.des <- merge(geno.mds, sample_des_revised, by="Sample.ID") 
-head(geno.mds.all.des)
-
+colnames(geno.mds.all.des)[1] <- "Taxa"
+head(SN_Taxa_131_sample)
+geno.mds.all.des.2 <- merge(geno.mds.all.des, SN_Taxa_131_sample, by="Taxa")
+head(geno.mds.all.des.2)
+colnames(geno.mds.all.des.2)[5] <- "location_of_origin"
 
 library(ggrepel)
 set.seed(111) 
@@ -422,13 +425,16 @@ p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
 p.mds.country 
 ggsave(p.mds.country, filename="~/505/output/figure/late_silique/p.mds.country.png", height=20, width=20)
 
-p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country.2 <- ggplot(data=geno.mds.all.des.2, aes(V1, V2, color=location_of_origin)) + theme_bw()
 p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
-p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
-p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
-# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
+# p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country.2 <- p.mds.country.2 + scale_color_manual(values = c("lightblue", "orange", "red", "green", "blue", "grey", "purple", "pink", "darkred", "black"))
+p.mds.country.2 <- p.mds.country.2 + geom_text_repel(aes(x=V1, y=V2, label=factor(SN)))
+p.mds.country.2 <- p.mds.country.2 + theme(legend.position = c(0.9, 0.2), legend.background = element_rect(fill="lightgrey", size=0.5, linetype="solid"), axis.title.x=element_blank(), axis.title.y =element_blank())
+p.mds.country.2 <- p.mds.country.2 + labs(title="MDS of 505 collection") + theme(plot.title = element_text(hjust = 0.5, size = 16, face="bold")) 
 p.mds.country.2
-ggsave(p.mds.country.2, filename="~/505/output/figure/leaf/p.mds.country.2.png", height=20, width=20)
+ggsave(p.mds.country.2, filename="~/505/output/figure/leaf/p.mds.country.2.png", height=10, width=10) 
+# ggsave(p.mds.country.2, filename="~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/late_silique/p.mds.country.2.png", height=10, width=10)
 
 p.mds.country.2 <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(Sample.Description.Origin)))
 p.mds.country.2 <- p.mds.country.2 + geom_point(size=1) 
@@ -1008,7 +1014,6 @@ rownames(geno.numeric) <- rnames
 
 geno.numeric.df <- as.data.frame(geno.numeric)
 geno.numeric.2 <- as.matrix(geno.numeric.df)
-
 genDist <- as.matrix(dist(geno.numeric.2))
 
 #perform the multi-dimensional scaling
@@ -1139,7 +1144,6 @@ ggsave("~/505/output/figure/clustering_common_leaf_late_silique_92.png", width =
 # run_1, all default parameter in GAPIT
 # run_2, model selection activated 
 # run_3, using PCA = 0 
-no siginificant SNPs identified --> model selection activated 
 ```
 
 # display GWAS result 
@@ -1404,8 +1408,8 @@ p.dendro
 ggsave("~/505/output/figure/clustering_common_leaf_late_silique_92.png", width = 15, height = 28)  
 ```
 
-# GWAS using common SNPs and common lines 
-```{r}
+# GWAS using common SNPs and common lines  
+```{r} 
 # get hmp files for both leaf & late silique 
 # https://github.com/leejimmy93/KIAT/blob/master/505/vcf_to_hmp.sh
 
@@ -1874,66 +1878,6 @@ head(myG2$V16)
 
 identical(myG[-1,11+1], myG2[-1,11+1])
 identical(as.character(myG[-1,11+1]), as.character(myG2[-1,11+1])) 
-
-###### replace genotype ID with SN# for the 131 samples and see whether get significant SNPs 
-load("~/505/output/131_sample/pheno_data_505.silique.Rdata") 
-pheno_data_505.silique
-pheno_data_505.silique.SN <- pheno_data_505.silique[,-c(2:3)]
-head(pheno_data_505.silique.SN)
-colnames(pheno_data_505.silique.SN)[1] <- "Taxa"
-save(pheno_data_505.silique.SN, file="~/505/data/pheno_data_505.silique.SN.Rdata")
-
-SN_Taxa_131_sample <- pheno_data_505.silique[,c(1:2)]
-SN_Taxa_131_sample
-
-geno_505_131sample <- read_table2("~/505/vcf_late_silique_131_sample/combined/505_filtered_sorted.hmp.txt") 
-
-temp1 <- data.frame(Taxa = colnames(geno_505_131sample))
-temp1$index <- rownames(temp1)
-temp1
-
-temp1.2 <- merge(temp1, SN_Taxa_131_sample, by="Taxa", all=T)
-temp1.2
-
-for (i in 1:nrow(temp1.2)){ 
-  temp1.2$SN_new[i] <- ifelse(!is.na(temp1.2$SN[i]), temp1.2$SN[i], as.character(temp1.2[i, "Taxa"]))  
-}
-
-colnames_131_sample <- temp1.2[order(as.numeric(temp1.2$index)),]$SN_new
-colnames(geno_505_131sample) <- colnames_131_sample
-geno_505_131sample[1:10, 1:20]
-
-write.table(geno_505_131sample, sep="\t", "~/505/leaf_VS_late_silique/geno_505_131sample.hmp", row.names = F) 
-# cat geno_505_131sample.hmp | sed 's/"//g' > geno_505_131sample.hmp.txt 
-
-# GWAS using this new dataset 
-# GWAS result 
-
-Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample_SN/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
-
-Oil_content <- read.csv("~/505/output/myGAPIT/late_silique_131_sample_SN/GAPIT..Oil_content.GWAS.Results.csv", header = T)
-
-Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample_SN/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
-
-colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
-colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
-colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
-
-png("~/505/output/figure/131_sample_SN.png", width=12, height=10, units="in", res=300)
-par(mfrow=c(3,1)) 
-manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
-          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
-) 
-
-manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
-          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
-) 
-
-manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
-          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
-) 
-dev.off()  
-
 ```
 
 # check genotype for the 9 sigSNPs in the vcf file  
@@ -2191,6 +2135,175 @@ The no signal for GWAS was caused by data processing. when I import the phenotyp
 
 Lessons learned: should use stringAsFactors=F, as.is=T, OR tidyverse package to avoid problem of factors. 
 
+# the right GWAS 
+```{r}
+###### replace genotype ID with SN# for the 131 samples and see whether get significant SNPs 
+load("~/505/output/131_sample/pheno_data_505.silique.Rdata") 
+pheno_data_505.silique
+pheno_data_505.silique.SN <- pheno_data_505.silique[,-c(2:3)]
+head(pheno_data_505.silique.SN)
+colnames(pheno_data_505.silique.SN)[1] <- "Taxa"
+save(pheno_data_505.silique.SN, file="~/505/data/pheno_data_505.silique.SN.Rdata")
+
+SN_Taxa_131_sample <- pheno_data_505.silique[,c(1:2)]
+SN_Taxa_131_sample
+
+geno_505_131sample <- read_table2("~/505/vcf_late_silique_131_sample/combined/505_filtered_sorted.hmp.txt") 
+
+temp1 <- data.frame(Taxa = colnames(geno_505_131sample))
+temp1$index <- rownames(temp1)
+temp1
+
+temp1.2 <- merge(temp1, SN_Taxa_131_sample, by="Taxa", all=T)
+temp1.2
+
+for (i in 1:nrow(temp1.2)){ 
+  temp1.2$SN_new[i] <- ifelse(!is.na(temp1.2$SN[i]), temp1.2$SN[i], as.character(temp1.2[i, "Taxa"]))  
+}
+
+colnames_131_sample <- temp1.2[order(as.numeric(temp1.2$index)),]$SN_new
+colnames(geno_505_131sample) <- colnames_131_sample
+geno_505_131sample[1:10, 1:20]
+
+write.table(geno_505_131sample, sep="\t", "~/505/leaf_VS_late_silique/geno_505_131sample.hmp", row.names = F) 
+# cat geno_505_131sample.hmp | sed 's/"//g' > geno_505_131sample.hmp.txt 
+
+# GWAS using this new dataset 
+# GWAS result 
+
+Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oil_content <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample_SN.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(2,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+) 
+
+# manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+#           cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+# ) 
+dev.off()  
+```
+
+# examine GWAS result 
+```{r}
+sum(Erucic_acid$P <= 0.00001) # 256
+sum(Oleic_acid$P <= 0.00001) # 125
+
+Erucic_acid[Erucic_acid$P <= 0.00001,] 
+
+# overlaps between Erucic acid & Oleic acid? 
+significant_SNP <- unique(c(as.character(Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP), as.character(Oleic_acid[Oleic_acid$P <= 0.00001,]$SNP))) 
+significant_SNP[order(significant_SNP)]
+
+
+Oleic_acid[Oleic_acid$P <= 0.00001,]$SNP %in% Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP
+write.table(significant_SNP, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/significant_SNP.txt")
+```
+
+# check the genes include the significant SNPs (my MAC)
+```{r}
+library(IRanges)
+library(GenomicRanges)
+library(GenomicFeatures)
+library("rtracklayer")
+
+### get gff file with gene chrom & pos info, gff3 file must be sorted 
+# Grange doesn't give me the corret order of genes, so I used unix command to get the gene info from sorted gff3 file 
+# cat Brassica_napus.annotation_v5.sorted.gff3 | grep "mRNA" | awk '{print $1, $4, $5, $9}' | tr "=" "\t" | tr ";" "\t" | awk '{print $1, $2, $3, $5}' > gff.mRNA
+gff.mRNA <- read.table("~/Desktop/Brassica_project/IGV_file/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+head(gff.mRNA) 
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+
+### get significant SNPs 
+Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+Erucic_Oleic <- rbind(Erucic_acid, Oleic_acid)
+
+SNP.Erucic.Oleic <- data.frame(CHROM = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", Erucic_Oleic[Erucic_Oleic$P.value < 0.00001,]$SNP), 
+                         POS = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\4", Erucic_Oleic[Erucic_Oleic$P.value < 0.00001,]$SNP))
+
+SNP.Erucic.Oleic$CHROM <- paste("chr", SNP.Erucic.Oleic$CHROM, sep = "")
+SNP.Erucic.Oleic$POS <- as.numeric(as.character(SNP.Erucic.Oleic$POS))
+
+head(SNP.Erucic.Oleic) 
+SNP.Erucic.Oleic.unique <- unique(SNP.Erucic.Oleic)
+dim(SNP.Erucic.Oleic.unique) # 259 2 
+
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
+genes
+
+SNP <- GRanges(seqnames = Rle(SNP.Erucic.Oleic.unique$CHROM), ranges = IRanges(start = SNP.Erucic.Oleic.unique$POS, end = SNP.Erucic.Oleic.unique$POS), ID = paste(SNP.Erucic.Oleic.unique$CHROM, SNP.Erucic.Oleic.unique$POS, sep = "_"))
+SNP
+
+SNP_gene <- mergeByOverlaps(SNP, genes) # warning message here. look out!!!!!! 
+SNP_gene
+
+SNP_gene_df <- as.data.frame(SNP_gene)
+SNP_gene_df
+
+SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
+SNP_gene_final 
+
+napus_vs_ara.non_reciprocal <- read.table("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
+
+head(napus_vs_ara.non_reciprocal)
+dim(napus_vs_ara.non_reciprocal) # 64949 
+
+colnames(napus_vs_ara.non_reciprocal)[1] <- "names"
+
+SNP_gene_final_fxn <- merge(SNP_gene_final, napus_vs_ara.non_reciprocal, by = "names", all.x=T)
+SNP_gene_final_fxn$SNP.ID <- gsub("chr", "S", SNP_gene_final_fxn$SNP.ID)
+
+SNP_gene_final_fxn$Erucic_acid <- SNP_gene_final_fxn$SNP.ID %in% Erucic_acid[Erucic_acid$P.value < 0.00001,]$SNP
+
+SNP_gene_final_fxn$Oleic_acid <- SNP_gene_final_fxn$SNP.ID %in% Oleic_acid[Oleic_acid$P.value < 0.00001,]$SNP 
+
+colnames(SNP_gene_final_fxn) <- c("gene_ID", "snp_ID", "CHROM", "POS", "Arabidopsis_homolog", "function", "Erucic_acid", "Oleic_acid")
+SNP_gene_final_fxn
+
+write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/late_silique/GWAS_SNP_gene_fxn.csv")
+
+# as a summary, 219 out of the 259 SNPs fall within genes, 201 of them have arabidopsis homologs.
+``` 
+
+# for the several significant SNPs, are they synonymous or not? what's the possible effect on the protein function? 
+```{r}
+# SNP annotation 
+# in the snpEff folder 
+# java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted_ann.vcf 
+
+# analyze snpEff annotation file 
+
+
+
+
+```
+
+# check the expression for genes include significant SNPs 
+For the 24 genes that include the significant SNPs, we want to know whether they are differentially expressed among different lines, and what are their expression levels. 
+
+# correlation between gene expression & phenotypic trait value 
+
+# SNP annotation for significant SNPs 
+
+
+
 ### appendix for functions
 ```{r}
 # reformat vcf file, return numeric values 
@@ -2268,7 +2381,11 @@ vcf_sigSNP_extract <- function(vcf, significant_SNP){
   rownames(vcf_sigSNP.t) <- gsub("X", "", rownames(vcf_sigSNP.t))  
   
   return(vcf_sigSNP.t)
+<<<<<<< HEAD
 }   
+=======
+}  
+>>>>>>> 5d68b4db960788d08dd9574a974c1cb88a0d251e
 ```
 
 

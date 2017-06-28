@@ -94,6 +94,7 @@ colnames(sample_statistics.F1)
 ```{r}
 F1.read.count <- read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/F1/read.count.tsv", header = T, check.names = F)
 
+head(F1.read.count)
 rownames(F1.read.count) <- F1.read.count[,1]
 F1.read.count <- F1.read.count[,-1]
 
