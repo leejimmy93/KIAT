@@ -2251,6 +2251,12 @@ write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/50
 # SNP annotation 
 # in the snpEff folder 
 # java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted_ann.vcf 
+
+# analyze snpEff annotation file 
+
+
+
+
 ```
 
 # check the expression for genes include significant SNPs 
