@@ -35,9 +35,9 @@ geno_505_hmp[1,3] <- "chrom"
 load("~/505/data/phenotype/gh.seed.bolt.table.wide.Rdata")
 # reform phentype data to have match taxa ID with geno data
 # get taxa ID from sample description file 
-sample_des_c <- read.csv("~/505/data/phenotype/batch_c.csv", header=T)
-sample_des_d <- read.csv("~/505/data/phenotype/batch_d.csv", header=T)
-sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", header=T)
+sample_des_c <- read.csv("~/505/data/phenotype/batch_c.csv", stringsAsFactors=F, header=T)
+sample_des_d <- read.csv("~/505/data/phenotype/batch_d.csv", stringsAsFactors=F, header=T)
+sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", stringsAsFactors=F, header=T)
 
 sample_des_c_sub2 <- sample_des_c[,c("Sample.ID", "No..of.Sowing", "Name")]
 sample_des_d_sub2 <- sample_des_d[,c("Sample.ID", "No..of.Sowing", "Name")]

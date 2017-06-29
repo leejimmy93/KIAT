@@ -1987,6 +1987,8 @@ K250_K251 <- data.frame(SN = c("K250", "K251"),
 			Oil_content = rep(NA, 2),
 			Oleic_acid = rep(NA, 2))
 pheno_data_505.silique <- rbind(pheno_data_505, K250_K251)
+pheno_data_505.silique$Taxa <- as.character(pheno_data_505.silique$Taxa)
+str(pheno_data_505.silique)
 save(pheno_data_505.silique, file="~/505/output/131_sample/pheno_data_505.silique.Rdata")
 
 # leaf 
@@ -2197,6 +2199,11 @@ manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6,
 dev.off()  
 ```
 
+# To avoid the duplicated sample problem, I also run GWAS using the sample ID, original data 
+
+
+
+
 # examine GWAS result 
 ```{r}
 sum(Erucic_acid$P <= 0.00001) # 256
@@ -2313,13 +2320,84 @@ SNP_gene_final_fxn.2
 # check the expression for genes include significant SNPs 
 For the 24 genes that include the significant SNPs, we want to know whether they are differentially expressed among different lines, and what are their expression levels. 
 ```{r}
-# add expressions? most of them will be differentially expressed 
+# 1) collect read count data for all lines 
+# batch C(47), D(41), E(43)
+library("edgeR")
+
+read.count <- read.table("~/505/data/late_silique/read.count.505.tsv", header=T, row.names=1)
+head(read.count)
+dim(read.count) # 101040    131 
+
+read.count.sample <- data.frame(group=factor(colnames(read.count)))
+read.count.sample
+
+# filter based on read count
+read.count.small <- read.count[rowSums(read.count > 10) >= 3,]
+dim(read.count.small) # 59934   131  
+save(read.count.small, file="~/505/output/131_sample/read.count.small.Rdata")
+
+# .... leave for later 
 ```
 
 # correlation between gene expression & phenotypic trait value 
+```{r}
+# voom transformation of raw read count data 
+library("DESeq2")  
+load("~/505/output/131_sample/read.count.small.Rdata")
 
-# SNP annotation for significant SNPs 
+dds.505.silique <- DESeqDataSetFromMatrix(countData = round(read.count.small), colData = read.count.sample, design = ~0+group)
 
+vsd.505.silique <- varianceStabilizingTransformation(dds.505.silique)
+vstMat.505.silique <- assay(vsd.505.silique)
+colnames(vstMat.505.silique) <- colnames(read.count.small)
+# save(vstMat.505.silique, file = "~/505/output/131_sample/vstMat.505.silique.Rdata")
+load("~/505/output/131_sample/vstMat.505.silique.Rdata")
+
+colnames(vstMat.505.silique) <- gsub("Sample_", "", colnames(vstMat.505.silique))
+colnames(vstMat.505.silique) <- gsub("\\.", "\\-", colnames(vstMat.505.silique))
+colnames(vstMat.505.silique)
+
+## pull out the vst transformed expression value for the sig genes (this way I am only getting genes that are expressed above certain value) 
+SNP.gene.fxn <-read.csv("~/505/output/131_sample/GWAS_SNP_gene_fxn.csv", header=T)
+vstMat.siggene <- as.data.frame(vstMat.505.silique[which(rownames(vstMat.505.silique) %in% SNP.gene.fxn$gene_ID),])
+dim(vstMat.siggene) # 87 131  
+head(vstMat.siggene)
+
+# get the phenotypic trait values 
+load("~/505/output/131_sample/pheno_data_505.silique.Rdata")
+colnames(pheno_data_505.silique)[2] <- "Sample.ID"
+
+vstMat.siggene.t <- data.frame(t(vstMat.siggene))
+vstMat.siggene.t$Sample.ID <- rownames(vstMat.siggene.t) 
+dim(vstMat.siggene.t) # 131 88 
+
+trait.gene <- merge(vstMat.siggene.t, pheno_data_505.silique, by="Sample.ID")
+dim(trait.gene) # 131 93  
+summary(trait.gene)
+trait.gene.sub <- trait.gene[!is.na(trait.gene$Erucic_acid),]
+dim(trait.gene.sub) # 114 93 
+
+# get spearman correlation test result 
+phenotypes <- colnames(pheno_data_505.silique)[4:6]
+genes <- rownames(vstMat.siggene)
+spearman.result <- spearman.cor.gene.trait(trait.gene.sub=trait.gene.sub, phenotypes=phenotypes, genes=genes)
+spearman.estimate <- spearman.result[[1]] 
+spearman.pvalue <- spearman.result[[2]]
+
+# reform for ggplot 
+spearman.estimate$trait <- rownames(spearman.estimate)
+spearman.estimate
+spearman.result <- melt(spearman.estimate, id.vars="trait") 
+spearman.result$pvalue <- as.data.frame(melt(spearman.pvalue))[,"value"]
+spearman.result$sig <- ifelse(spearman.result$pvalue < 0.05, "*", " ")
+spearman.result
+dim(spearman.result) # 261 5 
+save(spearman.result, file="~/505/output/131_sample/spearman.reult.Rdata")
+
+# extract genes that have greater than 0.5 significant (p-value < 0.05) correlation with trait value 
+spearman.result %>%
+  filter(abs(value) >= 0.4)  
+```
 
 ### appendix for functions
 ```{r}
@@ -2382,7 +2460,7 @@ IUPAC.code <- function(temp2){
 return(temp2)
 }
 
-vcf_sigSNP_extract <- function(vcf, significant_SNP){
+vcf_sigSNP_extract <- function(vcf, significant_SNP){ 
   vcf.new <-  
   vcf %>% 
     unite(feature2, CHROM, POS)
@@ -2398,11 +2476,37 @@ vcf_sigSNP_extract <- function(vcf, significant_SNP){
   rownames(vcf_sigSNP.t) <- gsub("X", "", rownames(vcf_sigSNP.t))  
   
   return(vcf_sigSNP.t)
-<<<<<<< HEAD
-}   
-=======
 }  
->>>>>>> 5d68b4db960788d08dd9574a974c1cb88a0d251e
+
+# the function below return the trait gene correlation 
+
+spearman.cor.gene.trait <- function(trait.gene.sub, phenotypes, genes){ 
+  spearman.estimate <- data.frame()
+
+  for (i in phenotypes){
+    for (j in genes){
+      spearman.estimate[i,j] <- cor(trait.gene.sub[,j], trait.gene.sub[,i], method="spearman")
+    }
+  }
+
+  # how to get p-value all together 
+  spearman.pvalue <- data.frame()
+  tmp <- data.frame()
+
+  for (i in phenotypes){
+    for (j in genes){
+      tmp <- cor.test(trait.gene.sub[,j], trait.gene.sub[,i], method="spearman")
+      spearman.pvalue[i,j] <- tmp$p.value
+    }
+  }
+
+spearman.result <- list()
+spearman.result[[1]] <- spearman.estimate # spearman.result[[1]] is cor estimate
+spearman.result[[2]] <- spearman.pvalue # spearman[[2]] is cor p-vlaue 
+
+return(spearman.result)
+} 
+
 ```
 
 
