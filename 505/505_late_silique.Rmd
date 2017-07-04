@@ -2200,13 +2200,41 @@ dev.off()
 ```
 
 # To avoid the duplicated sample problem, I also run GWAS using the sample ID, original data 
+https://github.com/leejimmy93/KIAT/blob/master/505/GWAS_505_late_silique.R
+display result 
+```{r}
+# GWAS result 
 
+Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_3/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
+Oil_content <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_3/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_3/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/output/figure/131_sample.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(2,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+          cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+) 
+
+# manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6, 
+#           cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F
+# ) 
+dev.off() 
+```
 
 
 # examine GWAS result 
 ```{r}
-sum(Erucic_acid$P <= 0.00001) # 256
+sum(Erucic_acid$P <= 0.00001) # 258
 sum(Oleic_acid$P <= 0.00001) # 125
 
 Erucic_acid[Erucic_acid$P <= 0.00001,] 
@@ -2217,7 +2245,7 @@ significant_SNP[order(significant_SNP)]
 
 
 Oleic_acid[Oleic_acid$P <= 0.00001,]$SNP %in% Erucic_acid[Erucic_acid$P <= 0.00001,]$SNP
-write.table(significant_SNP, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/significant_SNP.txt")
+write.table(significant_SNP, file = "~/505/output/131_sample/significant_SNP.txt")
 ```
 
 # check the genes include the significant SNPs (my MAC)
@@ -2230,15 +2258,16 @@ library("rtracklayer")
 ### get gff file with gene chrom & pos info, gff3 file must be sorted 
 # Grange doesn't give me the corret order of genes, so I used unix command to get the gene info from sorted gff3 file 
 # cat Brassica_napus.annotation_v5.sorted.gff3 | grep "mRNA" | awk '{print $1, $4, $5, $9}' | tr "=" "\t" | tr ";" "\t" | awk '{print $1, $2, $3, $5}' > gff.mRNA
-gff.mRNA <- read.table("~/Desktop/Brassica_project/IGV_file/gff.mRNA")
+# gff.mRNA <- read.table("~/Desktop/Brassica_project/IGV_file/gff.mRNA")
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
 dim(gff.mRNA) # 101040      4 
 head(gff.mRNA) 
 colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
 
 ### get significant SNPs 
-Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_3/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
-Oleic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_3/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
 
 Erucic_Oleic <- rbind(Erucic_acid, Oleic_acid)
 
@@ -2250,7 +2279,7 @@ SNP.Erucic.Oleic$POS <- as.numeric(as.character(SNP.Erucic.Oleic$POS))
 
 head(SNP.Erucic.Oleic) 
 SNP.Erucic.Oleic.unique <- unique(SNP.Erucic.Oleic)
-dim(SNP.Erucic.Oleic.unique) # 259 2 
+dim(SNP.Erucic.Oleic.unique) # 262 2 
 
 genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
 genes
@@ -2267,7 +2296,8 @@ SNP_gene_df
 SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
 SNP_gene_final 
 
-napus_vs_ara.non_reciprocal <- read.table("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
+# napus_vs_ara.non_reciprocal <- read.table("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
+napus_vs_ara.non_reciprocal <- read.table("~/Reference/B.napus/napus_vs_ara.non_reciprocal.table")
 
 head(napus_vs_ara.non_reciprocal)
 dim(napus_vs_ara.non_reciprocal) # 64949 
@@ -2284,9 +2314,9 @@ SNP_gene_final_fxn$Oleic_acid <- SNP_gene_final_fxn$SNP.ID %in% Oleic_acid[Oleic
 colnames(SNP_gene_final_fxn) <- c("gene_ID", "snp_ID", "CHROM", "POS", "Arabidopsis_homolog", "function", "Erucic_acid", "Oleic_acid")
 SNP_gene_final_fxn
 
-write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/late_silique/GWAS_SNP_gene_fxn.csv")
+write.csv(SNP_gene_final_fxn, file = "~/505/output/131_sample/GWAS_SNP_gene_fxn.csv")
 
-# as a summary, 219 out of the 259 SNPs fall within genes, 201 of them have arabidopsis homologs.
+# as a summary, 222 out of the 262 SNPs fall within genes, 201 of them have arabidopsis homologs.
 ``` 
 
 # for the several significant SNPs, are they synonymous or not? what's the possible effect on the protein function? 
@@ -2296,22 +2326,18 @@ write.csv(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/50
 # java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted_ann.vcf 
 
 # analyze snpEff annotation file 
-# grep -f significant_SNP_219 /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_sorted_ann.vcf | awk '{print $3 "|" $4 "|" $5 "|" $8}' | awk 'BEGIN{FS="|"}{print $1, $2, $3, $5}' > significant_SNP_219_annotation 
+# cat GWAS_SNP_gene_fxn.csv | sed 's/"//g' | sed 's/,/ /g' | awk '{print $3}' | tail -222 > significant_SNP
+# grep -f significant_SNP /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_sorted_ann.vcf | awk '{print $3 "|" $4 "|" $5 "|" $8}' | awk 'BEGIN{FS="|"}{print $1, $2, $3, $5}' > significant_SNP_annotation 
 
-sig_SNP_ann <- read_table2("~/505/output/131_sample/significant_SNP_219_annotation", col_names=F)
+sig_SNP_ann <- read_table2("~/505/output/131_sample/significant_SNP_annotation", col_names=F)
 head(sig_SNP_ann)  
 colnames(sig_SNP_ann) <- c("snp_ID", "ref", "alt", "mutation_type")
 
-unique(sig_SNP_ann$X4)
-# [1] "missense_variant"                         "stop_gained"                             
-# [3] "upstream_gene_variant"                    "synonymous_variant"                      
-# [5] "splice_region_variant&synonymous_variant" "downstream_gene_variant"                 
-# [7] "splice_region_variant&intron_variant"     "stop_lost"                               
-# [9] "stop_gained&splice_region_variant"        "stop_retained_variant"                   
-# [11] "intron_variant"                          
+unique(sig_SNP_ann$mutation_type)                          
 
 SNP_gene_final_fxn <- read.csv("~/505/output/131_sample/GWAS_SNP_gene_fxn.csv")
 head(SNP_gene_final_fxn)
+dim(SNP_gene_final_fxn)
 
 SNP_gene_final_fxn.2 <- merge(SNP_gene_final_fxn, sig_SNP_ann, by="snp_ID")
 SNP_gene_final_fxn.2 
@@ -2360,7 +2386,7 @@ colnames(vstMat.505.silique)
 ## pull out the vst transformed expression value for the sig genes (this way I am only getting genes that are expressed above certain value) 
 SNP.gene.fxn <-read.csv("~/505/output/131_sample/GWAS_SNP_gene_fxn.csv", header=T)
 vstMat.siggene <- as.data.frame(vstMat.505.silique[which(rownames(vstMat.505.silique) %in% SNP.gene.fxn$gene_ID),])
-dim(vstMat.siggene) # 87 131  
+dim(vstMat.siggene) # 90 131  
 head(vstMat.siggene)
 
 # get the phenotypic trait values 
@@ -2369,13 +2395,13 @@ colnames(pheno_data_505.silique)[2] <- "Sample.ID"
 
 vstMat.siggene.t <- data.frame(t(vstMat.siggene))
 vstMat.siggene.t$Sample.ID <- rownames(vstMat.siggene.t) 
-dim(vstMat.siggene.t) # 131 88 
+dim(vstMat.siggene.t) # 131 91 
 
 trait.gene <- merge(vstMat.siggene.t, pheno_data_505.silique, by="Sample.ID")
-dim(trait.gene) # 131 93  
+dim(trait.gene) # 131 96  
 summary(trait.gene)
 trait.gene.sub <- trait.gene[!is.na(trait.gene$Erucic_acid),]
-dim(trait.gene.sub) # 114 93 
+dim(trait.gene.sub) # 114 96 
 
 # get spearman correlation test result 
 phenotypes <- colnames(pheno_data_505.silique)[4:6]
@@ -2391,12 +2417,33 @@ spearman.result <- melt(spearman.estimate, id.vars="trait")
 spearman.result$pvalue <- as.data.frame(melt(spearman.pvalue))[,"value"]
 spearman.result$sig <- ifelse(spearman.result$pvalue < 0.05, "*", " ")
 spearman.result
-dim(spearman.result) # 261 5 
+dim(spearman.result) # 270 5 
 save(spearman.result, file="~/505/output/131_sample/spearman.reult.Rdata")
 
 # extract genes that have greater than 0.5 significant (p-value < 0.05) correlation with trait value 
-spearman.result %>%
-  filter(abs(value) >= 0.4)  
+genes.sig.cor <-
+  spearman.result %>%
+  filter(abs(value) >= 0.4 & pvalue <= 0.05)  
+
+genes.sig.cor
+
+# combine this info with annotation file 
+genesID.sig.cor <- as.character(unique(genes.sig.cor$variable))
+length(genesID.sig.cor)
+
+View(SNP.gene.fxn)
+View(SNP_gene_final_fxn.2)
+
+gene_report <- SNP_gene_final_fxn.2[which(SNP_gene_final_fxn.2$gene_ID %in% genesID.sig.cor),]
+colnames(gene_report)
+gene_report.final <- 
+  gene_report %>%
+  select(snp_ID, gene_ID, CHROM, POS, Arabidopsis_homolog, function., Erucic_acid, Oleic_acid, mutation_type)
+
+gene_report.final <- data.frame(sapply(gene_report.final, function(x) sub("FALSE","N",x))) 
+gene_report.final <- data.frame(sapply(gene_report.final, function(x) sub("TRUE","Y",x))) 
+gene_report.final
+write.csv(gene_report.final, file="~/505/output/131_sample/gene_report.final.csv")
 ```
 
 ### appendix for functions

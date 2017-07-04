@@ -1,0 +1,205 @@
+Title: 505 genomic prediction
+========================================================
+
+# load packages 
+```{r}
+library(bigRR)
+library(ggplot2)
+library(magrittr)
+library(reshape2)
+library(rrBLUP)
+library(BGLR)
+```
+
+## import & format geno & pheno data 
+```{r}
+# -1 for homo ref, 1 for homo alt, 0 for het 
+# geno data 
+geno <- read.vcfR("~/505/vcf_late_silique_131_sample/combined/505_filtered_sorted.vcf")
+geno.2 <- reform.vcf(geno)
+
+geno.2[1:10, 1:10]
+geno.2$snp_ID <- paste(geno.2$CHROM, geno.2$POS, sep="_")
+rownames(geno.2) <- geno.2$snp_ID
+colnames(geno.2)
+
+geno.2.t <- t(geno.2[,grep("505", colnames(geno.2))])
+geno.2.t[1:10, 1:10]
+rnames <- rownames(geno.2.t)
+rnames <- gsub("\\.","\\-", rnames)
+rnames <- gsub("X", "", rnames)
+
+geno.2.t.numeric <- apply(geno.2.t, 2, function(x) as.numeric(x))
+geno.2.t.numeric[1:10, 1:10]
+rownames(geno.2.t.numeric) <- rnames
+
+geno.center.505 <- geno.2.t.numeric
+save(geno.center.505, file="~/505/genomic_prediction/data/geno.center.505.Rdata")
+
+# pheno data 
+sample_des_c <- read.csv("~/505/data/phenotype/batch_c.csv", stringsAsFactors=F, header=T)
+sample_des_d <- read.csv("~/505/data/phenotype/batch_d.csv", stringsAsFactors=F, header=T)
+sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", stringsAsFactors=F, header=T)
+
+sample_des_c_sub2 <- sample_des_c[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_d_sub2 <- sample_des_d[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_e_sub2 <- sample_des_e[,c("Sample.ID", "No..of.Sowing", "Name")]
+
+sample_des_d_sub2 <- sample_des_d_sub2[c(1:41),]
+sample_des_sub2 <- rbind(sample_des_c_sub2, sample_des_d_sub2, sample_des_e_sub2)
+
+# add name to to replace SN
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
+gh.seed.bolt.table.wide.merge <- merge(sample_des_sub2, gh.seed.bolt.table.wide, by = "SN")
+pheno_data_505 <- gh.seed.bolt.table.wide.merge[,c("Sample.ID", "FATTY ACID_Erucic acid (C22:1n9)", "FATTY ACID_oil contents (%)", "FATTY ACID_Oleic acid (C18:1n9c)")]
+colnames(pheno_data_505) <- c("Taxa", "Erucic_acid", "Oil_content", "Oleic_acid")
+pheno_data_505
+K250_K251 <- data.frame(Taxa = c("505_K_250", "505_K_251"),
+  		Erucic_acid = rep(NA, 2),
+			Oil_content = rep(NA, 2),
+			Oleic_acid = rep(NA, 2))
+pheno_data_505 <- rbind(pheno_data_505, K250_K251)
+str(pheno_data_505)
+
+rownames(pheno_data_505) <- pheno_data_505$Taxa
+pheno.505 <- pheno_data_505[,-1]
+save(pheno.505, file="~/505/genomic_prediction/data/pheno.505.Rdata")
+```
+
+# bigRR
+
+## bigRR
+
+* Package bigRR (big Ridge Regression) uses optimized code to fit penalized Ridge Regression models.  
+* Enables separate shrinkage parameters to be used for each marker, in a two-step process
+
+```{r, include=FALSE}
+load("~/505/genomic_prediction/data/geno.center.505.Rdata")
+load("~/505/genomic_prediction/data/pheno.505.Rdata")
+
+geno.center.505[1:10, 1:10]
+head(pheno.505)
+
+### remove lines with NA value in phenotypes, only 113 unique (two replicates) lines have phenotype data 
+pheno.505.sub <- pheno.505[which(!is.na(pheno.505$Erucic_acid)),]
+geno.center.505.sub <- geno.center.505[which(rownames(geno.center.505) %in% rownames(pheno.505[which(!is.na(pheno.505$Erucic_acid)),])),]
+
+### remove SNPs with the same genotypes across different lines, 184 lines 
+test <- apply(geno.center.505.sub, 2, function(x) length(unique(x[!is.na(x)])))
+filter.polymorphsm <- test != 1 
+
+geno.center.505.sub <- geno.center.505.sub[,filter.polymorphsm]
+dim(geno.center.505.sub) # 114 206038 
+```
+
+### impute
+```{r}
+impute.505 <- A.mat(geno.center.505.sub,max.missing = .5, impute.method = "mean", return.imputed = TRUE,n.core=3)
+geno_impute.505 <- impute.505$imputed
+any(apply(geno_impute.505,2,function(x) any(is.na(x)))) #check for NAs.  If there are any, then would need to remove NA columns
+geno_impute.505[1:10, 1:10]
+dim(geno_impute.505) # 114 197399 
+```
+
+### bigRR 
+```{r}
+bigRR1.505 <- bigRR(y=pheno.505.sub$Erucic_acid,
+                X = matrix(1,nrow = nrow(pheno.505.sub),ncol=1), # intercepts
+                Z = geno_impute.505,
+                impute = TRUE) 
+
+bigRR1.update.505 <- bigRR_update(bigRR1.505, Z = geno_impute.505) #this allows heteroscedatic shrinkage (stronger shrinkage on SNPs than others). ??? 
+```
+
+## compare models with uniform and variable shrinkage
+
+using all data.  Plot predicted marker effects
+
+```{r, include=FALSE}
+snpBlups.505 <- data.frame(bigRR=bigRR1.505$u, bigRR.HME=bigRR1.update.505$u,index=1:nrow(bigRR1.505$u)) %>% melt(id.vars="index",variable.name="model") # what is u? marker effects I guess... 
+head(snpBlups.505)
+summary(snpBlups.505)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+snpBlups.505 <- snpBlups[sample(nrow(snpBlups.505)),] #for a better plot (if not facetting), randomize the order of the observations
+colnames(snpBlups.505)[2] <- "model" 
+pl.505 <- ggplot(snpBlups.505,aes(x=index,y=value,color=model))
+pl.505 <- pl.505 + geom_point(size=.5,alpha=.5)
+pl.505 <- pl.505 + facet_wrap(~ model)
+pl.505
+
+ggsave(pl.505, filename = "~/505/genomic_prediction/output/figure/bigRR_vs_bigRR.HME.png", height = 8, width = 11)
+```
+
+## plot predicted versus actual (using all data)
+
+```{r, echo=FALSE, eval=TRUE}
+hyp.predict.wide.505 <- data.frame(observed=pheno.505.sub$Erucic_acid,
+                               bigRR=bigRR1.505$beta + geno_impute.505 %*% bigRR1.505$u,
+                               bigRR.HME=bigRR1.update.505$beta + geno_impute.505 %*% bigRR1.update.505$u) 
+
+hyp.predict.505 <-  melt(hyp.predict.wide.505,id.vars="observed",variable.name="model",value.name = "predicted")
+colnames(hyp.predict.505) <- c("observed", "model", "predicted")
+pl.505.2 <- ggplot(hyp.predict.505,aes(x=observed,y=predicted,color=model))
+pl.505.2 <- pl.505.2 + geom_point() + ggtitle("two bigRR models, all data")
+pl.505.2
+ggsave(pl.505.2, filename = "~/505/genomic_prediction/output/figure/all.data.png", height = 8, width = 11)
+cor(hyp.predict.wide.505)
+hyp.predict.505
+##### wired that I get all cor value of 1 ... come back later 
+```
+fits the model data well
+
+## predict new observations
+# I have 114 samples in total, will use 76 (2/3) as training set and 38 (1/3) as test set.  
+
+```{r, include=FALSE}
+pheno.train.76 <- pheno.505.sub[1:76,]
+pheno.test.76 <- pheno.505.sub[77:114,]
+geno.train.76 <- geno_impute.505[1:76,]
+geno.test.76 <- geno_impute.505[77:114,]
+K.mat.train.76 <- K.mat[1:76,1:76]
+bigRR.train1.505 <- bigRR(y=pheno.train.76$Erucic_acid,
+                      X = matrix(1,nrow = nrow(pheno.train.76),ncol=1), # intercepts
+                      Z = geno.train.76)
+bigRR.train1.update.505 <- bigRR_update(bigRR.train1.505,Z = geno.train.76) #this allows heteroscedatic shrinkage (stronger shrinkage on SNPs than others).
+```
+
+```{r, echo=FALSE, eval=TRUE}
+hyp.predict.76.wide <- data.frame(observed=pheno.test.76$Erucic_acid,
+                                   bigRR=bigRR.train1.505$beta + geno.test.76 %*% bigRR.train1.505$u,
+                                   bigRR.HME=bigRR.train1.update.505$beta + geno.test.76 %*% bigRR.train1.update.505$u)
+hyp.predict.76 <- melt(hyp.predict.76.wide,id.vars="observed",variable.name="model",value.name = "predicted")
+colnames(hyp.predict.76) <- c("observed", "model", "predicted")
+pl.505.3 <- ggplot(hyp.predict.76,aes(x=observed,y=predicted,color=model))
+pl.505.3 <- pl.505.3 + geom_point() + ggtitle("two bigRR models, train on 76")
+ggsave(pl.505.3, filename = "~/505/genomic_prediction/output/figure/76_training.png", height = 8, width = 11)
+
+cor(hyp.predict.76.wide)
+```
+# I don't think this is helpful at all... 
+
+### appendix for functions
+```{r}
+# reformat vcf file, return numeric values 
+reform.vcf <- function(temp){
+  vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
+  vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
+  vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele
+  vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
+  vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
+  vcfgts <- subset(extract.gt(temp, element = "GT", IDtoRowNames = F), subset = vcfbi) 
+
+  temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts))
+  colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
+  rnames <- rownames(temp2)
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  row.names(temp2) <- rnames 
+
+return(temp2) 
+}
+``` 
+
