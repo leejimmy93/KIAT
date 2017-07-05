@@ -176,9 +176,9 @@ pl.505.3 <- ggplot(hyp.predict.76,aes(x=observed,y=predicted,color=model))
 pl.505.3 <- pl.505.3 + geom_point() + ggtitle("two bigRR models, train on 76")
 ggsave(pl.505.3, filename = "~/505/genomic_prediction/output/figure/76_training.png", height = 8, width = 11)
 
-cor(hyp.predict.76.wide)
+cor(hyp.predict.76.wide) 
 ```
-# I don't think this is helpful at all... 
+# something wrong? 
 
 ### appendix for functions
 ```{r}
