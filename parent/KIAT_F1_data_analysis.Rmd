@@ -13,7 +13,6 @@ output: html_document
 ```{r}
 # 1) download file from ftp using ftp_file_transfer.sh
 # 1.1) unzip files using gunzip *  
-# 2) get first 1000 sequences for each file extract_1000_reads.sh, actually worked with all data instead of the 1st 1000 seqs
 # 3) QC file using fastQC: fastqc *.fq -o /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/fastqc_result
 # 4) download Brassica_napus.annotation_v5.cds.fa to whitney 
 # 5) collapse fastqc summary result into one file & get overrepresented sequences using ./make_summary_report.sh 
