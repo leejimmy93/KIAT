@@ -213,19 +213,19 @@ pl.SNP.Ae.het.ratio.final
 
 ## the above is too complicated and only works for 1mb window size, use another way for other windows size 
 dim(Ae_flowering_combined.reform) 
-head(Ae_flowering_combined.reform)
+head(Ae_flowering_combined.reform) 
 
-tmp <- 
+tmp <-
   Ae_flowering_combined.reform %>%
   group_by(CHROM) %>%
-  count(cut_width(POS, 50000)) 
+  count(cut_width(POS,50000)) 
 
 tmp1 <- 
   Ae_flowering_combined.reform %>%
   group_by(CHROM) %>%
   count(cut_width(POS, 50000), wt = Ae_het)   
 
-dim(tmp)
+dim(tmp) 
 dim(tmp1)
 
 colnames(tmp) <- c("CHROM", "POS", "countSNP")
@@ -248,32 +248,19 @@ pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + facet_grid(chr_ID ~subg
 pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + theme(legend.position = "none")
 pl.SNP.Ae.het.ratio.final  
 
-## try Julin's suggestion, use package zoo or CAtools
-# install.packages("zoo")
-library(zoo)
+ggsave(pl.SNP.Ae.het.ratio.final, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/pl.SNP.Ae.ratio.final.50kb.png", width = 10, height = 15)
 
-### eg. 
-x.Date <- as.Date(paste(2004, rep(1:4, 4:1), sample(1:28, 10), sep = "-"))
-x.Date
-x <- zoo(rnorm(12), x.Date)
-x
-?zoo
+### sliding window 
+library("RcppRoll")
+?roll_mean 
 
-rollmean(x, 3)
-rollmax(x, 3)
-rollmedian(x, 3)
-rollsum(x, 3)
-?rollmean 
+roll_mean() 
 
-xm <- zoo(matrix(1:12, 4, 3), x.Date[1:4])
-xm
-rollmean(xm, 3)
-rollmax(xm, 3)
-rollmedian(xm, 3)
-rollsum(xm, 3)
 
-rollapply(xm, 3, mean) # uses rollmean
-rollapply(xm, 3, function(x) mean(x)) # does not use rollmean 
+
+
+
+
 ```
 
 By checking the result from last code chunk, subgenome C has higher het ratio although its SNP density is lower, probably because it has more repeated regions, which cause reads from A subgeome more falsefully mapped to different/similar regions of C subgenome. So many of detected SNPs on C sub genome are then appeared as het. Reads from C also map to A but they are more clustered, because A subgeome is more unqiue compared to C subgenome. 
