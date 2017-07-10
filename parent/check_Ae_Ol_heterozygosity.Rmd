@@ -421,6 +421,36 @@ table(Ae_flower_single.2$Ae_flower_single)
 # still a lot of het... # 0 means heterzygous, 1 means homozygous alternate... 
 ```
 
+```{r}
+DH_1 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-001-DG15--TGCTCATG_filtered.recode.vcf")
+
+DH_1.2 <- reform.vcf(DH_1)
+table(DH_1.2$DH.15.001.DG15..TGCTCATG)
+
+DH_2 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-001-GiBeuRiTteu--TTAGCCAG_filtered.recode.vcf")
+
+DH_2.2 <- reform.vcf(DH_2)
+table(DH_2.2$DH.15.001.GiBeuRiTteu..TTAGCCAG)
+
+DH_3 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-004-DG17--AATCACCT_filtered.recode.vcf")
+
+DH_3.2 <- reform.vcf(DH_3)
+table(DH_3.2$DH.15.004.DG17..AATCACCT)
+
+DH_3 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-004-DG17--AATCACCT_filtered.recode.vcf")
+
+DH_3.2 <- reform.vcf(DH_3)
+table(DH_3.2$DH.15.004.DG17..AATCACCT) 
+
+neotec <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/neotec--GTATCTCG_filtered.recode.vcf")
+neotec.2 <- reform.vcf(neotec)
+table(neotec.2$neotec..GTATCTCG)
+
+RIL <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/RIL219--ACGCCGAG_filtered.recode.vcf")
+RIL.2 <- reform.vcf(RIL)
+table(RIL.2$RIL219..ACGCCGAG) 
+```
+
 
 
 
