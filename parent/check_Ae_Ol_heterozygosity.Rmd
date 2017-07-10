@@ -255,12 +255,6 @@ library("RcppRoll")
 ?roll_mean 
 
 roll_mean() 
-
-
-
-
-
-
 ```
 
 By checking the result from last code chunk, subgenome C has higher het ratio although its SNP density is lower, probably because it has more repeated regions, which cause reads from A subgeome more falsefully mapped to different/similar regions of C subgenome. So many of detected SNPs on C sub genome are then appeared as het. Reads from C also map to A but they are more clustered, because A subgeome is more unqiue compared to C subgenome. 
@@ -407,6 +401,49 @@ Ae_flower_single.2 <- reform.vcf(Ae_flower_single)
 table(Ae_flower_single.2$Ae_flower_single)
 # still a lot of het... # 0 means heterzygous, 1 means homozygous alternate... 
 ```
+
+# I am wondering this het problem is common to allopyploid, and it is caused by mapping. to test for my hypothesis, I will check the SNP calling result of 505 collection, by selecting 6 samples from 505, including 2 DH line, because we are more sure that they should be homozygous... 
+```{r}
+sample_des_b <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/Sequencing_Statistics_Result_TBD170026.csv", stringsAsFactors = F, header = T)
+head(sample_des_b)
+
+sample_des_b$Name
+#  [1] NA257-DH7                NA257-DH8                NA257-DH17              
+#  [4] NA257-DH49               NA257-DH54               NA259-DH02              
+#  [7] NA259-DH06               NA259-DH09               NA259-DH10              
+# [10] RIL219                   #25N606                  #7-639                  
+# [13] #9-654                   #9-657                   #10-669                 
+# [16] #19-683                  850-23C                  774-6C(S20)             
+# [19] #4-708                   S20                      K23                     
+# [22] K25                      K26                      JH                      
+# [25] LD                       SM                       TM                      
+# [28] J04_HL                   영산 (Yeong-san)         DC1                     
+# [31] DC3                      DC4                      개림채 (Gae-rim-chae)   
+# [34] 설지홍 (Seol-chi-hong)   전생채 (Jeon-saeng-chae) neotec                  
+# [37] DG11 (Karbe)             DH-15-004-DG17           DH-15-001-Hara          
+# [40] DH-15-002-Hara           DH-15-001-DG15           DH-15-001-Gibrit        
+# [43] DH-15-002-gibrit         DH-15-003-Gibrit         DH-15-005-Gibrit        
+# [46] DH-15-006-Gibrit         DH-15-001-DG13           DH-16-010-Tra
+
+# among these samples, I choose 
+
+sample(sample_des_b$Name, size = 5, replace = F)
+# [1] "DH-15-004-DG17"   "RIL219"           "DH-15-001-DG15"   "neotec"          
+# [5] "DH-15-001-Gibrit"
+
+# the above are the 5 lines that I will use for SNP calling. 
+samples <- c("DH-15-004-DG17", "RIL219", "DH-15-001-DG15", "neotec", "DH-15-001-Gibrit")
+
+sample_des_b[which(sample_des_b$Name %in% samples),]$Sample.ID
+
+# filter SNPs, biallelic, QUAL score, depth, GQ... 
+
+
+```
+
+
+
+
 
 
 
