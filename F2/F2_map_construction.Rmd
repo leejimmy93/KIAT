@@ -123,6 +123,7 @@ save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
 dim(F2_geno_data_2) # 2932 166 
+head(F2_geno_data_2) 
 
 # formating data for onemap 
 F2_geno_data_2 <- as.matrix(F2_geno_data_2)
@@ -988,9 +989,9 @@ LG.f2.A <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/o
 
 summary(LG.f2.A)
 plotMap(LG.f2.A)
-# plot.rf(LG.f2.A)
+plot.rf(LG.f2.A)
 
-totmar(LG.f2.A)
+totmar(LG.f2.A) 
 
 LG.f2.C <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.map")
 

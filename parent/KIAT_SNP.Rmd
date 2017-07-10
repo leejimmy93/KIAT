@@ -210,6 +210,8 @@ table(vcf.freebayes.HQ.2.test1.Ae$Ae_gt)
 #     0/1    1/1 
 # 127827 187049 
 
+save(vcf.freebayes.HQ.2.test1.Ae, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/freebayes/vcf.freebayes.HQ.2.test1.Ae.Rdata") 
+
 head(vcf.freebayes.HQ.1.reform.Ae) 
 # save(vcf.freebayes.HQ.1.reform.Ae, file = "~/SNP_parent/result/freebayes/from_cabernet_call_separately/output/vcf.freebayes.HQ.1.reform.Ae.Rdata")
 
@@ -288,7 +290,7 @@ nrow(vcf.freebayes.HQ.2.test1.Ae.het)
 pl <- ggplot(data = vcf.freebayes.HQ.2.test1.Ae.het) 
 pl <- pl + geom_histogram(aes(allele_ratio)) 
 pl <- pl +labs(list(x="alt.depth/ref.depth", y="nunber of SNPs"))
-pl
+pl 
 
 # didn't see correlation between MAF & MBR... 
 cor.test(vcf.freebayes.HQ.2.test1.Ae.het)
@@ -2594,6 +2596,8 @@ hist(R500_IMB211.reform$MAF_R500)
 # hist(R500_IMB211.reform[R500_IMB211.reform$R500_gt=="0/1",]$R500_allele_ratio)
 hist(R500_IMB211.reform[R500_IMB211.reform$R500_gt=="0/1",]$MAF_R500)
 ```
+
+
 
 
 

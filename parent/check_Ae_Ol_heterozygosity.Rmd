@@ -213,19 +213,19 @@ pl.SNP.Ae.het.ratio.final
 
 ## the above is too complicated and only works for 1mb window size, use another way for other windows size 
 dim(Ae_flowering_combined.reform) 
-head(Ae_flowering_combined.reform)
+head(Ae_flowering_combined.reform) 
 
-tmp <- 
+tmp <-
   Ae_flowering_combined.reform %>%
   group_by(CHROM) %>%
-  count(cut_width(POS, 50000)) 
+  count(cut_width(POS,50000)) 
 
 tmp1 <- 
   Ae_flowering_combined.reform %>%
   group_by(CHROM) %>%
   count(cut_width(POS, 50000), wt = Ae_het)   
 
-dim(tmp)
+dim(tmp) 
 dim(tmp1)
 
 colnames(tmp) <- c("CHROM", "POS", "countSNP")
@@ -248,32 +248,13 @@ pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + facet_grid(chr_ID ~subg
 pl.SNP.Ae.het.ratio.final <- pl.SNP.Ae.het.ratio.final + theme(legend.position = "none")
 pl.SNP.Ae.het.ratio.final  
 
-## try Julin's suggestion, use package zoo or CAtools
-# install.packages("zoo")
-library(zoo)
+ggsave(pl.SNP.Ae.het.ratio.final, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/pl.SNP.Ae.ratio.final.50kb.png", width = 10, height = 15)
 
-### eg. 
-x.Date <- as.Date(paste(2004, rep(1:4, 4:1), sample(1:28, 10), sep = "-"))
-x.Date
-x <- zoo(rnorm(12), x.Date)
-x
-?zoo
+### sliding window 
+library("RcppRoll")
+?roll_mean 
 
-rollmean(x, 3)
-rollmax(x, 3)
-rollmedian(x, 3)
-rollsum(x, 3)
-?rollmean 
-
-xm <- zoo(matrix(1:12, 4, 3), x.Date[1:4])
-xm
-rollmean(xm, 3)
-rollmax(xm, 3)
-rollmedian(xm, 3)
-rollsum(xm, 3)
-
-rollapply(xm, 3, mean) # uses rollmean
-rollapply(xm, 3, function(x) mean(x)) # does not use rollmean 
+roll_mean() 
 ```
 
 By checking the result from last code chunk, subgenome C has higher het ratio although its SNP density is lower, probably because it has more repeated regions, which cause reads from A subgeome more falsefully mapped to different/similar regions of C subgenome. So many of detected SNPs on C sub genome are then appeared as het. Reads from C also map to A but they are more clustered, because A subgeome is more unqiue compared to C subgenome. 
@@ -421,6 +402,7 @@ table(Ae_flower_single.2$Ae_flower_single)
 # still a lot of het... # 0 means heterzygous, 1 means homozygous alternate... 
 ```
 
+<<<<<<< HEAD
 ```{r}
 DH_1 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-001-DG15--TGCTCATG_filtered.recode.vcf")
 
@@ -451,6 +433,51 @@ RIL.2 <- reform.vcf(RIL)
 table(RIL.2$RIL219..ACGCCGAG) 
 ```
 
+=======
+# I am wondering this het problem is common to allopyploid, and it is caused by mapping. to test for my hypothesis, I will check the SNP calling result of 505 collection, by selecting 6 samples from 505, including 2 DH line, because we are more sure that they should be homozygous... 
+```{r}
+sample_des_b <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/Sequencing_Statistics_Result_TBD170026.csv", stringsAsFactors = F, header = T)
+head(sample_des_b)
+
+sample_des_b$Name
+#  [1] NA257-DH7                NA257-DH8                NA257-DH17              
+#  [4] NA257-DH49               NA257-DH54               NA259-DH02              
+#  [7] NA259-DH06               NA259-DH09               NA259-DH10              
+# [10] RIL219                   #25N606                  #7-639                  
+# [13] #9-654                   #9-657                   #10-669                 
+# [16] #19-683                  850-23C                  774-6C(S20)             
+# [19] #4-708                   S20                      K23                     
+# [22] K25                      K26                      JH                      
+# [25] LD                       SM                       TM                      
+# [28] J04_HL                   영산 (Yeong-san)         DC1                     
+# [31] DC3                      DC4                      개림채 (Gae-rim-chae)   
+# [34] 설지홍 (Seol-chi-hong)   전생채 (Jeon-saeng-chae) neotec                  
+# [37] DG11 (Karbe)             DH-15-004-DG17           DH-15-001-Hara          
+# [40] DH-15-002-Hara           DH-15-001-DG15           DH-15-001-Gibrit        
+# [43] DH-15-002-gibrit         DH-15-003-Gibrit         DH-15-005-Gibrit        
+# [46] DH-15-006-Gibrit         DH-15-001-DG13           DH-16-010-Tra
+
+# among these samples, I choose 
+
+sample(sample_des_b$Name, size = 5, replace = F)
+# [1] "DH-15-004-DG17"   "RIL219"           "DH-15-001-DG15"   "neotec"          
+# [5] "DH-15-001-Gibrit"
+
+# the above are the 5 lines that I will use for SNP calling. 
+samples <- c("DH-15-004-DG17", "RIL219", "DH-15-001-DG15", "neotec", "DH-15-001-Gibrit")
+
+sample_des_b[which(sample_des_b$Name %in% samples),]$Sample.ID
+
+# filter SNPs, biallelic, QUAL score, depth, GQ... 
+
+
+```
+
+
+
+
+
+>>>>>>> 9a0bbe54d71bbde64e8749ad29b77c84fc6efb82
 
 
 
