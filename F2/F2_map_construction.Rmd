@@ -85,11 +85,11 @@ options(warn=0) # unsuppress warning message
 dim(F2_SNP_correlation) # 5795 5795 
 
 # calcualte number of SNPs with correlation of 1
-nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T)) # 150 pairs of SNPs have identical genotype data 
+nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T)) # 251 pairs of SNPs have identical genotype data 
 
 # find SNPs with correlation of 1 and remove them 
 dup.cordinate <- which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
-length(dup.cordinate) # 300 
+length(dup.cordinate) # 502
 dup.cordinate.df <- as.data.frame(dup.cordinate)
 sample.ID <- colnames(F2_SNP_correlation)
 
@@ -100,9 +100,9 @@ for (i in 1:nrow(dup.cordinate)){
  dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
 }
 
-length(dup.pair[,2]) # 150 
+length(dup.pair[,2]) # 251 
 rem <- unique(dup.pair[,2])
-length(rem) # 143 markers are removed due to pairwise correlation of 1 
+length(rem) # 239 markers are removed due to pairwise correlation of 1 
 
 # save data
 save(dup.pair, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/dup.pair.Rdata")
@@ -114,10 +114,12 @@ F2_geno_data_1 <- F2_geno_data_with_missing_rate_filtered.final[!(rownames(F2_ge
 # remove non polymorphism SNPs 
 F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
 
-dim(F2_geno_data_2) # 2932  166, end up with 2932 SNPs for map construction 
+dim(F2_geno_data_2) # 5556  166, end up with 2932 SNPs for map construction 
 
 save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs with missing data less than 0.85   
 ``` 
+
+######## down to here, missing rate based on the right number of lines were calculated and new F2 data were generated. ##########  
 
 # format data for onemap  
 ```{r}
