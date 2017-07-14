@@ -468,8 +468,12 @@ samples <- c("DH-15-004-DG17", "RIL219", "DH-15-001-DG15", "neotec", "DH-15-001-
 
 sample_des_b[which(sample_des_b$Name %in% samples),]$Sample.ID
 
+# SNP calling 
+# https://github.com/leejimmy93/KIAT/blob/master/parent/SNP_calling_505.sh 
+
 # filter SNPs, biallelic, QUAL score, depth, GQ... 
 
+# check result showed that 
 
 ```
 
