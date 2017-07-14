@@ -17,7 +17,7 @@ library(tkrplot)
 library(onemap)  
 library(ggplot2)
 library(reshape) 
-# library(tidyverse) 
+library(tidyverse) 
 ```
 
 # import & format data (MAC version)
@@ -30,6 +30,7 @@ class(F2_geno_data)
 rownames(F2_geno_data) <- paste(F2_geno_data$CHROM, F2_geno_data$POS, sep = "_")
 F2_geno_data <- F2_geno_data[, -c(1:6)]
 dim(F2_geno_data) # 18226   166 
+colnames(F2_geno_data)
 colnames(F2_geno_data) <- gsub("([[:print:]]+)(\\.)([[:digit:]])", "\\3", colnames(F2_geno_data))
 colnames(F2_geno_data)  
 ```
@@ -37,26 +38,25 @@ colnames(F2_geno_data)
 # check missing rate & remove data with high missing rate above 0.85 
 ```{r}
 F2_geno_data_with_missing_rate <- mutate(F2_geno_data, 
-       missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/94, 2))
+       missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/166, 2)) 
 
 rownames(F2_geno_data_with_missing_rate) <- rownames(F2_geno_data) 
 hist(F2_geno_data_with_missing_rate$missing_rate)
-max(F2_geno_data_with_missing_rate$missing_rate) # 0.83, the highest missing rate is 0.83 
+max(F2_geno_data_with_missing_rate$missing_rate) # 0.47, the highest missing rate is 0.47 
 
 # remove markers with missing rate greater than 0.85 
-F2_geno_data_with_missing_rate_filtered <- F2_geno_data_with_missing_rate[F2_geno_data_with_missing_rate$missing_rate < 0.15,]
+F2_geno_data_with_missing_rate_filtered <-  F2_geno_data_with_missing_rate[F2_geno_data_with_missing_rate$missing_rate < 0.15,]
 rownames(F2_geno_data_with_missing_rate_filtered)
 
-dim(F2_geno_data_with_missing_rate_filtered) # 3077 167
+dim(F2_geno_data_with_missing_rate_filtered) # 5797 167
 hist(F2_geno_data_with_missing_rate_filtered$missing_rate)
 
 F2_geno_data_with_missing_rate_filtered.final <- subset(F2_geno_data_with_missing_rate_filtered, select=-missing_rate)
 rownames(F2_geno_data_with_missing_rate_filtered.final)
 
-dim(F2_geno_data_with_missing_rate_filtered.final) # 3077 166 
+dim(F2_geno_data_with_missing_rate_filtered.final) # 5797 166 
 rownames(F2_geno_data_with_missing_rate_filtered.final) 
 ```
-
 
 # calculate pairwise corrlelation and remove SNPs with corrlelation greater or equal to 0.9
 some SNPs should have exactly the same genotype across all individuals, they are redundant in terms of genetic map construction, so they should be removed. find those SNPs by doing correlation test. 
@@ -69,7 +69,7 @@ test <- apply(F2_geno_data_t.numeric, 2, function(x) length(unique(x[!is.na(x)])
 filter.polymorphsm <- test != 1 
 
 F2_geno_data_t.numeric.2 <- F2_geno_data_t.numeric[,filter.polymorphsm]
-dim(F2_geno_data_t.numeric.2) # 166 3075  
+dim(F2_geno_data_t.numeric.2) # 166 5795  
 
 # also output save markers with same genotype across individuals
 polymorphism <- test == 1
@@ -82,14 +82,14 @@ options(warn=-1) # suppress warning message
 F2_SNP_correlation <- cor(F2_geno_data_t.numeric.2, use = "pairwise.complete.obs")
 save(F2_SNP_correlation, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_SNP_correlation.Rdata")
 options(warn=0) # unsuppress warning message
-dim(F2_SNP_correlation) # 3075 3075 
+dim(F2_SNP_correlation) # 5795 5795 
 
 # calcualte number of SNPs with correlation of 1
-nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T)) # 150 pairs of SNPs have identical genotype data 
+nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T)) # 251 pairs of SNPs have identical genotype data 
 
 # find SNPs with correlation of 1 and remove them 
 dup.cordinate <- which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
-length(dup.cordinate) # 300 
+length(dup.cordinate) # 502
 dup.cordinate.df <- as.data.frame(dup.cordinate)
 sample.ID <- colnames(F2_SNP_correlation)
 
@@ -100,9 +100,9 @@ for (i in 1:nrow(dup.cordinate)){
  dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
 }
 
-length(dup.pair[,2]) # 150 
+length(dup.pair[,2]) # 251 
 rem <- unique(dup.pair[,2])
-length(rem) # 143 markers are removed due to pairwise correlation of 1 
+length(rem) # 239 markers are removed due to pairwise correlation of 1 
 
 # save data
 save(dup.pair, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/dup.pair.Rdata")
@@ -114,10 +114,12 @@ F2_geno_data_1 <- F2_geno_data_with_missing_rate_filtered.final[!(rownames(F2_ge
 # remove non polymorphism SNPs 
 F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
 
-dim(F2_geno_data_2) # 2932  166, end up with 2932 SNPs for map construction 
+dim(F2_geno_data_2) # 5556  166, end up with 2932 SNPs for map construction 
 
 save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs with missing data less than 0.85   
 ``` 
+
+######## down to here, missing rate based on the right number of lines were calculated and new F2 data were generated. ##########  
 
 # format data for onemap  
 ```{r}
