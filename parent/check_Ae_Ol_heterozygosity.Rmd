@@ -402,37 +402,6 @@ table(Ae_flower_single.2$Ae_flower_single)
 # still a lot of het... # 0 means heterzygous, 1 means homozygous alternate... 
 ```
 
-<<<<<<< HEAD
-```{r}
-DH_1 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-001-DG15--TGCTCATG_filtered.recode.vcf")
-
-DH_1.2 <- reform.vcf(DH_1)
-table(DH_1.2$DH.15.001.DG15..TGCTCATG)
-
-DH_2 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-001-GiBeuRiTteu--TTAGCCAG_filtered.recode.vcf")
-
-DH_2.2 <- reform.vcf(DH_2)
-table(DH_2.2$DH.15.001.GiBeuRiTteu..TTAGCCAG)
-
-DH_3 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-004-DG17--AATCACCT_filtered.recode.vcf")
-
-DH_3.2 <- reform.vcf(DH_3)
-table(DH_3.2$DH.15.004.DG17..AATCACCT)
-
-DH_3 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-004-DG17--AATCACCT_filtered.recode.vcf")
-
-DH_3.2 <- reform.vcf(DH_3)
-table(DH_3.2$DH.15.004.DG17..AATCACCT) 
-
-neotec <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/neotec--GTATCTCG_filtered.recode.vcf")
-neotec.2 <- reform.vcf(neotec)
-table(neotec.2$neotec..GTATCTCG)
-
-RIL <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/RIL219--ACGCCGAG_filtered.recode.vcf")
-RIL.2 <- reform.vcf(RIL)
-table(RIL.2$RIL219..ACGCCGAG) 
-```
-
 =======
 # I am wondering this het problem is common to allopyploid, and it is caused by mapping. to test for my hypothesis, I will check the SNP calling result of 505 collection, by selecting 6 samples from 505, including 2 DH line, because we are more sure that they should be homozygous... 
 ```{r}
@@ -468,20 +437,48 @@ samples <- c("DH-15-004-DG17", "RIL219", "DH-15-001-DG15", "neotec", "DH-15-001-
 
 sample_des_b[which(sample_des_b$Name %in% samples),]$Sample.ID
 
+<<<<<<< HEAD
 # SNP calling 
 # https://github.com/leejimmy93/KIAT/blob/master/parent/SNP_calling_505.sh 
 
 # filter SNPs, biallelic, QUAL score, depth, GQ... 
 
 # check result showed that 
+=======
+# filter SNPs, biallelic, QUAL score, depth, GQ...  
+# how did I filter it? where is the code? 
 
-```
+DH_1 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-001-DG15--TGCTCATG_filtered.recode.vcf")
+>>>>>>> 71a2bb70c27ad6e3605ac937bd443c22fcae719e
+
+DH_1.2 <- reform.vcf(DH_1)
+table(DH_1.2$DH.15.001.DG15..TGCTCATG)
+
+DH_2 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-001-GiBeuRiTteu--TTAGCCAG_filtered.recode.vcf")
+
+DH_2.2 <- reform.vcf(DH_2)
+table(DH_2.2$DH.15.001.GiBeuRiTteu..TTAGCCAG)
+
+DH_3 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-004-DG17--AATCACCT_filtered.recode.vcf")
+
+DH_3.2 <- reform.vcf(DH_3)
+table(DH_3.2$DH.15.004.DG17..AATCACCT)
+
+DH_3 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-004-DG17--AATCACCT_filtered.recode.vcf")
+
+DH_3.2 <- reform.vcf(DH_3)
+table(DH_3.2$DH.15.004.DG17..AATCACCT) 
+
+neotec <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/neotec--GTATCTCG_filtered.recode.vcf")
+neotec.2 <- reform.vcf(neotec)
+table(neotec.2$neotec..GTATCTCG)
+
+RIL <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/RIL219--ACGCCGAG_filtered.recode.vcf")
+RIL.2 <- reform.vcf(RIL)
+table(RIL.2$RIL219..ACGCCGAG) 
+```  
 
 
-
-
-
->>>>>>> 9a0bbe54d71bbde64e8749ad29b77c84fc6efb82
 
 
 
