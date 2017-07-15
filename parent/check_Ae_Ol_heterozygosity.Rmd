@@ -402,8 +402,7 @@ table(Ae_flower_single.2$Ae_flower_single)
 # still a lot of het... # 0 means heterzygous, 1 means homozygous alternate... 
 ```
 
-=======
-# I am wondering this het problem is common to allopyploid, and it is caused by mapping. to test for my hypothesis, I will check the SNP calling result of 505 collection, by selecting 6 samples from 505, including 2 DH line, because we are more sure that they should be homozygous... 
+I am wondering this het problem is common to allopyploid, and it is caused by mapping. to test for my hypothesis, I will check the SNP calling result of 505 collection, by selecting 6 samples from 505, including 2 DH line, because we are more sure that they should be homozygous... 
 ```{r}
 sample_des_b <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/Sequencing_Statistics_Result_TBD170026.csv", stringsAsFactors = F, header = T)
 head(sample_des_b)
@@ -436,20 +435,12 @@ sample(sample_des_b$Name, size = 5, replace = F)
 samples <- c("DH-15-004-DG17", "RIL219", "DH-15-001-DG15", "neotec", "DH-15-001-Gibrit")
 
 sample_des_b[which(sample_des_b$Name %in% samples),]$Sample.ID
+# SNP calling: https://github.com/leejimmy93/KIAT/blob/master/parent/SNP_calling_505.sh 
 
-<<<<<<< HEAD
-# SNP calling 
-# https://github.com/leejimmy93/KIAT/blob/master/parent/SNP_calling_505.sh 
-
-# filter SNPs, biallelic, QUAL score, depth, GQ... 
-
-# check result showed that 
-=======
-# filter SNPs, biallelic, QUAL score, depth, GQ...  
+# filter SNPs, biallelic, QUAL score, depth, GQ: https://github.com/leejimmy93/KIAT/blob/master/parent/filter_Ae_flowering.sh
 # how did I filter it? where is the code? 
 
 DH_1 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/use_505_data_check/DH-15-001-DG15--TGCTCATG_filtered.recode.vcf")
->>>>>>> 71a2bb70c27ad6e3605ac937bd443c22fcae719e
 
 DH_1.2 <- reform.vcf(DH_1)
 table(DH_1.2$DH.15.001.DG15..TGCTCATG)
@@ -478,23 +469,23 @@ RIL.2 <- reform.vcf(RIL)
 table(RIL.2$RIL219..ACGCCGAG) 
 ```  
 
+After checking the 5 lines from 505, all of them have high het ratio, suggesting the mapping for allopolyploid is still a problem. Julin then asked me to check how mapping works for the RNAseq reads from the genotype used for reference genome sequencing Damour. So I downloaded RNAseq reads from http://www.ebi.ac.uk/ena/data/view/PRJEB5461. 
+```{r}
+# trimming of RNA-seq reads (single end 100bp)
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Da-Ae_Da_Ol-1_heterzygosity_check/reference_genome_RNAseq/trimming.sh
+
+# mapping 
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Da-Ae_Da_Ol-1_heterzygosity_check/reference_genome_RNAseq/mapping.sh
+
+# SNP calling 
+# https://github.com/leejimmy93/KIAT/blob/master/parent/SNP_calling_ref_RNA.sh
+
+# SNP filtering
+# 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+``` 
 
 
 
