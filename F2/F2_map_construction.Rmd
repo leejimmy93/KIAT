@@ -116,7 +116,7 @@ F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
 
 dim(F2_geno_data_2) # 5556  166, end up with 2932 SNPs for map construction 
 
-save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs with missing data less than 0.85   
+save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs with missing data less than 0.85
 ``` 
 
 ######## down to here, missing rate based on the right number of lines were calculated and new F2 data were generated. ##########  
