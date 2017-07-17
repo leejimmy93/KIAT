@@ -481,10 +481,18 @@ After checking the 5 lines from 505, all of them have high het ratio, suggesting
 # https://github.com/leejimmy93/KIAT/blob/master/parent/SNP_calling_ref_RNA.sh
 
 # SNP filtering
-# 
+# https://github.com/leejimmy93/KIAT/blob/master/parent/filter_SNP_individual.sh 
 
+# SNP data result check 
+AUP_BOSW_3 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/reference_genome_RNAseq/SNP_result/AUP_BOSW_3_filtered.recode.vcf")
 
+AUP_BOSW_3.2 <- reform.vcf(AUP_BOSW_3)
+table(AUP_BOSW_3.2$AUP_BOSW_3)
 
+AUP_BOSW_4 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/reference_genome_RNAseq/SNP_result/AUP_COSW_4_filtered.recode.vcf")
+
+AUP_BOSW_4.2 <- reform.vcf(AUP_BOSW_4)
+table(AUP_BOSW_4.2$AUP_COSW_4) 
 ``` 
 
 

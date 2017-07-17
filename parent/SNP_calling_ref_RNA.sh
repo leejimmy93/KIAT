@@ -12,7 +12,7 @@ for i in $sample
 	do
 	echo $i
 	echo "extract unique mapping"
-	samtools view ${i}/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' | samtools view -bT /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa > ${i}/unique.bam 
+	samtools view ${i}/Aligned.sortedByCoord.out.bam | awk '$5 == "255"' | awk '$15 == "nM:i:0" || $15 == "nM:i:1" || $15 == "nM:i:2" || $15 == "nM:i:3" || $15 == "nM:i:4"' | samtools view -bT /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa > ${i}/unique.bam 
 	echo "sort bam file"
 	samtools sort ${i}/unique.bam -o ${i}/unique_sorted.bam
 	echo "remove PCR duplicate"
