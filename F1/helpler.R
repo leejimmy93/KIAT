@@ -1,66 +1,43 @@
 # Title: helpler file 
 # ========================================================
 #   
-#   This is a helpler file that stores all the function used for F1 data anlysis 
+# This is a helpler file that stores all the function used for F1 data anlysis 
+
+library(vcfR)
 
 ##########################################################
 ## formatting vcf file 
-##set header
-setHeader <- function(vcf){
-  vcf.header <- system("grep '#C'" + toString(vcf), intern = TRUE)
-  vcf.header <- sub("","",vcf.header)
+# reformat vcf file, return numeric values 
+reform.vcf.F1 <- function(temp){
+  vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
+  vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
+  vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele
+  vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
+  vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
+  vcfgts <- subset(extract.gt(temp, element = "GT", IDtoRowNames = F), subset = vcfbi)
+  vcfgq <- subset(extract.gt(temp, element="GQ", IDtoRowNames=F), subset=vcfbi)
+  vcfdp <- subset(extract.gt(temp, element="DP", IDtoRowNames=F), subset=vcfbi) 
   
-  vcf.header <- unlist(strsplit(vcf.header,split="\t"))
-  colnames(vcf.data) <- vcf.header
+  temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts,vcfgq,vcfdp))
+  colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
+  colnames(temp2)[5:8] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("GT"), sep="_")
+  colnames(temp2)[9:12] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("GQ"), sep="_")
+  colnames(temp2)[13:16] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("DP"), sep="_")
   
-  system("grep '##INFO'" + vcf)
-  system("grep '##FORMAT'"+ vcf)
+  rnames <- rownames(temp2)
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  row.names(temp2) <- rnames 
   
-  return(vcf.data)
-}
-
-##split and set headers
-split <- function(vcf, x){
-  vcf$x[is.na(vcf$x)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
-  tmp <- matrix(
-    unlist(strsplit(vcf$x,split = ":")),
-    nrow=nrow(vcf),
-    byrow=TRUE)
-  
-  colnames(tmp) <- paste(x, c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
-  return (tmp)
-}  
-
-##convert columns
-#convCol<-function(vcf,name){
-#  vcf.data <- cbind(vcf, Ae.tmp, Ol.tmp, F414_early_silique.tmp, F415_early_silique.tmp,stringsAsFactors=FALSE)
-#  
-#  vcf.data[, paste(Ae,name,sep="_") paste(Ol,name,sep="_") paste(F414,name,sep="_") paste(F1415,name,sep="_")] <- 
-#    apply(vcf.data[, paste(Ae,name,sep="_") paste(Ol,name,sep="_") paste(F414,name,sep="_") paste(F1415,name,sep="_")],
-#          2,
-#          as.numeric
-#    )
-#  return vcf.data
-#}  
-
-# filter based on depth field
-# if the depth for any sample is below n, that site will be filtered out.
-DP.filter <- function(vcf, n){
-  tmp <- vcf.data[,grep("dp", colnames(vcf.data))]
-  vcf.filtered.DP <- vcf[which(apply(tmp, 1, min) > n),]
-  
-  cat("number of SNPs after DP filter is:")
-  cat(dim(vcf.filtered.DP)[1])
-  cat("\n")
-  
-  return(vcf.filtered.DP) 
+  return(temp2) 
 } 
 
 # filter based on genotype quality field
 # if the genotype quality for any sample is below n, that site will be filtered out. 
 
 GQ.filter <- function(vcf, n){
-  tmp <- vcf.data[,grep("gen.qual", colnames(vcf.data))]
+  tmp <- vcf[,grep("GQ", colnames(vcf))]
   vcf.filtered.GQ <- vcf[which(apply(tmp, 1, min) > n),]
   
   cat("number of SNPs after GQ filter is:")
@@ -70,18 +47,29 @@ GQ.filter <- function(vcf, n){
   return(vcf.filtered.GQ) 
 } 
 
+# filter based on depth field
+# if the depth for any sample is below n, that site will be filtered out.
+DP.filter <- function(vcf, n){
+  tmp <- vcf[,grep("DP", colnames(vcf))]
+  vcf.filtered.DP <- vcf[which(apply(tmp, 1, min) > n),]
+  
+  cat("number of SNPs after DP filter is:")
+  cat(dim(vcf.filtered.DP)[1])
+  cat("\n")
+  
+  return(vcf.filtered.DP) 
+} 
 
 # extract all the SNPs from the filtered dataset (vcf.data.filter.DP) 
 #to get loci that are homozygous for parents, see whether they are 
 #heterozygous in both F1s. 
 
 GT.filter <- function(vcf){
-  vcf.GT <- subset(vcf, (((Ae_gt=="0/0" & Ol_gt=="1/1")) | ((Ae_gt=="1/1" & Ol_gt=="0/0"))))
+  vcf.GT <- subset(vcf, (((Ae_GT=="-1" & Ol_GT=="1")) | ((Ae_GT=="1" & Ol_GT=="-1"))))
   return(vcf.GT)
 } 
 
-#SNP annotation
-
+#SNP annotation 
 SNPannotation <- function(gff, vcf){
   library(IRanges)
   library(GenomicRanges)
