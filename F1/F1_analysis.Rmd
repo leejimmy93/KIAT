@@ -1,0 +1,311 @@
+Title: Analysis of all F1 stages
+========================================================
+
+# SNP calling 
+```{r}
+
+```
+
+# SNP filtering
+```{r}
+# https://github.com/leejimmy93/KIAT/blob/master/parent/filter_SNP_individual.sh (in linux)
+# vcftools --gzvcf ${i}.vcf --remove-indels --min-alleles 2 --max-alleles 2 --minQ 40 --recode --recode-INFO-all --out SNP_result/${i}_filtered 
+
+```
+
+#source functions
+```{r}
+source("~/project/script/helpler.R")
+```
+
+#YOUNG
+```{r}
+getwd()
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output")
+
+library(ggplot2)
+young_vcf.data <- read.table("F1_young_filtered.recode.vcf",as.is=T,na.strings = ".")
+
+#header
+young_vcf.header <- system("grep '#C' F1_young_filtered.recode.vcf", intern = TRUE)
+young_vcf.header <- sub("#","",young_vcf.header) # replace # with empty
+young_vcf.header <- unlist(strsplit(young_vcf.header,split="\t"))
+young_vcf.header
+colnames(young_vcf.data) <- young_vcf.header
+
+# below the # INFO can be useful when you wan to filter based on other parameters 
+system("grep '##INFO' F1_young_filtered.recode.vcf")
+system("grep '##FORMAT' F1_young_filtered.recode.vcf")
+
+#split Ae
+young_vcf.data$Ae[is.na(young_vcf.data$Ae)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+young_Ae.tmp <- matrix(
+  unlist(strsplit(young_vcf.data$Ae,split = ":")),
+  nrow=nrow(young_vcf.data),
+  byrow=TRUE
+)
+colnames(young_Ae.tmp) <- paste("Ae", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#split Ol
+young_vcf.data$Ol[is.na(young_vcf.data$Ol)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+young_Ol.tmp <- matrix(
+  unlist(strsplit(young_vcf.data$Ol,split = ":")),
+  nrow=nrow(young_vcf.data),
+  byrow=TRUE
+)
+colnames(young_Ol.tmp) <- paste("Ol", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#rename 414 and 415
+young_vcf.data.test <- young_vcf.data %>% rename("414F1_young" = "fouronefour")
+young_vcf.data.test <- young_vcf.data.test %>% rename("415F1_young" = "fouronefive")
+colnames(young_vcf.data.test)
+
+#split 414 
+young_vcf.data.test$fouronefour[is.na(young_vcf.data.test$fouronefour)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+young_414.tmp <- matrix(
+  unlist(strsplit(young_vcf.data.test$fouronefour,split = ":")),
+  nrow=nrow(young_vcf.data.test),
+  byrow=TRUE
+)
+colnames(young_414.tmp) <- paste("414", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#split 415
+young_vcf.data.test$fouronefive[is.na(young_vcf.data.test$fouronefive)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+young_415.tmp <- matrix(
+  unlist(strsplit(young_vcf.data.test$fouronefive,split = ":")),
+  nrow=nrow(young_vcf.data.test),
+  byrow=TRUE
+)
+colnames(young_415.tmp) <- paste("415", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#convert columns
+
+young_vcf.data <- cbind(young_vcf.data, young_Ae.tmp, young_Ol.tmp, young_414.tmp, young_415.tmp,stringsAsFactors=FALSE)
+summary(young_vcf.data)
+
+young_vcf.data[, c("Ae_gen.qual","Ae_dp","Ae_ro","Ae_qr","Ae_ao","Ae_qa","Ol_gen.qual","Ol_dp","Ol_ro","Ol_qr","Ol_ao","Ol_qa","414_gen.qual","414_dp","414_ro","414_qr","414_ao","414_qa","415_gen.qual","415_dp","415_ro","415_qr","415_ao","415_qa")]<-
+ apply(young_vcf.data[,c("Ae_gen.qual","Ae_dp","Ae_ro","Ae_qr","Ae_ao","Ae_qa","Ol_gen.qual","Ol_dp","Ol_ro","Ol_qr","Ol_ao","Ol_qa","414_gen.qual","414_dp","414_ro","414_qr","414_ao","414_qa","415_gen.qual","415_dp","415_ro","415_qr","415_ao","415_qa")], 
+        2,
+        as.numeric
+        )
+colnames(young_vcf.data)
+name <- c("_gen.qual|_dp|_ro|_qr|_ao|_qa") # qr? 
+grep(name, colnames(young_vcf.data), value=T)
+
+```
+#filter young
+```{r}
+#Genotype Quality (30)
+dim(young_vcf.data)
+young_vcf.GQ <- GQ.filter(vcf=young_vcf.data, n=30) #337408
+summary(young_vcf.GQ)
+
+#Depth(10)
+young_vcf.DP <- DP.filter(vcf=young_vcf.GQ, n=10) 
+
+#GT: extract all the SNPs from the filtered dataset (vcf.data.filter.DP) to get loci that are homozygous for parents, see whether they are heterozygous in both F1s. 
+young_vcf.GT <- subset(young_vcf.DP, (((Ae_gt=="0/0" & Ol_gt=="1/1")) | ((Ae_gt=="1/1" & Ol_gt=="0/0"))))
+
+
+
+```
+#Histograms
+```{r}
+#DEPTH
+dp <- young_vcf.GT[,grep("dp", colnames(young_vcf.GT), value=T)]
+dp.melt <- melt(dp)
+head(dp.melt)
+
+ggplot(data = dp.melt, aes(x=log10(value)))+
+  geom_vline(xintercept=log10(10))+
+  geom_histogram(binwidth=0.1) + facet_wrap(~variable)
+
+#Genotype
+youngtmp <-young_vcf.GT[,grep("gt", colnames(young_vcf.GT), value=T)]
+library(tidyr)
+library(dplyr)
+View(youngtmp)
+gt <- youngtmp[,grep("41", colnames(youngtmp), value=T)]
+head(gt)
+gt.gather<-gather(gt, key="gen", value= "GN" )
+head(gt.gather)
+ggplot(data = gt.gather, aes(x=GN))+
+  geom_histogram(stat = "count")+facet_wrap(~gen)
+
+gt.gather$GN
+```
+
+
+
+
+#FLOWERING
+```{r}
+flowering_vcf.data <- read.table("F1_flowering_filtered.recode.vcf",as.is=T,na.strings = ".")
+
+#header
+flowering_vcf.header <- system("grep '#C' F1_flowering_filtered.recode.vcf", intern = TRUE)
+flowering_vcf.header <- sub("","",flowering_vcf.header)
+flowering_vcf.header <- unlist(strsplit(flowering_vcf.header,split="\t"))
+flowering_vcf.header
+colnames(flowering_vcf.data) <- flowering_vcf.header
+system("grep '##INFO' F1_flowering_filtered.recode.vcf")
+system("grep '##FORMAT' F1_flowering_filtered.recode.vcf")
+
+#split Ae
+flowering_vcf.data$Ae[is.na(flowering_vcf.data$Ae)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+flowering_Ae.tmp <- matrix(
+  unlist(strsplit(flowering_vcf.data$Ae,split = ":")),
+  nrow=nrow(flowering_vcf.data),
+  byrow=TRUE
+)
+colnames(flowering_Ae.tmp) <- paste("Ae", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#split Ol
+flowering_vcf.data$Ol[is.na(flowering_vcf.data$Ol)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+flowering_Ol.tmp <- matrix(
+  unlist(strsplit(flowering_vcf.data$Ol,split = ":")),
+  nrow=nrow(flowering_vcf.data),
+  byrow=TRUE
+)
+colnames(flowering_Ol.tmp) <- paste("Ol", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+
+#rename 414 and 415
+flowering_vcf.data.test <- flowering_vcf.data %>% rename("414F1_flowering" = "fouronefour")
+flowering_vcf.data.test <- flowering_vcf.data.test %>% rename("415F1_flowering" = "fouronefive")
+colnames(young_vcf.data.test)
+
+#split 414 
+flowering_vcf.data.test$fouronefour[is.na(flowering_vcf.data.test$fouronefour)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+flowering_414.tmp <- matrix(
+  unlist(strsplit(flowering_vcf.data.test$fouronefour,split = ":")),
+  nrow=nrow(flowering_vcf.data.test),
+  byrow=TRUE
+
+)
+colnames(flowering_414.tmp) <- paste("414", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#split 415
+flowering_vcf.data.test$fouronefive[is.na(flowering_vcf.data.test$fouronefive)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+flowering_415.tmp <- matrix(
+  unlist(strsplit(flowering_vcf.data.test$fouronefive,split = ":")),
+  nrow=nrow(flowering_vcf.data.test),
+  byrow=TRUE
+)
+colnames(flowering_415.tmp) <- paste("415", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#convert columns
+
+flowering_vcf.data <- cbind(flowering_vcf.data, flowering_Ae.tmp, flowering_Ol.tmp, flowering_414.tmp, flowering_415.tmp,stringsAsFactors=FALSE)
+summary(flowering_vcf.data)
+
+flowering_vcf.data[, c("Ae_gen.qual","Ae_dp","Ae_ro","Ae_qr","Ae_ao","Ae_qa","Ol_gen.qual","Ol_dp","Ol_ro","Ol_qr","Ol_ao","Ol_qa","414_gen.qual","414_dp","414_ro","414_qr","414_ao","414_qa","415_gen.qual","415_dp","415_ro","415_qr","415_ao","415_qa")]<-
+ apply(flowering_vcf.data[,c("Ae_gen.qual","Ae_dp","Ae_ro","Ae_qr","Ae_ao","Ae_qa","Ol_gen.qual","Ol_dp","Ol_ro","Ol_qr","Ol_ao","Ol_qa","414_gen.qual","414_dp","414_ro","414_qr","414_ao","414_qa","415_gen.qual","415_dp","415_ro","415_qr","415_ao","415_qa")], 
+        2,
+        as.numeric
+        )
+colnames(flowering_vcf.data)
+name <- c("_gen.qual|_dp|_ro|_qr|_ao|_qa") # qr? 
+grep(name, colnames(flowering_vcf.data), value=T)
+
+```
+#filter flowering
+```{r}
+#Genotype Quality (30)
+dim(flowering_vcf.data)
+flowering_vcf.GQ <- GQ.filter(vcf=flowering_vcf.data, n=30) #337408
+summary(flowering_vcf.GQ)
+
+#Depth(10)
+flowering_vcf.DP <- DP.filter(vcf=flowering_vcf.GQ, n=10) 
+
+#GT: extract all the SNPs from the filtered dataset (vcf.data.filter.DP) to get loci that are homozygous for parents, see whether they are heterozygous in both F1s. 
+flowering_vcf.GT <- subset(flowering_vcf.DP, (((Ae_gt=="0/0" & Ol_gt=="1/1")) | ((Ae_gt=="1/1" & Ol_gt=="0/0"))))
+
+```
+
+#LATE SILIQUE
+```{r}
+late_silique_vcf.data <- read.table("F1_late_silique_filtered.recode.vcf",as.is=T,na.strings = ".")
+
+#header
+late_silique_vcf.header <- system("grep '#C' F1_late_silique_filtered.recode.vcf", intern = TRUE)
+late_silique_vcf.header <- sub("","",late_silique_vcf.header)
+late_silique_vcf.header <- unlist(strsplit(late_silique_vcf.header,split="\t"))
+late_silique_vcf.header
+colnames(late_silique_vcf.data) <- late_silique_vcf.header
+system("grep '##INFO' F1_late_silique_filtered.recode.vcf")
+system("grep '##FORMAT' F1_late_silique_filtered.recode.vcf")
+
+#split Ae
+late_silique_vcf.data$Ae[is.na(late_silique_vcf.data$Ae)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+late_silique_Ae.tmp <- matrix(
+  unlist(strsplit(late_silique_vcf.data$Ae,split = ":")),
+  nrow=nrow(late_silique_vcf.data),
+  byrow=TRUE
+)
+colnames(late_silique_Ae.tmp) <- paste("Ae", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#split Ol
+late_silique_vcf.data$Ol[is.na(late_silique_vcf.data$Ol)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+late_silique_Ol.tmp <- matrix(
+  unlist(strsplit(late_silique_vcf.data$Ol,split = ":")),
+  nrow=nrow(late_silique_vcf.data),
+  byrow=TRUE
+)
+colnames(late_silique_Ol.tmp) <- paste("Ol", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+
+#rename 414 and 415
+late_silique_vcf.data.test <- late_silique_vcf.data %>% rename("414F1_late_silique" = "fouronefour")
+late_silique_vcf.data.test <- late_silique_vcf.data.test %>% rename("415F1_late_silique" = "fouronefive")
+colnames(late_silique_vcf.data.test)
+
+#split 414 
+late_silique_vcf.data.test$fouronefour[is.na(late_silique_vcf.data.test$fouronefour)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+late_silique_414.tmp <- matrix(
+  unlist(strsplit(late_silique_vcf.data.test$fouronefour,split = ":")),
+  nrow=nrow(late_silique_vcf.data.test),
+  byrow=TRUE
+
+)
+colnames(late_silique_414.tmp) <- paste("414", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#split 415
+late_silique_vcf.data.test$fouronefive[is.na(late_silique_vcf.data.test$fouronefive)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+late_silique_415.tmp <- matrix(
+  unlist(strsplit(late_silique_vcf.data.test$fouronefive,split = ":")),
+  nrow=nrow(late_silique_vcf.data.test),
+  byrow=TRUE
+)
+colnames(late_silique_415.tmp) <- paste("415", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+
+#convert columns
+late_silique_vcf.data <- cbind(late_silique_vcf.data, late_silique_Ae.tmp, late_silique_Ol.tmp, late_silique_414.tmp, late_silique_415.tmp,stringsAsFactors=FALSE)
+summary(late_silique_vcf.data)
+
+late_silique_vcf.data[, c("Ae_gen.qual","Ae_dp","Ae_ro","Ae_qr","Ae_ao","Ae_qa","Ol_gen.qual","Ol_dp","Ol_ro","Ol_qr","Ol_ao","Ol_qa","414_gen.qual","414_dp","414_ro","414_qr","414_ao","414_qa","415_gen.qual","415_dp","415_ro","415_qr","415_ao","415_qa")]<-
+ apply(late_silique_vcf.data[,c("Ae_gen.qual","Ae_dp","Ae_ro","Ae_qr","Ae_ao","Ae_qa","Ol_gen.qual","Ol_dp","Ol_ro","Ol_qr","Ol_ao","Ol_qa","414_gen.qual","414_dp","414_ro","414_qr","414_ao","414_qa","415_gen.qual","415_dp","415_ro","415_qr","415_ao","415_qa")], 
+        2,
+        as.numeric
+        )
+colnames(late_silique_vcf.data)
+name <- c("_gen.qual|_dp|_ro|_qr|_ao|_qa") # qr? 
+grep(name, colnames(late_silique_vcf.data), value=T)
+
+```
+#late silique filter
+```{r}
+#Genotype Quality (30)
+dim(late_silique_vcf.data)
+late_silique_vcf.GQ <- GQ.filter(vcf=late_silique_vcf.data, n=30) #337408
+summary(late_silique_vcf.GQ)
+
+#Depth(10)
+late_silique_vcf.DP <- DP.filter(vcf=late_silique_vcf.GQ, n=10) 
+
+#GT: extract all the SNPs from the filtered dataset (vcf.data.filter.DP) to get loci that are homozygous for parents, see whether they are heterozygous in both F1s. 
+late_silique_vcf.GT <- subset(late_silique_vcf.DP, (((Ae_gt=="0/0" & Ol_gt=="1/1")) | ((Ae_gt=="1/1" & Ol_gt=="0/0"))))
+```
+
+

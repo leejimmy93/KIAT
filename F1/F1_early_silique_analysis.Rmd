@@ -1,0 +1,211 @@
+Title: SNP analysis of F1 population
+========================================================
+
+# source functions for this analysis 
+```{r}
+source("~/project/data/helpler.R")
+```
+
+# import data 
+```{r}
+getwd()
+setwd("~/project/data/")
+
+library(ggplot2)
+vcf.data <- read.table("F1_early_silique_filtered.vcf",as.is=T,na.strings = ".")
+head(vcf.data)
+dim(vcf.data)
+
+```
+
+#set header 
+```{r}
+vcf.header <- system("grep '#C' F1_early_silique_filtered.vcf", intern = TRUE)
+vcf.header
+vcf.header <- sub("","",vcf.header)
+
+vcf.header <- unlist(strsplit(vcf.header,split="\t"))
+colnames(vcf.data) <- vcf.header
+View(vcf.data)
+
+system("grep '##INFO' F1_early_silique_filtered.vcf")
+system("grep '##FORMAT' F1_early_silique_filtered.vcf")
+
+```
+
+
+#set header Ae
+```{r}
+
+vcf.data$Ae[is.na(vcf.data$Ae)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+Ae.tmp <- matrix(
+  unlist(strsplit(vcf.data$Ae,split = ":")),
+  nrow=nrow(vcf.data),
+  byrow=TRUE
+)
+
+head(Ae.tmp)
+colnames(Ae.tmp) <- paste("Ae", c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+head(Ae.tmp)
+
+```
+
+#set header Ol
+```{r}
+
+vcf.data$Ol[is.na(vcf.data$Ol)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+Ol.tmp <- matrix(
+  unlist(strsplit(vcf.data$Ol,split = ":")),
+  nrow=nrow(vcf.data),
+  byrow=TRUE
+)
+
+head(Ol.tmp)
+colnames(Ol.tmp) <- paste("Ol",c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+head(Ol.tmp)
+
+
+```
+
+#set header 414F1_early_silique
+```{r}
+vcf.data <- vcf.data %>% rename(fouronefour = `414F1_early_silique`)
+vcf.data$fouronefour[is.na(vcf.data$fouronefour)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+
+F414_early_silique.tmp <- matrix(
+  unlist(strsplit(vcf.data$fouronefour, split = ":")),
+  nrow=nrow(vcf.data),
+  byrow=TRUE
+  )
+
+head(F414_early_silique.tmp)
+colnames(F414_early_silique.tmp) <- paste("414F1_early_silique",c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+head(F414_early_silique.tmp)
+```
+
+#set header and split 415F2_early_silique
+```{r}
+vcf.data <- vcf.data %>% rename(fouronefive = `415F1_early_silique`)
+vcf.data$fouronefive[is.na(vcf.data$fouronefive)] <-"NA:NA:NA:NA:NA:NA:NA:NA"
+
+F415_early_silique.tmp <- matrix(
+  unlist(strsplit(vcf.data$fouronefive, split = ":")),
+  nrow=nrow(vcf.data),
+  byrow=TRUE
+  )
+
+head(F415_early_silique.tmp)
+colnames(F415_early_silique.tmp) <- paste("415F1_early_silique",c("gt","gen.qual","dp","ro","qr","ao","qa","gl"),sep="_")
+head(F415_early_silique.tmp)
+```
+
+#convert columns
+```{r}
+vcf.data <- cbind(vcf.data, Ae.tmp, Ol.tmp, F414_early_silique.tmp, F415_early_silique.tmp,stringsAsFactors=FALSE)
+summary(vcf.data)
+
+vcf.data[,c("Ae_gen.qual","Ae_dp","Ae_ro","Ae_qr","Ae_ao","Ae_qa","Ol_gen.qual","Ol_dp","Ol_ro","Ol_qr","Ol_ao","Ol_qa","414F1_early_silique_gen.qual","414F1_early_silique_dp","414F1_early_silique_ro","414F1_early_silique_qr","414F1_early_silique_ao","414F1_early_silique_qa","415F1_early_silique_gen.qual","415F1_early_silique_dp","415F1_early_silique_ro","415F1_early_silique_qr","415F1_early_silique_ao","415F1_early_silique_qa")] <- 
+  apply(vcf.data[,c("Ae_gen.qual","Ae_dp","Ae_ro","Ae_qr","Ae_ao","Ae_qa","Ol_gen.qual","Ol_dp","Ol_ro","Ol_qr","Ol_ao","Ol_qa","414F1_early_silique_gen.qual","414F1_early_silique_dp","414F1_early_silique_ro","414F1_early_silique_qr","414F1_early_silique_ao","414F1_early_silique_qa","415F1_early_silique_gen.qual","415F1_early_silique_dp","415F1_early_silique_ro","415F1_early_silique_qr","415F1_early_silique_ao","415F1_early_silique_qa")],
+        2,
+        as.numeric
+        )
+head(vcf.data)
+summary(vcf.data)
+View(vcf.data)
+```
+
+# filter based on genotype quality using min of 30 for each sample 
+```{r}
+dim(vcf.data)
+vcf.data.filter.GQ <- GQ.filter(vcf=vcf.data, n=30)
+
+summary(vcf.data.filter.GQ)
+```
+
+
+
+#QUAL histogram
+```{r}
+
+ggplot(data = vcf.data, aes(x=QUAL))+
+  geom_histogram(binwidth = 30)
+
+```
+
+#depth histogram
+```{r}
+library(reshape2)
+
+#ggplot(data = vcf.data.filter.GQ, aes(x=log10(Ae_dp)))+
+#  geom_histogram(binwidth=0.1) 
+#ggplot(data = vcf.data.filter.GQ, aes(x=log10(Ol_dp)))+
+#  geom_histogram(binwidth=0.1) 
+#ggplot(data = vcf.data.filter.GQ, aes(x=log10(`414F1_early_silique_dp`)))+
+#  geom_histogram(binwidth=0.1) 
+#ggplot(data = vcf.data.filter.GQ, aes(x=log10(`415F1_early_silique_dp`)))+
+#  geom_histogram(binwidth=0.1)
+
+
+dp <- vcf.data.filter.GQ[,grep("dp", colnames(vcf.data.filter.GQ), value=T)]
+dp.melt <- melt(dp)
+head(dp.melt)
+
+ggplot(data = dp.melt, aes(x=log10(value)))+
+  geom_vline(xintercept=log10(10))+
+  geom_histogram(binwidth=0.1) + facet_wrap(~variable)
+
+
+
+
+
+```
+
+# we want allele count for site where there are at least 10 reads in each sample
+```{r}
+
+dim(vcf.data.filter.GQ) # 337408     45
+vcf.data.filter.DP <- DP.filter(vcf=vcf.data.filter.GQ, n=10) 
+dim(vcf.data.filter.DP) # 334876     45 
+summary(vcf.data.filter.DP)
+
+# 
+View(vcf.data.filter.DP)
+```
+
+# extract all the SNPs from the filtered dataset (vcf.data.filter.DP) to get loci that are homozygous for parents, see whether they are heterozygous in both F1s. 
+```{r}
+vcf.filtered.GT <- subset(vcf.data.filter.DP, (((Ae_gt=="0/0" & Ol_gt=="1/1")) | ((Ae_gt=="1/1" & Ol_gt=="0/0"))))
+dim(vcf.filtered.GT)
+View(vcf.filtered.GT)
+
+tmp <-vcf.filtered.GT[,grep("gt", colnames(vcf.filtered.GT), value=T)]
+View(tmp)  
+
+dim(vcf.data.filter.GT) 
+
+
+```
+
+#histogram of gt of both 414 and 415
+```{r}
+
+#ggplot(data = tmp, aes(x=`414F1_early_silique_gt`))+
+# geom_histogram(stat = "count")
+#ggplot(data = tmp, aes(x=`415F1_early_silique_gt`))+
+# geom_histogram(stat = "count")
+
+library(tidyr)
+library(dplyr)
+
+
+gt <- tmp[,grep("early_silique_gt", colnames(tmp), value=T)]
+head(gt)
+
+gt.gather<-gather(gt, key="gen", value= "GN" )
+head(gt.gather)
+
+ggplot(data = gt.gather, aes(x=GN))+
+  geom_histogram(stat = "count")+facet_wrap(~gen)
+
+```
+

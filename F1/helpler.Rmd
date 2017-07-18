@@ -1,0 +1,21 @@
+Title: helpler file 
+========================================================
+
+This is a helpler file that stores all the function used for F1 data anlysis 
+
+# filter based on genotype quality field
+if the genotype quality for any sample is below n, that site will be filtered out. 
+```{r}
+GQ.filter <- function(vcf, n){
+  tmp <- vcf.data[,grep("gen.qual", colnames(vcf.data))]
+  vcf.filtered.GQ <- vcf[which(apply(tmp, 1, min) > n),]
+  
+  cat("number of SNPs after GQ filter is:")
+  cat(dim(vcf.filtered.GQ)[1])
+  cat("\n")
+  
+  return(vcf.filtered.GQ) 
+} 
+```
+
+
