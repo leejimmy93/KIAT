@@ -17,12 +17,16 @@ reform.vcf.F1 <- function(temp){
   vcfgts <- subset(extract.gt(temp, element = "GT", IDtoRowNames = F), subset = vcfbi)
   vcfgq <- subset(extract.gt(temp, element="GQ", IDtoRowNames=F), subset=vcfbi)
   vcfdp <- subset(extract.gt(temp, element="DP", IDtoRowNames=F), subset=vcfbi) 
+  vcfro <- subset(extract.gt(temp, element="RO", IDtoRowNames=F), subset=vcfbi)
+  vcfao <- subset(extract.gt(temp, element="AO", IDtoRowNames=F), subset=vcfbi)
   
   temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts,vcfgq,vcfdp))
   colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
   colnames(temp2)[5:8] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("GT"), sep="_")
   colnames(temp2)[9:12] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("GQ"), sep="_")
   colnames(temp2)[13:16] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("DP"), sep="_")
+  colnames(temp2)[17:20] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("RO"), sep="_")
+  colnames(temp2)[21:24] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("AO"), sep="_")
   
   rnames <- rownames(temp2)
   temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
@@ -65,7 +69,7 @@ DP.filter <- function(vcf, n){
 #heterozygous in both F1s. 
 
 GT.filter <- function(vcf){
-  vcf.GT <- subset(vcf, (((Ae_GT=="-1" & Ol_GT=="1")) | ((Ae_GT=="1" & Ol_GT=="-1"))))
+  
   return(vcf.GT)
 } 
 

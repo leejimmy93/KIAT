@@ -38,7 +38,7 @@ F1.young.nomissing <- F1.young.reform[complete.cases(F1.young.reform),]
 dim(F1.young.nomissing) # 635218     16 
 
 # 2) transform filter columns to numeric values 
-F1.young.nomissing[,(5:16)] <- lapply(F1.young.nomissing[,(5:16)], function(x) as.numeric(as.character(x))) 
+F1.young.nomissing[,(5:24)] <- lapply(F1.young.nomissing[,(5:16)], function(x) as.numeric(as.character(x))) 
 
 # 3) filter based on GQ  
 F1.young.GQ.filtered <- GQ.filter(vcf=F1.young.nomissing, n=30)
@@ -53,10 +53,17 @@ dim(F1.young.DP.filtered) # 166691     16
 # 5) filter based on gt (homozygous in parents)
 F1.young.GQ.filtered <- subset(F1.young.DP.filtered, (((Ae_GT=="-1" & Ol_GT=="1")) | ((Ae_GT=="1" & Ol_GT=="-1"))))
 dim(F1.young.GQ.filtered) # 49140    16 
-
+F1.young.GQ.filtered[1:10,]
 save(F1.young.GQ.filtered, file = "~/F1_SNP/output/F1.young.GQ.filtered.Rdata")
 ```
 
+# extract ref/alt dp 
+```{r}
+# import data using Julin's code 
+
+# extract 
+
+```
 
 
 
