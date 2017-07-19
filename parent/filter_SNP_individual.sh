@@ -7,7 +7,7 @@ echo $sample
 for i in $sample
 	do
 	echo $i
-	vcftools --gzvcf SNP_result/${i}.vcf --remove-indels --min-alleles 2 --max-alleles 2 --minQ 40 --minGQ 30 --min-meanDP 20 --max-meanDP 500 --recode --recode-INFO-all --out SNP_result/${i}_filtered 
+	vcftools --gzvcf SNP_result/${i}.vcf --remove-indels --min-alleles 2 --max-alleles 2 --minQ 70 --minGQ 30 --min-meanDP 20 --max-meanDP 500 --recode --recode-INFO-all --out SNP_result/${i}_filtered_mismatch3 
 
 done
  

@@ -57,13 +57,6 @@ F1.young.GQ.filtered[1:10,]
 save(F1.young.GQ.filtered, file = "~/F1_SNP/output/F1.young.GQ.filtered.Rdata")
 ```
 
-# extract ref/alt dp 
-```{r}
-# import data using Julin's code 
-
-# extract 
-
-```
 
 
 

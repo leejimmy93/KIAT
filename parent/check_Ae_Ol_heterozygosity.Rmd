@@ -495,10 +495,45 @@ AUP_BOSW_4.2 <- reform.vcf(AUP_BOSW_4)
 table(AUP_BOSW_4.2$AUP_COSW_4) 
 ``` 
 
+I then checked whether mismatch is the problem of high het ratio. Because the default mismatch allowed in STAR is 10. 10 might be too high, so I limit that to 4. 
+```{r}
+# extract bam file with mismatch less than 4 and unique mappers 
+# https://github.com/leejimmy93/KIAT/blob/master/parent/SNP_calling_ref_RNA.sh
 
+# SNP filtering
+# https://github.com/leejimmy93/KIAT/blob/master/parent/filter_SNP_individual.sh 
 
+# SNP data result check 
+AUP_BOSW_3 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/reference_genome_RNAseq/SNP_result/AUP_BOSW_3_filtered_mismatch4.recode.vcf")
 
+AUP_BOSW_3.2 <- reform.vcf(AUP_BOSW_3)
+table(AUP_BOSW_3.2$AUP_BOSW_3)
 
+AUP_BOSW_4 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/reference_genome_RNAseq/SNP_result/AUP_COSW_4_filtered_mismatch4.recode.vcf")
+
+AUP_BOSW_4.2 <- reform.vcf(AUP_BOSW_4)
+table(AUP_BOSW_4.2$AUP_COSW_4)  
+```
+
+max mismatch of 4 doesn't seem work, so I limit mismatch to 3. 
+```{r}
+# extract bam file with mismatch less than 4 and unique mappers 
+# https://github.com/leejimmy93/KIAT/blob/master/parent/SNP_calling_ref_RNA.sh
+
+# SNP filtering
+# https://github.com/leejimmy93/KIAT/blob/master/parent/filter_SNP_individual.sh 
+
+# SNP data result check 
+AUP_BOSW_3 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/reference_genome_RNAseq/SNP_result/AUP_BOSW_3_filtered_mismatch3.recode.vcf")
+
+AUP_BOSW_3.2 <- reform.vcf(AUP_BOSW_3)
+table(AUP_BOSW_3.2$AUP_BOSW_3)
+
+AUP_BOSW_4 <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/reference_genome_RNAseq/SNP_result/AUP_COSW_4_filtered_mismatch3.recode.vcf")
+
+AUP_BOSW_4.2 <- reform.vcf(AUP_BOSW_4)
+table(AUP_BOSW_4.2$AUP_COSW_4) 
+```
 
 
 
