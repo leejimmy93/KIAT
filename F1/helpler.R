@@ -20,7 +20,7 @@ reform.vcf.F1 <- function(temp){
   vcfro <- subset(extract.gt(temp, element="RO", IDtoRowNames=F), subset=vcfbi)
   vcfao <- subset(extract.gt(temp, element="AO", IDtoRowNames=F), subset=vcfbi)
   
-  temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts,vcfgq,vcfdp))
+  temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts,vcfgq,vcfdp,vcfro,vcfao))
   colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
   colnames(temp2)[5:8] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("GT"), sep="_")
   colnames(temp2)[9:12] <- paste(c("Ae", "Ol", "F1_414", "F1_415"), c("GQ"), sep="_")
