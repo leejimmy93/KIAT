@@ -2446,6 +2446,13 @@ gene_report.final
 write.csv(gene_report.final, file="~/505/output/131_sample/gene_report.final.csv")
 ```
 
+# filter based on max 0.2 missing data, also change the order of filter parameter
+```{r}
+
+
+
+```
+
 ### appendix for functions
 ```{r}
 # reformat vcf file, return numeric values 

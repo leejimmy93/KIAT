@@ -31,7 +31,7 @@ save(F1.young.refom, file="~/F1_SNP/output/F1.young.reform.Rdata")
 
 # filter based on missing data (no missing data), GQ (>30 in each sample), DP (>10 in each sample)  
 ```{r} 
-load("~/F1_SNP/output/F1.young.reform.Rdata")
+load("~/F1_SNP/output/F1.young.reform.Rdata") 
 
 # 1) filter based on missing data 
 F1.young.nomissing <- F1.young.reform[complete.cases(F1.young.reform),]
