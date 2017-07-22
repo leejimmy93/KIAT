@@ -2446,12 +2446,69 @@ gene_report.final
 write.csv(gene_report.final, file="~/505/output/131_sample/gene_report.final.csv")
 ```
 
-# filter based on max 0.2 missing data, also change the order of filter parameter
+# filter based on max 0.2 missing data, also change the order of filter parameter, remove those with high het ratio 
 ```{r}
+# https://github.com/leejimmy93/KIAT/blob/master/505/filter_late_silique.sh
 
+# filter based on site heterozygosity 
+# site that are highly heterozygous might be result of mis-mapping result of homeologous sequences 
 
+# convert .vcf.gz file to hmp file --> import into tassel --> calculate site heterozygosity --> remove site with high heterozygosity (>0.2)
+ 
+# convert to hmp format 
+# run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_0.2_missing.vcf.gz -outputFile 505_filtered_0.2_missing_sorted -fileType VCF
+# run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_0.2_missing_sorted.vcf -export -exportType Hapmap -runfork1 
 
+# mv 505_filtered_0.hmp.txt 505_filtered_0.2.hmp.txt
+
+# use Tassel to calculate site heterzygosity ratio 
+# export site summary file 
+
+library("tidyverse")
+site_summary <- read.table("~/505/genomic_prediction/data/site_summary_tassel.txt", sep="\t", header=T)
+site_summary[1:10, 1:10]
+dim(site_summary)  # 273363     37
+hist(site_summary$Proportion.Heterozygous)
+
+colnames(site_summary)
+
+SNP.ID.het.filterd <- 
+site_summary %>% 
+  filter(Proportion.Heterozygous < 0.1) %>%
+  select(Chromosome, Physical.Position) 
+
+SNP.ID.het.filterd.0.2 <- 
+site_summary %>% 
+  filter(Proportion.Heterozygous < 0.2) %>%
+  select(Chromosome, Physical.Position)
+
+dim(SNP.ID.het.filterd.0.2) # 174397      2 
+head(SNP.ID.het.filterd.0.2)
+write.table(SNP.ID.het.filterd.0.2, file= "~/505/genomic_prediction/output/SNP.ID.het.filterd.0.2.txt") 
+
+dim(SNP.ID.het.filterd) # 98961      2
+head(SNP.ID.het.filterd) 
+write.table(SNP.ID.het.filterd, file= "~/505/genomic_prediction/output/SNP.ID.het.filterd.txt") 
+
+# filter based on het ratio 
+# cat SNP.ID.het.filterd.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print "chr"$2 "\t" $3}' > SNP.ID.het.filterd 
+# filter to keep loci with high het ratio  
+# vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_1 (wired that vcftool filtered based on position will lose positions...) 
+
+# 505_filtered_het_1.recode.vcf OR 505_filtered_het.recode.vcf 
+# import to genomic prediction script 
 ```
+
+# re-run GWAS using new dataset, filtered using missing data 0.2 & het ratio of 0.2 
+```{r}
+# run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_het.recode.vcf -outputFile 505_filtered_het.recode.vcf_sorted -fileType VCF
+# run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_het.recode.vcf_sorted.vcf -export -exportType Hapmap -runfork1  
+
+# edit output file to remove "#" after rs & assembly 
+# run GWAS 
+# GWAS_505_late_silique.R  
+
+``` 
 
 ### appendix for functions
 ```{r}
