@@ -1150,11 +1150,11 @@ ggsave("~/505/output/figure/clustering_common_leaf_late_silique_92.png", width =
 ```{r}
 # install.packages("qqman")
 library("qqman")
-Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_1/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
-Oil_content <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_1/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+Oil_content <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Oil_content.GWAS.Results.csv", header = T)
 
-Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/run_1/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
 
 colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
 colnames(Oil_content)[1:4] <- c("SNP", "CHR", "BP", "P")
@@ -1176,7 +1176,9 @@ manhattan(Oil_content, main = "Oil content", ylim = c(0, 8), cex = 0.6,
 dev.off() 
 
 # check the significant SNPs
-unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs 
+sum(Erucic_acid$P < 0.00001)
+unique(Erucic_acid[Erucic_acid$P < 0.00001,]$CHR) # no SNPs  
+unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs  
 ```
 
 # compare leaf & late silique 131 samples, how many lines are overlapped  
@@ -2472,10 +2474,10 @@ hist(site_summary$Proportion.Heterozygous)
 
 colnames(site_summary)
 
-SNP.ID.het.filterd <- 
-site_summary %>% 
-  filter(Proportion.Heterozygous < 0.1) %>%
-  select(Chromosome, Physical.Position) 
+# SNP.ID.het.filterd <- 
+# site_summary %>% 
+#   filter(Proportion.Heterozygous < 0.1) %>%
+#   select(Chromosome, Physical.Position) 
 
 SNP.ID.het.filterd.0.2 <- 
 site_summary %>% 
@@ -2484,14 +2486,31 @@ site_summary %>%
 
 dim(SNP.ID.het.filterd.0.2) # 174397      2 
 head(SNP.ID.het.filterd.0.2)
+unique(SNP.ID.het.filterd.0.2$Chromosome)
+SNP.ID.het.filterd.0.2$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2$Chromosome, sep="")
+SNP.ID.het.filterd.0.2$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2$Chromosome)
+SNP.ID.het.filterd.0.2$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2$Chromosome)
+
 write.table(SNP.ID.het.filterd.0.2, file= "~/505/genomic_prediction/output/SNP.ID.het.filterd.0.2.txt") 
 
-dim(SNP.ID.het.filterd) # 98961      2
-head(SNP.ID.het.filterd) 
-write.table(SNP.ID.het.filterd, file= "~/505/genomic_prediction/output/SNP.ID.het.filterd.txt") 
+# cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2
+
+# vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd.0.2 --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_0.2  
+
+# gzip 505_filtered_het_0.2.recode.vcf
+############################################
+
+
+# dim(SNP.ID.het.filterd) # 98961      2
+# head(SNP.ID.het.filterd) 
+# SNP.ID.het.filterd$Chromosome
+# 
+# SNP.ID.het.filterd$Chromosome <- paste("chr", SNP.ID.het.filterd$Chromosome, sep="")
+# 
+# write.table(SNP.ID.het.filterd, file= "~/505/genomic_prediction/output/SNP.ID.het.filterd.txt") 
 
 # filter based on het ratio 
-# cat SNP.ID.het.filterd.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print "chr"$2 "\t" $3}' > SNP.ID.het.filterd 
+# cat SNP.ID.het.filterd.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print "$2 "\t" $3}' > SNP.ID.het.filterd 
 # filter to keep loci with high het ratio  
 # vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_1 (wired that vcftool filtered based on position will lose positions...) 
 
@@ -2502,13 +2521,21 @@ write.table(SNP.ID.het.filterd, file= "~/505/genomic_prediction/output/SNP.ID.he
 # re-run GWAS using new dataset, filtered using missing data 0.2 & het ratio of 0.2 
 ```{r}
 # run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_het.recode.vcf -outputFile 505_filtered_het.recode.vcf_sorted -fileType VCF
-# run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_het.recode.vcf_sorted.vcf -export -exportType Hapmap -runfork1  
+# run_pipeline.pl -Xmx5g -fork1 -vcf 505_filtered_het_0.2.recode.sorted.vcf -export -exportType Hapmap -runfork1  
 
 # edit output file to remove "#" after rs & assembly 
 # run GWAS 
-# GWAS_505_late_silique.R  
+# 
 
 ``` 
+
+# overlaps between DEGs & GWAS loci 
+```{r}
+
+
+
+
+```
 
 ### appendix for functions
 ```{r}

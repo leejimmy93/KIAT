@@ -25,7 +25,7 @@ setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanl
 
 ######### load data
 # genotype data 
-geno_505_hmp <- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het.recode.hmp.txt", head=FALSE)
+geno_505_hmp <- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.hmp.txt", head=FALSE)
 # get chrom name to numerics
 geno_505_hmp$V3 <- as.numeric(geno_505_hmp$V3)
 geno_505_hmp[1,3] <- "chrom"
