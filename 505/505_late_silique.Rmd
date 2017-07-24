@@ -2545,7 +2545,7 @@ colnames(gff.mRNA) <- c("CHROM", "start", "end", "name")
 ### get significant SNPs 
 Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
-Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Oleic_acid.GWAS.Results.csv", header = T) 
 
 Erucic_Oleic <- rbind(Erucic_acid, Oleic_acid)
 
@@ -2592,9 +2592,10 @@ SNP_gene_final_fxn$Oleic_acid <- SNP_gene_final_fxn$SNP.ID %in% Oleic_acid[Oleic
 colnames(SNP_gene_final_fxn) <- c("gene_ID", "snp_ID", "CHROM", "POS", "Arabidopsis_homolog", "function", "Erucic_acid", "Oleic_acid")
 View(SNP_gene_final_fxn) 
 
-write.csv(SNP_gene_final_fxn, file = "~/505/output/131_sample/GWAS_SNP_gene_fxn.csv")
+write.csv(SNP_gene_final_fxn, file = "~/505/output/131_sample/GWAS_SNP_gene_fxn_het.csv")
 
-# as a summary, 204 out of the 235 SNPs fall within 84 genes, 201 of them have arabidopsis homologs.
+# as a summary, 204 out of the 235 SNPs fall within 84 genes, 69 of them have arabidopsis homologs.
+########### come to this stage... 
 ``` 
 
 # for the several significant SNPs, are they synonymous or not? what's the possible effect on the protein function? 
