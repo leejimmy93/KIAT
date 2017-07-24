@@ -2602,11 +2602,11 @@ write.csv(SNP_gene_final_fxn, file = "~/505/output/131_sample/GWAS_SNP_gene_fxn_
 ```{r}
 # SNP annotation 
 # in the snpEff folder 
-# java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_leaf_no_pop/combined/missing_0.5/505_filtered_sorted_ann.vcf 
+# java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.ann.vcf  
 
 # analyze snpEff annotation file 
-# cat GWAS_SNP_gene_fxn.csv | sed 's/"//g' | sed 's/,/ /g' | awk '{print $3}' | tail -222 > significant_SNP
-# grep -f significant_SNP /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_sorted_ann.vcf | awk '{print $3 "|" $4 "|" $5 "|" $8}' | awk 'BEGIN{FS="|"}{print $1, $2, $3, $5}' > significant_SNP_annotation 
+# cat GWAS_SNP_gene_fxn_het.csv | sed 's/"//g' | sed 's/,/ /g' | awk '{print $3}' | tail -${number_of_SNP} > significant_SNP
+# awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($3 in a) print $0}' significant_SNP /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.ann.vcf | awk '{print $3 "|" $4 "|" $5 "|" $8}' | awk 'BEGIN{FS="|"}{print $1, $2, $3, $5}' > significant_SNP_annotation 
 
 sig_SNP_ann <- read_table2("~/505/output/131_sample/significant_SNP_annotation", col_names=F)
 head(sig_SNP_ann)  
@@ -2616,7 +2616,7 @@ unique(sig_SNP_ann$mutation_type)
 
 SNP_gene_final_fxn <- read.csv("~/505/output/131_sample/GWAS_SNP_gene_fxn.csv")
 head(SNP_gene_final_fxn)
-dim(SNP_gene_final_fxn)
+dim(SNP_gene_final_fxn) # 222 
 
 SNP_gene_final_fxn.2 <- merge(SNP_gene_final_fxn, sig_SNP_ann, by="snp_ID")
 SNP_gene_final_fxn.2 
