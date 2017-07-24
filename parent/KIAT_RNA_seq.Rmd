@@ -484,7 +484,7 @@ new_sample_ID
 
 # replace sample ID 
 colnames(parent.read.count.one) <- new_sample_ID
-head(parent.read.count.one)
+head(parent.read.count.one) 
 # save(parent.read.count.one,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/parent.read.count.one.Rdata")
 ```
 
@@ -694,13 +694,13 @@ dge.data.parent <- estimateGLMTagwiseDisp(dge.data.parent,design.parent)
 plotBCV(dge.data.parent)
 
 ########
-colnames(design.new)
-lrt.young.test <- glmLRT(fit.new, coef = "genotypeDa-Ae")
-summary(de.young.test <- decideTestsDGE(lrt.young.test, p=0.05))
-DEgene.young.test <- topTags(lrt.young.test,n = Inf)$table[topTags(lrt.young.test,n = Inf)$table$FDR<0.05,]
-sum(rownames(DEgene.young.test) %in% rownames(DEgene.young))
-DEgene.young.test[1:10,]
-DEgene.young[1:10,]
+# colnames(design.new)
+# lrt.young.test <- glmLRT(fit.new, coef = "genotypeDa-Ae")
+# summary(de.young.test <- decideTestsDGE(lrt.young.test, p=0.05))
+# DEgene.young.test <- topTags(lrt.young.test,n = Inf)$table[topTags(lrt.young.test,n = Inf)$table$FDR<0.05,]
+# sum(rownames(DEgene.young.test) %in% rownames(DEgene.young))
+# DEgene.young.test[1:10,]
+# DEgene.young[1:10,]
 ########
 ## w/o batch effect
 fit.parent <- glmFit(dge.data.parent, design.parent)
@@ -1028,7 +1028,7 @@ ftable(parent.read.count.one.sample,row.vars=c("stage"),col.vars=c("batch","geno
 
 # normalize 
 dge.new <- DGEList(counts=parent.read.count.one.small, group=parent.read.count.one.sample$group)
-dim(dge.new) # [1] 30876    28 
+dim(dge.new) # [1] 60975    27 ??? 
 dge.new <- calcNormFactors(dge.new, method = "TMM") 
 dge.new$sample
 # design matrix 
@@ -1052,8 +1052,6 @@ colnames(fit.new$coefficients)
 
 lrt.new.interaction <- glmLRT(fit.new,coef = c("tissuebolting:genotypeDa-Ae", "tissueearly-silique:genotypeDa-Ae", "tissueflowering:genotypeDa-Ae", "tissuelate-silique:genotypeDa-Ae"))
 topTags(lrt.new.interaction)
-
-
 
 DEgene.new.interaction <- topTags(lrt.new.interaction,n = Inf)$table[topTags(lrt.new.interaction,n = Inf)$table$FDR<0.05,]
 nrow(DEgene.new.interaction) # number of genes with interaction effect in any tissue types 
