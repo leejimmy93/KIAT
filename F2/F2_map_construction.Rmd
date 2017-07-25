@@ -1047,8 +1047,7 @@ LG.C_all <- F2_geno_data_2[rownames(F2_geno_data_2) %in% unlist(LG.C),]
 ```
 
 # appendix 
-```{r}
-
+```{r} 
 transform_geno <- function(temp2){
   rnames <- rownames(temp2)
   temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","0",x)))
@@ -1069,6 +1068,12 @@ MDS <- function(genotype_file){
 
 ```
 
+
+# what else can do? 
+```{r}
+# 1) chi-square test? 
+# 2) 
+```
 
 
 
