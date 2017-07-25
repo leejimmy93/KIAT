@@ -2727,10 +2727,7 @@ SNP_range_gene
 SNP_range_gene.df <- as.data.frame(SNP_range_gene)
 head(SNP_range_gene.df)
 
-SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
-SNP_gene_final 
-
-
+save(SNP_range_gene.df, file="~/505/output/131_sample/SNP_range_gene.df.Rdata")
 
 
 
