@@ -2625,13 +2625,36 @@ dim(SNP_gene_final_fxn) # 204
 SNP_gene_final_fxn.2 <- merge(SNP_gene_final_fxn, sig_SNP_ann, by="snp_ID")
 SNP_gene_final_fxn.2 
 View(SNP_gene_final_fxn.2) 
+save(SNP_gene_final_fxn.2, file="~/505/output/131_sample/SNP_gene_final_fxn.2.Rdata")
 ```
 
 # overlaps between DEGs (genes differentially expressed Da-Ae & Da-Ol-1 at any stage) & GWAS loci 
 ```{r}
+# differentially expressed genes anlayzed collectively, significant for any... 
+load("~/505/output/131_sample/DEgene.new.Rdata")
+dim(DEgene.new.gt) # 15098     9 
+dim(DEgene.new.interaction) # 1701    8 
+dim(DEgene.new.tissue) # 22580     8 
 
+# differentially expressed genes pairwise result, Da-Ol-1 as reference level 
+load("~/505/output/131_sample/DEgene.pairwise.gt.Rdata")
+dim(DEgene.young); dim(DEgene.bolting); dim(DEgene.flowering); dim(DEgene.early.silique); dim(DEgene.late.silique)
+# [1] 8976    5
+# [1] 4648    5
+# [1] 6081    5
+# [1] 6695    5
+# [1] 7413    5
 
+load("~/505/output/131_sample/SNP_gene_final_fxn.2.Rdata")
 
+# find overlaps
+colnames(SNP_gene_final_fxn.2)
+colnames(DEgene.late.silique)
+DEgene.late.silique$gene_ID <- rownames(DEgene.late.silique)
+
+SNP_gene_final_fxn.2 %>%
+left_join(DEgene.late.silique, by="gene_ID") %>%
+  !is.na(FDR)
 
 
 
