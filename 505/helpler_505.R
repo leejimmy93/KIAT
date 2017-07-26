@@ -108,5 +108,39 @@ spearman.cor.gene.trait <- function(trait.gene.sub, phenotypes, genes){
   return(spearman.result)
 } 
 
+### pull out expression value in Da-Ae and Da-Ol-1 for important genes 
 
-
+expression.pattern.Bn.parent.bar <- function(gene, vstMat.parent){
+  rownames(ID) <- ID$V1
+  data <- as.data.frame(vstMat.parent[(c(which(rownames(vstMat.parent) %in% rownames(ID)))),])
+  data$geneID <- rownames(data) 
+  data.melt <- melt(data)
+  data.melt$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",data.melt$variable)
+  data.melt$tissue <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",data.melt$variable)
+  data.melt$rep <-  gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",data.melt$variable)
+  data.melt$group <- paste(data.melt$gt, data.melt$tissue, data.melt$geneID, sep = "_")
+  
+  data.melt.reshape <- reshape(data.melt[,c("value", "rep", "group")], idvar = "group", direction = "wide", timevar = "rep")
+  data.melt.reshape$mean <- apply(data.melt.reshape[,c(2:4)], 1, mean, na.rm=TRUE)
+  data.melt.reshape$min <- apply(data.melt.reshape[,c(2:4)], 1, min, na.rm=T)
+  data.melt.reshape$max <- apply(data.melt.reshape[,c(2:4)], 1, max, na.rm=T)
+  
+  data.melt.reshape$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",data.melt.reshape$group)
+  data.melt.reshape$tissue <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\3",data.melt.reshape$group)
+  data.melt.reshape$geneID <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\5",data.melt.reshape$group)
+  
+  # order data to specific orders: young, bolting, flowering, early-silique, and late-silique
+  data.melt.reshape$tissue <- factor(data.melt.reshape$tissue, levels = c("Young","bolting","flowering","early-silique","late-silique"))
+  data.melt.reshape <- data.melt.reshape[order(data.melt.reshape$tissue),]
+  
+  p <- ggplot(data = data.melt.reshape, aes(x = factor(tissue), y = mean, group = gt, fill=gt))
+  p <- p + geom_col(position = "dodge")
+  p <- p + geom_errorbar(mapping=aes(x=tissue,ymin=min,ymax=max), position=position_dodge(0.9), width=0.25)
+  p <- p + facet_wrap(~geneID, nrow = 2) 
+  p <- p + theme(axis.text.x=element_text(angle=90),strip.text.y = element_text(angle=0))
+  p <- p + labs(y = "expression value from RNA-seq", x="tissue", title="") 
+  
+  p  
+  
+  return(p) 
+}  

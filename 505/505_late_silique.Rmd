@@ -2472,7 +2472,12 @@ site_summary[1:10, 1:10]
 dim(site_summary)  # 273363     37
 hist(site_summary$Proportion.Heterozygous)
 
-colnames(site_summary)
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/het.ratio.png", width=4, height=3, units="in", res=300) 
+hist(site_summary$Proportion.Heterozygous, xlab = "heterozygosity ratio across samples", ylab="Number of SNPs", main="heterozygosity ratio", breaks=50)
+abline(v=0.2, col="red", lwd=2)
+dev.off()
+
+colnames(site_summary) 
 
 # SNP.ID.het.filterd <- 
 # site_summary %>% 
@@ -2719,6 +2724,8 @@ SNP.Erucic.Oleic.unique %>%
 SNP.range <- GRanges(seqnames = Rle(c("chrA08", "chrC03")), ranges = IRanges(start = c(7053250, 52598214), end = c(11476346, 56930228)))
 SNP.range
 
+### BnaC03g67820D: chrC03 57461343 57463972  2630      * BnaC03g67820D
+
 SNP_range_gene <- mergeByOverlaps(SNP.range, genes)
 SNP_range_gene
 
@@ -2782,8 +2789,29 @@ View(gene_list[[1]])
 gene_list[[8]][which(gene_list[[8]]$gene_ID=="BnaA08g12780D"),] # between Da-Ae & Da-Ol-1 late silique
 gene_list[[2]][which(gene_list[[2]]$gene_ID=="BnaA08g12780D"),] # between Da-Ae & Da-Ol-1 late silique
 
+### plot the expression of the two genes 
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.Rdata")
+genes.GWAS <- c("BnaA08g12780D", "BnaC03g67820D")
+genes.GWAS.df <- as.data.frame(genes.GWAS)
+colnames(genes.GWAS.df) <- "V1"
+genes.GWAS.df
 
+expression.pattern.Bn.parent(genes.GWAS.df)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/two_genes.png", width = 7, height = 5)  
 
+expression.pattern.Bn.parent.bar(vstMat.parent = vstMat.parent, gene = genes.GWAS.df)
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/two_genes.png", width = 7, height = 5) 
 ```
+
+
+
+
+
+
+
+
+
+
+
 
 
