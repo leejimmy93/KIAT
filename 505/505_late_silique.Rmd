@@ -2734,8 +2734,54 @@ save(SNP_range_gene.df, file="~/505/output/131_sample/SNP_range_gene.df.Rdata")
 ```{r}
 source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/131_sample/SNP_range_gene.df.Rdata")
-GOseq.Bn.ORA(SNP_range_gene.df$names)
-head(SNP_range_gene.df)
+GOseq.Bn.ORA(SNP_range_gene.df$names) 
+head(SNP_range_gene.df) 
+```
+
+# check expression of genes in A08 & C03 GWAS loci 
+```{r}
+# arabidopsis homologs 
+head(napus_vs_ara.non_reciprocal)
+dim(napus_vs_ara.non_reciprocal) # 64949 
+colnames(napus_vs_ara.non_reciprocal)[1] <- "gene_ID"
+
+colnames(SNP_range_gene.df)[12] <- "gene_ID"
+
+## check the Arabidopsis homolog of these genes 
+SNP_range_gene.df %>% 
+  semi_join(napus_vs_ara.non_reciprocal, by="gene_ID") %>%
+  View()
+
+
+gene_list <- 
+lapply(1:length(DE.list), function(i){
+  DE.list[[i]]$gene_ID <- rownames(DE.list[[i]])  
+  
+  tmp <- 
+    DE.list[[i]] %>%
+    semi_join(SNP_range_gene.df, by="gene_ID") %>% # get genes in the GWAS loci 
+    left_join(napus_vs_ara.non_reciprocal, by="gene_ID") # add Arabidopsis homolog information 
+  
+  gene_number <- nrow(tmp)
+  cat(gene_number, "\n")
+  
+  return(tmp)
+})
+
+# 151 gt
+# 211 tissue
+# 13 interaction
+# 80 young
+# 36 bolting
+# 48 flowering
+# 49 early silique
+# 64 late silique 
+
+### check result 
+View(gene_list[[1]])
+gene_list[[8]][which(gene_list[[8]]$gene_ID=="BnaA08g12780D"),] # between Da-Ae & Da-Ol-1 late silique
+gene_list[[2]][which(gene_list[[2]]$gene_ID=="BnaA08g12780D"),] # between Da-Ae & Da-Ol-1 late silique
+
 
 
 ```
