@@ -2728,7 +2728,16 @@ SNP_range_gene.df <- as.data.frame(SNP_range_gene)
 head(SNP_range_gene.df)
 
 save(SNP_range_gene.df, file="~/505/output/131_sample/SNP_range_gene.df.Rdata")
+```
 
+# GO enrichment of genes in A08 and C03 GWAS range 
+```{r}
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/131_sample/SNP_range_gene.df.Rdata")
+GOseq.Bn.ORA(SNP_range_gene.df$names)
+head(SNP_range_gene.df)
 
 
 ```
+
+

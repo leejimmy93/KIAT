@@ -21,7 +21,7 @@ head(fastQC_summary)
 tail(fastQC_summary) 
 
 fastQC_summary_wide <- reshape(fastQC_summary, timevar="V2",idvar="V3",direction="wide")
-colnames(fastQC_summary_wide) <- gsub("(V1)(.)([[:print:]]+)","\\3",colnames(fastQC_summary_wide))
+colnames(fastQC_summary_wide) <-  gsub("(V1)(.)([[:print:]]+)","\\3",colnames(fastQC_summary_wide))
 dim(fastQC_summary_wide)
 
 write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
@@ -745,6 +745,8 @@ DEgene.bolting <- topTags(lrt.bolting,n = Inf)$table[topTags(lrt.bolting,n = Inf
 # 0  56327
 # 1   1854
 
+save(DEgene.young, DEgene.flowering, DEgene.bolting, DEgene.early.silique, DEgene.late.silique, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.pairwise.gt.Rdata")
+
 ### barplot for DEGs number 
 ### reformat for ggplot barplot 
 DEGs_number_between_gt.parent <- data.frame(young = as.data.frame(summary(de.young <- decideTestsDGE(lrt.young, p=0.05)))$Freq,
@@ -1130,6 +1132,7 @@ expression.pattern.Bn.parent.with.annot(ID, fatty.acid.genes.annotation)
 ```{r}
 # load all necessary functions 
 # source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.new.Rdata")
 
 # gt effect 
 DEgene.GO.ORA.gt <- GOseq.Bn.ORA(rownames(DEgene.new.gt))
