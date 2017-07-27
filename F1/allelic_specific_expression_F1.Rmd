@@ -165,11 +165,70 @@ ggsave(p.BT.414, filename="~/F1_SNP/output/figure/p.BT.414.young.png", height=8,
 ggsave(p.BT.415, filename="~/F1_SNP/output/figure/p.BT.415.young.png", height=8, width=5) 
 ```
 
-# import expression data 
+# import expression data
 https://github.com/leejimmy93/KIAT/blob/master/F1/KIAT_F1_data_analysis.Rmd
+
+are SNPs in side these genes show "parent-of-origin-specific" expression pattern? check that based on binomial test result generated from the above code chunk 
 ```{r}
-load("") 
+load("~/F1_SNP/output/DEgene.gt.F1.Rdata") 
+
+# young, 414 F1 as refernece level, FDR of 0.05 
+head(DEgene.young.F1)
+dim(DEgene.young.F1) # 4024 
+
+DEgene.young.F1$gene_ID <- rownames(DEgene.young.F1)
+
+DEgene.young.F1.BT <- 
+DEgene.young.F1 %>%
+  left_join(F1.young.gene.BT, by="gene_ID") 
+
+# Q: how many DEGs have allele count (ie. SNP data)? among these many (how many) loci with allele count, how many of them show allele specific expression (ie. deviated from binomial distribution, p-value from binomial test is smaller than 0.05)? 
+DEgene.young.F1.BT %>%
+  group_by(gene_ID) %>%
+  head()
+
+DEGs_allele_count <- 
+DEgene.young.F1.BT[complete.cases(DEgene.young.F1.BT),] %>%
+  group_by(gene_ID) %>%
+  count() %>%
+  nrow() 
+
+SNP_number <- 
+DEgene.young.F1.BT[complete.cases(DEgene.young.F1.BT),] %>%
+  group_by(CHROM, POS) %>%
+  nrow()
+
+SNP_ASE_414 <- 
+DEgene.young.F1.BT[complete.cases(DEgene.young.F1.BT),] %>%
+  group_by(CHROM, POS) %>%
+  filter(BT_414 < 0.05) %>%
+  nrow() # 
+
+SNP_ASE_415 <- 
+DEgene.young.F1.BT[complete.cases(DEgene.young.F1.BT),] %>%
+  group_by(CHROM, POS) %>%
+  filter(BT_415 < 0.05) %>%
+  nrow() # 
+
+cat(DEGs_allele_count, "DEGs have allele count, among" SNP_number, "loci with allele count", SNP_ASE_414, "and" SNP_ASE_415, "show allele specific expression in 414F1 and 415F1 respecitively \n")
+cat(DEGs_allele_count, "DEGs have allele count, among", SNP_number, "loci with allele count,")
+cat(SNP_ASE_414, SNP_ASE_415, "show allele specific expression in 414F1 and 415F1 respecitively \n")
 ```
 
- 
+# parent-of-origin-specific expression pattern searching
+for SNP/loci that show ASE (deviated from binomial distribution), how many of them have paternal-origin-specific expression? Are SNPs in the same gene show the same direction? (ie. all have paternal-orginal-specific expression pattern?) 
+```{r}
+# BTvalue < 0.05, 
+
+
+
+
+
+
+```
+
+To do: 
+multiple test problem, use FDR correction 
+binomial test on gene level, use statisical model to look for genes that have "parent-of-origin-specific" expression patterns. 
+
 
