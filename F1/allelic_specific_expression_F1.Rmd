@@ -82,14 +82,31 @@ p.dp <- grid.arrange(p.414, p.415, ncol=2)
 ggsave(p.dp, filename="~/F1_SNP/output/figure/p.dp.young.png", height=5, width=7)
 
 ## genotype quality 
-p.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_414_GQ)) + labs(x="genotype quality of 414)", y="Number of SNPs") 
+p.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_414_GQ)) + labs(x="genotype quality of 414", y="Number of SNPs") 
 
-p.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_415_GQ)) + labs(x="genotype quality of 415)", y="Number of SNPs") 
+p.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_415_GQ)) + labs(x="genotype quality of 415", y="Number of SNPs") 
 
 p.dp <- grid.arrange(p.414, p.415, ncol=2)
 ggsave(p.dp, filename="~/F1_SNP/output/figure/p.gq.young.png", height=5, width=7)  
 ```
 
+# calculate reference ratio and plot it out for each genotype 
+```{r}
+n1 <- sum(F1.young.GQ.filtered$F1_414_DP == F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
+n2 <- sum(F1.young.GQ.filtered$F1_414_DP <= F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
+n3 <- sum(F1.young.GQ.filtered$F1_414_DP >= F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
+
+cat("number of 414 SNPs DP equals AO + RO:", n1, "\n")
+cat("number of 414 SNPs DP greater than AO + RO:", n2, "\n")
+cat("number of 414 SNPs DP smaller than AO + RO:", n3, "\n") 
+# don't know why now. 
+
+ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=(F1.young.GQ.filtered$F1_415_RO/F1.young.GQ.filtered$F1_415_AO+F1.young.GQ.filtered$F1_415_RO))) + labs(x="genotype quality of 415", y="Number of SNPs") 
+
+F1.young.GQ.filtered$F1_415_RO/F1.young.GQ.filtered$F1_415_AO+F1.young.GQ.filtered$F1_415_RO
+F1.young.GQ.filtered$F1_415_RO 
+F1.young.GQ.filtered$F1_415_GT  
+```
 
 
  

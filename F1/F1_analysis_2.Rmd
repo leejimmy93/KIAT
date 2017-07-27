@@ -181,7 +181,7 @@ dim(F1.late_silique.GQ.filtered) # 64909    16
 save(F1.late_silique.GQ.filtered, file = "~/project/output/F1.late_silique.GQ.filtered.Rdata")
 ```
 
-#historgram for genotype quality
+#historgram for genotype quality 
 ```{r}
 
 young_gq <- F1.young.GQ.filtered[,grep("_GQ", colnames(F1.young.GQ.filtered), value=T)]
