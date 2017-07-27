@@ -245,13 +245,17 @@ library(tidyr)
 library(dplyr)
 
 load("~/F1_SNP/output/F1.young.GQ.filtered.Rdata") 
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output/F1.flowering.GQ.filtered.Rdata")
 young_gt <- F1.young.GQ.filtered[,grep("_GT", colnames(F1.young.GQ.filtered), value=T)]
 young_gt.melt <- melt(young_gt)
 young_gt.melt$tissue <- rep("young", nrow(young_gt.melt))
+dim(young_gt.melt) # 196560      3
 
-# flowering_gt <- F1.flowering.GQ.filtered[,grep("_GT", colnames(F1.flowering.GQ.filtered), value=T)]
-# flowering_gt.melt <- melt(flowering_gt)
-# flowering_gt.melt$tissue <- rep("flowering", nrow(flowering_gt.melt))
+flowering_gt <- F1.flowering.GQ.filtered[,grep("_GT", colnames(F1.flowering.GQ.filtered), value=T)]
+flowering_gt.melt <- melt(flowering_gt)
+flowering_gt.melt$tissue <- rep("flowering", nrow(flowering_gt.melt))
+dim(flowering_gt.melt) # 177856      3 
+
 # 
 # early_silique_gt <- F1.early_silique.GQ.filtered[,grep("_GT", colnames(F1.early_silique.GQ.filtered), value=T)]
 # early_silique_gt.melt <- melt(early_silique_gt)
@@ -263,7 +267,7 @@ young_gt.melt$tissue <- rep("young", nrow(young_gt.melt))
 
 GT_tmp <- merge(young_gt.melt, flowering_gt.melt)
 
-young_flowering_silique <- rbind(late_silique_gt.melt,flowering_gt.melt,young_gt.melt,  early_silique_gt.melt)
+young_flowering_silique <- rbind(flowering_gt.melt,young_gt.melt)
 young_flowering_silique$value <- (as.character(young_flowering_silique$value))
 
 

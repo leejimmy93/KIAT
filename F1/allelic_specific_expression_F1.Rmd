@@ -92,22 +92,36 @@ ggsave(p.dp, filename="~/F1_SNP/output/figure/p.gq.young.png", height=5, width=7
 
 # calculate reference ratio and plot it out for each genotype 
 ```{r}
+# calculate to see whether DP == AO + RO
 n1 <- sum(F1.young.GQ.filtered$F1_414_DP == F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
-n2 <- sum(F1.young.GQ.filtered$F1_414_DP <= F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
-n3 <- sum(F1.young.GQ.filtered$F1_414_DP >= F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
+n2 <- sum(F1.young.GQ.filtered$F1_414_DP < F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
+n3 <- sum(F1.young.GQ.filtered$F1_414_DP > F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
 
 cat("number of 414 SNPs DP equals AO + RO:", n1, "\n")
 cat("number of 414 SNPs DP greater than AO + RO:", n2, "\n")
 cat("number of 414 SNPs DP smaller than AO + RO:", n3, "\n") 
-# don't know why now. 
+# 
 
-ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=(F1.young.GQ.filtered$F1_415_RO/F1.young.GQ.filtered$F1_415_AO+F1.young.GQ.filtered$F1_415_RO))) + labs(x="genotype quality of 415", y="Number of SNPs") 
+# plot out distribution of reference allele ratio 
+p.RAR.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_414_RO/(F1_414_AO+F1_414_RO), group=F1_414_GT, fill=F1_414_GT)) + facet_wrap(~F1_414_GT, nrow=3) + labs(x="reference allele ratio of 414", y="Number of SNPs", title="reference allele ratio for 414F1") + theme(legend.position="none") 
 
-F1.young.GQ.filtered$F1_415_RO/F1.young.GQ.filtered$F1_415_AO+F1.young.GQ.filtered$F1_415_RO
-F1.young.GQ.filtered$F1_415_RO 
-F1.young.GQ.filtered$F1_415_GT  
+p.RAR.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_415_RO/(F1_415_AO+F1_415_RO), group=F1_415_GT, fill=F1_415_GT)) + facet_wrap(~F1_415_GT, nrow=3) + labs(x="reference allele ratio of 415", y="Number of SNPs", title="reference allele ratio for 415F1") + theme(legend.position="none")   
+
+ggsave(p.RAR.414, filename="~/F1_SNP/output/figure/p.RAR.414.young.png", height=8, width=5)
 ```
 
+# gene annotation of SNPs 
+```{r}
+
+
+
+```
+
+# import expression data 
+https://github.com/leejimmy93/KIAT/blob/master/F1/KIAT_F1_data_analysis.Rmd
+```{r}
+load("")
+```
 
  
 
