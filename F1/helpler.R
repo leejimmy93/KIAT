@@ -4,6 +4,11 @@
 # This is a helpler file that stores all the function used for F1 data anlysis 
 
 library(vcfR)
+library(IRanges)
+library(GenomicRanges)
+library(GenomicFeatures)
+library("rtracklayer")
+library("tidyverse")
 
 ##########################################################
 ## formatting vcf file 
@@ -64,21 +69,61 @@ DP.filter <- function(vcf, n){
   return(vcf.filtered.DP) 
 } 
 
-#SNP annotation 
-SNPannotation <- function(gff, vcf){
-  library(IRanges)
-  library(GenomicRanges)
-  library(GenomicFeatures)
-  library("rtracklayer") 
-  
-  gff.mRNA <- read.table(gff)
+#SNP annotation, get gene ID for SNPs with known chromosome and pos information 
+
+SNP.annotation <- function(SNP_data){
+  ### get gff file with gene chrom & pos info, gff3 file must be sorted 
+  gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
   colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
   
-  genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
-  SNP <- GRanges(seqnames = Rle(vcf$`#CHROM`), ranges = IRanges(start = vcf$POS, end = vcf$POS), ID = paste(vcf$`#CHROM`, vcf$POS, sep = "_"))
-  SNP_gene <- mergeByOverlaps(SNP, genes) 
-  SNP_gene_df <- as.data.frame(SNP_gene)
-  SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
+  genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),
+                   ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), 
+                   names = gff.mRNA$name)
   
-  return(vcf.filtered.GT)
+  # SNP information 
+  SNP <- GRanges(seqnames = Rle(SNP_data$CHROM), 
+                 ranges = IRanges(start = SNP_data$POS, SNP_data$POS), 
+                 ID = paste(SNP_data$CHROM, SNP_data$POS, sep = "_"))
+  
+  # overlap SNP position with gene range 
+  SNP_gene <- mergeByOverlaps(SNP, genes)
+  SNP_gene_df <- as.data.frame(SNP_gene)
+  
+  # reform output 
+  SNP_gene_df2 <- SNP_gene_df[,c("SNP.seqnames", "SNP.start", "genes.names")] 
+  colnames(SNP_gene_df2) <- c("CHROM", "POS", "gene_ID")
+  
+  SNP_gene_final <- 
+  SNP_data %>% 
+    left_join(SNP_gene_df2, by=c("CHROM", "POS")) 
+  
+  return(SNP_gene_final)  
 }
+
+## binomial test, add binomial test result (p-value, <0.05 means deviated from binomial distribution) as extra columns 
+binomial_test <- function(F1){
+  F1.414 <- 
+    lapply(1:nrow(F1), function(SNP){
+      stats <- binom.test(F1$F1_414_RO[SNP], (F1$F1_414_AO[SNP]+F1$F1_414_RO[SNP]), 0.5)
+      pvalue <- stats$p.value
+      return(pvalue)
+    }
+    )
+
+  F1.415 <- 
+    lapply(1:nrow(F1), function(SNP){
+      stats <- binom.test(F1$F1_415_RO[SNP], (F1$F1_415_AO[SNP]+F1$F1_415_RO[SNP]), 0.5)
+      pvalue <- stats$p.value
+      return(pvalue)
+    }
+    )
+
+  F1$BT_414 <- unlist(F1.414) 
+  F1$BT_415 <- unlist(F1.415)
+  
+  return(F1)
+}
+
+
+
+

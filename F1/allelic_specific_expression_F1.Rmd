@@ -20,7 +20,8 @@ library(vcfR)
 source("~/KIAT/F1/helpler.R")  
 ```
 
-# examine F1 dataset to study gene imprinting effect 
+# examine F1 dataset to study gene imprinting effect
+# import data
 ```{r}
 # ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
 F1.young <- read.vcfR("~/F1_SNP/vcf/with_GQ/F1_young_filtered.recode.vcf")  
@@ -108,19 +109,66 @@ p.RAR.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_414_R
 p.RAR.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_415_RO/(F1_415_AO+F1_415_RO), group=F1_415_GT, fill=F1_415_GT)) + facet_wrap(~F1_415_GT, nrow=3) + labs(x="reference allele ratio of 415", y="Number of SNPs", title="reference allele ratio for 415F1") + theme(legend.position="none")   
 
 ggsave(p.RAR.414, filename="~/F1_SNP/output/figure/p.RAR.414.young.png", height=8, width=5)
+ggsave(p.RAR.415, filename="~/F1_SNP/output/figure/p.RAR.415.young.png", height=8, width=5)
 ```
 
 # gene annotation of SNPs 
 ```{r}
+str(F1.young.GQ.filtered) 
+F1.young.GQ.filtered$POS <- as.numeric(as.character(F1.young.GQ.filtered$POS))
 
+F1.young.gene <- SNP.annotation(SNP_data=F1.young.GQ.filtered)
+dim(F1.young.gene) # 49140    25    
+```
 
+# binomial test on SNP basis
+```{r}
+F1.young.gene.BT <- binomial_test(F1=F1.young.gene)
 
+colnames(F1.you)
+# stats on BT 
+SNP_BT_number_414 <-
+F1.young.gene.BT %>%
+  filter(BT_414 < 0.05) %>%
+  count() %>% 
+  as.numeric()
+
+gene_BT_number_414 <- 
+F1.young.gene.BT %>%
+  filter(BT_414 < 0.05) %>%
+  group_by(gene_ID) %>%
+  count() %>%
+  nrow()
+
+SNP_BT_number_415 <-
+F1.young.gene.BT %>%
+  filter(BT_415 < 0.05) %>%
+  count() %>% 
+  as.numeric()
+
+gene_BT_number_415 <- 
+F1.young.gene.BT %>%
+  filter(BT_415 < 0.05) %>%
+  group_by(gene_ID) %>%
+  count() %>%
+  nrow()
+
+cat(SNP_BT_number_414, "SNPs in", gene_BT_number_414, "genes are deviated from binomial distribution in 414F1", "\n")
+cat(SNP_BT_number_415, "SNPs in", gene_BT_number_415, "genes are deviated from binomial distribution in 415F1", "\n")
+
+# plot binomial test result 
+p.BT.414 <- ggplot(data = F1.young.gene.BT) + geom_histogram(aes(x=BT_414)) + facet_wrap(~F1.young.gene.BT$F1_414_GT, nrow=3) + labs(x="P-value from binomial test of 414F1", y="Number of SNPs")
+
+p.BT.415 <- ggplot(data = F1.young.gene.BT) + geom_histogram(aes(x=BT_415)) + facet_wrap(~F1.young.gene.BT$F1_415_GT, nrow=3) + labs(x="P-value from binomial test of 415F1", y="Number of SNPs")
+
+ggsave(p.BT.414, filename="~/F1_SNP/output/figure/p.BT.414.young.png", height=8, width=5)
+ggsave(p.BT.415, filename="~/F1_SNP/output/figure/p.BT.415.young.png", height=8, width=5) 
 ```
 
 # import expression data 
 https://github.com/leejimmy93/KIAT/blob/master/F1/KIAT_F1_data_analysis.Rmd
 ```{r}
-load("")
+load("") 
 ```
 
  
