@@ -64,6 +64,11 @@ DP.filter <- function(vcf, n){
   return(vcf.filtered.DP) 
 } 
 
+
+
+
+
+
 # extract all the SNPs from the filtered dataset (vcf.data.filter.DP) 
 #to get loci that are homozygous for parents, see whether they are 
 #heterozygous in both F1s. 

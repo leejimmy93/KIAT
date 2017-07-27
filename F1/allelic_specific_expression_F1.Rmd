@@ -25,7 +25,7 @@ source("~/KIAT/F1/helpler.R")
 # ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
 F1.young <- read.vcfR("~/F1_SNP/vcf/with_GQ/F1_young_filtered.recode.vcf")  
 F1.young.reform <- reform.vcf.F1(temp=F1.young)
-dim(F1.young.reform) # 1247960      16 
+dim(F1.young.reform) # 1247960      24
 save(F1.young.refom, file="~/F1_SNP/output/F1.young.reform.Rdata")
 ```
 
@@ -35,28 +35,60 @@ load("~/F1_SNP/output/F1.young.reform.Rdata")
 
 # 1) filter based on missing data 
 F1.young.nomissing <- F1.young.reform[complete.cases(F1.young.reform),]
-dim(F1.young.nomissing) # 635218     16 
+dim(F1.young.nomissing) # 635218     24 
 
 # 2) transform filter columns to numeric values 
-F1.young.nomissing[,(5:24)] <- lapply(F1.young.nomissing[,(5:16)], function(x) as.numeric(as.character(x))) 
+F1.young.nomissing[,(5:24)] <- lapply(F1.young.nomissing[,(5:24)], function(x) as.numeric(as.character(x))) 
 
 # 3) filter based on GQ  
 F1.young.GQ.filtered <- GQ.filter(vcf=F1.young.nomissing, n=30)
-dim(F1.young.GQ.filtered) # 288085     16  
+dim(F1.young.GQ.filtered) # 288085     24  
 
 hist(as.numeric(as.character(F1.young.GQ.filtered$F1_415_GQ)))
 
 # 4) filter based depth 
 F1.young.DP.filtered <- DP.filter(vcf=F1.young.GQ.filtered, n=10)
-dim(F1.young.DP.filtered) # 166691     16 
+dim(F1.young.DP.filtered) # 166691     24 
 
 # 5) filter based on gt (homozygous in parents)
 F1.young.GQ.filtered <- subset(F1.young.DP.filtered, (((Ae_GT=="-1" & Ol_GT=="1")) | ((Ae_GT=="1" & Ol_GT=="-1"))))
-dim(F1.young.GQ.filtered) # 49140    16 
+dim(F1.young.GQ.filtered) # 49140    24 
 F1.young.GQ.filtered[1:10,]
-save(F1.young.GQ.filtered, file = "~/F1_SNP/output/F1.young.GQ.filtered.Rdata")
+save(F1.young.GQ.filtered, file = "~/F1_SNP/output/F1.young.GQ.filtered.Rdata") 
 ```
 
+# plot to check read depth, genotye quality, and genotype of two F1s 
+```{r}
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+
+load("~/F1_SNP/output/F1.young.GQ.filtered.Rdata")
+## check genotypes of two F1s
+p.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=as.factor(F1_414_GT)), stat = "count") + labs(x="gentoype of 414", y="Number of SNPs") 
+
+p.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=as.factor(F1_415_GT)), stat = "count") + labs(x="gentoype of 415", y="Number of SNPs") 
+
+p.gt <- grid.arrange(p.414, p.415, ncol=2) 
+ggsave(p.gt, filename="~/F1_SNP/output/figure/p.gt.young.png", height=5, width=7)
+
+## check read depth of two F1s 
+p.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=log10(F1_414_DP))) + labs(x="log10(read_depth of 414)", y="Number of SNPs") 
+
+p.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=log10(F1_415_DP))) + labs(x="log10(read_depth of 415)", y="Number of SNPs") 
+
+p.dp <- grid.arrange(p.414, p.415, ncol=2)
+ggsave(p.dp, filename="~/F1_SNP/output/figure/p.dp.young.png", height=5, width=7)
+
+## genotype quality 
+p.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_414_GQ)) + labs(x="genotype quality of 414)", y="Number of SNPs") 
+
+p.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_415_GQ)) + labs(x="genotype quality of 415)", y="Number of SNPs") 
+
+p.dp <- grid.arrange(p.414, p.415, ncol=2)
+ggsave(p.dp, filename="~/F1_SNP/output/figure/p.gq.young.png", height=5, width=7)  
+```
 
 
 
