@@ -124,6 +124,45 @@ binomial_test <- function(F1){
   return(F1)
 }
 
+# check parent-of-origin-specific expression pattern 
+ASE_test <- function(F1){
+  for(i in 1:nrow(F1)){
+    if(F1$BT_414[i] >= 0.05){ # not ASE expression 
+      F1$ASE_414[i] = "N"
+    }
+    else if(F1$BT_414[i] < 0.05 & 
+              (F1$F1_414_RO[i]/(F1$F1_414_AO[i]+F1$F1_414_RO[i]) < 0.5 &
+                 F1$Ae_RO[i]/(F1$Ae_AO[i]+F1$Ae_RO[i]) < 0.5) |
+              (F1$BT_414[i] < 0.05 &
+                 F1$F1_414_RO[i]/(F1$F1_414_AO[i]+F1$F1_414_RO[i]) > 0.5 &
+                 F1$Ae_RO[i]/(F1$Ae_AO[i]+F1$Ae_RO[i] > 0.5))) { # same as Ae     
+      F1$ASE_414[i] = "Ae"
+    }
+    else {
+      F1$ASE_414[i] = "Ol"
+    } 
+  } 
+  
+  for(i in 1:nrow(F1)){
+    if(F1$BT_415[i] >= 0.05){ # not ASE expression 
+      F1$ASE_415[i] = "N"
+    }
+    else if(F1$BT_415[i] < 0.05 & 
+              (F1$F1_415_RO[i]/(F1$F1_415_AO[i]+F1$F1_415_RO[i]) < 0.5 &
+                 F1$Ae_RO[i]/(F1$Ae_AO[i]+F1$Ae_RO[i]) < 0.5) |
+              (F1$BT_415[i] < 0.05 &
+                 F1$F1_415_RO[i]/(F1$F1_415_AO[i]+F1$F1_415_RO[i]) > 0.5 &
+                 F1$Ae_RO[i]/(F1$Ae_AO[i]+F1$Ae_RO[i] > 0.5))) { # same as Ae     
+      F1$ASE_415[i] = "Ae"
+    }
+    else {
+      F1$ASE_415[i] = "Ol"
+    } 
+  } 
+  
+  return(F1)
+}
+
 
 
 
