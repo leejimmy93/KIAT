@@ -270,7 +270,7 @@ dim(mean.depth) # 434331      4
 
 ```{r}
 # chromosome distribution 
-geno_505_hmp.late_silique <- read.table("~/505/vcf_late_silique_no_pop/combined/505_filtered_sorted.hmp.txt", head=T)
+geno_505_hmp.late_silique <- read.table("~/", head=T)
 head(geno_505_hmp.late_silique)
 colnames(geno_505_hmp.late_silique)
 nrow(geno_505_hmp.late_silique) # 242314  
@@ -2555,10 +2555,14 @@ Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_h
 Erucic_Oleic <- rbind(Erucic_acid, Oleic_acid)
 
 SNP.Erucic.Oleic <- data.frame(CHROM = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", Erucic_Oleic[Erucic_Oleic$P.value < 0.00001,]$SNP), 
-                         POS = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\4", Erucic_Oleic[Erucic_Oleic$P.value < 0.00001,]$SNP))
+                         POS = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\4", Erucic_Oleic[Erucic_Oleic$P.value < 0.00001,]$SNP)) 
 
 SNP.Erucic.Oleic$CHROM <- paste("chr", SNP.Erucic.Oleic$CHROM, sep = "")
 SNP.Erucic.Oleic$POS <- as.numeric(as.character(SNP.Erucic.Oleic$POS))
+
+#### overlap between Erucic and Oleic acid 
+length(Erucic_acid[Erucic_acid$P.value < 0.00001,]$SNP) # 231
+length(Oleic_acid[Oleic_acid$P.value < 0.00001,]$SNP) # 104
 
 head(SNP.Erucic.Oleic) 
 SNP.Erucic.Oleic.unique <- unique(SNP.Erucic.Oleic)
@@ -2606,7 +2610,7 @@ write.csv(SNP_gene_final_fxn, file = "~/505/output/131_sample/GWAS_SNP_gene_fxn.
 ``` 
 
 # for the several significant SNPs, are they synonymous or not? what's the possible effect on the protein function? 
-```{r}
+```{r} 
 # SNP annotation 
 # in the snpEff folder 
 # java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.ann.vcf  
@@ -2787,6 +2791,9 @@ lapply(1:length(DE.list), function(i){
 ### check result 
 View(gene_list[[1]])
 gene_list[[8]][which(gene_list[[8]]$gene_ID=="BnaA08g12780D"),] # between Da-Ae & Da-Ol-1 late silique
+<<<<<<< HEAD
+gene_list[[2]][which(gene_list[[2]]$gene_ID=="BnaA08g12780D"),] # between Da-Ae & Da-Ol-1 late silique 
+=======
 gene_list[[2]][which(gene_list[[2]]$gene_ID=="BnaA08g12780D"),] # between Da-Ae & Da-Ol-1 late silique
 
 ### plot the expression of the two genes 
@@ -2801,6 +2808,7 @@ ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure
 
 expression.pattern.Bn.parent.bar(vstMat.parent = vstMat.parent, gene = genes.GWAS.df)
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/two_genes.png", width = 7, height = 5) 
+>>>>>>> dcba47f81724688cb93464ba860a307637974ed2
 ```
 
 

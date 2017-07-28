@@ -1,0 +1,1191 @@
+Title: Analysis of all F1 stages
+========================================================
+
+# SNP calling 
+```{r}
+
+```
+
+# SNP filtering
+```{r}
+# https://github.com/leejimmy93/KIAT/blob/master/parent/filter_SNP_individual.sh (in linux)
+# vcftools --gzvcf ${i}.vcf --remove-indels --min-alleles 2 --max-alleles 2 --minQ 40 --recode --recode-INFO-all --out SNP_result/${i}_filtered 
+
+```
+
+#source functions
+```{r}
+library(ggplot2)
+library(vcfR)
+source("~/project/script/helpler.R")
+```
+
+#YOUNG
+```{r}
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output")
+
+# ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
+F1.young <- read.vcfR("~/project/output/F1_young_filtered.recode.vcf")  
+F1.young.reform <- reform.vcf.F1(temp=F1.young)
+dim(F1.young.reform) # 1247960      24 
+save(F1.young.reform, file="~/project/output/F1.young.reform.Rdata")
+
+load("~/project/output/F1.young.reform.Rdata")
+
+# 1) filter based on missing data 
+F1.young.nomissing <- F1.young.reform[complete.cases(F1.young.reform),]
+dim(F1.young.nomissing) # 635218     24
+
+# 2) transform filter columns to numeric values 
+View(F1.young.nomissing)
+F1.young.nomissing[,c(2, 5:24)] <- lapply(F1.young.nomissing[,c(2, 5:24)], function(x) as.numeric(as.character(x))) 
+head(F1.young.nomissing)
+
+# 3) filter based on GQ  
+F1.young.GQ.filtered <- GQ.filter(vcf=F1.young.nomissing, n=30)
+dim(F1.young.GQ.filtered) # 288085     24  
+
+hist(as.numeric(as.character(F1.young.GQ.filtered$F1_415_GQ)))
+
+# 4) filter based depth 
+F1.young.DP.filtered <- DP.filter(vcf=F1.young.GQ.filtered, n=10)
+dim(F1.young.DP.filtered) # 166691     24
+
+# 5) filter based on gt (homozygous in parents)
+F1.young.GQ.filtered <- subset(F1.young.DP.filtered, (((Ae_GT=="-1" & Ol_GT=="1")) | ((Ae_GT=="1" & Ol_GT=="-1"))))
+dim(F1.young.GQ.filtered) # 49140    24
+
+save(F1.young.GQ.filtered, file = "~/project/output/F1.young.GQ.filtered.Rdata")
+
+View(F1.young.GQ.filtered)
+
+```
+
+
+#flowering
+```{r}
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output")
+
+# ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
+F1.flowering <- read.vcfR("~/project/output/F1_flowering_filtered.recode.vcf")  
+F1.flowering.reform <- reform.vcf.F1(temp=F1.flowering)
+dim(F1.flowering.reform) # 1242882      24 
+save(F1.flowering.reform, file="~/project/output/F1.flowering.reform.Rdata")
+
+load("~/project/output/F1.flowering.reform.Rdata")
+
+# 1) filter based on missing data 
+F1.flowering.nomissing <- F1.flowering.reform[complete.cases(F1.flowering.reform),]
+dim(F1.flowering.nomissing) # 660784     16 
+
+# 2) transform filter columns to numeric values 
+F1.flowering.nomissing[,c(2, 5:24)] <- lapply(F1.flowering.nomissing[,c(2, 5:24)], function(x) as.numeric(as.character(x))) 
+
+# 3) filter based on GQ  
+F1.flowering.GQ.filtered <- GQ.filter(vcf=F1.flowering.nomissing, n=30)
+dim(F1.flowering.GQ.filtered) # 282561     24  
+
+hist(as.numeric(as.character(F1.flowering.GQ.filtered$F1_415_GQ)))
+
+# 4) filter based depth 
+F1.flowering.DP.filtered <- DP.filter(vcf=F1.flowering.GQ.filtered, n=10)
+dim(F1.flowering.DP.filtered) # 146891     24
+
+# 5) filter based on gt (homozygous in parents)
+F1.flowering.GQ.filtered <- subset(F1.flowering.DP.filtered, (((Ae_GT=="-1" & Ol_GT=="1")) | ((Ae_GT=="1" & Ol_GT=="-1"))))
+dim(F1.flowering.GQ.filtered) # 44464    24 
+
+save(F1.flowering.GQ.filtered, file = "~/project/output/F1.flowering.GQ.filtered.Rdata")
+
+View(F1.flowering.GQ.filtered)
+
+```
+
+
+
+
+#early silique
+```{r}
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output")
+
+# ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
+F1.early_silique <- read.vcfR("~/project/output/F1_early_silique_filtered.vcf")  
+F1.early_silique.reform <- reform.vcf.F1(temp=F1.early_silique)
+dim(F1.early_silique.reform) # 1289120      24
+save(F1.early_silique.reform, file="~/project/output/F1.early_silique.reform.Rdata")
+
+load("~/project/output/F1.early_silique.reform.Rdata")
+
+# 1) filter based on missing data 
+F1.early_silique.nomissing <- F1.early_silique.reform[complete.cases(F1.early_silique.reform),]
+dim(F1.early_silique.nomissing) # 337408     24
+
+# 2) transform filter columns to numeric values 
+F1.early_silique.nomissing[,c(2, 5:24)] <- lapply(F1.early_silique.nomissing[,c(2, 5:24)], function(x) as.numeric(as.character(x)))
+
+# 3) filter based on GQ  
+F1.early_silique.GQ.filtered <- GQ.filter(vcf=F1.early_silique.nomissing, n=30)
+dim(F1.early_silique.GQ.filtered) # 337408     24  
+
+hist(as.numeric(as.character(F1.early_silique.GQ.filtered$F1_415_GQ)))
+
+# 4) filter based depth 
+F1.early_silique.DP.filtered <- DP.filter(vcf=F1.early_silique.GQ.filtered, n=10)
+dim(F1.early_silique.DP.filtered) # 209666     24
+
+# 5) filter based on gt (homozygous in parents)
+F1.early_silique.GQ.filtered <- subset(F1.early_silique.DP.filtered, (((Ae_GT=="-1" & Ol_GT=="1")) | ((Ae_GT=="1" & Ol_GT=="-1"))))
+dim(F1.early_silique.GQ.filtered) # 61229    24
+
+save(F1.early_silique.GQ.filtered, file = "~/project/output/F1.early_silique.GQ.filtered.Rdata")
+
+View(F1.early_silique.GQ.filtered)
+
+```
+
+
+#LATE SILIQUE
+```{r}
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output")
+
+# ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
+F1.late_silique <- read.vcfR("~/project/output/F1_late_silique_filtered.recode.vcf")  
+F1.late_silique.reform <- reform.vcf.F1(temp=F1.late_silique)
+dim(F1.late_silique.reform) # 1290767      24 
+save(F1.late_silique.reform, file="~/project/output/F1.late_silique.reform.Rdata")
+
+load("~/project/output/F1.late_silique.reform.Rdata")
+
+# 1) filter based on missing data 
+F1.late_silique.nomissing <- F1.late_silique.reform[complete.cases(F1.late_silique.reform),]
+dim(F1.late_silique.nomissing) # 747778     24
+
+# 2) transform filter columns to numeric values 
+F1.late_silique.nomissing[,c(2, 5:24)] <- lapply(F1.late_silique.nomissing[,c(2, 5:24)], function(x) as.numeric(as.character(x))) 
+
+# 3) filter based on GQ  
+F1.late_silique.GQ.filtered <- GQ.filter(vcf=F1.late_silique.nomissing, n=30)
+dim(F1.late_silique.GQ.filtered) # 350329     24  
+
+hist(as.numeric(as.character(F1.late_silique.GQ.filtered$F1_415_GQ)))
+
+# 4) filter based depth 
+F1.late_silique.DP.filtered <- DP.filter(vcf=F1.late_silique.GQ.filtered, n=10)
+dim(F1.late_silique.DP.filtered) # 225500     24 
+
+# 5) filter based on gt (homozygous in parents)
+F1.late_silique.GQ.filtered <- subset(F1.late_silique.DP.filtered, (((Ae_GT=="-1" & Ol_GT=="1")) | ((Ae_GT=="1" & Ol_GT=="-1"))))
+dim(F1.late_silique.GQ.filtered) # 64909    16 
+
+
+save(F1.late_silique.GQ.filtered, file = "~/project/output/F1.late_silique.GQ.filtered.Rdata")
+```
+
+#historgram for genotype quality 
+```{r}
+
+young_gq <- F1.young.GQ.filtered[,grep("_GQ", colnames(F1.young.GQ.filtered), value=T)]
+young_gq.melt <- melt(young_gq)
+young_gq.melt$tissue <- rep("young", nrow(young_gq.melt))
+
+flowering_gq <- F1.flowering.GQ.filtered[,grep("_GQ", colnames(F1.flowering.GQ.filtered), value=T)]
+flowering_gq.melt <- melt(flowering_gq)
+flowering_gq.melt$tissue <- rep("flowering", nrow(flowering_gq.melt))
+
+early_silique_gq <- F1.early_silique.GQ.filtered[,grep("_GQ", colnames(F1.early_silique.GQ.filtered), value=T)]
+early_silique_gq.melt <- melt(early_silique_gq)
+early_silique_gq.melt$tissue <- rep("early_silique", nrow(early_silique_gq.melt))
+
+late_silique_gq <- F1.late_silique.GQ.filtered[,grep("_GQ", colnames(F1.late_silique.GQ.filtered), value=T)]
+late_silique_gq.melt <- melt(late_silique_gq)
+late_silique_gq.melt$tissue <- rep("late_silique", nrow(late_silique_gq.melt))
+
+
+young_flowering_silique.GQ <- rbind(late_silique_gq.melt,flowering_gq.melt,young_gq.melt,  early_silique_gq.melt)
+
+gq <- ggplot(data = young_flowering_silique.GQ) 
+gq <- gq + geom_histogram(aes(value, fill=tissue), stat="bin") 
+gq <- gq + facet_wrap(~tissue, ncol = 2) 
+gq
+  
+```
+#histogram for read depth
+```{r}
+young_dp <- F1.young.GQ.filtered[,grep("_DP", colnames(F1.young.GQ.filtered), value=T)]
+young_dp.melt <- melt(young_gq)
+young_dp.melt$tissue <- rep("young", nrow(young_gq.melt))
+
+flowering_dp <- F1.flowering.GQ.filtered[,grep("_DP", colnames(F1.flowering.GQ.filtered), value=T)]
+flowering_dp.melt <- melt(flowering_dp)
+flowering_dp.melt$tissue <- rep("flowering", nrow(flowering_gq.melt))
+
+early_silique_dp <- F1.early_silique.GQ.filtered[,grep("_DP", colnames(F1.early_silique.GQ.filtered), value=T)]
+early_silique_dp.melt <- melt(early_silique_dp)
+early_silique_dp.melt$tissue <- rep("early_silique", nrow(early_silique_gq.melt))
+
+late_silique_dp <- F1.late_silique.GQ.filtered[,grep("_DP", colnames(F1.late_silique.GQ.filtered), value=T)]
+late_silique_dp.melt <- melt(late_silique_dp)
+late_silique_dp.melt$tissue <- rep("late_silique", nrow(late_silique_dp.melt))
+
+young_flowering_silique.DP <- rbind(late_silique_dp.melt,flowering_dp.melt, young_dp.melt,  early_silique_dp.melt)
+
+dp <- ggplot(data = young_flowering_silique.DP) 
+dp <- dp + geom_histogram(aes(x=value, fill=tissue), stat="bin") + xlim(10, 2500)
+dp <- dp + facet_wrap(~tissue, ncol = 2) 
+dp
+
+
+```
+
+
+#histogram for Genotype (not the right way...)
+```{r}
+
+library(tidyr)
+library(dplyr)
+
+load("~/F1_SNP/output/F1.young.GQ.filtered.Rdata") 
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output/F1.flowering.GQ.filtered.Rdata")
+young_gt <- F1.young.GQ.filtered[,grep("_GT", colnames(F1.young.GQ.filtered), value=T)]
+young_gt.melt <- melt(young_gt)
+young_gt.melt$tissue <- rep("young", nrow(young_gt.melt))
+dim(young_gt.melt) # 196560      3
+
+flowering_gt <- F1.flowering.GQ.filtered[,grep("_GT", colnames(F1.flowering.GQ.filtered), value=T)]
+flowering_gt.melt <- melt(flowering_gt)
+flowering_gt.melt$tissue <- rep("flowering", nrow(flowering_gt.melt))
+dim(flowering_gt.melt) # 177856      3 
+
+# 
+# early_silique_gt <- F1.early_silique.GQ.filtered[,grep("_GT", colnames(F1.early_silique.GQ.filtered), value=T)]
+# early_silique_gt.melt <- melt(early_silique_gt)
+# early_silique_gt.melt$tissue <- rep("early_silique", nrow(early_silique_gt.melt))
+# 
+# late_silique_gt <- F1.late_silique.GQ.filtered[,grep("_GT", colnames(F1.late_silique.GQ.filtered), value=T)]
+# late_silique_gt.melt <- melt(late_silique_gt)
+# late_silique_gt.melt$tissue <- rep("late_silique", nrow(late_silique_gt.melt))
+
+GT_tmp <- merge(young_gt.melt, flowering_gt.melt)
+
+young_flowering_silique <- rbind(flowering_gt.melt,young_gt.melt)
+young_flowering_silique$value <- (as.character(young_flowering_silique$value))
+
+
+p <- ggplot(data = young_flowering_silique) 
+p <- p + geom_histogram(aes(value, fill=tissue), stat="count") 
+p <- p + facet_wrap(~tissue, ncol = 2) 
+p 
+
+p.QUAL.Ol <- p.QUAL.Ol +labs(list(x="log10(QUAL)", y="Number of SNPs"))  
+p.QUAL.Ol <- p.QUAL.Ol + theme(legend.position = "none") 
+p.QUAL.Ol    
+
+#ggplot(data =early_silique_gt.melt, aes(x=value))+
+#  geom_histogram(binwidth=0.1)
+
+
+```
+
+#calculate reference ratio for all loci (young)
+```{r}
+
+F1.young.RR.filtered_1 <- mutate(F1.young.GQ.filtered, "Ae_RR"= ifelse(F1.young.GQ.filtered$Ae_RO+F1.young.GQ.filtered$Ae_AO==F1.young.GQ.filtered$Ae_DP,"0",ifelse(F1.young.GQ.filtered$Ae_RO+F1.young.GQ.filtered$Ae_AO>F1.young.GQ.filtered$Ae_DP,"1","-1")))
+
+F1.young.RR.filtered_2 <- mutate(F1.young.RR.filtered_1, "Ol_RR"= ifelse(F1.young.RR.filtered_1$Ol_RO+F1.young.RR.filtered_1$Ol_AO==F1.young.RR.filtered_1$Ol_DP,"0",ifelse(F1.young.RR.filtered_1$Ol_RO+F1.young.RR.filtered_1$Ol_AO>F1.young.RR.filtered_1$Ol_DP,"1","-1")))
+
+F1.young.RR.filtered_3 <- mutate(F1.young.RR.filtered_2, "414_RR"= ifelse(F1.young.RR.filtered_2$F1_414_RO+F1.young.RR.filtered_2$F1_414_AO==F1.young.RR.filtered_2$F1_414_DP,"0",ifelse(F1.young.RR.filtered_2$F1_414_RO+F1.young.RR.filtered_2$F1_414_AO>F1.young.RR.filtered_2$F1_414_DP,"1","-1")))
+
+F1.young.RR.filtered <- mutate(F1.young.RR.filtered_3, "415_RR"= ifelse(F1.young.RR.filtered_3$F1_415_RO+F1.young.RR.filtered_3$F1_415_AO==F1.young.RR.filtered_3$F1_415_DP,"0",ifelse(F1.young.RR.filtered_3$F1_415_RO+F1.young.RR.filtered_3$F1_415_AO>F1.young.RR.filtered_3$F1_415_DP,"1","-1")))
+
+F1.young.RR <- F1.young.RR.filtered[,grep("_RR", colnames(F1.young.RR.filtered), value=T)]
+F1.young.RR.gather<-gather(F1.young.RR, key="gen", value= "young_RR" )
+
+young.RR <- ggplot(data = F1.young.RR.gather) 
+young.RR <- young.RR+ geom_histogram(aes(x=young_RR), stat="count") 
+young.RR <- young.RR + facet_wrap(~gen, ncol = 2) 
+young.RR
+
+
+```
+
+#calculate reference ratio for all loci (Flowering)
+```{r}
+F1.flowering.RR.filtered_1 <- mutate(F1.flowering.GQ.filtered, "Ae_RR"= ifelse(F1.flowering.GQ.filtered$Ae_RO+F1.flowering.GQ.filtered$Ae_AO==F1.flowering.GQ.filtered$Ae_DP,"T","F"))
+
+F1.flowering.RR.filtered_2 <- mutate(F1.flowering.RR.filtered_1, "Ol_RR"= ifelse(F1.flowering.RR.filtered_1$Ol_RO+F1.flowering.RR.filtered_1$Ol_AO==F1.flowering.RR.filtered_1$Ol_DP,"T","F"))
+
+F1.flowering.RR.filtered_3 <- mutate(F1.flowering.RR.filtered_2, "414_RR"= ifelse(F1.flowering.RR.filtered_2$F1_414_RO+F1.flowering.RR.filtered_2$F1_414_AO==F1.flowering.RR.filtered_2$F1_414_DP,"T","F"))
+
+F1.flowering.RR.filtered <- mutate(F1.flowering.RR.filtered_3, "415_RR"= ifelse(F1.flowering.RR.filtered_3$F1_415_RO+F1.flowering.RR.filtered_3$F1_415_AO==F1.flowering.RR.filtered_3$F1_415_DP,"T","F"))
+
+
+F1.flowering.RR <- F1.flowering.RR.filtered[,grep("_RR", colnames(F1.flowering.RR.filtered), value=T)]
+F1.flowering.RR.gather<-gather(F1.flowering.RR, key="gen", value= "flowering_RR" )
+
+flowering.RR <- ggplot(data = F1.flowering.RR.gather) 
+flowering.RR <- flowering.RR+ geom_histogram(aes(x=flowering_RR), stat="count") 
+flowering.RR <- flowering.RR + facet_wrap(~gen, ncol = 2) 
+flowering.RR
+
+```
+
+#calculate reference ratio for all loci (early silique)
+```{r}
+F1.early_silique.RR.filtered_1 <- mutate(F1.early_silique.GQ.filtered, "Ae_RR"= ifelse(F1.early_silique.GQ.filtered$Ae_RO+F1.early_silique.GQ.filtered$Ae_AO==F1.early_silique.GQ.filtered$Ae_DP,"T","F"))
+
+F1.early_silique.RR.filtered_2 <- mutate(F1.early_silique.RR.filtered_1, "Ol_RR"= ifelse(F1.early_silique.RR.filtered_1$Ol_RO+F1.early_silique.RR.filtered_1$Ol_AO==F1.early_silique.RR.filtered_1$Ol_DP,"T","F"))
+
+F1.early_silique.RR.filtered_3 <- mutate(F1.early_silique.RR.filtered_2, "414_RR"= ifelse(F1.early_silique.RR.filtered_2$F1_414_RO+F1.early_silique.RR.filtered_2$F1_414_AO==F1.early_silique.RR.filtered_2$F1_414_DP,"T","F"))
+
+F1.early_silique.RR.filtered <- mutate(F1.early_silique.RR.filtered_3, "415_RR"= ifelse(F1.early_silique.RR.filtered_3$F1_415_RO+F1.early_silique.RR.filtered_3$F1_415_AO==F1.early_silique.RR.filtered_3$F1_415_DP,"T","F"))
+
+F1.early_silique.RR <- F1.early_silique.RR.filtered[,grep("_RR", colnames(F1.early_silique.RR.filtered), value=T)]
+F1.early_silique.RR.gather<-gather(F1.early_silique.RR, key="gen", value= "early_silique_RR" )
+
+early_silique.RR <- ggplot(data = F1.early_silique.RR.gather) 
+early_silique.RR <- early_silique.RR+ geom_histogram(aes(x=early_silique_RR), stat="count") 
+early_silique.RR <- early_silique.RR + facet_wrap(~gen, ncol = 2) 
+early_silique.RR
+
+```
+
+#calculate reference ratio for all loci (late silique)
+```{r}
+F1.late_silique.RR.filtered_1 <- mutate(F1.late_silique.GQ.filtered, "Ae_RR"= ifelse(F1.late_silique.GQ.filtered$Ae_RO+F1.late_silique.GQ.filtered$Ae_AO==F1.late_silique.GQ.filtered$Ae_DP,"T","F"))
+
+F1.late_silique.RR.filtered_2 <- mutate(F1.late_silique.RR.filtered_1, "Ol_RR"= ifelse(F1.late_silique.RR.filtered_1$Ol_RO+F1.late_silique.RR.filtered_1$Ol_AO==F1.late_silique.RR.filtered_1$Ol_DP,"T","F"))
+
+F1.late_silique.RR.filtered_3 <- mutate(F1.late_silique.RR.filtered_2, "414_RR"= ifelse(F1.late_silique.RR.filtered_2$F1_414_RO+F1.late_silique.RR.filtered_2$F1_414_AO==F1.late_silique.RR.filtered_2$F1_414_DP,"T","F"))
+
+F1.late_silique.RR.filtered <- mutate(F1.late_silique.RR.filtered_3, "415_RR"= ifelse(F1.late_silique.RR.filtered_3$F1_415_RO+F1.late_silique.RR.filtered_3$F1_415_AO==F1.late_silique.RR.filtered_3$F1_415_DP,"T","F"))
+
+F1.late_silique.RR <- F1.late_silique.RR.filtered[,grep("_RR", colnames(F1.late_silique.RR.filtered), value=T)]
+F1.late_silique.RR.gather<-gather(F1.late_silique.RR, key="gen", value= "late_silique_RR" )
+
+late_silique.RR <- ggplot(data = F1.late_silique.RR.gather) 
+late_silique.RR <- late_silique.RR+ geom_histogram(aes(x=late_silique_RR), stat="count") 
+late_silique.RR <- late_silique.RR + facet_wrap(~gen, ncol = 2) 
+late_silique.RR
+```
+
+
+#RO/RO+AO (young)
+```{r}
+F1.young.RR_Ae <- mutate(F1.young.RR.filtered, "Ae:RO/RO+AO"= F1.young.RR.filtered$Ae_RO/(F1.young.RR.filtered$Ae_RO+F1.young.RR.filtered$Ae_AO) )
+
+F1.young.RR_Ol <- mutate(F1.young.RR_Ae, "Ol:RO/RO+AO"= F1.young.RR.filtered$Ol_RO/(F1.young.RR.filtered$Ol_RO+F1.young.RR.filtered$Ol_AO) )
+
+F1.young.RR_414 <- mutate(F1.young.RR_Ol, "414:RO/RO+AO"= F1.young.RR.filtered$F1_414_RO/(F1.young.RR.filtered$F1_414_RO+F1.young.RR.filtered$F1_414_AO) )
+
+F1.young.RR_415 <- mutate(F1.young.RR_414, "415:RO/RO+AO"= F1.young.RR.filtered$F1_415_RO/(F1.young.RR.filtered$F1_415_RO+F1.young.RR.filtered$F1_415_AO) )
+```
+
+#RO/RO+AO (flowering)
+```{r}
+F1.flowering.RR_Ae <- mutate(F1.flowering.RR.filtered, "Ae:RO/RO+AO"= F1.flowering.RR.filtered$Ae_RO/(F1.flowering.RR.filtered$Ae_RO+F1.flowering.RR.filtered$Ae_AO) )
+
+F1.flowering.RR_Ol <- mutate(F1.flowering.RR_Ae, "Ol:RO/RO+AO"= F1.flowering.RR.filtered$Ol_RO/(F1.flowering.RR.filtered$Ol_RO+F1.flowering.RR.filtered$Ol_AO) )
+
+F1.flowering.RR_414 <- mutate(F1.flowering.RR_Ol, "414:RO/RO+AO"= F1.flowering.RR.filtered$F1_414_RO/(F1.flowering.RR.filtered$F1_414_RO+F1.flowering.RR.filtered$F1_414_AO) )
+
+F1.flowering.RR_415 <- mutate(F1.flowering.RR_414, "415:RO/RO+AO"= F1.flowering.RR.filtered$F1_415_RO/(F1.flowering.RR.filtered$F1_415_RO+F1.flowering.RR.filtered$F1_415_AO) )
+```
+
+#RO/RO+AO (early_silique)
+```{r}
+F1.early_silique.RR_Ae <- mutate(F1.early_silique.RR.filtered, "Ae:RO/RO+AO"= F1.early_silique.RR.filtered$Ae_RO/(F1.early_silique.RR.filtered$Ae_RO+F1.early_silique.RR.filtered$Ae_AO) )
+
+F1.early_silique.RR_Ol <- mutate(F1.early_silique.RR_Ae, "Ol:RO/RO+AO"= F1.early_silique.RR.filtered$Ol_RO/(F1.early_silique.RR.filtered$Ol_RO+F1.early_silique.RR.filtered$Ol_AO) )
+
+F1.early_silique.RR_414 <- mutate(F1.early_silique.RR_Ol, "414:RO/RO+AO"= F1.early_silique.RR.filtered$F1_414_RO/(F1.early_silique.RR.filtered$F1_414_RO+F1.early_silique.RR.filtered$F1_414_AO) )
+
+F1.early_silique.RR_415 <- mutate(F1.early_silique.RR_414, "415:RO/RO+AO"= F1.early_silique.RR.filtered$F1_415_RO/(F1.early_silique.RR.filtered$F1_415_RO+F1.early_silique.RR.filtered$F1_415_AO) )
+```
+
+#RO/RO+AO (late_silique)
+```{r}
+F1.late_silique.RR_Ae <- mutate(F1.late_silique.RR.filtered, "Ae:RO/RO+AO"= F1.late_silique.RR.filtered$Ae_RO/(F1.late_silique.RR.filtered$Ae_RO+F1.late_silique.RR.filtered$Ae_AO) )
+
+F1.late_silique.RR_Ol <- mutate(F1.late_silique.RR_Ae, "Ol:RO/RO+AO"= F1.late_silique.RR.filtered$Ol_RO/(F1.late_silique.RR.filtered$Ol_RO+F1.late_silique.RR.filtered$Ol_AO) )
+
+F1.late_silique.RR_414 <- mutate(F1.late_silique.RR_Ol, "414:RO/RO+AO"= F1.late_silique.RR.filtered$F1_414_RO/(F1.late_silique.RR.filtered$F1_414_RO+F1.late_silique.RR.filtered$F1_414_AO) )
+
+F1.late_silique.RR_415 <- mutate(F1.late_silique.RR_414, "415:RO/RO+AO"= F1.late_silique.RR.filtered$F1_415_RO/(F1.late_silique.RR.filtered$F1_415_RO+F1.late_silique.RR.filtered$F1_415_AO) )
+```
+ 
+#plot ref allele ratio
+```{r}
+F1.young.refratio <- F1.young.RR_415[,grep("RO/RO", colnames(F1.young.RR_415), value=T)]
+head(F1.young.refratio)
+F1.young.refratio.gather<-gather(F1.young.refratio, key="gen", value= "young_Reference_Ratio" )
+head(F1.young.refratio.gather)
+
+dim(F1.young.refratio.gather) 
+unique(F1.young.refratio.gather$gen)
+
+young.RefR <- ggplot(data = F1.young.refratio.gather) 
+young.RefR <- young.RefR+ geom_histogram(aes(x = young_Reference_Ratio), stat="bin") # stat="count" discrete, but here it is continuous 
+young.RefR <- young.RefR + facet_wrap(~gen, ncol = 2) 
+young.RefR
+
+#hist(F1.young.refratio.gather$young_Reference_Ratio)
+
+
+
+F1.flowering.refratio <- F1.flowering.RR_415[,grep("RO/RO", colnames(F1.flowering.RR_415), value=T)]
+head(F1.flowering.refratio)
+F1.flowering.refratio.gather<-gather(F1.flowering.refratio, key="gen", value= "flowering_Reference_Ratio" )
+head(F1.flowering.refratio.gather)
+unique(F1.flowering.refratio.gather$gen)
+
+flowering.RefR <- ggplot(data = F1.flowering.refratio.gather) 
+flowering.RefR <- flowering.RefR+ geom_histogram(aes(x = flowering_Reference_Ratio), stat="bin") # stat="count" discrete, but here it is continuous 
+flowering.RefR <- flowering.RefR + facet_wrap(~gen, ncol = 2) 
+flowering.RefR
+
+
+F1.early_silique.refratio <- F1.early_silique.RR_415[,grep("RO/RO", colnames(F1.early_silique.RR_415), value=T)]
+head(F1.early_silique.refratio)
+F1.early_silique.refratio.gather<-gather(F1.early_silique.refratio, key="gen", value= "early_silique_Reference_Ratio" )
+head(F1.early_silique.refratio.gather)
+unique(F1.early_silique.refratio.gather$gen)
+
+early_silique.RefR <- ggplot(data = F1.early_silique.refratio.gather) 
+early_silique.RefR <- early_silique.RefR+ geom_histogram(aes(x = early_silique_Reference_Ratio), stat="bin") # stat="count" discrete, but here it is continuous 
+early_silique.RefR <- early_silique.RefR + facet_wrap(~gen, ncol = 2) 
+early_silique.RefR
+
+
+
+F1.late_silique.refratio <- F1.late_silique.RR_415[,grep("RO/RO", colnames(F1.late_silique.RR_415), value=T)]
+head(F1.late_silique.refratio)
+F1.late_silique.refratio.gather<-gather(F1.late_silique.refratio, key="gen", value= "late_silique_Reference_Ratio" )
+head(F1.late_silique.refratio.gather)
+unique(F1.late_silique.refratio.gather$gen)
+
+late_silique.RefR <- ggplot(data = F1.late_silique.refratio.gather) 
+late_silique.RefR <- late_silique.RefR+ geom_histogram(aes(x = late_silique_Reference_Ratio), stat="bin") # stat="count" discrete, but here it is continuous 
+late_silique.RefR <- late_silique.RefR + facet_wrap(~gen, ncol = 2) 
+late_silique.RefR
+```
+
+#plot histogram of ref allele ratio, facet for genotype within sample (young)
+```{r}
+F1.young.refratio <- F1.young.RR_415[,grep("RO/RO", colnames(F1.young.RR_415), value=T)]
+F1.young.GT<- F1.young.RR_415[,grep("GT", colnames(F1.young.RR_415), value=T)] 
+
+F1.young.GT.gather <- gather(F1.young.GT, key="gen", value="Genotype")
+F1.young.refratio.gather<-gather(F1.young.refratio, key="gen", value= "young_Reference_Ratio" )
+head(F1.young.refratio.gather)
+head(F1.young.GT.gather)
+F1.young.RR.GT<- mutate(F1.young.refratio.gather, "GT"= F1.young.GT.gather$Genotype)
+head(F1.young.RR.GT)
+
+young.RR.GT <- ggplot(data = F1.young.RR.GT) 
+young.RR.GT <- young.RR.GT+ geom_histogram(aes(x = young_Reference_Ratio), stat="bin") # stat="count" discrete, but here it is continuous 
+young.RR.GT <- young.RR.GT + facet_wrap(~GT, ncol = 2) 
+young.RR.GT
+
+
+```
+
+#plot histogram of ref allele ratio, facet for genotype within sample (flowering)
+```{r}
+F1.flowering.refratio <- F1.flowering.RR_415[,grep("RO/RO", colnames(F1.flowering.RR_415), value=T)]
+F1.flowering.GT<- F1.flowering.RR_415[,grep("GT", colnames(F1.flowering.RR_415), value=T)] 
+
+F1.flowering.GT.gather <- gather(F1.flowering.GT, key="gen", value="Genotype")
+F1.flowering.refratio.gather<-gather(F1.flowering.refratio, key="gen", value= "flowering_Reference_Ratio" )
+head(F1.flowering.refratio.gather)
+head(F1.flowering.GT.gather)
+F1.flowering.RR.GT<- mutate(F1.flowering.refratio.gather, "GT"= F1.flowering.GT.gather$Genotype)
+head(F1.flowering.RR.GT)
+
+flowering.RR.GT <- ggplot(data = F1.flowering.RR.GT) 
+flowering.RR.GT <- flowering.RR.GT+ geom_histogram(aes(x = flowering_Reference_Ratio), stat="bin") # stat="count" discrete, but here it is continuous 
+flowering.RR.GT <- flowering.RR.GT + facet_wrap(~GT, ncol = 2) 
+flowering.RR.GT
+```
+
+#plot histogram of ref allele ratio, facet for genotype within sample (early silique)
+```{r}
+F1.early_silique.refratio <- F1.early_silique.RR_415[,grep("RO/RO", colnames(F1.early_silique.RR_415), value=T)]
+F1.early_silique.GT<- F1.early_silique.RR_415[,grep("GT", colnames(F1.early_silique.RR_415), value=T)] 
+
+F1.early_silique.GT.gather <- gather(F1.early_silique.GT, key="gen", value="Genotype")
+F1.early_silique.refratio.gather<-gather(F1.early_silique.refratio, key="gen", value= "early_silique_Reference_Ratio" )
+head(F1.early_silique.refratio.gather)
+head(F1.early_silique.GT.gather)
+F1.early_silique.RR.GT<- mutate(F1.early_silique.refratio.gather, "GT"= F1.early_silique.GT.gather$Genotype)
+head(F1.early_silique.RR.GT)
+
+early_silique.RR.GT <- ggplot(data = F1.early_silique.RR.GT) 
+early_silique.RR.GT <- early_silique.RR.GT+ geom_histogram(aes(x = early_silique_Reference_Ratio), stat="bin") # stat="count" discrete, but here it is continuous 
+early_silique.RR.GT <- early_silique.RR.GT + facet_wrap(~GT, ncol = 2) 
+early_silique.RR.GT
+```
+
+
+#plot histogram of ref allele ratio, facet for genotype within sample (late silique)
+```{r}
+F1.late_silique.refratio <- F1.late_silique.RR_415[,grep("RO/RO", colnames(F1.late_silique.RR_415), value=T)]
+F1.late_silique.GT<- F1.late_silique.RR_415[,grep("GT", colnames(F1.late_silique.RR_415), value=T)] 
+
+F1.late_silique.GT.gather <- gather(F1.late_silique.GT, key="gen", value="Genotype")
+F1.late_silique.refratio.gather<-gather(F1.late_silique.refratio, key="gen", value= "late_silique_Reference_Ratio" )
+head(F1.late_silique.refratio.gather)
+head(F1.late_silique.GT.gather)
+F1.late_silique.RR.GT<- mutate(F1.late_silique.refratio.gather, "GT"= F1.late_silique.GT.gather$Genotype)
+head(F1.late_silique.RR.GT)
+
+late_silique.RR.GT <- ggplot(data = F1.late_silique.RR.GT) 
+late_silique.RR.GT <- late_silique.RR.GT+ geom_histogram(aes(x = late_silique_Reference_Ratio), stat="bin") # stat="count" discrete, but here it is continuous 
+late_silique.RR.GT <- late_silique.RR.GT + facet_wrap(~GT, ncol = 2) 
+late_silique.RR.GT
+```
+
+
+#Expression Analysis (young) 1)formatting data
+```{r}
+F1.read.count <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/data/read.count.tsv", header = T, check.names = F)
+
+head(F1.read.count)
+rownames(F1.read.count) <- F1.read.count[,1]
+F1.read.count <- F1.read.count[,-1]
+
+# format data 
+head(F1.read.count)
+dim(F1.read.count) # 101040     24 
+colnames(F1.read.count)
+colnames(F1.read.count) <- sub("_2.fq","",colnames(F1.read.count),fixed = TRUE) # remove _2.fq 
+
+# sample description  
+sample_des.F1 <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/data/F1_summary.csv")
+dim(sample_des.F1) # 24 12
+sorted_sample_des.F1 <- sample_des.F1[order(sample_des.F1$Sample.ID),]
+
+sorted_sample_des.F1[,5:8]
+new_sample_ID.F1 <- paste(sorted_sample_des.F1$cultivar, sorted_sample_des.F1$Stage, sorted_sample_des.F1$rep, sep = "_")
+
+# calculate GB size of libs 
+mean(as.numeric(sub("Gb","",sample_des.F1$TotalBases.Gb.)))  #5.891667
+min(as.numeric(sub("Gb","",sample_des.F1$TotalBases.Gb.)))   #4.62
+max(as.numeric(sub("Gb","",sample_des.F1$TotalBases.Gb.)))   #8.67
+
+# replace sample ID 
+colnames(F1.read.count) <- new_sample_ID.F1
+save(F1.read.count,file="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/data/F1.read.count.Rdata")
+
+
+```
+
+#Expression analysis (young) 2)Set up sample description
+```{r}
+# load necessary libs & functions 
+library(edgeR)
+library(ggplot2)
+
+# filter based on read count, assign group, normalize, design matrix, calculate dispersion   
+# set up group 
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/data/F1.read.count.Rdata")
+F1.read.count <- F1.read.count[,colSums(F1.read.count) > 1000000]  
+dim(F1.read.count) # 101040     24 
+colnames(F1.read.count)
+
+F1.read.count.sample<-data.frame(file=colnames(F1.read.count),
+                                         batch=factor(gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\5",colnames(F1.read.count))),  
+                                         genotype=factor(gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1",colnames(F1.read.count))),  
+                                         tissue=factor(gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\3",colnames(F1.read.count))),	
+                                         group=factor(gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1\\3",colnames(F1.read.count)))
+)
+
+F1.read.count.sample
+ftable(F1.read.count.sample,row.vars="tissue",col.vars=c("batch","genotype"))
+
+# filter based on read count 
+F1.read.count.small <- F1.read.count[rowSums(F1.read.count > 10) >= 3,]
+dim(F1.read.count.small) # 60176  24 
+save(F1.read.count.small, file = "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/data/F1.read.count.small.Rdata")
+```
+
+#MDS clustering
+```{r}
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/data/F1.read.count.small.Rdata")
+
+# normalize 
+dge.data.F1 <- DGEList(counts=F1.read.count.small, group=F1.read.count.sample$group)
+dge.data.F1 <- calcNormFactors(dge.data.F1, method = "TMM") 
+dge.data.F1$sample
+hist(dge.data.F1$samples$norm.factors)
+
+# MDS to check sample seperation, also using dendrogram.  
+# plotMDS(dge.data.F1, method = "bcv",labels = rownames(dge.data.F1$samples))
+mds.F1 <- plotMDS(dge.data.F1, method = "bcv",labels = dge.data.F1$samples$group)
+
+x.F1 <- as.data.frame(mds.F1$x)
+y.F1 <- as.data.frame(mds.F1$y)
+distance_matrix.F1 <- merge(x.F1, y.F1, by="row.names")
+distance_matrix.F1$group <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1\\3",distance_matrix.F1$Row.names)
+distance_matrix.F1$gt <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1",distance_matrix.F1$Row.names)
+distance_matrix.F1$tissue <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\3",distance_matrix.F1$Row.names)
+
+colnames(distance_matrix.F1) <- c("lib","x","y","group","gt","tissue")
+head(distance_matrix.F1)
+
+# making color MDS figure 
+p <- ggplot(data = distance_matrix.F1)
+p <- p + geom_point(aes(x, y, color=factor(gt), shape=factor(tissue)), size=3) 
+p <- p + labs(y = "BCV distance 2", x="BCV distance 1")
+p
+
+ggsave("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/plots", width = 6, height = 4)
+
+# clustering to check sample seperation 
+# install.packages("ggdendro")
+library(ggdendro)
+library(pvclust)
+
+hc.F1 <- hclust(dist(t(F1.read.count.small[1:1000,])))
+
+ggdata <- dendro_data(as.dendrogram(hc.F1))
+ggdata$labels$gt <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\1",ggdata$labels$label) 
+ggdata$labels$tissue <- gsub("(414F1|415F1)(_)(flowering|early-silique|late-silique|Young)(_)(1|2|3)","\\3",ggdata$labels$label)
+ggdata$labels$group <- paste(ggdata$labels$gt, ggdata$labels$tissue, sep = "_")
+
+# start ggplot here 
+p2 <- ggplot(data = segment(ggdata))
+p2 <- p2 + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
+p2 <- p2 + geom_text(data = label(ggdata), aes(x = x, y = y, label = label, hjust=0, color=group)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
+p2
+# ggsave("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/plots", width = 13, height = 8)
+```
+
+#expression analysis
+```{r}
+# pairwise comparison using GLM model 
+# design matrix
+design.F1 <- model.matrix(~0+group, data = F1.read.count.sample)
+
+# w/o batch effect
+dge.data.F1 <- estimateGLMCommonDisp(dge.data.F1, design.F1,verbose = TRUE) # Disp = 0.08264 , BCV = 0.2875 
+dge.data.F1 <- estimateGLMTrendedDisp(dge.data.F1,design.F1)
+plotBCV(dge.data.F1)
+
+## w/o batch effect
+fit.F1 <- glmFit(dge.data.F1, design.F1)
+colnames(fit.F1$design)
+
+# between genotypes, 414 as reference level  
+lrt.young.F1 <- glmLRT(fit.F1, contrast = c(-1,0,0,0,1,0,0,0))
+topTags(lrt.young.F1) 
+summary(de.young.F1 <- decideTestsDGE(lrt.young.F1, p=0.05))
+DEgene.young.F1 <- topTags(lrt.young.F1,n = Inf)$table[topTags(lrt.young.F1,n = Inf)$table$FDR<0.05,]
+# -1  1640
+# 0  56152
+# 1   2384
+
+lrt.flowering.F1 <- glmLRT(fit.F1, contrast = c(0,0,-1,0,0,0,1,0))
+topTags(lrt.flowering.F1)
+summary(de.flowering.F1 <- decideTestsDGE(lrt.flowering.F1, p=0.05))
+DEgene.flowering.F1 <- topTags(lrt.flowering.F1,n = Inf)$table[topTags(lrt.flowering.F1,n = Inf)$table$FDR<0.05,]
+# -1   961
+# 0  58526
+# 1    689
+
+lrt.early.silique.F1 <- glmLRT(fit.F1, contrast = c(0,-1,0,0,0,1,0,0))
+topTags(lrt.early.silique.F1)
+summary(de.early.silique.F1 <- decideTestsDGE(lrt.early.silique.F1, p=0.05))
+DEgene.early.silique.F1 <- topTags(lrt.early.silique.F1,n = Inf)$table[topTags(lrt.early.silique.F1,n = Inf)$table$FDR<0.05,]
+# -1    69
+# 0  60061
+# 1     46
+
+lrt.late.silique.F1 <- glmLRT(fit.F1, contrast = c(0,0,0,-1,0,0,0,1))
+topTags(lrt.late.silique.F1)
+summary(de.late.silique.F1 <- decideTestsDGE(lrt.late.silique.F1, p=0.05))
+DEgene.late.silique.F1 <- topTags(lrt.late.silique.F1,n = Inf)$table[topTags(lrt.late.silique.F1,n = Inf)$table$FDR<0.05,]
+# -1   170
+# 0  59840
+# 1    166
+
+### reformat for ggplot barplot 
+DEGs_number_between_gt <- data.frame(young = as.data.frame(summary(de.young.F1 <- decideTestsDGE(lrt.young.F1, p=0.05)))$Freq,
+                                     flowering = as.data.frame(summary(de.flowering.F1 <- decideTestsDGE(lrt.flowering.F1, p=0.05)))$Freq, 
+                                     early.silique = as.data.frame(summary(de.early.silique.F1 <- decideTestsDGE(lrt.early.silique.F1, p=0.05)))$Freq,
+                                     late.silique = as.data.frame(summary(de.late.silique.F1 <- decideTestsDGE(lrt.late.silique.F1, p=0.05)))$Freq)
+
+rownames(DEGs_number_between_gt) <- c("down", "no", "up")
+DEGs_number_between_gt <- DEGs_number_between_gt[c("down", "up"),]
+
+library(reshape2)
+DEGs_number_between_gt.melt <- melt(DEGs_number_between_gt)
+DEGs_number_between_gt.melt$DE <- rep(c("down", "up"), 4)
+colnames(DEGs_number_between_gt.melt) <- c("tissue", "number", "DE")
+
+# reorder: up 1st down 2nd 
+DEGs_number_between_gt.melt$DE <- factor(DEGs_number_between_gt.melt$DE, levels = c("up", "down"))
+DEGs_number_between_gt.melt <- DEGs_number_between_gt.melt[order(DEGs_number_between_gt.melt$DE),]
+
+### making ggplot for DEGs 
+p.DEGs_number_between_gt <- ggplot(data = DEGs_number_between_gt.melt)
+p.DEGs_number_between_gt <- p.DEGs_number_between_gt + geom_bar(mapping = aes(fill=DE, x = factor(DE), y = number), stat = "identity")
+p.DEGs_number_between_gt <- p.DEGs_number_between_gt + facet_grid(~tissue)
+p.DEGs_number_between_gt <- p.DEGs_number_between_gt + labs(y = "number of differentially expressed genes", x = "")
+
+p.DEGs_number_between_gt
+ggsave("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/plots/DEGs_number_between_gt.png", width = 6, height = 4)
+
+colnames(fit.F1$design)
+# between developmental stages 
+### 414 
+lrt.young.vs.flowering.414 <- glmLRT(fit.F1, contrast = c(-1,0,1,0,0,0,0,0)) #(-1,0,1,0,0,0,0,0)
+topTags(lrt.young.vs.flowering.414)
+summary(de.young.vs.flowering.414 <- decideTestsDGE(lrt.young.vs.flowering.414, p=0.05))
+DEgene.young.vs.flowering.414 <- topTags(lrt.young.vs.flowering.414,n = Inf)$table[topTags(lrt.young.vs.flowering.414,n = Inf)$table$FDR<0.05,]
+# -1 12706
+# 0  30576
+# 1  16894
+
+lrt.flowering.vs.early.silique.414 <- glmLRT(fit.F1, contrast = c(0,1,-1,0,0,0,0,0))
+topTags(lrt.flowering.vs.early.silique.414)
+summary(de.flowering.vs.early.silique.414 <- decideTestsDGE(lrt.flowering.vs.early.silique.414, p=0.05))
+DEgene.flowering.vs.early.silique.414 <- topTags(lrt.flowering.vs.early.silique.414,n = Inf)$table[topTags(lrt.flowering.vs.early.silique.414,n = Inf)$table$FDR<0.05,]
+# -1  8920
+# 0  44337
+# 1   6919
+
+lrt.early.vs.late.silique.414 <- glmLRT(fit.F1, contrast = c(0,-1,0,1,0,0,0,0))
+topTags(lrt.early.vs.late.silique.414)
+summary(de.early.vs.late.silique.414 <- decideTestsDGE(lrt.early.vs.late.silique.414, p=0.05))
+DEgene.early.vs.late.silique.414 <- topTags(lrt.early.vs.late.silique.414,n = Inf)$table[topTags(lrt.early.vs.late.silique.414,n = Inf)$table$FDR<0.05,]
+# -1  3049
+# 0  53803
+# 1   3324
+
+### ggplot 
+### reformat for ggplot barplot 
+DEGs_number_between_tissue.414 <- data.frame("flowering-vs-young" = as.data.frame(summary(de.young.vs.flowering.414 <- decideTestsDGE(lrt.young.vs.flowering.414, p=0.05)))$Freq, 
+                                     "early.slique-vs-flowering"= as.data.frame(summary(de.flowering.vs.early.silique.414 <- decideTestsDGE(lrt.flowering.vs.early.silique.414, p=0.05)))$Freq, 
+                                     "late.silique-vs-early.silique" = as.data.frame(summary(de.early.vs.late.silique.414 <- decideTestsDGE(lrt.early.vs.late.silique.414, p=0.05)))$Freq)
+
+rownames(DEGs_number_between_tissue.414) <- c("down", "no", "up")
+DEGs_number_between_tissue.414 <- DEGs_number_between_tissue.414[c("down", "up"),]
+DEGs_number_between_tissue.414.melt <- melt(DEGs_number_between_tissue.414)
+DEGs_number_between_tissue.414.melt$DE <- rep(c("down", "up"), 3)
+colnames(DEGs_number_between_tissue.414.melt) <- c("tissue", "number", "DE")
+
+# reorder: up 1st down 2nd 
+DEGs_number_between_tissue.414.melt$DE <- factor(DEGs_number_between_tissue.414.melt$DE, levels = c("up", "down"))
+DEGs_number_between_tissue.414.melt <- DEGs_number_between_tissue.414.melt[order(DEGs_number_between_tissue.414.melt$DE),]
+
+### making ggplot for DEGs 
+p.DEGs_number_between_tissue.414 <- ggplot(data = DEGs_number_between_tissue.414.melt)
+p.DEGs_number_between_tissue.414 <- p.DEGs_number_between_tissue.414 + geom_bar(mapping = aes(fill=DE, x = factor(DE), y = number), stat = "identity")
+p.DEGs_number_between_tissue.414 <- p.DEGs_number_between_tissue.414 + facet_grid(~tissue)
+p.DEGs_number_between_tissue.414 <- p.DEGs_number_between_tissue.414 + labs(y = "number of differentially expressed genes", x = "")
+
+p.DEGs_number_between_tissue.414
+# ggsave("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/plots/DEGs_number_between_tissue.414.png", width = 11, height = 8)  
+
+### 415 
+lrt.young.vs.flowering.415 <- glmLRT(fit.F1, contrast = c(0,0,0,0,-1,0,1,0))
+topTags(lrt.young.vs.flowering.415)
+summary(de.young.vs.flowering.415 <- decideTestsDGE(lrt.young.vs.flowering.415, p=0.05))
+DEgene.young.vs.flowering.415 <- topTags(lrt.young.vs.flowering.415,n = Inf)$table[topTags(lrt.young.vs.flowering.415,n = Inf)$table$FDR<0.05,]
+# -1 12450
+# 0  32614
+# 1  15112
+
+lrt.flowering.vs.early.silique.415 <- glmLRT(fit.F1, contrast = c(0,0,0,0,0,1,-1,0))
+topTags(lrt.flowering.vs.early.silique.415)
+summary(de.flowering.vs.early.silique.415 <- decideTestsDGE(lrt.flowering.vs.early.silique.415, p=0.05))
+DEgene.flowering.vs.early.silique.415 <- topTags(lrt.flowering.vs.early.silique.415,n = Inf)$table[topTags(lrt.flowering.vs.early.silique.415,n = Inf)$table$FDR<0.05,]
+# -1  7666
+# 0  47946
+# 1   4564
+
+lrt.early.vs.late.silique.415 <- glmLRT(fit.F1, contrast = c(0,0,0,0,0,-1,0,1)) #(0,0,0,0,0,-1,0,1)
+topTags(lrt.early.vs.late.silique.415)
+summary(de.early.vs.late.silique.415 <- decideTestsDGE(lrt.early.vs.late.silique.415, p=0.05))
+DEgene.early.vs.late.silique.415 <- topTags(lrt.early.vs.late.silique.415,n = Inf)$table[topTags(lrt.early.vs.late.silique.415,n = Inf)$table$FDR<0.05,]
+# -1  3074
+# 0  53197
+# 1   3905
+
+### ggplot 
+### reformat for ggplot barplot 
+DEGs_number_between_tissue.415 <- data.frame("flowering-vs-young" = as.data.frame(summary(de.young.vs.flowering.415 <- decideTestsDGE(lrt.young.vs.flowering.415, p=0.05)))$Freq, 
+                                     "early.slique-vs-flowering"= as.data.frame(summary(de.flowering.vs.early.silique.415 <- decideTestsDGE(lrt.flowering.vs.early.silique.415, p=0.05)))$Freq, 
+                                     "late.silique-vs-early.silique" = as.data.frame(summary(de.early.vs.late.silique.415 <- decideTestsDGE(lrt.early.vs.late.silique.415, p=0.05)))$Freq)
+
+rownames(DEGs_number_between_tissue.415) <- c("down", "no", "up")
+DEGs_number_between_tissue.415 <- DEGs_number_between_tissue.415[c("down", "up"),]
+
+DEGs_number_between_tissue.415.melt <- melt(DEGs_number_between_tissue.415)
+DEGs_number_between_tissue.415.melt$DE <- rep(c("down", "up"), 3)
+colnames(DEGs_number_between_tissue.415.melt) <- c("tissue", "number", "DE")
+
+# reorder: up 1st down 2nd 
+DEGs_number_between_tissue.415.melt$DE <- factor(DEGs_number_between_tissue.415.melt$DE, levels = c("up", "down"))
+DEGs_number_between_tissue.415.melt <- DEGs_number_between_tissue.415.melt[order(DEGs_number_between_tissue.415.melt$DE),]
+
+### making ggplot for DEGs 
+p.DEGs_number_between_tissue.415 <- ggplot(data = DEGs_number_between_tissue.415.melt)
+p.DEGs_number_between_tissue.415 <- p.DEGs_number_between_tissue.415 + geom_bar(mapping = aes(fill=DE, x = factor(DE), y = number), stat = "identity")
+p.DEGs_number_between_tissue.415 <- p.DEGs_number_between_tissue.415 + facet_grid(~tissue)
+p.DEGs_number_between_tissue.415 <- p.DEGs_number_between_tissue.415 + labs(y = "number of differentially expressed genes", x = "")
+
+p.DEGs_number_between_tissue.415
+# ggsave("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/plots/DEGs_number_between_tissue.415.png", width = 11, height = 8)  
+### 
+```
+
+
+```{r}
+topTags(lrt.young.F1)  #comparison. 414 as reference 
+DEgene.young.F1 <- topTags(lrt.young.F1,n = Inf)$table[topTags(lrt.young.F1,n = Inf)$table$FDR<0.05,]
+dim(DEgene.young.F1) # 4024    5 # this is the DEG data.frame 
+
+setwd("~/project/data/")
+library(IRanges)
+library(GenomicRanges)
+library(GenomicFeatures)
+library("rtracklayer")
+
+gff.mRNA <- read.table("gff.mRNA")
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
+
+SNP <- GRanges(seqnames = Rle(F1.young.RR_415$CHROM), ranges = IRanges(start = F1.young.RR_415$POS, end = F1.young.RR_415$POS), ID = paste(F1.young.RR_415$CHROM, F1.young.RR_415$POS, sep = "_"))
+
+SNP_gene <- mergeByOverlaps(SNP, genes)
+SNP_gene_df <- as.data.frame(SNP_gene)
+SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
+SNP_gene_final <- rename(SNP_gene_final, c("genes.seqnames" = "CHROM"))
+SNP_gene_final <- rename(SNP_gene_final, c("SNP.start" = "POS"))
+SNP_gene_final <- rename(SNP_gene_final, c("names" = "gene.names"))
+
+dim(SNP_gene_final) # 46577     4 
+dim(F1.young.RR_415) # 49140    32 
+```
+
+#join 2 dataframes based on chrom and pos
+```{r}
+
+# install.packages("tidyverse")
+# library(tidyverse) # prob
+# check the genotype/reference allele ratio for SNPs in differentially expressed genes, do this for all four dataset from young to late silique, plot the binormial test result as histogram 
+
+#genotype
+F1.young.gn <- F1.young.RR_415 %>% left_join(SNP_gene_final, by = c("CHROM", "POS"))
+
+young_deg <- F1.young.gn[,grep("_GT", colnames(F1.young.gn), value=T)]
+young_deg <- young_deg[,grep("41", colnames(young_deg), value=T)]
+F1.young_deg <- filter(young_deg, F1_414_GT!=F1_415_GT)
+head(F1.young_deg)
+
+F1.young_deg.melt <- melt(F1.young_deg)
+
+young_deg <- ggplot(data = F1.young_deg.melt) 
+young_deg <- young_deg + geom_histogram(aes(x=value), stat="count") 
+young_deg <- young_deg + facet_wrap(~variable, ncol = 1) 
+young_deg 
+
+#reference allele ratio
+young_rar1 <-filter(F1.young.gn, F1_414_GT!=F1_415_GT)
+young_rar2 <- young_rar1[,grep("RO/RO", colnames(young_rar1), value=T)]
+young_rar <- young_rar2[,grep("41", colnames(young_rar2), value=T)]
+
+young_rar.melt <- melt(young_rar)
+
+young_rar <- ggplot(data = young_rar.melt) 
+young_rar <- young_rar + geom_histogram(aes(x=value), stat="bin") 
+young_rar <- young_rar + facet_wrap(~variable, ncol = 1) 
+young_rar 
+
+
+
+
+F1.late_silique.gn <- F1.late_silique.RR_415 %>% left_join(SNP_gene_final, by = c("CHROM", "POS"))
+ 
+```
+
+#genotype/reference allele ratio for SNPs in differentially expressed genes (flowering)
+
+```{r}
+F1.flowering.gn <- F1.flowering.RR_415 %>% left_join(SNP_gene_final, by = c("CHROM", "POS"))
+
+flowering_deg <- F1.flowering.gn[,grep("_GT", colnames(F1.flowering.gn), value=T)]
+flowering_deg <- flowering_deg[,grep("41", colnames(flowering_deg), value=T)]
+F1.flowering_deg <- filter(flowering_deg, F1_414_GT!=F1_415_GT)
+head(F1.flowering_deg)
+
+F1.flowering_deg.melt <- melt(F1.flowering_deg)
+
+flowering_deg <- ggplot(data = F1.flowering_deg.melt) 
+flowering_deg <- flowering_deg + geom_histogram(aes(x=value), stat="count") 
+flowering_deg <- flowering_deg + facet_wrap(~variable, ncol = 1) 
+flowering_deg 
+
+#reference allele ratio
+flowering_rar1 <-filter(F1.flowering.gn, F1_414_GT!=F1_415_GT)
+flowering_rar2 <- flowering_rar1[,grep("RO/RO", colnames(flowering_rar1), value=T)]
+flowering_rar <- flowering_rar2[,grep("41", colnames(flowering_rar2), value=T)]
+
+flowering_rar.melt <- melt(flowering_rar)
+
+flowering_rar <- ggplot(data = flowering_rar.melt) 
+flowering_rar <- flowering_rar + geom_histogram(aes(x=value), stat="bin") 
+flowering_rar <- flowering_rar + facet_wrap(~variable, ncol = 1) 
+flowering_rar 
+
+```
+#genotype/reference allele ratio for SNPs in differentially expressed genes (early silique)
+
+```{r}
+F1.early_silique.gn <- F1.early_silique.RR_415 %>% left_join(SNP_gene_final, by = c("CHROM", "POS"))
+early_silique_deg <- F1.early_silique.gn[,grep("_GT", colnames(F1.early_silique.gn), value=T)]
+early_silique_deg <- early_silique_deg[,grep("41", colnames(early_silique_deg), value=T)]
+F1.early_silique_deg <- filter(early_silique_deg, F1_414_GT!=F1_415_GT)
+head(F1.early_silique_deg)
+
+F1.early_silique_deg.melt <- melt(F1.early_silique_deg)
+
+early_silique_deg <- ggplot(data = F1.early_silique_deg.melt) 
+early_silique_deg <- early_silique_deg + geom_histogram(aes(x=value), stat="count") 
+early_silique_deg <- early_silique_deg + facet_wrap(~variable, ncol = 1) 
+early_silique_deg 
+
+#reference allele ratio
+early_silique_rar1 <-filter(F1.early_silique.gn, F1_414_GT!=F1_415_GT)
+early_silique_rar2 <- early_silique_rar1[,grep("RO/RO", colnames(early_silique_rar1), value=T)]
+early_silique_rar <- early_silique_rar2[,grep("41", colnames(early_silique_rar2), value=T)]
+
+early_silique_rar.melt <- melt(early_silique_rar)
+
+early_silique_rar <- ggplot(data = early_silique_rar.melt) 
+early_silique_rar <- early_silique_rar + geom_histogram(aes(x=value), stat="bin") 
+early_silique_rar <- early_silique_rar + facet_wrap(~variable, ncol = 1) 
+early_silique_rar 
+
+```
+
+#genotype/reference allele ratio for SNPs in differentially expressed genes (late silique)
+
+```{r}
+F1.late_silique.gn <- F1.late_silique.RR_415 %>% left_join(SNP_gene_final, by = c("CHROM", "POS"))
+late_silique_deg <- F1.late_silique.gn[,grep("_GT", colnames(F1.late_silique.gn), value=T)]
+late_silique_deg <- late_silique_deg[,grep("41", colnames(late_silique_deg), value=T)]
+F1.late_silique_deg <- filter(late_silique_deg, F1_414_GT!=F1_415_GT)
+head(F1.late_silique_deg)
+
+F1.late_silique_deg.melt <- melt(F1.late_silique_deg)
+
+late_silique_deg <- ggplot(data = F1.late_silique_deg.melt) 
+late_silique_deg <- late_silique_deg + geom_histogram(aes(x=value), stat="count") 
+late_silique_deg <- late_silique_deg + facet_wrap(~variable, ncol = 1) 
+late_silique_deg 
+
+#reference allele ratio
+late_silique_rar1 <-filter(F1.late_silique.gn, F1_414_GT!=F1_415_GT)
+late_silique_rar2 <- late_silique_rar1[,grep("RO/RO", colnames(late_silique_rar1), value=T)]
+late_silique_rar <- late_silique_rar2[,grep("41", colnames(late_silique_rar2), value=T)]
+
+late_silique_rar.melt <- melt(late_silique_rar)
+
+late_silique_rar <- ggplot(data = late_silique_rar.melt) 
+late_silique_rar <- late_silique_rar + geom_histogram(aes(x=value), stat="bin") 
+late_silique_rar <- late_silique_rar + facet_wrap(~variable, ncol = 1) 
+late_silique_rar 
+
+```
+
+# binomial test(young)
+```{r}
+#tmp <- binom.test(F1.young.RR_415$F1_414_RO[1], (F1.young.RR_415$F1_414_AO[1]+F1.young.RR_415$F1_414_RO[1]), 0.5)
+#tmp$p.value
+
+
+# F1.young.BT <- lapply(F1.young.RR_415[x,], mutate("414_BT" = binom.test(F1.young.RR_415$F1_414_RO, (F1.young.RR_415$F1_414_AO+F1.young.RR_415$F1_414_RO), 0.5))$p.value) 
+
+#binomial test 414
+tmp414 <- 
+lapply(1:nrow(F1.young.gn), function(SNP){
+  stats <- binom.test(F1.young.gn$F1_414_RO[SNP], (F1.young.gn$F1_414_AO[SNP]+F1.young.gn$F1_414_RO[SNP]), 0.5)
+  pvalue <- stats$p.value
+  return(pvalue)
+}
+)
+
+F1.young.BT414 <- mutate(F1.young.gn, "BT_414"= unlist(tmp414))
+
+#binomial test 415
+tmp415 <- 
+lapply(1:nrow(F1.young.gn), function(SNP){
+  stats <- binom.test(F1.young.gn$F1_415_RO[SNP], (F1.young.gn$F1_415_AO[SNP]+F1.young.gn$F1_415_RO[SNP]), 0.5)
+  pvalue <- stats$p.value
+  return(pvalue)
+}
+)
+
+F1.young.BT414 <- mutate(F1.young.gn, "BT_414"= unlist(tmp414))
+
+F1.young.BT <- mutate(F1.young.BT414, "BT_415"= unlist(tmp415)) # I unlist the tmp415/414 object and add that as an extra column to the list 
+
+young.tmp.DEG <-filter(F1.young.BT,F1_414_GT!=F1_415_GT) 
+young.tmp.414 <-young.tmp.DEG[,c(7,35)]
+bt_gt_young.414 <- ggplot(data = young.tmp.414) 
+bt_gt_young.414 <- bt_gt_young.414 + geom_histogram(aes(x=BT_414, fill=BT_414), stat="bin") 
+bt_gt_young.414 <- bt_gt_young.414 + facet_wrap(~F1_414_GT, ncol = 2) 
+bt_gt_young.414
+
+young.tmp.415 <-young.tmp.DEG[,c(8,36)]
+bt_gt_young.415 <- ggplot(data = young.tmp.415) 
+bt_gt_young.415 <- bt_gt_young.415 + geom_histogram(aes(x=BT_415, fill=BT_415), stat="bin") 
+bt_gt_young.415 <- bt_gt_young.415 + facet_wrap(~F1_415_GT, ncol = 2) 
+bt_gt_young.415
+    
+young.tmp.DEG[,c(1,2,34)] 
+
+```
+
+#binomial test(flowering)
+```{r}
+#binomial test 414
+tmp414 <- 
+lapply(1:nrow(F1.flowering.gn), function(SNP){
+  stats <- binom.test(F1.flowering.gn$F1_414_RO[SNP], (F1.flowering.gn$F1_414_AO[SNP]+F1.flowering.gn$F1_414_RO[SNP]), 0.5)
+  pvalue <- stats$p.value
+  return(pvalue)
+}
+)
+
+F1.flowering.BT414 <- mutate(F1.flowering.gn, "BT_414"= unlist(tmp414))
+
+
+#binomial test 415
+tmp415 <- 
+lapply(1:nrow(F1.flowering.gn), function(SNP){
+  stats <- binom.test(F1.flowering.gn$F1_415_RO[SNP], (F1.flowering.gn$F1_415_AO[SNP]+F1.flowering.gn$F1_415_RO[SNP]), 0.5)
+  pvalue <- stats$p.value
+  return(pvalue)
+}
+)
+
+F1.flowering.BT414 <- mutate(F1.flowering.gn, "BT_414"= unlist(tmp414))
+
+F1.flowering.BT <- mutate(F1.flowering.BT414, "BT_415"= unlist(tmp415)) # I unlist the tmp415/414 object and add that as an extra column to the list 
+
+flowering.tmp.DEG <-filter(F1.flowering.BT,F1_414_GT!=F1_415_GT) 
+flowering.tmp.414 <-flowering.tmp.DEG[,c(7,35)]
+bt_gt_flowering.414 <- ggplot(data = flowering.tmp.414) 
+bt_gt_flowering.414 <- bt_gt_flowering.414 + geom_histogram(aes(x=BT_414, fill=BT_414), stat="bin") 
+bt_gt_flowering.414 <- bt_gt_flowering.414 + facet_wrap(~F1_414_GT, ncol = 2) 
+bt_gt_flowering.414
+
+flowering.tmp.415 <-flowering.tmp.DEG[,c(8,36)]
+bt_gt_flowering.415 <- ggplot(data = flowering.tmp.415) 
+bt_gt_flowering.415 <- bt_gt_flowering.415 + geom_histogram(aes(x=BT_415, fill=BT_415), stat="bin") 
+bt_gt_flowering.415 <- bt_gt_flowering.415 + facet_wrap(~F1_415_GT, ncol = 2) 
+bt_gt_flowering.415
+```
+
+#binomial test(early silique)
+```{r}
+#binomial test 414
+tmp414 <- 
+lapply(1:nrow(F1.early_silique.gn), function(SNP){
+  stats <- binom.test(F1.early_silique.gn$F1_414_RO[SNP], (F1.early_silique.gn$F1_414_AO[SNP]+F1.early_silique.gn$F1_414_RO[SNP]), 0.5)
+  pvalue <- stats$p.value
+  return(pvalue)
+}
+)
+
+F1.early_silique.BT414 <- mutate(F1.early_silique.gn, "BT_414"= unlist(tmp414))
+
+#binomial test 415
+tmp415 <- 
+lapply(1:nrow(F1.early_silique.gn), function(SNP){
+  stats <- binom.test(F1.early_silique.gn$F1_415_RO[SNP], (F1.early_silique.gn$F1_415_AO[SNP]+F1.early_silique.gn$F1_415_RO[SNP]), 0.5)
+  pvalue <- stats$p.value
+  return(pvalue)
+}
+)
+
+F1.early_silique.BT414 <- mutate(F1.early_silique.gn, "BT_414"= unlist(tmp414))
+
+F1.early_silique.BT <- mutate(F1.early_silique.BT414, "BT_415"= unlist(tmp415)) # I unlist the tmp415/414 object and add that as an extra column to the list 
+
+early_silique.tmp.DEG <-filter(F1.early_silique.BT,F1_414_GT!=F1_415_GT)
+early_silique.tmp.414 <-early_silique.tmp.DEG[,c(7,35)]
+bt_gt_early_silique.414 <- ggplot(data = early_silique.tmp.414) 
+bt_gt_early_silique.414 <- bt_gt_early_silique.414 + geom_histogram(aes(x=BT_414, fill=BT_414), stat="bin") 
+bt_gt_early_silique.414 <- bt_gt_early_silique.414 + facet_wrap(~F1_414_GT, ncol = 2) 
+bt_gt_early_silique.414
+
+early_silique.tmp.415 <-early_silique.tmp.DEG[,c(8,36)]
+bt_gt_early_silique.415 <- ggplot(data = early_silique.tmp.415) 
+bt_gt_early_silique.415 <- bt_gt_early_silique.415 + geom_histogram(aes(x=BT_415, fill=BT_415), stat="bin") 
+bt_gt_early_silique.415 <- bt_gt_early_silique.415 + facet_wrap(~F1_415_GT, ncol = 2) 
+bt_gt_early_silique.415
+```
+
+
+
+
+#binomial test(late silique)
+```{r}
+#binomial test 414
+tmp414 <- 
+lapply(1:nrow(F1.late_silique.gn), function(SNP){
+  stats <- binom.test(F1.late_silique.gn$F1_414_RO[SNP], (F1.late_silique.gn$F1_414_AO[SNP]+F1.late_silique.gn$F1_414_RO[SNP]), 0.5)
+  pvalue <- stats$p.value
+  return(pvalue)
+}
+)
+
+F1.late_silique.BT414 <- mutate(F1.late_silique.gn, "BT_414"= unlist(tmp414))
+
+#binomial test 415
+tmp415 <- 
+lapply(1:nrow(F1.late_silique.gn), function(SNP){
+  stats <- binom.test(F1.late_silique.gn$F1_415_RO[SNP], (F1.late_silique.gn$F1_415_AO[SNP]+F1.late_silique.gn$F1_415_RO[SNP]), 0.5)
+  pvalue <- stats$p.value
+  return(pvalue)
+}
+)
+
+F1.late_silique.BT414 <- mutate(F1.late_silique.gn, "BT_414"= unlist(tmp414))
+
+F1.late_silique.BT <- mutate(F1.late_silique.BT414, "BT_415"= unlist(tmp415)) # I unlist the tmp415/414 object and add that as an extra column to the list 
+
+late_silique.tmp.DEG <-filter(F1.late_silique.BT,F1_414_GT!=F1_415_GT)
+late_silique.tmp.414 <-late_silique.tmp.DEG[,c(7,35)]
+bt_gt_late_silique.414 <- ggplot(data = late_silique.tmp.414) 
+bt_gt_late_silique.414 <- bt_gt_late_silique.414 + geom_histogram(aes(x=BT_414, fill=BT_414), stat="bin") 
+bt_gt_late_silique.414 <- bt_gt_late_silique.414 + facet_wrap(~F1_414_GT, ncol = 2) 
+bt_gt_late_silique.414
+
+late_silique.tmp.415 <-late_silique.tmp.DEG[,c(8,36)]
+bt_gt_late_silique.415 <- ggplot(data = late_silique.tmp.415) 
+bt_gt_late_silique.415 <- bt_gt_late_silique.415 + geom_histogram(aes(x=BT_415, fill=BT_415), stat="bin") 
+bt_gt_late_silique.415 <- bt_gt_late_silique.415 + facet_wrap(~F1_415_GT, ncol = 2) 
+bt_gt_late_silique.415
+```
+
+```{r}
+colnames(young.tmp.DEG)
+young.tmp.DEG %>% 
+  group_by(gene.names) %>%
+  count() %>%
+  filter(freq > 1)
+
+colnames(F1.flowering.BT)
+F1.flowering.BT %>% 
+  group_by(gene.names) %>%
+  count() %>% 
+  filter(freq > 1)
+
+dim(F1.young.BT)
+```

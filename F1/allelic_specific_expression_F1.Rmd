@@ -1,6 +1,6 @@
 Title: Allelic specific expression 
 ========================================================
-# call SNPs between 414 & 415 F1 population 
+## call SNPs between 414 & 415 F1 population 
 ```{r} 
 # 1) trim & map fastq file using script trimming_mapping_01_23_2017.sh 
 
@@ -14,51 +14,222 @@ Title: Allelic specific expression
 # https://github.com/leejimmy93/KIAT/blob/master/F1/filter_SNP_biallelic_QUAL.sh
 ```
 
-# load libraries 
+## load libraries 
 ```{r}
 library(vcfR)
 source("~/KIAT/F1/helpler.R")  
 ```
 
-# examine F1 dataset to study gene imprinting effect 
+## examine F1 dataset to study gene imprinting effect
+## import data
 ```{r}
 # ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
 F1.young <- read.vcfR("~/F1_SNP/vcf/with_GQ/F1_young_filtered.recode.vcf")  
 F1.young.reform <- reform.vcf.F1(temp=F1.young)
-dim(F1.young.reform) # 1247960      16 
+dim(F1.young.reform) # 1247960      24
 save(F1.young.refom, file="~/F1_SNP/output/F1.young.reform.Rdata")
 ```
 
-# filter based on missing data (no missing data), GQ (>30 in each sample), DP (>10 in each sample)  
+## filter based on missing data (no missing data), GQ (>30 in each sample), DP (>10 in each sample)  
 ```{r} 
 load("~/F1_SNP/output/F1.young.reform.Rdata") 
 
 # 1) filter based on missing data 
 F1.young.nomissing <- F1.young.reform[complete.cases(F1.young.reform),]
-dim(F1.young.nomissing) # 635218     16 
+dim(F1.young.nomissing) # 635218     24 
 
 # 2) transform filter columns to numeric values 
-F1.young.nomissing[,(5:24)] <- lapply(F1.young.nomissing[,(5:16)], function(x) as.numeric(as.character(x))) 
+F1.young.nomissing[,(5:24)] <- lapply(F1.young.nomissing[,(5:24)], function(x) as.numeric(as.character(x))) 
 
 # 3) filter based on GQ  
 F1.young.GQ.filtered <- GQ.filter(vcf=F1.young.nomissing, n=30)
-dim(F1.young.GQ.filtered) # 288085     16  
+dim(F1.young.GQ.filtered) # 288085     24  
 
 hist(as.numeric(as.character(F1.young.GQ.filtered$F1_415_GQ)))
 
 # 4) filter based depth 
 F1.young.DP.filtered <- DP.filter(vcf=F1.young.GQ.filtered, n=10)
-dim(F1.young.DP.filtered) # 166691     16 
+dim(F1.young.DP.filtered) # 166691     24 
 
 # 5) filter based on gt (homozygous in parents)
 F1.young.GQ.filtered <- subset(F1.young.DP.filtered, (((Ae_GT=="-1" & Ol_GT=="1")) | ((Ae_GT=="1" & Ol_GT=="-1"))))
-dim(F1.young.GQ.filtered) # 49140    16 
+dim(F1.young.GQ.filtered) # 49140    24 
 F1.young.GQ.filtered[1:10,]
-save(F1.young.GQ.filtered, file = "~/F1_SNP/output/F1.young.GQ.filtered.Rdata")
+save(F1.young.GQ.filtered, file = "~/F1_SNP/output/F1.young.GQ.filtered.Rdata") 
 ```
 
+## plot to check read depth, genotye quality, and genotype of two F1s 
+```{r}
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
 
+load("~/F1_SNP/output/F1.young.GQ.filtered.Rdata")
+## check genotypes of two F1s
+p.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=as.factor(F1_414_GT)), stat = "count") + labs(x="gentoype of 414", y="Number of SNPs") 
 
+p.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=as.factor(F1_415_GT)), stat = "count") + labs(x="gentoype of 415", y="Number of SNPs") 
 
- 
+p.gt <- grid.arrange(p.414, p.415, ncol=2) 
+ggsave(p.gt, filename="~/F1_SNP/output/figure/p.gt.young.png", height=5, width=7)
+
+## check read depth of two F1s 
+p.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=log10(F1_414_DP))) + labs(x="log10(read_depth of 414)", y="Number of SNPs") 
+
+p.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=log10(F1_415_DP))) + labs(x="log10(read_depth of 415)", y="Number of SNPs") 
+
+p.dp <- grid.arrange(p.414, p.415, ncol=2)
+ggsave(p.dp, filename="~/F1_SNP/output/figure/p.dp.young.png", height=5, width=7)
+
+## genotype quality 
+p.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_414_GQ)) + labs(x="genotype quality of 414", y="Number of SNPs") 
+
+p.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_415_GQ)) + labs(x="genotype quality of 415", y="Number of SNPs") 
+
+p.dp <- grid.arrange(p.414, p.415, ncol=2)
+ggsave(p.dp, filename="~/F1_SNP/output/figure/p.gq.young.png", height=5, width=7)  
+```
+
+## calculate reference ratio and plot it out for each genotype 
+```{r}
+# calculate to see whether DP == AO + RO
+n1 <- sum(F1.young.GQ.filtered$F1_414_DP == F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
+n2 <- sum(F1.young.GQ.filtered$F1_414_DP < F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
+n3 <- sum(F1.young.GQ.filtered$F1_414_DP > F1.young.GQ.filtered$F1_414_RO + F1.young.GQ.filtered$F1_414_AO) 
+
+cat("number of 414 SNPs DP equals AO + RO:", n1, "\n")
+cat("number of 414 SNPs DP greater than AO + RO:", n2, "\n")
+cat("number of 414 SNPs DP smaller than AO + RO:", n3, "\n") 
+# 
+
+# plot out distribution of reference allele ratio 
+p.RAR.414 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_414_RO/(F1_414_AO+F1_414_RO), group=F1_414_GT, fill=F1_414_GT)) + facet_wrap(~F1_414_GT, nrow=3) + labs(x="reference allele ratio of 414", y="Number of SNPs", title="reference allele ratio for 414F1") + theme(legend.position="none") 
+
+p.RAR.415 <- ggplot(data = F1.young.GQ.filtered) + geom_histogram(aes(x=F1_415_RO/(F1_415_AO+F1_415_RO), group=F1_415_GT, fill=F1_415_GT)) + facet_wrap(~F1_415_GT, nrow=3) + labs(x="reference allele ratio of 415", y="Number of SNPs", title="reference allele ratio for 415F1") + theme(legend.position="none")   
+
+ggsave(p.RAR.414, filename="~/F1_SNP/output/figure/p.RAR.414.young.png", height=8, width=5)
+ggsave(p.RAR.415, filename="~/F1_SNP/output/figure/p.RAR.415.young.png", height=8, width=5)
+```
+
+## gene annotation of SNPs 
+```{r}
+str(F1.young.GQ.filtered) 
+F1.young.GQ.filtered$POS <- as.numeric(as.character(F1.young.GQ.filtered$POS))
+
+F1.young.gene <- SNP.annotation(SNP_data=F1.young.GQ.filtered)
+dim(F1.young.gene) # 49140    25    
+```
+
+## binomial test on SNP basis
+```{r}
+F1.young.gene.BT <- binomial_test(F1=F1.young.gene)
+save(F1.young.gene.BT, file="~/F1_SNP/output/F1.young.gene.BT.Rdata")
+
+colnames(F1.you)
+# stats on BT 
+SNP_BT_number_414 <-
+F1.young.gene.BT %>%
+  filter(BT_414 < 0.05) %>%
+  count() %>% 
+  as.numeric()
+
+gene_BT_number_414 <- 
+F1.young.gene.BT %>%
+  filter(BT_414 < 0.05) %>%
+  group_by(gene_ID) %>%
+  count() %>%
+  nrow()
+
+SNP_BT_number_415 <-
+F1.young.gene.BT %>%
+  filter(BT_415 < 0.05) %>%
+  count() %>% 
+  as.numeric()
+
+gene_BT_number_415 <- 
+F1.young.gene.BT %>%
+  filter(BT_415 < 0.05) %>%
+  group_by(gene_ID) %>%
+  count() %>%
+  nrow()
+
+cat(SNP_BT_number_414, "SNPs in", gene_BT_number_414, "genes are deviated from binomial distribution in 414F1", "\n")
+cat(SNP_BT_number_415, "SNPs in", gene_BT_number_415, "genes are deviated from binomial distribution in 415F1", "\n")
+
+# plot binomial test result 
+p.BT.414 <- ggplot(data = F1.young.gene.BT) + geom_histogram(aes(x=BT_414)) + facet_wrap(~F1.young.gene.BT$F1_414_GT, nrow=3) + labs(x="P-value from binomial test of 414F1", y="Number of SNPs")
+
+p.BT.415 <- ggplot(data = F1.young.gene.BT) + geom_histogram(aes(x=BT_415)) + facet_wrap(~F1.young.gene.BT$F1_415_GT, nrow=3) + labs(x="P-value from binomial test of 415F1", y="Number of SNPs")
+
+ggsave(p.BT.414, filename="~/F1_SNP/output/figure/p.BT.414.young.png", height=8, width=5)
+ggsave(p.BT.415, filename="~/F1_SNP/output/figure/p.BT.415.young.png", height=8, width=5) 
+```
+
+## import expression data
+https://github.com/leejimmy93/KIAT/blob/master/F1/KIAT_F1_data_analysis.Rmd
+
+are SNPs in side these genes show "parent-of-origin-specific" expression pattern? check that based on binomial test result generated from the above code chunk 
+```{r}
+load("~/F1_SNP/output/DEgene.gt.F1.Rdata") 
+
+# young, 414 F1 as refernece level, FDR of 0.05 
+head(DEgene.young.F1)
+dim(DEgene.young.F1) # 4024 
+
+DEgene.young.F1$gene_ID <- rownames(DEgene.young.F1)
+
+DEgene.young.F1.BT <- 
+DEgene.young.F1 %>%
+  left_join(F1.young.gene.BT, by="gene_ID") 
+
+# Q: how many DEGs have allele count (ie. SNP data)? among these many (how many) loci with allele count, how many of them show allele specific expression (ie. deviated from binomial distribution, p-value from binomial test is smaller than 0.05)? 
+DEgene.young.F1.BT %>%
+  group_by(gene_ID) %>%
+  head()
+
+DEGs_allele_count <- 
+DEgene.young.F1.BT[complete.cases(DEgene.young.F1.BT),] %>%
+  group_by(gene_ID) %>%
+  count() %>%
+  nrow() 
+
+SNP_number <- 
+DEgene.young.F1.BT[complete.cases(DEgene.young.F1.BT),] %>%
+  group_by(CHROM, POS) %>%
+  nrow()
+
+SNP_ASE_414 <- 
+DEgene.young.F1.BT[complete.cases(DEgene.young.F1.BT),] %>%
+  group_by(CHROM, POS) %>%
+  filter(BT_414 < 0.05) %>%
+  nrow() # 
+
+SNP_ASE_415 <- 
+DEgene.young.F1.BT[complete.cases(DEgene.young.F1.BT),] %>%
+  group_by(CHROM, POS) %>%
+  filter(BT_415 < 0.05) %>%
+  nrow() # 
+
+cat(DEGs_allele_count, "DEGs have allele count, among", SNP_number, "loci with allele count,")
+cat(SNP_ASE_414, SNP_ASE_415, "show allele specific expression in 414F1 and 415F1 respecitively \n")
+```
+
+what are the biological function of those genes which show ASE in DEGs? to do GO enrichment analysis 
+
+## parent-of-origin-specific expression pattern searching
+for SNP/loci that show ASE (deviated from binomial distribution), how many of them have Da-Ae-origin-specific expression? Are SNPs in the same gene show the same direction? (ie. all have Da-Ae-orginal-specific expression pattern?) 
+```{r}
+load("~/F1_SNP/output/F1.young.gene.BT.Rdata")
+head(F1.young.gene.BT) 
+
+F1.young.gene.ASE <- ASE_test(F1=F1.young.gene.BT)
+head(F1.young.gene.ASE)
+
+```
+
+To do: 
+multiple test problem, use FDR correction 
+binomial test on gene level, use statisical model to look for genes that have "parent-of-origin-specific" expression patterns. 
+
 
