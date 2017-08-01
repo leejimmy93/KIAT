@@ -2811,7 +2811,97 @@ ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure
 >>>>>>> dcba47f81724688cb93464ba860a307637974ed2
 ```
 
+# GWAS on more traits: 
+bolting date, flowering date, fruition, and oil content 
+```{r}
+load("~/505/data/phenotype/mongolia_korea_data_means_combined_JM.Rdata")
+pheno.505.four <- data.all[,grep("SN|flower_50|bolt_50|fruition|oil", colnames(data.all), value=T)]
+colnames(pheno.505.four) <- c("SN", "bolting_time", "flowering_time", "fruition","oil_content")
 
+str(pheno.505.four)
+# get the right format for fruition 
+pheno.505.four.2 <- 
+pheno.505.four %>%
+  separate(fruition, into=c("month", "day", "year")) %>%
+  mutate(fruition=day) %>%
+  dplyr::select(SN, bolting_time, flowering_time, fruition, oil_content) 
+  
+str(pheno.505.four.2)
+# need to change fruition charater to numeric values 
+pheno.505.four.2$fruition <- as.numeric(pheno.505.four.2$fruition)
+str(pheno.505.four.2)
+pheno.505.four.2$fruition # very few have data, don't think this can generate useful information 
+
+# replace SN with sample ID in genotype data 
+sample_des_c <- read.csv("~/505/data/phenotype/batch_c.csv", stringsAsFactors=F, header=T)
+sample_des_d <- read.csv("~/505/data/phenotype/batch_d.csv", stringsAsFactors=F, header=T)
+sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", stringsAsFactors=F, header=T)
+
+sample_des_c_sub2 <- sample_des_c[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_d_sub2 <- sample_des_d[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_e_sub2 <- sample_des_e[,c("Sample.ID", "No..of.Sowing", "Name")]
+
+sample_des_d_sub2 <- sample_des_d_sub2[c(1:41),]
+sample_des_sub2 <- rbind(sample_des_c_sub2, sample_des_d_sub2, sample_des_e_sub2)
+
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
+pheno.505.four.2.merge <- merge(sample_des_sub2, pheno.505.four.2, by = "SN")
+colnames(pheno.505.four.2.merge)
+
+pheno_data_505 <- pheno.505.four.2.merge[,c("Sample.ID", "bolting_time", "flowering_time", "fruition", "oil_content")]
+colnames(pheno_data_505)[1] <- "Taxa"
+pheno_data_505
+K250_K251 <- data.frame(Taxa = c("505_K_250", "505_K_251"),
+    	bolting_time = rep(NA, 2),
+			flowering_time = rep(NA, 2),
+			fruition = rep(NA, 2),
+      oil_content = rep(NA, 2))
+pheno_data_505 <- rbind(pheno_data_505, K250_K251)
+str(pheno_data_505)
+dim(pheno_data_505)
+pheno_data_505
+
+save(pheno_data_505, file="~/505/genomic_prediction/data/pheno_data_505_bolting_flowering_fruition_oil.Rdata") 
+
+## combine oil content & flowering time for GWAS 
+load("~/505/genomic_prediction/data/pheno.505.Rdata") # pheno data for fatty acid 
+pheno.505$Taxa <- rownames(pheno.505)
+pheno.505
+
+identical(test$Oil_content, test$oil_content)
+test$Oil_content
+test$oil_content
+
+test$Oil_content %in% test$oil_content # wierd that these two data are not the same, I will use the one that I am sure correct, "Oil_content" 
+
+pheno.505.six <- 
+pheno.505 %>%
+  left_join(pheno_data_505, by=c("Taxa")) %>%
+  dplyr::select(Taxa, Erucic_acid, Oleic_acid, Oil_content, bolting_time, flowering_time, fruition)
+
+head(pheno.505.six)
+save(pheno.505.six, file="~/505/genomic_prediction/data/pheno.505.six.Rdata")
+```
+
+# plot out phenotype data??? 
+```{r}
+hist(pheno_data_505$bolting_time)
+hist(pheno_data_505$flowering_time)
+hist(pheno_data_505$fruition)
+hist(pheno_data_505$oil_content)
+```
+
+# run GWAS 
+on bolting, flowering, fruition time and oil content 
+```{r}
+
+
+
+
+
+
+
+```
 
 
 
