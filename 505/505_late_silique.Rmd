@@ -2894,15 +2894,114 @@ hist(pheno_data_505$oil_content)
 # run GWAS 
 on bolting, flowering, fruition time and oil content 
 ```{r}
+# GWAS 
+# https://github.com/leejimmy93/KIAT/blob/master/505/GWAS_505_late_silique_bolting_flowering_fruition_oil_content.R
 
-
-
-
-
-
-
+# plotting 
+# https://github.com/leejimmy93/KIAT/blob/master/505/mahattan_plot_bolting_flower_oil.R
 ```
 
+# extract genes for signficant SNPs 
+```{r}
+### get significant SNPs 
+flowering_time <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/bolting_floweirng_fruition_oil/GAPIT..flowering_time.GWAS.Results.csv", header = T)
+
+bolting_time <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/bolting_floweirng_fruition_oil/GAPIT..bolting_time.GWAS.Results.csv", header = T) 
+
+time <- rbind(flowering_time, bolting_time)
+
+SNP.time <- data.frame(CHROM = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", time[time$P.value < 0.00001,]$SNP), 
+                         POS = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\4", time[time$P.value < 0.00001,]$SNP)) 
+
+SNP.time$CHROM <- paste("chr", SNP.time$CHROM, sep = "")
+SNP.time$POS <- as.numeric(as.character(SNP.time$POS))
+
+#### overlap between Erucic and Oleic acid 
+length(flowering_time[flowering_time$P.value < 0.00001,]$SNP) # 1
+length(bolting_time[bolting_time$P.value < 0.00001,]$SNP) # 5
+
+######### work tonight to identify genes in those flowering and bolting time regions 
+# maybe should still use the old code 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SNP.time
+SNP.time.unique <- unique(SNP.time)
+dim(SNP.time.unique) # 6 2 
+head(SNP.time.unique)
+
+SNP_gene_final <- SNP.annotation(SNP_data=SNP.time.unique)
+SNP_gene_final
+
+# napus_vs_ara.non_reciprocal <- read.table("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
+napus_vs_ara.non_reciprocal <- read.table("~/Reference/B.napus/napus_vs_ara.non_reciprocal.table")
+
+head(napus_vs_ara.non_reciprocal)
+dim(napus_vs_ara.non_reciprocal) # 64949 
+
+colnames(napus_vs_ara.non_reciprocal)[1] <- "gene_ID"
+
+SNP_gene_final_fxn <- merge(SNP_gene_final, napus_vs_ara.non_reciprocal, by = "gene_ID", all.x=T)
+SNP_gene_final_fxn$SNP.ID <- gsub("chr", "S", SNP_gene_final_fxn$SNP.ID)
+
+SNP_gene_final_fxn$Erucic_acid <- SNP_gene_final_fxn$SNP.ID %in% Erucic_acid[Erucic_acid$P.value < 0.00001,]$SNP
+
+SNP_gene_final_fxn$Oleic_acid <- SNP_gene_final_fxn$SNP.ID %in% Oleic_acid[Oleic_acid$P.value < 0.00001,]$SNP 
+
+colnames(SNP_gene_final_fxn) <- c("gene_ID", "snp_ID", "CHROM", "POS", "Arabidopsis_homolog", "function", "Erucic_acid", "Oleic_acid")
+View(SNP_gene_final_fxn) 
+nrow(SNP_gene_final_fxn) # 204 
+
+write.csv(SNP_gene_final_fxn, file = "~/505/output/131_sample/GWAS_SNP_gene_fxn.csv")
+
+# as a summary, 204 out of the 235 SNPs fall within 84 genes, 69 of them have arabidopsis homologs.
+########### come to this stage... 
+``` 
+
+# for the several significant SNPs, are they synonymous or not? what's the possible effect on the protein function? 
+```{r} 
+# SNP annotation 
+# in the snpEff folder 
+# java -jar snpEff.jar napus /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.vcf > /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.ann.vcf  
+
+# analyze snpEff annotation file 
+
+# number_of_SNP <- nrow(SNP_gene_final_fxn)  
+# cat GWAS_SNP_gene_fxn.csv | sed 's/"//g' | sed 's/,/ /g' | awk '{print $3}' | tail -${number_of_SNP} > significant_SNP
+# awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($3 in a) print $0}' significant_SNP /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.ann.vcf | awk '{print $3 "|" $4 "|" $5 "|" $8}' | awk 'BEGIN{FS="|"}{print $1, $2, $3, $5}' > significant_SNP_annotation 
+
+sig_SNP_ann <- read_table2("~/505/output/131_sample/significant_SNP_annotation", col_names=F)
+head(sig_SNP_ann)  
+dim(sig_SNP_ann) # 204 4 
+colnames(sig_SNP_ann) <- c("snp_ID", "ref", "alt", "mutation_type")
+
+unique(sig_SNP_ann$mutation_type)                          
+
+SNP_gene_final_fxn <- read.csv("~/505/output/131_sample/GWAS_SNP_gene_fxn.csv")
+head(SNP_gene_final_fxn)
+dim(SNP_gene_final_fxn) # 204  
+
+SNP_gene_final_fxn.2 <- merge(SNP_gene_final_fxn, sig_SNP_ann, by="snp_ID")
+SNP_gene_final_fxn.2 
+View(SNP_gene_final_fxn.2) 
+save(SNP_gene_final_fxn.2, file="~/505/output/131_sample/SNP_gene_final_fxn.2.Rdata")
+```
 
 
 
