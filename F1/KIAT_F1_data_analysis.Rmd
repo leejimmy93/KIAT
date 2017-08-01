@@ -274,6 +274,8 @@ DEgene.late.silique.F1 <- topTags(lrt.late.silique.F1,n = Inf)$table[topTags(lrt
 # 0  59840
 # 1    166
 
+save(DEgene.young.F1, DEgene.flowering.F1, DEgene.early.silique.F1, DEgene.late.silique.F1, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F1/output/DEgene.gt.F1.Rdata")
+
 ### reformat for ggplot barplot 
 DEGs_number_between_gt <- data.frame(young = as.data.frame(summary(de.young.F1 <- decideTestsDGE(lrt.young.F1, p=0.05)))$Freq,
                                      flowering = as.data.frame(summary(de.flowering.F1 <- decideTestsDGE(lrt.flowering.F1, p=0.05)))$Freq, 
