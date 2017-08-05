@@ -2815,6 +2815,7 @@ ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure
 bolting date, flowering date, fruition, and oil content 
 ```{r}
 load("~/505/data/phenotype/mongolia_korea_data_means_combined_JM.Rdata")
+grep("SN|flower_50|bolt_50|fruition|oil", colnames(data.all), value=T)
 pheno.505.four <- data.all[,grep("SN|flower_50|bolt_50|fruition|oil", colnames(data.all), value=T)]
 colnames(pheno.505.four) <- c("SN", "bolting_time", "flowering_time", "fruition","oil_content")
 
@@ -2883,12 +2884,23 @@ head(pheno.505.six)
 save(pheno.505.six, file="~/505/genomic_prediction/data/pheno.505.six.Rdata")
 ```
 
-# plot out phenotype data??? 
+# plot out phenotype data 
 ```{r}
-hist(pheno_data_505$bolting_time)
-hist(pheno_data_505$flowering_time)
-hist(pheno_data_505$fruition)
-hist(pheno_data_505$oil_content)
+pheno.505.six.long <- 
+pheno.505.six %>% 
+  gather(key="Taxa", value="value") 
+
+colnames(pheno.505.six.long)[2] <- "trait"
+
+p.phenotype <- 
+pheno.505.six.long %>%
+  ggplot() + 
+  geom_histogram(aes(x=value, fill=trait)) +
+  facet_wrap(~trait, nrow=2, ncol=3) + 
+  theme(legend.position="none")
+
+ggsave(p.phenotype, filename = "~/505/output/figure/131_sample/p.phenotype.png", height = 8, width = 12)
+
 ```
 
 # run GWAS 
@@ -2920,33 +2932,21 @@ SNP.time$POS <- as.numeric(as.character(SNP.time$POS))
 length(flowering_time[flowering_time$P.value < 0.00001,]$SNP) # 1
 length(bolting_time[bolting_time$P.value < 0.00001,]$SNP) # 5
 
-######### work tonight to identify genes in those flowering and bolting time regions 
-# maybe should still use the old code 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 SNP.time
 SNP.time.unique <- unique(SNP.time)
 dim(SNP.time.unique) # 6 2 
 head(SNP.time.unique)
 
-SNP_gene_final <- SNP.annotation(SNP_data=SNP.time.unique)
+SNP <- GRanges(seqnames = Rle(SNP.time.unique$CHROM), ranges = IRanges(start = SNP.time.unique$POS, end = SNP.time.unique$POS), ID = paste(SNP.time.unique$CHROM, SNP.time.unique$POS, sep = "_"))
+SNP
+
+SNP_gene <- mergeByOverlaps(SNP, genes) # warning message here. look out!!!!!! 
+SNP_gene
+
+SNP_gene_df <- as.data.frame(SNP_gene)
+SNP_gene_df
+
+SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
 SNP_gene_final
 
 # napus_vs_ara.non_reciprocal <- read.table("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
@@ -2955,22 +2955,22 @@ napus_vs_ara.non_reciprocal <- read.table("~/Reference/B.napus/napus_vs_ara.non_
 head(napus_vs_ara.non_reciprocal)
 dim(napus_vs_ara.non_reciprocal) # 64949 
 
-colnames(napus_vs_ara.non_reciprocal)[1] <- "gene_ID"
+colnames(napus_vs_ara.non_reciprocal)[1] <- "names"
 
-SNP_gene_final_fxn <- merge(SNP_gene_final, napus_vs_ara.non_reciprocal, by = "gene_ID", all.x=T)
+SNP_gene_final_fxn <- merge(SNP_gene_final, napus_vs_ara.non_reciprocal, by = "names", all.x=T)
 SNP_gene_final_fxn$SNP.ID <- gsub("chr", "S", SNP_gene_final_fxn$SNP.ID)
 
-SNP_gene_final_fxn$Erucic_acid <- SNP_gene_final_fxn$SNP.ID %in% Erucic_acid[Erucic_acid$P.value < 0.00001,]$SNP
+SNP_gene_final_fxn$flowering_time <- SNP_gene_final_fxn$SNP.ID %in% flowering_time[flowering_time$P.value < 0.00001,]$SNP
 
-SNP_gene_final_fxn$Oleic_acid <- SNP_gene_final_fxn$SNP.ID %in% Oleic_acid[Oleic_acid$P.value < 0.00001,]$SNP 
+SNP_gene_final_fxn$bolting_time <- SNP_gene_final_fxn$SNP.ID %in% bolting_time[bolting_time$P.value < 0.00001,]$SNP 
 
-colnames(SNP_gene_final_fxn) <- c("gene_ID", "snp_ID", "CHROM", "POS", "Arabidopsis_homolog", "function", "Erucic_acid", "Oleic_acid")
+colnames(SNP_gene_final_fxn) <- c("gene_ID", "snp_ID", "CHROM", "POS", "Arabidopsis_homolog", "function", "flowering_time", "bolting_time")
 View(SNP_gene_final_fxn) 
 nrow(SNP_gene_final_fxn) # 204 
 
 write.csv(SNP_gene_final_fxn, file = "~/505/output/131_sample/GWAS_SNP_gene_fxn.csv")
 
-# as a summary, 204 out of the 235 SNPs fall within 84 genes, 69 of them have arabidopsis homologs.
+# as a summary, 6 SNPs in total, 5 for bolting time, 1 for flowering time
 ########### come to this stage... 
 ``` 
 
@@ -2982,31 +2982,228 @@ write.csv(SNP_gene_final_fxn, file = "~/505/output/131_sample/GWAS_SNP_gene_fxn.
 
 # analyze snpEff annotation file 
 
-# number_of_SNP <- nrow(SNP_gene_final_fxn)  
+number_of_SNP <- nrow(SNP_gene_final_fxn)  
 # cat GWAS_SNP_gene_fxn.csv | sed 's/"//g' | sed 's/,/ /g' | awk '{print $3}' | tail -${number_of_SNP} > significant_SNP
 # awk 'NR==FNR{a[$1]=$0}NR>FNR{if ($3 in a) print $0}' significant_SNP /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.ann.vcf | awk '{print $3 "|" $4 "|" $5 "|" $8}' | awk 'BEGIN{FS="|"}{print $1, $2, $3, $5}' > significant_SNP_annotation 
 
 sig_SNP_ann <- read_table2("~/505/output/131_sample/significant_SNP_annotation", col_names=F)
 head(sig_SNP_ann)  
-dim(sig_SNP_ann) # 204 4 
+dim(sig_SNP_ann) # 6 4 
 colnames(sig_SNP_ann) <- c("snp_ID", "ref", "alt", "mutation_type")
 
 unique(sig_SNP_ann$mutation_type)                          
 
 SNP_gene_final_fxn <- read.csv("~/505/output/131_sample/GWAS_SNP_gene_fxn.csv")
 head(SNP_gene_final_fxn)
-dim(SNP_gene_final_fxn) # 204  
+dim(SNP_gene_final_fxn) # 6 9   
 
 SNP_gene_final_fxn.2 <- merge(SNP_gene_final_fxn, sig_SNP_ann, by="snp_ID")
 SNP_gene_final_fxn.2 
 View(SNP_gene_final_fxn.2) 
-save(SNP_gene_final_fxn.2, file="~/505/output/131_sample/SNP_gene_final_fxn.2.Rdata")
+write.csv(SNP_gene_final_fxn.2, "~/505/output/131_sample/SNP_gene_final_fxn.flowering_bolting.csv")
+save(SNP_gene_final_fxn.2, file="~/505/output/131_sample/SNP_gene_final_fxn.flowering_bolting.Rdata")
 ```
 
+I don't see obvious flowering time or bolting time related genes, maybe look for genes in the bolting time region 
+```{r}
+SNP.range <- GRanges(seqnames = Rle("chrA04"), ranges = IRanges(start = 17445226, end = 18422534))
+SNP.range
+
+SNP_range_gene <- mergeByOverlaps(SNP.range, genes)
+SNP_range_gene
+SNP_range_gene.df <- as.data.frame(SNP_range_gene)
+head(SNP_range_gene.df)
+
+save(SNP_range_gene.df, file="~/505/output/131_sample/SNP_range_gene.df.Rdata")
+```
+
+# GO enrichment of genes in range 
+```{r}
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/131_sample/SNP_range_gene.df.Rdata")
+GOseq.Bn.ORA(SNP_range_gene.df$names) # no enriched GO terms 
+head(SNP_range_gene.df) 
+
+```
+
+# annotate genes in this range 
+```{r}
+SNP_gene_final <- SNP_range_gene.df[,c("SNP.range.seqnames", "SNP.range.start", "SNP.range.end", "genes.start", "genes.end", "names")]
+head(SNP_gene_final)
+
+# napus_vs_ara.non_reciprocal <- read.table("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
+SNP_gene_final_fxn <- merge(SNP_gene_final, napus_vs_ara.non_reciprocal, by = "names", all.x=T)
+colnames(SNP_gene_final_fxn)
+
+View(SNP_gene_final_fxn) 
+nrow(SNP_gene_final_fxn) # 229
+
+write.csv(SNP_gene_final_fxn, file = "~/505/output/131_sample/SNP_range_gene_bolting_time.csv")
+``` 
+
+# batch F 
+```{r}
+# trimming & mapping was done on whitney 
+# mapping result analysis 
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+
+# sample description 
+sample_des_f <- read.csv("~/505/data/phenotype/batch_f.csv", header = T) 
+sample_des_f_sub <- sample_des_f[,c("Sample.ID","TotalReads")]
+head(sample_des_f_sub)
+sample_des_f_sub$Sample.ID <- gsub(" ", "_", sample_des_f_sub$Sample.ID)
+sample_des_f_sub$Sample.ID
+
+# mapping result
+mapping_result <- read.table("~/505/data/late_silique/Star_Stats.tab", header = T)
+head(mapping_result)
+mapping_result$Sample.ID <- gsub("(Sample_)([[:print:]])", "\\2", mapping_result$Sample) 
+
+mapping_result_505 <- merge(sample_des_f_sub, mapping_result, by="Sample.ID")
+
+### calculate average 
+mean(mapping_result_505$TotalReads/2) # 19736643
+
+# number of total reads 
+library(ggplot2) 
+p.total.reads <- ggplot(data=mapping_result_505)
+p.total.reads <- p.total.reads + geom_bar(aes(x=reorder(Sample.ID, TotalReads/2), y=TotalReads/2), stat = "identity")
+p.total.reads <- p.total.reads + labs(list(title = "", x = "", y = "Number of raw reads"))
+p.total.reads <- p.total.reads + theme(axis.text.x = element_text(angle = 90, size = 8)) 
+p.total.reads   
+# ggsave(p.total.reads, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/total_reads.png", height = 8, width = 11) 
+
+# look at HQ, mapped, multimapped in detail for each sample (memory too low, cannot view histogram of total reads...)
+colnames(mapping_result_505)
+mapping_result_505_sub <- data.frame(Sample.ID = mapping_result_505$Sample.ID, 
+                                    trimmed.off = mapping_result_505$TotalReads/2 - mapping_result_505$Number_Input_Reads,
+                                    unmapped = mapping_result_505$Number_Input_Reads * (as.numeric(mapping_result_505$Percent_Unmapped_Mismatches + mapping_result_505$Percent_Unmapped_Other + mapping_result_505$Percent_Unmapped_Too_Short)/100), 
+                                    multi_too_many_mapped = mapping_result_505$Number_Multi_Mapped + mapping_result_505$Number_Too_Many_Multi_Mapped, 
+                                    unqiuemapped = mapping_result_505$Number_Unique_Mapped
+) 
+
+mapping_result_505_sub 
+dim(mapping_result_505_sub) # 37 5 
+
+mapping_result_505_sub.long <- melt(mapping_result_505_sub, id.vars = c("Sample.ID"))
+
+pl.mapping.indi.c <- ggplot(data = mapping_result_505_sub.long)
+pl.mapping.indi.c <- pl.mapping.indi.c + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
+pl.mapping.indi.c <- pl.mapping.indi.c + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 4.5e+7) 
+# p.total.reads <- p.total.reads + theme(axis.text.x = element_text(angle = 90, size = 8)) 
+pl.mapping.indi.c
+
+
+# look at histogram of HQ reads 
+colnames(mapping_result_505)
+p.HQ.perc <- ggplot(data=mapping_result_505)
+p.HQ.perc <- p.HQ.perc + geom_histogram(aes(x=mapping_result_505$Number_Input_Reads/(mapping_result_505$TotalReads/2)), binwidth = 0.01) 
+p.HQ.perc <- p.HQ.perc + labs(list(title = "histogram of HQ reads percentage", x = "Percent of high qulity reads", y = "number of samples"))
+p.HQ.perc 
+# ggsave(p.HQ.perc, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/HQ_hist.png", height = 8, width = 11) 
+
+# histogram of unqiue mapped reads 
+p.uniq.mapping <- ggplot(data=mapping_result_505)
+p.uniq.mapping <- p.uniq.mapping + geom_histogram(aes(x=Percent_Unique_Mapped), binwidth = 2.5) 
+p.uniq.mapping <- p.uniq.mapping + labs(list(title = "histogram of uniquely mapped reads percentage", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping  
+# ggsave(p.uniq.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/unique_mapped.png", height = 8, width = 11) 
+
+# hisogram of multimapped & too many reads 
+p.multi.too.many.mapping <- ggplot(data=mapping_result_505)
+p.multi.too.many.mapping <- p.multi.too.many.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Multi_Mapped+mapping_result_505$Percent_Too_Many_Multi_Mapped), binwidth = 2.5) 
+p.multi.too.many.mapping <- p.multi.too.many.mapping + labs(list(title = "", x = "Percent of multi & too many mapped reads", y = "number of samples")) 
+p.multi.too.many.mapping
+
+# histogram of multi mapped 
+p.multi.mapping <- ggplot(data=mapping_result_505)
+p.multi.mapping <- p.multi.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Multi_Mapped), binwidth = 2.5) 
+p.multi.mapping <- p.multi.mapping + labs(list(title = "histogram of multi mapped reads percentage", x = "Percent of multi mapped reads", y = "number of samples"))
+p.multi.mapping
+# ggsave(p.multi.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/multi_mapped.png", height = 8, width = 11) 
+
+# histogram of too many mapped 
+p.toomany.mapping <- ggplot(data=mapping_result_505) 
+p.toomany.mapping <- p.toomany.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Too_Many_Multi_Mapped), binwidth = 2.5) 
+p.toomany.mapping <- p.toomany.mapping + labs(list(title = "histogram of too many mapped reads percentage", x = "Percent of toomany mapped reads", y = "number of samples"))
+p.toomany.mapping
+# ggsave(p.toomany.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/toomany_mapped.png", height = 8, width = 11) 
+
+# histogram of unmapped 
+p.un.mapping <- ggplot(data=mapping_result_505)
+p.un.mapping <- p.un.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Unmapped_Mismatches+mapping_result_505$Percent_Unmapped_Other+mapping_result_505$Percent_Unmapped_Too_Short, fill=batch), binwidth = 2.5) 
+p.un.mapping <- p.un.mapping + labs(list(title = "histogram of unmapped reads percentage", x = "Percent of unmapped reads", y = "number of samples"))
+p.un.mapping
+# ggsave(p.un.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/un_mapped.png", height = 8, width = 11)
+
+# mapping stats 
+colnames(mapping_result_505)
+mapping_result_505$batch <- rep("f", nrow(mapping_result_505))
+# average percentage of HQ, unique, multi, toomany, unmapped 
+average.mapping <- aggregate(mapping_result_505[,c("TotalReads","Number_Input_Reads", "Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short")], list(mapping_result_505$batch), mean)
+
+rownames(average.mapping) <- average.mapping$Group.1
+average.mapping$Percent_HQ <- average.mapping$Number_Input_Reads/(average.mapping$TotalReads/2)*100
+average.mapping
+
+average.mapping.long <- melt(average.mapping[,c("Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short","Percent_HQ","Group.1")], id.vars = "Group.1")
+
+average.mapping.long
+
+p.average.mapping <- ggplot(data = average.mapping.long)
+p.average.mapping <- p.average.mapping + geom_bar(aes(x=variable, y=value, fill=variable), stat = "identity")
+p.average.mapping <- p.average.mapping + facet_wrap(~Group.1, ncol = 2)
+p.average.mapping <- p.average.mapping + labs(list(title = "mapping stats of 505", x = "", y = "percentage"))
+p.average.mapping <- p.average.mapping + theme(axis.text.x = element_text(angle = 90), legend.position = "none")
+p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long, aes(x=variable, y=value, label=factor(round(value,0)))) 
+p.average.mapping
+# ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_mapping.png", height = 6, width = 9) 
+
+### split this figure to HQ ratio & mapping ratio (two plots)
+average.mapping.long.HQ <- 
+  average.mapping.long[average.mapping.long$variable=="Percent_HQ",]
+
+average.mapping.long.HQ
+
+p.average.HQ <- ggplot(data = average.mapping.long.HQ)
+p.average.HQ <- p.average.HQ + geom_bar(aes(x=Group.1, y=value, fill=variable), stat = "identity")
+# p.average.mapping <- p.average.mapping + facet_wrap(~Group.1, ncol = 2)
+p.average.HQ <- p.average.HQ + labs(list(title = "", x = "", y = "percentage of total raw reads"))
+p.average.HQ <- p.average.HQ + theme(legend.position = "none")
+p.average.HQ <- p.average.HQ + geom_text(data = average.mapping.long.HQ, aes(x=Group.1, y=value, label=factor(round(value,0)))) 
+p.average.HQ
+
+ggsave(p.average.HQ, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_HQ_late_silique.png", height = 4, width = 2) 
+
+average.mapping.long.mapping <- 
+  average.mapping.long[average.mapping.long$variable!="Percent_HQ",]
+
+p.average.mapping <- ggplot(data = average.mapping.long.mapping)
+p.average.mapping <- p.average.mapping + geom_bar(aes(x=variable, y=value, fill=variable), stat = "identity")
+p.average.mapping <- p.average.mapping + facet_wrap(~Group.1, ncol = 2)
+p.average.mapping <- p.average.mapping + labs(list(title = "", x = "", y = "percentage of HQ reads"))
+p.average.mapping <- p.average.mapping + theme(axis.text.x = element_text(angle = 90), legend.position = "none")
+p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long.mapping, aes(x=variable, y=value, label=factor(round(value,0)))) 
+p.average.mapping 
+
+ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_mapping_late_silique.png", height = 6, width = 5)  
+```
+
+# prepare for SNP calling 
+```{r}
+# 1) prepare data for SNP calling 
+# Prep4Freebayes.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Prep4Freebayes.sh)
+
+# 2) split bam file by chromosome 
+# Bam_Split_By_Chrom.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Bam_Split_By_Chrom.sh) 
+
+# 3) SNP calling 
+# Freebayes_Array_no_pop_late_silique.slurm (https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Freebayes_Array_no_pop_late_silique.slurm) 
 
 
 
 
+```
 
 
 

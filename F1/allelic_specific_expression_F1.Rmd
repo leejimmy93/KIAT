@@ -123,10 +123,11 @@ dim(F1.young.gene) # 49140    25
 
 ## binomial test on SNP basis
 ```{r}
+dim(F1.young.gene)
 F1.young.gene.BT <- binomial_test(F1=F1.young.gene)
 save(F1.young.gene.BT, file="~/F1_SNP/output/F1.young.gene.BT.Rdata")
+colnames(F1.young.gene.BT)
 
-colnames(F1.you)
 # stats on BT 
 SNP_BT_number_414 <-
 F1.young.gene.BT %>%
@@ -213,6 +214,7 @@ DEgene.young.F1.BT[complete.cases(DEgene.young.F1.BT),] %>%
 
 cat(DEGs_allele_count, "DEGs have allele count, among", SNP_number, "loci with allele count,")
 cat(SNP_ASE_414, SNP_ASE_415, "show allele specific expression in 414F1 and 415F1 respecitively \n")
+save(DEgene.young.F1.BT, file="~/F1_SNP/output/DEgene.young.F1.BT.Rdata")
 ```
 
 what are the biological function of those genes which show ASE in DEGs? to do GO enrichment analysis 
@@ -224,8 +226,11 @@ load("~/F1_SNP/output/F1.young.gene.BT.Rdata")
 head(F1.young.gene.BT) 
 
 F1.young.gene.ASE <- ASE_test(F1=F1.young.gene.BT)
-head(F1.young.gene.ASE)
+colnames(F1.young.gene.ASE)
+F1.young.gene.ASE[,c("gene_ID", "ASE_414", "ASE_415")] %>%
+  head(20)
 
+save(F1.young.gene.ASE, file="~/F1_SNP/output/F1.young.gene.ASE.Rdata") # 
 ```
 
 To do: 

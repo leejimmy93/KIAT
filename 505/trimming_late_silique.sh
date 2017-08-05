@@ -2,7 +2,7 @@
 
 cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/data/late_silique
 
-sample=`cat sample_list`
+sample=`echo 505_K27-2`
 echo $sample
 
 for i in $sample
