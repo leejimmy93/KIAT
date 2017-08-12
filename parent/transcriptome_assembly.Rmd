@@ -84,7 +84,7 @@ output:
 # 1) trim each lib 
 # 2) combine trimmed data for Da-Ae & Da-Ol-1 
 # 3) run trinity on Da-Ae & Da-Ol-1: stats, N50, how many transcripts? ... length distribution?  
-# 4) get read count for transcripts of Da-Ae & Da-Ol-1, remove transcripts with reads number less than 10: stats? how many transcripts left? length distribution  
+# 4) get read count for transcripts of Da-Ae & Da-Ol-1, remove transcripts with reads number less than 1: stats? how many transcripts left? length distribution  
 # 5) predict ORF from transcript dataset using transdecoder: stats, how many transcripts? transfer to cluster for blastn 
 # 5.1) split peptide sequence to smaller fasta files with each blastp against uniref 
 # wait, I see Calen gave me ~70,000 transcripts for Da-Ae and Da-Ol-1, these numbers are so high that I don't think we should proceed with these numbers, instead, I asked him to give me reports on the number of transcripts for each step. Also, we may need to run cap3 before blastn 

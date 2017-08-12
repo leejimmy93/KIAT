@@ -3202,28 +3202,6 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 
 ```
 
-# is batch F duplicate or new lines for 505? 
-```{r}
-# sample description 
-sample_des_f <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_f.csv", header = T) 
-sample_des_f_sub <- sample_des_f[,c("Sample.ID","TotalReads", "Name")]
-head(sample_des_f_sub)
-
-# rep1 
-sample_des_c <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_c.csv", header = T) 
-sample_des_c_sub <- sample_des_c[,c("Sample.ID","TotalReads","Name")]
-sample_des_d <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_d.csv", header = T)
-sample_des_d_sub <- sample_des_d[,c("Sample.ID","TotalReads","Name")]
-head(sample_des_d_sub)
-sample_des_e <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_e.csv", header = T) 
-sample_des_e_sub <- sample_des_c[,c("Sample.ID","TotalReads","Name")]
-
-sum(!is.na((rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub))[,"TotalReads"]))
-
-
-
-```
-
 
 
 
