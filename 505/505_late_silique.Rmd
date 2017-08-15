@@ -3071,7 +3071,7 @@ p.total.reads <- p.total.reads + geom_bar(aes(x=reorder(Sample.ID, TotalReads/2)
 p.total.reads <- p.total.reads + labs(list(title = "", x = "", y = "Number of raw reads"))
 p.total.reads <- p.total.reads + theme(axis.text.x = element_text(angle = 90, size = 8)) 
 p.total.reads   
-# ggsave(p.total.reads, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/total_reads.png", height = 8, width = 11) 
+ggsave(p.total.reads, filename = "~/505/output/figure/total_reads.png", height = 8, width = 11) 
 
 # look at HQ, mapped, multimapped in detail for each sample (memory too low, cannot view histogram of total reads...)
 colnames(mapping_result_505)
@@ -3092,7 +3092,7 @@ pl.mapping.indi.c <- pl.mapping.indi.c + geom_bar(aes(x=Sample.ID, y = value, fi
 pl.mapping.indi.c <- pl.mapping.indi.c + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 4.5e+7) 
 # p.total.reads <- p.total.reads + theme(axis.text.x = element_text(angle = 90, size = 8)) 
 pl.mapping.indi.c
-
+ggsave(pl.mapping.indi.c, filename = "~/505/output/figure/indi.png", height = 8, width = 11) 
 
 # look at histogram of HQ reads 
 colnames(mapping_result_505)
@@ -3157,7 +3157,7 @@ p.average.mapping <- p.average.mapping + labs(list(title = "mapping stats of 505
 p.average.mapping <- p.average.mapping + theme(axis.text.x = element_text(angle = 90), legend.position = "none")
 p.average.mapping <- p.average.mapping + geom_text(data = average.mapping.long, aes(x=variable, y=value, label=factor(round(value,0)))) 
 p.average.mapping
-# ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/average_mapping.png", height = 6, width = 9) 
+ggsave(p.average.mapping, filename =  "~/505/output/figure/average_mapping.png", height = 6, width = 9) 
 
 ### split this figure to HQ ratio & mapping ratio (two plots)
 average.mapping.long.HQ <- 
@@ -3199,10 +3199,29 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 
 # 3) SNP calling 
 # Freebayes_Array_no_pop_late_silique.slurm (https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Freebayes_Array_no_pop_late_silique.slurm) 
+```
 
+# is batch F duplicate or new lines for 505? 
+```{r}
+# sample description 
+# is batch F duplicate or new lines for 505? 
+```{r}
+# sample description 
+sample_des_f <- read.csv("~/505/data/phenotype/batch_f.csv", header = T) 
+sample_des_f_sub <- sample_des_f[,c("Sample.ID","TotalReads", "Name")]
+head(sample_des_f_sub)
 
+# rep1 
+sample_des_c <- read.csv("~/505/data/phenotype/batch_c.csv", header = T) 
+sample_des_c_sub <- sample_des_c[,c("Sample.ID","TotalReads","Name")]
+sample_des_d <- read.csv("~/505/data/phenotype/batch_d.csv", header = T)
+sample_des_d_sub <- sample_des_d[,c("Sample.ID","TotalReads","Name")]
+head(sample_des_d_sub)
+sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", header = T) 
+sample_des_e_sub <- sample_des_c[,c("Sample.ID","TotalReads","Name")]
 
-
+rep1 <- rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub)
+rep1$Name
 ```
 
 
