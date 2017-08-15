@@ -7,7 +7,7 @@ output:
     keep_md: yes
 ---
 
-# download data & trimming 
+#### download data & trimming 
 ```{r}
 # 1) download raw fastq data using wget 
 
@@ -21,6 +21,7 @@ output:
 # run with modified gff3 file 
 # STAR --runMode genomeGenerate --genomeDir star_genome/ --genomeFastaFiles Brassica_napus_v4.1.chromosomes.fa --sjdbGTFfile Brassica_napus.annotation_v5_modified_modified.gff3 --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS (screen -r 10070.ttys003.coloma) 
 
+############# reference based ##################### 
 # 4.2)  mapping 
 # "STAR --genomeDir /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/star_genome --readFilesIn /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_1.fq /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data/Ae_Hu_2_2.fq --outSAMtype BAM SortedByCoordinate --sjdbGTFfile /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5_modified_modified.gff3 --quantMode TranscriptomeSAM GeneCounts --twopassMode Basic –alignIntronMax 15000 --outFilterIntronMotifs RemoveNoncanonical --runThreadN 6 --sjdbGTFtagExonParentTranscript Parent --sjdbGTFfeatureExon CDS --outReadsUnmapped Fastx" 
 
@@ -72,9 +73,28 @@ output:
 
 # 10) blastp against nr protein database to get an idea of what genes they are 
 # blastp -query longest_orfs.pep  -db /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/NCBI/nr/nr  -max_target_seqs 1 -outfmt 6 -evalue 1e-6 -num_threads 6 -out ${i}_nr.out 
+
+# the number of novel genes which can be annotated 
+# cat longest_orfs.pep | grep ">" | sed 's/:/\t/g' | awk '{print $2}' | sort | uniq | wc -l
+# for Da-Ae 2311; for Da-Ol-1 2427 
 ```
 
-# structure annotation (possible tool: PASA)
+#### de-novo based 
+```{r}
+# 1) trim each lib 
+# 2) combine trimmed data for Da-Ae & Da-Ol-1 
+# 3) run trinity on Da-Ae & Da-Ol-1: stats, N50, how many transcripts? ... length distribution?  
+# 4) get read count for transcripts of Da-Ae & Da-Ol-1, remove transcripts with reads number less than 1: stats? how many transcripts left? length distribution  
+# 5) predict ORF from transcript dataset using transdecoder: stats, how many transcripts? transfer to cluster for blastn 
+# 5.1) split peptide sequence to smaller fasta files with each blastp against uniref 
+# wait, I see Calen gave me ~70,000 transcripts for Da-Ae and Da-Ol-1, these numbers are so high that I don't think we should proceed with these numbers, instead, I asked him to give me reports on the number of transcripts for each step. Also, we may need to run cap3 before blastn 
+
+
+
+
+```
+
+# structure annotation (possible tool: maker2)
 ```{r}
 
 ```

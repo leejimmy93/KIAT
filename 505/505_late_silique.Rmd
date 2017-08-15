@@ -3201,6 +3201,7 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # Freebayes_Array_no_pop_late_silique.slurm (https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Freebayes_Array_no_pop_late_silique.slurm) 
 ```
 
+<<<<<<< HEAD
 # is batch F duplicate or new lines for 505? 
 ```{r}
 # sample description 
@@ -3222,8 +3223,9 @@ sample_des_e_sub <- sample_des_c[,c("Sample.ID","TotalReads","Name")]
 
 rep1 <- rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub)
 rep1$Name
+=======
+>>>>>>> c0de2ba1a237d590b3377979785bcb8e96b99fa3
 ```
-
 
 
 
