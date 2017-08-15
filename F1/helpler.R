@@ -163,6 +163,31 @@ ASE_test <- function(F1){
   return(F1)
 }
 
+# add Da-Ae allele ratio 
+Ae_ratio_test <- function(F1){
+  for(i in 1:nrow(F1)){
+    if(F1$Ae_GT[i] == -1){ # Ae same as ref allele 
+      F1$Ae_ratio_414[i] = F1$F1_414_RO[i]/(F1$F1_414_RO[i] + F1$F1_414_AO[i])
+      F1$Ae_ratio_415[i] = F1$F1_415_RO[i]/(F1$F1_415_RO[i] + F1$F1_415_AO[i])
+    }
+    else { # Ae same as alt allele 
+      F1$Ae_ratio_414[i] = F1$F1_414_AO[i]/(F1$F1_414_RO[i] + F1$F1_414_AO[i])
+      F1$Ae_ratio_415[i] = F1$F1_415_AO[i]/(F1$F1_415_RO[i] + F1$F1_415_AO[i])
+    } 
+  } 
+  
+  return(F1)
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
