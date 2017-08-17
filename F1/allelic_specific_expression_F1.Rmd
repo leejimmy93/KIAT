@@ -138,10 +138,19 @@ F1.young.gene.Ae_ratio <- SNP.annotation(SNP_data=F1.young.GQ.filtered_Ae_ratio)
 dim(F1.young.gene.Ae_ratio) # 49140    27 
 F1.young.gene.Ae_ratio %>% 
   dplyr::select(Ae_ratio_414, Ae_ratio_415, gene_ID) %>%
-  head(100)
+  head(20)
 
+save(F1.young.gene.Ae_ratio, file="~/F1_SNP/output/F1.young.gene.Ae_ratio.Rdata")
 ```
 
+###### work from here for gene level ASE analysis 
+
+
+
+
+
+
+#### below is the branch for single SNP binomial test 
 ### binomial test on SNP basis
 ```{r}
 dim(F1.young.gene)
@@ -269,8 +278,7 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
 ### the Ae allele ratio should follow beta-binomial distribution, with prior as the average for null, and update with the Ae allele ratio in each of the observed SNPs for a gene, and calculate the posterior distribution for different genes??? 
-http://genome.cshlp.org/content/21/10/1728.long
-
+http://genome.cshlp.org/content/21/10/1728.long 
 ```
 
 
