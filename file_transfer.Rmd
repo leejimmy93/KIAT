@@ -6,3 +6,28 @@ output: html_document
 ---
 
 Here I want to record how I transfer data use different protocols 
+1) download icommnad to cabernet 
+wget https://pods.iplantcollaborative.org/wiki/download/attachments/28117338/irods-icommands-4.1.9-ubuntu-14.installer?version=1&modificationDate=1472924229000&api=v2
+
+install 
+sh irods-icommands-4.1.9-ubuntu14.installer
+
+add to PATH by modifying .bash_profile 
+
+2) start icommand inside screen (eg)
+bash-3.2$ iinit
+One or more fields in your iRODS environment file (irods_environment.json) are
+missing; please enter them.
+Enter the host name (DNS) of the server to connect to: data.cyverse.org
+Enter the port number: 1247
+Enter your irods user name: rzlli
+Enter your irods zone: iplant
+Those values will be added to your environment file (for use by
+other i-commands) if the login succeeds.
+ 
+Enter your current iRODS password: mypassword
+bash-3.2$
+
+3) use iput to transfer data from local to iplant 
+need a script to automate the whole process 
+
