@@ -144,13 +144,19 @@ save(F1.young.gene.Ae_ratio, file="~/F1_SNP/output/F1.young.gene.Ae_ratio.Rdata"
 ```
 
 ###### work from here for gene level ASE analysis 
+```{r}
+library(brms)
 
 
 
 
 
 
-#### below is the branch for single SNP binomial test 
+
+
+```
+
+################## below is the branch for single SNP binomial test ########################
 ### binomial test on SNP basis
 ```{r}
 dim(F1.young.gene)
