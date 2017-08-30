@@ -535,6 +535,13 @@ AUP_BOSW_4.2 <- reform.vcf(AUP_BOSW_4)
 table(AUP_BOSW_4.2$AUP_COSW_4) 
 ```
 
+Julin simulated reads from CDS of B.napus, and map them back to B.napus, call SNPs from uniquely mapped reads, to see how heterozygous the results are 
+```{r}
+simulated <- read.vcfR("~/Da-Ae_Da_Ol-1_heterzygosity_check/Julin_simulation/simulated.vcf")
+simulated <- reform.vcf(simulated)
+table(simulated$simulated) # no heterzygous SNPs 
+```
+
 
 
 
