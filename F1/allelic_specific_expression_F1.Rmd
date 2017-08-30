@@ -259,20 +259,112 @@ To do:
 
 2) binomial test on gene level, use statisical model to look for genes that have "parent-of-origin-specific" expression patterns. may need STAN, treat each SNP inside a gene as an independent observation.
 
-### use brms for ASE analysis on gene level 
+############################################################################## 
+use brms for ASE analysis on gene level, Below is Julin's demo on one gene  
 ```{r}
-library(devtools)
-install_github("paul-buerkner/brms")
-library(brms) # didn't install these correctly... 
-library(rstan)
-rstan_options(auto_write = TRUE)
-options(mc.cores = parallel::detectCores())
-
-### the Ae allele ratio should follow beta-binomial distribution, with prior as the average for null, and update with the Ae allele ratio in each of the observed SNPs for a gene, and calculate the posterior distribution for different genes??? 
-http://genome.cshlp.org/content/21/10/1728.long
-
+library(brms)
+library(tidyverse)
+library(stringr)
+library(rethinking)
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1.young.gene.Ae_ratio.Rdata")
 ```
 
+Calcaulte  total and Ae counts because this is what (I think) we want to work with in the binomial model
+```{r}
+F1.young.gene.Ae_ratio %>% head()
+F1.young.gene.Ae_ratio <-  F1.young.gene.Ae_ratio %>%  
+  mutate(total_F1_414.counts=F1_414_RO+F1_414_AO, # total count 
+         total_F1_415.counts=F1_415_RO+F1_415_AO,
+         Ae_F1_414.counts=Ae_ratio_414*total_F1_414.counts, # Ae count 
+         Ae_F1_415.counts=Ae_ratio_415*total_F1_415.counts,
+         SNP_ID=str_c(CHROM,POS,sep="_")) %>% # usage of str_c 
+  select(SNP_ID,gene_ID,ends_with("counts"))
+
+F1.young.gene.Ae_ratio %>% head()
+```
+
+Rearrange the data so that each line is for one SNP in one of the crosses
+```{r}
+Total.counts.long <- F1.young.gene.Ae_ratio %>% 
+gather(key="cross",value="total.counts",total_F1_414.counts,total_F1_415.counts) %>% # the usage of gather 
+  mutate(cross=str_extract(cross,"F1_41[45]")) %>% # usage of str_extract()
+  select(-starts_with("Ae")) # usage of -starts_with()
+Total.counts.long %>% head() 
+
+Ae.counts.long <- F1.young.gene.Ae_ratio %>%
+  gather(key="cross",value="Ae.counts",Ae_F1_414.counts,Ae_F1_415.counts) %>%
+    mutate(cross=str_extract(cross,"F1_41[45]")) %>%
+select(-starts_with("total"))
+Ae.counts.long %>% head()
+
+F1.counts.long <- full_join(Total.counts.long,Ae.counts.long) # full_join()
+F1.counts.long %>% head()
+``` 
+
+Start by selecting a single gene to work with
+```{r}
+onegene <- F1.counts.long %>% filter(gene_ID=="BnaA01g00020D")
+onegene
+```
+
+one gene, no random effects
+```{r}
+brms1 <- brm(Ae.counts | trials(total.counts) ~ cross,
+             family="binomial",
+             prior=set_prior("normal(0,10)", class="b"),
+             data=onegene) 
+```
+
+```{r}
+brms1
+plot(brms1)
+```
+does this make sense?
+```{r}
+#Estimate for 414 probability of being Da-Ae?
+logistic(fixef(brms1)[1])
+
+#Estimate of 415 probability of being Da-Ae?
+logistic(sum(fixef(brms1)))
+
+#compare to real data...should match up...
+onegene %>% group_by(cross) %>% summarize(ae.ratio=mean(Ae.counts/total.counts))
+```
+Yes, we understand!
 
 
+We want to test whether or not the to ratios are actually different
+```{r}
+hyp1 <- hypothesis(brms1,"Intercept = (Intercept + crossF1_415)")
+hyp1
+plot(hyp1)
+```
+Snp as random effect?
+
+```{r}
+brms2 <- brm(Ae.counts | trials(total.counts) ~ cross + (1|SNP_ID),
+             family="binomial",
+             prior=set_prior("normal(0,10)", class="b"),
+             data=onegene)
+```
+
+```{r}
+brms2
+plot(brms2)
+```
+
+```{r}
+hyp2 <- hypothesis(brms2,"Intercept = (Intercept + crossF1_415)")
+hyp2
+plot(hyp2)
+```
+
+```{r}
+gene2 <- F1.counts.long %>% filter(gene_ID=="BnaA01g00030D")
+brms3 <- update(brms2,newdata=gene2)
+```
+
+```{r}
+brms3 
+``` 
 
