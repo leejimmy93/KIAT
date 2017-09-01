@@ -411,3 +411,8 @@ length(brms_all)
 
 ```
 
+# check the fixed effect model result 
+```{r}
+load("~/F1_SNP/output/brms_all.Rdata") 
+```
+
