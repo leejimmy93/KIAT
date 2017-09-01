@@ -339,19 +339,13 @@ does this make sense?
 #Estimate for 414 probability of being Da-Ae?
 logistic(fixef(brms1)[1])
 
-<<<<<<< HEAD
 #Estimate of 415 probability of being Da-Ae?
 logistic(sum(fixef(brms1)))
 
 #compare to real data...should match up...
 onegene %>% group_by(cross) %>% summarize(ae.ratio=mean(Ae.counts/total.counts))
-=======
-### the Ae allele ratio should follow beta-binomial distribution, with prior as the average for null, and update with the Ae allele ratio in each of the observed SNPs for a gene, and calculate the posterior distribution for different genes??? 
-http://genome.cshlp.org/content/21/10/1728.long 
->>>>>>> dc2c4dbd0a5d0ef4639837db846d8200d5c76ef7
 ```
 Yes, we understand!
-
 
 We want to test whether or not the to ratios are actually different
 ```{r}
@@ -365,7 +359,8 @@ Snp as random effect?
 brms2 <- brm(Ae.counts | trials(total.counts) ~ cross + (1|SNP_ID),
              family="binomial",
              prior=set_prior("normal(0,10)", class="b"),
-             data=onegene)
+             data=onegene,
+             control = list(adapt_delta = 0.99)) 
 ```
 
 ```{r}
@@ -382,9 +377,37 @@ plot(hyp2)
 ```{r}
 gene2 <- F1.counts.long %>% filter(gene_ID=="BnaA01g00030D")
 brms3 <- update(brms2,newdata=gene2)
+pairs(brms3)
 ```
 
 ```{r}
 brms3 
 ``` 
+
+# iteration among all genes 
+```{r}
+library(snowfall)
+
+F1.counts.long.c <- F1.counts.long[complete.cases(F1.counts.long),]
+dim(F1.counts.long)
+dim(F1.counts.long.c)
+length(unique(F1.counts.long.c$gene_ID)) # 12044
+
+sfInit(parallel = TRUE, cpus = parallel::detectCores())
+sfLibrary(brms)
+sfExport("F1.counts.long.c","brms2")
+
+brms_all <-  
+  sapply(unique(as.character(F1.counts.long.c$gene_ID)), function(x){
+    new.data <- F1.counts.long.c %>% filter(gene_ID==x)
+    tryCatch(update(brms1, newdata = new.data),
+    error = function(e) NA)
+})    
+
+sfStop()
+
+brms_all[[5]]
+length(brms_all)
+
+```
 
