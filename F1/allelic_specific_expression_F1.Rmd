@@ -334,7 +334,7 @@ brms1 <- brm(Ae.counts | trials(total.counts) ~ cross,
 brms1
 plot(brms1)
 ```
-does this make sense?
+does this make sense? 
 ```{r}
 #Estimate for 414 probability of being Da-Ae?
 logistic(fixef(brms1)[1])
@@ -366,6 +366,11 @@ brms2 <- brm(Ae.counts | trials(total.counts) ~ cross + (1|SNP_ID),
 ```{r}
 brms2
 plot(brms2)
+```
+
+# compare model 1 and model 2 
+```{r}
+compare(brms1, brms2)
 ```
 
 ```{r}
@@ -407,7 +412,70 @@ brms_all <-
 sfStop()
 
 brms_all[[5]]
-length(brms_all)
+length(brms_all) 
+```
 
+# iteration among only DEGs in young tissue 
+```{r}
+
+```
+
+# write model in rethinking format
+```{r}
+brms2 <- brm(Ae.counts | trials(total.counts) ~ cross + (1|SNP_ID),
+             family="binomial",
+             prior=set_prior("normal(0,10)", class="b"),
+             data=onegene,
+             control = list(adapt_delta = 0.99))
+
+brms2
+
+str(onegene) 
+onegene$Ae.counts <- as.integer(onegene$Ae.counts)
+onegene$total.counts <- as.integer(onegene$total.counts)
+onegene$SNP <- 1:nrow(onegene)
+colnames(onegene)[4:5] <- c("total_counts", "Ae_counts")
+onegene
+
+library(rethinking)
+# problem with the model below 
+rethinking1 <- map2stan(
+  alist(
+    Ae_counts ~ dbinom(total_counts, p), 
+    logit(p) <- a_SNP[SNP],
+    a_SNP[SNP] <- dnorm(0, 5)
+    ),
+  data = onegene, iter = 1e4, warmup = 1000, chains = 4) 
+ 
+precis(rethinking1) 
+
+rethinking2 <- map2stan(
+  alist(
+    Ae_counts ~ dbinom(total_counts, p), 
+    logit(p) <- a_SNP[SNP],
+    a_SNP[SNP] <- dnorm(a, sigma),
+    a ~ dnorm(0, 1),
+    sigma ~ dcauchy(0, 1)
+    ),
+  data = onegene, iter = 1e4, warmup = 1000, chains = 4) 
+ 
+precis(rethinking2, depth = 2)
+
+# add cross effect 
+onegene$cross_414 <- ifelse(onegene$cross=="F1_414", 1, 0)
+
+rethinking3 <- map2stan(
+  alist(
+    Ae_counts ~ dbinom(total_counts, p), 
+    logit(p) <- a_SNP[SNP] + b*cross_414, 
+    a_SNP[SNP] <- dnorm(a, sigma),
+    a ~ dnorm(0, 1),
+    sigma ~ dcauchy(0, 1), 
+    b ~ dnorm(0, 10)
+    ),
+  data = onegene, iter = 1e4, warmup = 1000, chains = 4) 
+ 
+precis(rethinking3, depth = 2) 
+compare(rethinking1, rethinking3, rethinking2) 
 ```
 
