@@ -479,3 +479,8 @@ precis(rethinking3, depth = 2)
 compare(rethinking1, rethinking3, rethinking2) 
 ```
 
+# check the fixed effect model result 
+```{r}
+load("~/F1_SNP/output/brms_all.Rdata") 
+```
+
