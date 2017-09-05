@@ -114,8 +114,8 @@ output:
 # Da-Ae: 4118 genes are uniquely mapped to B.napus genome; 
 
 # 8) blastx against Uniref protein database (on whitney)
-# Da-Ae: 4076 blastx against 3690 Uniref protein 
-# Da-Ol: 3775 blastx against 3444 Uniref protein 
+# Da-Ae: 4076 blastx against 3690 Uniref protein (for unknown reason, not every Uniref protein has annotation here using batch entrez, but the ones that are proved to be plant genes are 2873, 10 non-plant genes)
+# Da-Ol: 3775 blastx against 3444 Uniref protein (2628 plant genes, and 15 non-plant genes)
 
 # 9) tag uniquely mapped & uniquely mapped genes, blastx unmapped genes to NCBI nr database to see whether they hit plant proteins 
 
