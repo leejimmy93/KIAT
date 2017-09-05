@@ -38,7 +38,7 @@ colnames(F2_geno_data)
 # check missing rate & remove data with high missing rate above 0.85 
 ```{r}
 F2_geno_data_with_missing_rate <- mutate(F2_geno_data, 
-       missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/94, 2)) 
+       missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/166, 2)) 
 
 rownames(F2_geno_data_with_missing_rate) <- rownames(F2_geno_data) 
 hist(F2_geno_data_with_missing_rate$missing_rate)
