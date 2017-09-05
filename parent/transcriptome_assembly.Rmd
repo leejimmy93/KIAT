@@ -101,11 +101,29 @@ output:
 # Da-Ol-1: 67883 with B.rapa CDS hit (e-value < 1e-6); 62905 above 95% percent identity, so (69906-62905) 7,001 novel genes 
 
 # 7) BWA-MEM 7768 Ae genes and 7001 Ol genes to B.napus genome to see how many of them hit B.napus genome 
-# 
+
+## unmapped: 3rd column is "*"
+# cat Ae_bwa_mem.sam | awk 'NF > 8{print $3}' | sort | uniq -c # 139 unmapped 
+# cat Ol_bwa_mem.sam | awk 'NF > 8{print $3}' | sort | uniq -c # 90 unmapped 
+
+# uniquely mapped: absence of "XA:Z" means unqiue mapping 
+# cat Ae_bwa_mem.sam | awk 'NF > 8' | grep -v "XA:Z" | awk '{print $1}' | sort | uniq | wc -l 4728
+# cat Ol_bwa_mem.sam | awk 'NF > 8' | grep -v "XA:Z" | awk '{print $1}' | sort | uniq | wc -l 4118
+
+# Da-Ae: 4728 genes are uniquely mapped to B.napus genome; 
+# Da-Ae: 4118 genes are uniquely mapped to B.napus genome; 
+
+# 8) blastx against Uniref protein database (on whitney)
+# Da-Ae: 4076 blastx against 3690 Uniref protein 
+# Da-Ol: 3775 blastx against 3444 Uniref protein 
+
+# 9) tag uniquely mapped & uniquely mapped genes, blastx unmapped genes to NCBI nr database to see whether they hit plant proteins 
+
 
 # To do: 
 # blast against Uniref, retain those with homology to known protein (E<=1e-10 suggested by Upendra)
  
+
 
 
 
