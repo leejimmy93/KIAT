@@ -185,6 +185,7 @@ write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_proje
 # scp rf.Rdata to my MAC
 # after checking the group result, only one linkage group was formed... 
 ```
+###################################### up to here ################# 
 
 # assign markers to different linkage groups based on their chromsome assignment 
 ```{r}
