@@ -162,19 +162,21 @@ for (i in colnames(F2_geno_data_2_Ae_Ol)[1:166]) {
   }
 }
 
+rownames(F2_geno_data_2_Ae_Ol_new) <- F2_geno_data_2_Ae_Ol[,"index"]
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
 ############ start working from here ############### 
-F2_geno_data_2 <- as.data.frame(F2_geno_data_2)
-dim(F2_geno_data_2) # 2932 166  
-write.table(F2_geno_data_2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data.txt")
+dim(F2_geno_data_2_Ae_Ol_new) # 5556 166  
+write.table(F2_geno_data_2_Ae_Ol_new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.txt")
 # change file format in linux 
-# cat F2_geno_data.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
-# tail -2932 tmp > tmp.1 
+# cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
+# tail -5556 tmp > tmp.1
 
-write.table(rownames(F2_geno_data_2), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info.txt" )
-# cat marker_info.txt | awk '{print "*"$2}' | tail -2932 | sed 's/"//g' > marker_info_reform.txt
+write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info.txt" )
+# cat marker_info.txt | awk '{print "*"$2}' | tail -5556 | sed 's/"//g' > marker_info_reform.txt
 
 # paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt 
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt 
+# change header info: maker number to the right marker number 
 ```
 
 # calculate two point rf & assign to linkage groups (on whitney) 
