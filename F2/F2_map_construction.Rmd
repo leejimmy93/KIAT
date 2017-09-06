@@ -38,7 +38,7 @@ colnames(F2_geno_data)
 # check missing rate & remove data with high missing rate above 0.85 
 ```{r}
 F2_geno_data_with_missing_rate <- mutate(F2_geno_data, 
-       missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/94, 2)) 
+       missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/166, 2)) 
 
 rownames(F2_geno_data_with_missing_rate) <- rownames(F2_geno_data) 
 hist(F2_geno_data_with_missing_rate$missing_rate)
@@ -124,28 +124,59 @@ save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_
 # format data for onemap  
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
-dim(F2_geno_data_2) # 2932 166 
+dim(F2_geno_data_2) # 5556 166 
 head(F2_geno_data_2) 
+# F2_geno_data_2 <- as.matrix(F2_geno_data_2)
+# F2_geno_data_2[is.na(F2_geno_data_2)] <- "-"
+# F2_geno_data_2[1:10, 1:10]
+# F2_geno_data_2 <- as.data.frame(F2_geno_data_2)
 
-# formating data for onemap 
-F2_geno_data_2 <- as.matrix(F2_geno_data_2)
-F2_geno_data_2[is.na(F2_geno_data_2)] <- "-"
-F2_geno_data_2 <- gsub("0/0", "A", F2_geno_data_2) 
-F2_geno_data_2 <- gsub("0/1", "H", F2_geno_data_2)
-F2_geno_data_2 <- gsub("1/1", "B", F2_geno_data_2)
+########### below should be corrected
+# read parent data 
+Ae_Ol <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/vcf.Ae.Ol.intersect.final.csv", stringsAsFactors = F)
 
-F2_geno_data_2 <- as.data.frame(F2_geno_data_2)
-dim(F2_geno_data_2) # 2932 166  
-write.table(F2_geno_data_2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data.txt")
+# left join to filter Ae_Ol SNP based on F2 genotypes
+Ae_Ol$index <- paste(Ae_Ol$CHROM, Ae_Ol$POS, sep = "_")
+F2_geno_data_2$index <- rownames(F2_geno_data_2)
+F2_geno_data_2_Ae_Ol <- 
+left_join(F2_geno_data_2, Ae_Ol, by="index") %>% 
+  select(-(X:ALT)) 
+
+F2_geno_data_2_Ae_Ol <- as.matrix(F2_geno_data_2_Ae_Ol) 
+
+# reassign genotype according to parents genotypes
+F2_geno_data_2_Ae_Ol_new <- data.frame()
+
+for (i in colnames(F2_geno_data_2_Ae_Ol)[1:166]) {
+  print(i)
+  for (j in 1:nrow(F2_geno_data_2_Ae_Ol)){
+    if (is.na(F2_geno_data_2_Ae_Ol[j,i])){
+    F2_geno_data_2_Ae_Ol_new[j,i] = "-"
+    } else if (F2_geno_data_2_Ae_Ol[j,i] == "0/1"){
+      F2_geno_data_2_Ae_Ol_new[j,i] = "H"
+    } else if (F2_geno_data_2_Ae_Ol[j,i] == F2_geno_data_2_Ae_Ol[j,"Ae.gt"]){
+      F2_geno_data_2_Ae_Ol_new[j,i] = "A"
+    } else {
+      F2_geno_data_2_Ae_Ol_new[j,i] = "B"
+    }
+  }
+}
+
+rownames(F2_geno_data_2_Ae_Ol_new) <- F2_geno_data_2_Ae_Ol[,"index"]
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
+############ start working from here ############### 
+dim(F2_geno_data_2_Ae_Ol_new) # 5556 166  
+write.table(F2_geno_data_2_Ae_Ol_new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.txt")
 # change file format in linux 
-# cat F2_geno_data.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
-# tail -2932 tmp > tmp.1 
+# cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
+# tail -5556 tmp > tmp.1
 
-write.table(rownames(F2_geno_data_2), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info.txt" )
-# cat marker_info.txt | awk '{print "*"$2}' | tail -2932 | sed 's/"//g' > marker_info_reform.txt
+write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info.txt" )
+# cat marker_info.txt | awk '{print "*"$2}' | tail -5556 | sed 's/"//g' > marker_info_reform.txt
 
 # paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt 
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt 
+# change header info: maker number to the right marker number 
 ```
 
 # calculate two point rf & assign to linkage groups (on whitney) 
@@ -154,6 +185,7 @@ write.table(rownames(F2_geno_data_2), file = "~/Desktop/Brassica_project/KIAT_RN
 # scp rf.Rdata to my MAC
 # after checking the group result, only one linkage group was formed... 
 ```
+###################################### up to here ################# 
 
 # assign markers to different linkage groups based on their chromsome assignment 
 ```{r}
