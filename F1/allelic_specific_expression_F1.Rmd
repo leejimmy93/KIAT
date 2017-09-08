@@ -389,37 +389,6 @@ pairs(brms3)
 brms3 
 ``` 
 
-# iteration among all genes 
-```{r}
-library(snowfall)
-
-F1.counts.long.c <- F1.counts.long[complete.cases(F1.counts.long),]
-dim(F1.counts.long)
-dim(F1.counts.long.c)
-length(unique(F1.counts.long.c$gene_ID)) # 12044
-
-sfInit(parallel = TRUE, cpus = parallel::detectCores())
-sfLibrary(brms)
-sfExport("F1.counts.long.c","brms2")
-
-brms_all <-  
-  sapply(unique(as.character(F1.counts.long.c$gene_ID)), function(x){
-    new.data <- F1.counts.long.c %>% filter(gene_ID==x)
-    tryCatch(update(brms1, newdata = new.data),
-    error = function(e) NA)
-})    
-
-sfStop()
-
-brms_all[[5]]
-length(brms_all) 
-```
-
-# iteration among only DEGs in young tissue 
-```{r}
-
-```
-
 # write model in rethinking format
 ```{r}
 brms2 <- brm(Ae.counts | trials(total.counts) ~ cross + (1|SNP_ID),
@@ -479,8 +448,45 @@ precis(rethinking3, depth = 2)
 compare(rethinking1, rethinking3, rethinking2) 
 ```
 
-# check the fixed effect model result 
+iteration among all genes,tested on my MAC  
 ```{r}
-load("~/F1_SNP/output/brms_all.Rdata") 
+library(snowfall)
+
+F1.counts.long.c <- F1.counts.long[complete.cases(F1.counts.long),]
+dim(F1.counts.long)
+dim(F1.counts.long.c)
+length(unique(F1.counts.long.c$gene_ID)) # 12044
+
+sfInit(parallel = TRUE, cpus = parallel::detectCores())
+sfLibrary(brms)
+sfExport("F1.counts.long.c","brms2")
+
+brms_all <-  
+  sapply(unique(as.character(F1.counts.long.c$gene_ID)), function(x){
+    new.data <- F1.counts.long.c %>% filter(gene_ID==x)
+    tryCatch(update(brms1, newdata = new.data),
+    error = function(e) NA)
+})    
+
+sfStop()
+
+brms_all[[5]]
+length(brms_all) 
 ```
+
+run iteration on cluster 
+```{r}
+# fixed effct: https://github.com/leejimmy93/KIAT_cabernet/blob/master/F1/ASE_brms_fixed.R (actually ran this on my MAC, then transfer to cabernet for analysis) 
+# mixed effct: https://github.com/leejimmy93/KIAT_cabernet/blob/master/F1/ASE.slurm  
+```
+
+# check result for fixed effect & mixed effect 
+```{r}
+# mixed effect (on cabernet)
+# srun -N 1 -n 20 --mem 100000 --time 07-00:00:00 --pty /bin/bash (large memory is required to load the data)
+
+
+
+```
+
 
