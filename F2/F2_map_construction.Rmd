@@ -200,26 +200,37 @@ F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
 head(F2_geno_data_2[F2_geno_data_2$Chr=="chrA04",],1)
 tail(F2_geno_data_2[F2_geno_data_2$Chr=="chrC09",],1)
 
-sum(F2_geno_data_2$Chr=="chrA01") # 1-192  
-sum(F2_geno_data_2$Chr=="chrA02") # 78 193-270
-sum(F2_geno_data_2$Chr=="chrA03") # 267 271-537
-sum(F2_geno_data_2$Chr=="chrA04") # 136 538-673
-sum(F2_geno_data_2$Chr=="chrA05") # 129 674-802
-sum(F2_geno_data_2$Chr=="chrA06") # 379 803-1181
-sum(F2_geno_data_2$Chr=="chrA07") # 242 1182-1423
-sum(F2_geno_data_2$Chr=="chrA08") # 151 1424-1574
-sum(F2_geno_data_2$Chr=="chrA09") # 307 1575-1881
-sum(F2_geno_data_2$Chr=="chrA10") # 253 1882-2134
-sum(F2_geno_data_2$Chr=="chrC01") # 106 2135-2240
-sum(F2_geno_data_2$Chr=="chrC02") # 59 2241-2299
-sum(F2_geno_data_2$Chr=="chrC03") # 158 2300-2457
-sum(F2_geno_data_2$Chr=="chrC04") # 143 2458-2600
-sum(F2_geno_data_2$Chr=="chrC05") # 43 2601-2643
-sum(F2_geno_data_2$Chr=="chrC06") # 85 2644-2728
-sum(F2_geno_data_2$Chr=="chrC07") # 100 2729-2828
-sum(F2_geno_data_2$Chr=="chrC08") # 60 2829-2888
-sum(F2_geno_data_2$Chr=="chrC09") # 44 2889-2932  
+sum(F2_geno_data_2$Chr=="chrA01") # 346 1-346  
+sum(F2_geno_data_2$Chr=="chrA02") # 163 347-509
+sum(F2_geno_data_2$Chr=="chrA03") # 506 510-1015
+sum(F2_geno_data_2$Chr=="chrA04") # 275 1016-1290
+sum(F2_geno_data_2$Chr=="chrA05") # 263 1291-1553
+sum(F2_geno_data_2$Chr=="chrA06") # 710 1554-2263
+sum(F2_geno_data_2$Chr=="chrA07") # 482 2264-2745
+sum(F2_geno_data_2$Chr=="chrA08") # 274 2746-3019
+sum(F2_geno_data_2$Chr=="chrA09") # 545 3020-3564
+sum(F2_geno_data_2$Chr=="chrA10") # 474 3565-4038
+sum(F2_geno_data_2$Chr=="chrC01") # 196 4039-4234
+sum(F2_geno_data_2$Chr=="chrC02") # 112 4235-4346
+sum(F2_geno_data_2$Chr=="chrC03") # 322 4347-4668
+sum(F2_geno_data_2$Chr=="chrC04") # 245 4669-4913
+sum(F2_geno_data_2$Chr=="chrC05") # 82 4914-4995
+sum(F2_geno_data_2$Chr=="chrC06") # 161 4996-5156
+sum(F2_geno_data_2$Chr=="chrC07") # 192 5157-5348
+sum(F2_geno_data_2$Chr=="chrC08") # 131 5349-5479
+sum(F2_geno_data_2$Chr=="chrC09") # 77 5480-5556  
 
+i = 1
+index = vector()
+for (ch in unique(F2_geno_data_2$Chr)){
+  while (F2_geno_data_2$Chr[i]==ch){
+      i = i + 1 
+  }
+  print (i-1)
+  index[ch] = i-1
+}
+
+index
 # https://github.com/leejimmy93/KIAT/map_A01.R .... mapC09.R 
 ```
 
