@@ -17,7 +17,7 @@ Title: Allelic specific expression
 ### load libraries 
 ```{r}
 library(vcfR)
-source("~/KIAT/F1/helpler.R")  
+source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/F1/helpler.R")  
 ```
 
 ### examine F1 dataset to study gene imprinting effect
@@ -370,7 +370,10 @@ plot(brms2)
 
 # compare model 1 and model 2 
 ```{r}
-compare(brms1, brms2)
+AIC(brms1, brms2) # fixed model is better than mixed model... 
+brms1
+brms2
+?AIC
 ```
 
 ```{r}
@@ -391,6 +394,7 @@ brms3
 
 # write model in rethinking format
 ```{r}
+# mixed model 
 brms2 <- brm(Ae.counts | trials(total.counts) ~ cross + (1|SNP_ID),
              family="binomial",
              prior=set_prior("normal(0,10)", class="b"),
@@ -407,7 +411,8 @@ colnames(onegene)[4:5] <- c("total_counts", "Ae_counts")
 onegene
 
 library(rethinking)
-# problem with the model below 
+# problem with the model below
+# no equivalent brms model 
 rethinking1 <- map2stan(
   alist(
     Ae_counts ~ dbinom(total_counts, p), 
@@ -431,6 +436,7 @@ rethinking2 <- map2stan(
 precis(rethinking2, depth = 2)
 
 # add cross effect 
+# equivalent to mixed effect model 
 onegene$cross_414 <- ifelse(onegene$cross=="F1_414", 1, 0)
 
 rethinking3 <- map2stan(
@@ -445,6 +451,11 @@ rethinking3 <- map2stan(
   data = onegene, iter = 1e4, warmup = 1000, chains = 4) 
  
 precis(rethinking3, depth = 2) 
+
+# need to write equilavent of fixed effect model in rethinking format and compare fixed VS mixed effect model 
+precis(rethinking3, depth = 2) 
+
+
 compare(rethinking1, rethinking3, rethinking2) 
 ```
 
@@ -485,6 +496,8 @@ run iteration on cluster
 # mixed effect (on cabernet)
 # srun -N 1 -n 20 --mem 100000 --time 07-00:00:00 --pty /bin/bash (large memory is required to load the data)
 
+# Questions that we are intrested: 
+# 1) is there cross effect for each gene? i.e. Ae.counts is affected by the kind of cross, which might affect the expression level of those genes between the two kinds of crosses. 
 
 
 ```
