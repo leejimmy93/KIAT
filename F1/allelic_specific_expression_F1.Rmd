@@ -498,8 +498,8 @@ run iteration on cluster
 
 # Questions that we are intrested: 
 # 1) is there cross effect for each gene? i.e. Ae.counts is affected by the kind of cross, which might affect the expression level of those genes between the two kinds of crosses. 
-
-
+# all on cabernet 
 ```
+
 
 
