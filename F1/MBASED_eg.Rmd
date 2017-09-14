@@ -1,0 +1,120 @@
+---
+title: "MBASED_eg"
+author: "Ruijuan Li"
+date: "9/12/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+load lib
+```{r}
+library(MBASED)
+library(tidyverse)
+```
+
+1-sample analysis 
+```{r}
+set.seed(988482)
+# a quick look at the main function
+args(runMBASED)
+# create Granges object for SNVs of interest
+# note the only required column is "aseID"
+
+mySNVs <- GRanges(
+seqnames=c('chr1', 'chr2', 'chr2', 'chr2'),
+  ranges=IRanges(start=c(100, 1000, 1100, 1200), width=1),
+  aseID=c('gene1', rep('gene2', 3)),
+  allele1=c('G', 'A', 'C', 'A'),
+  allele2=c('T', 'C', 'T', 'G')
+)
+names(mySNVs) <- c('gene1_SNV1', 'gene2_SNV1', 'gene2_SNV2', 'gene2_SNV3')
+
+## create input RangedSummarizedExperiment object
+mySample <- SummarizedExperiment(
+assays=list(
+  lociAllele1Counts=matrix(
+  c(25, 10, 22, 14),
+  ncol=1,
+  dimnames=list(
+    names(mySNVs), 
+    'mySample'
+  )
+  ),
+  lociAllele2Counts=matrix(
+  c(20,16,15,16),
+  ncol=1,
+  dimnames=list(
+    names(mySNVs), 
+    'mySample'
+  )
+  )
+  ),
+rowRanges=mySNVs
+)
+
+# eg of use 
+ASEresults_1s_haplotypesKnown <- runMBASED(
+   ASESummarizedExperiment=mySample,
+   isPhased=TRUE,
+   numSim=10^6,
+ BPPARAM = SerialParam()
+)
+
+## explore the return object
+class(ASEresults_1s_haplotypesKnown)  
+names(assays(ASEresults_1s_haplotypesKnown))
+assays(ASEresults_1s_haplotypesKnown)$majorAlleleFrequency
+assays(ASEresults_1s_haplotypesKnown)$pValueASE
+assays(ASEresults_1s_haplotypesKnown)$pValueHeterogeneity
+rowRanges(ASEresults_1s_haplotypesKnown)
+names(metadata(ASEresults_1s_haplotypesKnown))
+class(metadata(ASEresults_1s_haplotypesKnown)$locusSpecificResults)
+names(assays(metadata(ASEresults_1s_haplotypesKnown)$locusSpecificResults))
+assays(metadata(ASEresults_1s_haplotypesKnown)$locusSpecificResults)$allele1IsMajor
+assays(metadata(ASEresults_1s_haplotypesKnown)$locusSpecificResults)$MAF
+rowRanges(metadata(ASEresults_1s_haplotypesKnown)$locusSpecificResults)
+
+## define function to print out the summary of ASE results
+summarizeASEResults_1s <- function(MBASEDOutput) {
+  geneOutputDF <- data.frame(
+  majorAlleleFrequency=assays(MBASEDOutput)$majorAlleleFrequency[,1],
+  pValueASE=assays(MBASEDOutput)$pValueASE[,1],
+  pValueHeterogeneity=assays(MBASEDOutput)$pValueHeterogeneity[,1]) 
+  lociOutputGR <- rowRanges(metadata(MBASEDOutput)$locusSpecificResults)
+  lociOutputGR$allele1IsMajor <- assays(metadata(MBASEDOutput)$locusSpecificResults)$allele1IsMajor[,1]
+  lociOutputGR$MAF <- assays(metadata(MBASEDOutput)$locusSpecificResults)$MAF[,1]
+  lociOutputList <- split(lociOutputGR, factor(lociOutputGR$aseID,  levels=unique(lociOutputGR$aseID)))
+  return(
+    list(
+        geneOutput=geneOutputDF,
+          locusOutput=lociOutputList
+    )
+  )
+}
+
+summarizeASEResults_1s(ASEresults_1s_haplotypesKnown)
+```
+
+Note that the pseudo-phasing based‘major’ haplotype of gene2 consists of the reference allele at SNV2 and alternative alleles at SNV1 and SNV3. Also note that by design, the gene-level estimate of MAF for the multi-locus gene2 is higher in the case of unphased data (0.58 vs. 0.505) and the SNV-level estimates are all ≥ 0.5. We rely on properly calibrated p-values to prevent these higher estimates from resulting in spurious ASE calls due to pseudo-phasing. This is accomplished by employing simulations (argument numSim) to obtain an approximation to null distribution of MAF estimates. We used 106 simulations in the previous example and we recommend at least this many simulations in practice. If parallel architecture is available (see argument BPPARAM and documentation for function bplapply in R package BiocParallel), it can be employed when many genes are tested simulatneously (parallelization is done over genes (aseIDs), and not simulations).
+To illustrate the need for simulations, we show how the results are affected by bias introduced during the pseudo-phasing step. 
+
+```{r}
+##re-run analysis without simulations
+summarizeASEResults_1s(
+   runMBASED(
+     ASESummarizedExperiment=mySample,
+     isPhased = FALSE, 
+     numSim = 0, 
+     BPPARAM = SerialParam()
+   ) 
+)   
+```
+
+Notice the 3-fold decrease in pValueASE for gene2 when we skipped the simulations. See the accompanying paper for further discussion of the internal simulations used by MBASED.
+The use of parallelization is illustrated in the example below (not evaluated):
+
+```{r}
+
+```
+

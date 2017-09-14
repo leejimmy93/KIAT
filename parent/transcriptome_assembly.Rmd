@@ -118,12 +118,10 @@ output:
 # Da-Ol: 3775 blastx against 3444 Uniref protein (2628 plant genes, and 15 non-plant genes)
 
 # 9) tag uniquely mapped & uniquely mapped genes, blastx unmapped genes to NCBI nr database to see whether they hit plant proteins 
+# 39 genes out 139 genes of Da-Ae are found to have blast hit in plant 
+# 24 (-1) genes out of 90 genes of Da-Ol-1 are found to have blast hit in plant 
 
-
-# To do: 
-# blast against Uniref, retain those with homology to known protein (E<=1e-10 suggested by Upendra)
- 
-
+# 10) remove chimera RNA: chimera RNAs are composed of exons from two or more different genes and the potential to encode novel proteins. While natual chimeric transcripts exist in some cancer tissues but are very rare, and most of the cases they are resulted from mis-assembly in transcriptome assembly. So they need to be removed...   
 
 
 
