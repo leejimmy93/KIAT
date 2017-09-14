@@ -297,7 +297,7 @@ A01
 #################### A01 ##############################
 # load data 
 F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/twopts.LOD3_rf0.5_09_2017.Rdata") # LOD=3, max rf=0.5 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata") # LOD=3, max rf=0.5 
 
 # mapping order 
 # LG.f2.arbi.A01 <- make.seq(twopts.f2.05.12, order[[1]])
@@ -494,6 +494,22 @@ LG.f2.A08.final <- make.seq(LG.f2.ord.A08, "force")
 LG.f2.A08.final
 rf.graph.table(LG.f2.A08.final) 
 draw.map(LG.f2.A08.final, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+```
+
+C09 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.f2.ord.C09.Rdata")
+LG.f2.C09 <- make.seq(LG.f2.ord.C09) 
+LG.f2.C09
+rf.graph.table(LG.f2.C09) 
+par(mfrow=c(1,1)) 
+draw.map(LG.f2.C09, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+
+# all order
+LG.f2.C09.final <- make.seq(LG.f2.ord.C09, "force")
+LG.f2.C09.final
+rf.graph.table(LG.f2.C09.final) 
+draw.map(LG.f2.C09.final, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
 ```
 
 # C01 
