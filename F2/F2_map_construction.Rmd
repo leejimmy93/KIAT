@@ -250,8 +250,15 @@ index
 http://cgpdb.ucdavis.edu/XLinkage/MadMapper/#Part_2
 ```{r} 
 # https://github.com/leejimmy93/KIAT/blob/master/madmapper.sh
-# the output file we should check is tree.cluster file 
+# the output file we should check is tree.clust file 
 ```
+
+check madmapper output (export *.tree.clust file to Excel, and decide which SNP belong to which LG based on tree value) /Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/F2_geno_data_m_loc_mmout.x_tree_clust.xlsx 
+
+
+
+
+
 
 
 # construct each LG on whitney 
@@ -970,7 +977,7 @@ save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/outp
 http://cgpdb.ucdavis.edu/XLinkage/MadMapper/#Part_2
 ```{r} 
 # https://github.com/leejimmy93/KIAT/blob/master/madmapper.sh
-# the output file we should check is tree.cluster file 
+# the output file we should check is .tree.clust file 
 ```
 
 # get linkage group from madmapper generated tree.cluster file 
