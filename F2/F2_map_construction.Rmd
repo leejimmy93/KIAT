@@ -279,44 +279,22 @@ LG.A08 <- madmapper.result$V26[3075:3251]
 LG.C02 <- madmapper.result$V26[3252:3319]
 LG.C07 <- madmapper.result$V26[3320:3442]
 
-
-#########
-LG.A09.2 <- madmapper.result$V26[533:612]
-LG.C04.C05 <- madmapper.result$V26[723:731]
-LG.A03.2 <- madmapper.result$V26[732:858]
-LG.C03.2 <- madmapper.result$V26[1064:1139]
-LG.A01.2 <- madmapper.result$V26[1168:1255]
-LG.A02.2 <- madmapper.result$V26[1549:1587]
-LG.A05.2 <- madmapper.result$V26[1671:1694]
-LG.C08.2 <- madmapper.result$V26[1873:1891]
-LG.C01.2 <- madmapper.result$V26[1892:1932]
-LG.C03.3 <- madmapper.result$V26[1933:1939]
-LG.C05.2 <- madmapper.result$V26[1940:1951]
-LG.C06.2 <- madmapper.result$V26[2006:2034]
-LG.A04.2 <- madmapper.result$V26[2057:2108]
-LG.A05.3 <- madmapper.result$V26[2109:2166]
-LG.A06.2 <- madmapper.result$V26[2167:2293]
-LG.A07.2 <- madmapper.result$V26[2294:2358]
-LG.A08.2 <- madmapper.result$V26[2425:2508] 
-LG.A10.2 <- madmapper.result$V26[2547:2640]
-LG.C02.2 <- madmapper.result$V26[2641:2662]
-LG.C04.2 <- madmapper.result$V26[2728:2800]
-LG.C07.2 <- madmapper.result$V26[2856:2901]
-LG.C08.3 <- madmapper.result$V26[2902:2906]
-LG.C09.2 <- madmapper.result$V26[2907:2932] 
+######### unincorported LGs
+LG.A01.2 <- madmapper.result$V26[213:224]
+LG.A03.2 <- madmapper.result$V26[622:658]
+LG.A09.2 <- madmapper.result$V26[1251:1259]
+LG.C04.C05 <- madmapper.result$V26[1703:1716]
+LG.C05.2 <- madmapper.result$V26[1910:1913]
+LG.C08.2 <- madmapper.result$V26[1914:1923]
+LG.C09.2 <- madmapper.result$V26[3063:3073] 
 #########
 
-LG.A <- list(LG.A01, LG.A02, LG.A03, LG.A04, LG.A05, LG.A06, LG.A07, LG.A08, LG.A09,  LG.A10)
+LG.A <- list(LG.A01, LG.A01.2, LG.A02, LG.A03, LG.A03.2, LG.A04, LG.A05, LG.A06, LG.A07, LG.A08, LG.A09, LG.A09.2, LG.A10)
 
-LG.C <- list(LG.C01, LG.C02, LG.C03, LG.C04, LG.C05, LG.C06, LG.C07, LG.C08, LG.C09)
+LG.C <- list(LG.C01, LG.C02, LG.C03, LG.C04, LG.C04.C05, LG.C05, LG.C05.2, LG.C06, LG.C07, LG.C08, LG.C08.2, LG.C09, LG.C09.2)
 length(LG.A) # 21 linkage groups 
 length(LG.C) # 21 linkage groups 
-``` 
-
-
-
-
-
+```  
 
 # construct each LG on whitney 
 ```{r}
