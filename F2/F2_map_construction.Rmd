@@ -292,9 +292,83 @@ LG.C09.2 <- madmapper.result$V26[3063:3073]
 LG.A <- list(LG.A01, LG.A01.2, LG.A02, LG.A03, LG.A03.2, LG.A04, LG.A05, LG.A06, LG.A07, LG.A08, LG.A09, LG.A09.2, LG.A10)
 
 LG.C <- list(LG.C01, LG.C02, LG.C03, LG.C04, LG.C04.C05, LG.C05, LG.C05.2, LG.C06, LG.C07, LG.C08, LG.C08.2, LG.C09, LG.C09.2)
-length(LG.A) # 21 linkage groups 
-length(LG.C) # 21 linkage groups 
+length(LG.A) # 13 linkage groups 
+length(LG.C) # 13 linkage groups 
 ```  
+
+# get index for the above markers in different linkage group 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata")
+twopts.f2.LOD3_rf0.5$marnames 
+
+group.A <- list()
+
+for (i in 1:length(LG.A)) {
+  group.A[[i]] <-  which(twopts.f2.LOD3_rf0.5$marnames %in% LG.A[[i]])
+}
+group.A
+
+group.C <- list()
+
+for (i in 1:length(LG.C)) {
+  group.C[[i]] <-  which(twopts.f2.LOD3_rf0.5$marnames %in% LG.C[[i]])
+}
+
+group.C
+save(group.A, group.C, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.Rdata")
+```
+
+#### order within each chromosome 
+```{r}
+# scp group.A & group.C to whitney 
+# https://github.com/leejimmy93/KIAT/blob/master/F2/map_A.R
+# https://github.com/leejimmy93/KIAT/blob/master/F2/map_C.R 
+``` 
+
+#### analyze result 
+C08 eg
+```{r}
+######## import data #######
+# marker data 
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
+F2.data 
+# This is an object of class 'f2.onemap'
+#     No. individuals:     166 
+#     No. markers:         3443 
+#     Percent genotyped:   95 
+# 
+#     Number of markers per type:
+#        AA : AB : BB -->  3443
+# 
+# This data contains no phenotypic information
+
+# two-point rf data  
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata")
+
+# order data 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/madmapper/LG.f2.ord.C8.Rdata")
+
+# get order 
+LG.f2.C8 <- make.seq(LG.f2.ord.C8[[10]], "force") 
+LG.f2.C8
+
+rf.graph.table(LG.f2.C8)
+par(mfrow=c(1,1))
+draw.map(LG.f2.C8, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.C8, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C8.map") 
+
+# use safe mode 
+LG.f2.C8.safe <- make.seq(LG.f2.ord.C8[[10]], "safe") 
+
+rf.graph.table(LG.f2.C8.safe)
+par(mfrow=c(1,1))
+draw.map(LG.f2.C8.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.C8.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C8.safe.map")
+```
+
+
+
+######### above is for madmapper 
 
 # construct each LG on whitney 
 ```{r}
@@ -988,35 +1062,8 @@ geno.image(cross.drop.marker, alternate.chrid = T) # grid with color pixels for 
 save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
 ```
 
+######## for madmapper 
 
-# get index for the above markers in different linkage group 
-```{r}
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
-twopts.f2.05.12$marnames 
-
-group.A <- list()
-
-for (i in 1:length(LG.A)) {
-  group.A[[i]] <-  which(twopts.f2.05.12$marnames %in% LG.A[[i]])
-}
-group.A
-
-group.C <- list()
-
-for (i in 1:length(LG.C)) {
-  group.C[[i]] <-  which(twopts.f2.05.12$marnames %in% LG.C[[i]])
-}
-
-group.C
-save(group.A, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.Rdata")
-```
-
-# order within each chromosome 
-```{r}
-# scp group.A & group.C to whitney 
-# https://github.com/leejimmy93/KIAT/blob/master/F2/map_A.R
-# https://github.com/leejimmy93/KIAT/blob/master/F2/map_C.R 
-```
 
 # analyze result C sub genome 
 # import data 
