@@ -491,7 +491,7 @@ run iteration on cluster
 # mixed effct: https://github.com/leejimmy93/KIAT_cabernet/blob/master/F1/ASE.slurm  
 ```
 
-# check result for fixed effect & mixed effect 
+check result for fixed effect & mixed effect 
 ```{r}
 # mixed effect (on cabernet)
 # srun -N 1 -n 20 --mem 100000 --time 07-00:00:00 --pty /bin/bash (large memory is required to load the data)
@@ -500,6 +500,15 @@ run iteration on cluster
 # 1) is there cross effect for each gene? i.e. Ae.counts is affected by the kind of cross, which might affect the expression level of those genes between the two kinds of crosses. 
 # all on cabernet 
 ```
+
+use MBASED for ASE in F1 
+```{r}
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("MBASED")
+library(MBASED)
+
+```
+
 
 
 

@@ -405,12 +405,38 @@ for (i in 1:length(LG.f2.ord.C)){
   LG.f2.C.safe[[i]] <- make.seq(LG.f2.ord.C[[i]], "safe") 
 } 
 
-rf.graph.table(LG.f2.C.safe[[13]])
+# rf.graph.table(LG.f2.C.safe[[13]])
 par(mfrow=c(1,1))
 draw.map(LG.f2.C.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
 write.map(LG.f2.C.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
 ```
 
+# R/qtl package to plot LOD & rf headmap to check marker order & assignment to LG correctness  
+```{r}
+library("qtl")
+
+LG.f2.C <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.map")
+
+summary(LG.f2.C)
+plotMap(LG.f2.C)
+plot.rf(LG.f2.C)
+
+totmar(LG.f2.C) # 945
+
+LG.f2.C.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
+
+summary(LG.f2.C.safe)
+plotMap(LG.f2.C.safe)
+plot.rf(LG.f2.C.safe)
+
+totmar(LG.f2.C.safe) # 631 
+
+geno.image(LG.f2.C, alternate.chrid = T) # grid with color pixels for different genotypes
+# geno.image(LG.f2.A, alternate.chrid = T) # grid with color pixels for different genotypes
+
+# save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
+```
+ 
 
 
 ######### above is for madmapper 

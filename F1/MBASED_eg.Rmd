@@ -238,6 +238,52 @@ assays=list(
   ),
   rowRanges=mySNVs_2s
   )
+
+myTumorNormalExample
+
+##example of use
+ASEresults_2s <- runMBASED(
+ASESummarizedExperiment=myTumorNormalExample,
+isPhased=FALSE,
+numSim=10^6,
+BPPARAM = SerialParam()
+)
+
+ASEresults_2s
+## explore the return object
+class(ASEresults_2s)
+names(assays(ASEresults_2s))
+assays(ASEresults_2s)$majorAlleleFrequencyDifference
+assays(ASEresults_2s)$pValueASE
+assays(ASEresults_2s)$pValueHeterogeneity
+rowRanges(ASEresults_2s)
+
+names(metadata(ASEresults_2s))
+class(metadata(ASEresults_2s)$locusSpecificResults)
+names(assays(metadata(ASEresults_2s)$locusSpecificResults))
+assays(metadata(ASEresults_2s)$locusSpecificResults)$allele1IsMajor
+assays(metadata(ASEresults_2s)$locusSpecificResults)$MAFDifference
+rowRanges(metadata(ASEresults_2s)$locusSpecificResults)
+
+## define function to print out the summary of ASE results
+summarizeASEResults_2s <- function(MBASEDOutput) {
+geneOutputDF <- data.frame(
+majorAlleleFrequencyDifference=assays(MBASEDOutput)$majorAlleleFrequencyDifference[,1],
+pValueASE=assays(MBASEDOutput)$pValueASE[,1],
+pValueHeterogeneity=assays(MBASEDOutput)$pValueHeterogeneity[,1]
+)
+lociOutputGR <- rowRanges(metadata(MBASEDOutput)$locusSpecificResults)
+lociOutputGR$allele1IsMajor <- assays(metadata(MBASEDOutput)$locusSpecificResults)$allele1IsMajor[,1]
+lociOutputGR$MAFDifference <- assays(metadata(MBASEDOutput)$locusSpecificResults)$MAFDifference[,1]
+lociOutputList <- split(lociOutputGR, factor(lociOutputGR$aseID, levels=unique(lociOutputGR$aseID)))
+return(
+list(
+geneOutput=geneOutputDF,
+locusOutput=lociOutputList
+)
+)
+}
+summarizeASEResults_2s(ASEresults_2s)
 ```
 
 
