@@ -332,6 +332,44 @@ C08 eg
 # marker data 
 F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
 F2.data 
+
+# two-point rf data  
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata")
+
+# order data 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/madmapper/LG.f2.ord.C8.Rdata")
+
+# get order 
+LG.f2.C8 <- make.seq(LG.f2.ord.C8[[10]], "force") 
+LG.f2.C8 # 62 
+
+rf.graph.table(LG.f2.C8)
+par(mfrow=c(1,1))
+draw.map(LG.f2.C8, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.C8, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C8.map") 
+
+# use safe mode 
+LG.f2.C8.safe <- make.seq(LG.f2.ord.C8[[10]], "safe") 
+LG.f2.C8.safe # 40 
+rf.graph.table(LG.f2.C8.safe)
+par(mfrow=c(1,1))
+draw.map(LG.f2.C8.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.C8.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C8.safe.map")
+
+#### check alternative order 
+ripple.seq(LG.f2.C8, ws = 5, LOD = 3)
+
+```
+* Is there need to use ripple.seq() to compare all possible orders, cannot output the result... 
+
+### Now import C subgenome 
+### analyze result C sub genome 
+### import data 
+```{r}
+######## import data #######
+# marker data 
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
+F2.data 
 # This is an object of class 'f2.onemap'
 #     No. individuals:     166 
 #     No. markers:         3443 
@@ -346,24 +384,31 @@ F2.data
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata")
 
 # order data 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/madmapper/LG.f2.ord.C8.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/madmapper/LG.f2.ord.C.Rdata")
 
 # get order 
-LG.f2.C8 <- make.seq(LG.f2.ord.C8[[10]], "force") 
-LG.f2.C8
+LG.f2.C <- list()
 
-rf.graph.table(LG.f2.C8)
+for (i in 1:length(LG.f2.ord.C)){
+  LG.f2.C[[i]] <- make.seq(LG.f2.ord.C[[i]], "force") 
+}
+
+# rf.graph.table(LG.f2.C[[i]])
 par(mfrow=c(1,1))
-draw.map(LG.f2.C8, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
-write.map(LG.f2.C8, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C8.map") 
+draw.map(LG.f2.C, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.C, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.map") 
 
 # use safe mode 
-LG.f2.C8.safe <- make.seq(LG.f2.ord.C8[[10]], "safe") 
+LG.f2.C.safe <- list()
 
-rf.graph.table(LG.f2.C8.safe)
+for (i in 1:length(LG.f2.ord.C)){
+  LG.f2.C.safe[[i]] <- make.seq(LG.f2.ord.C[[i]], "safe") 
+} 
+
+rf.graph.table(LG.f2.C.safe[[13]])
 par(mfrow=c(1,1))
-draw.map(LG.f2.C8.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
-write.map(LG.f2.C8.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C8.safe.map")
+draw.map(LG.f2.C.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.C.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
 ```
 
 
@@ -1029,89 +1074,7 @@ pull.map(cross_m, chr = c("A03","A05")) # longer length was plot than what was i
 pull.map(cross_m) 
 ```
 
-# check double cross over 
-```{r}
-cross.drop.marker <- map.F2
-
-for (chr in names(cross.drop.marker$geno)) { # for each chromosome in cross genotype data
-  my.chr <- get(chr,cross.drop.marker$geno) # return the genotype data, including data & map
-  print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
-  if(ncol(my.chr$data) > 3) { 
-    my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
-      apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
-        if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
-        if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
-        if ( length(unique(gt))  == 3) return(NA)
-        return(gt[2])
-      })
-    })
-  }
-  cross.drop.marker$geno <- within(cross.drop.marker$geno,assign(chr,my.chr))
-  print(paste(chr,"NA after",sum(is.na(get(chr,cross.drop.marker$geno)$data))))
-} 
-
-write.csv(pull.geno(cross.drop.marker),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/cross.drop.marker.csv")
-
-newmap.drop.marker <- est.map(cross.drop.marker,verbose=T,error.prob=.01) # why going through 
-# the last section of code doesn't assign new map 
-plot.map(map.F2, alternate.chrid = T) # the old genetic map
-plot.map(map.F2,newmap.drop.marker, alternate.chrid = T) # genetic map comparison
-
-geno.image(cross.drop.marker, alternate.chrid = T) # grid with color pixels for different genotypes
-
-save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
-```
-
 ######## for madmapper 
-
-
-# analyze result C sub genome 
-# import data 
-```{r}
-######## import data #######
-# marker data 
-F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
-F2.data 
-# This is an object of class 'f2.onemap'
-#     No. individuals:     166  
-#     No. markers:         2932 
-#     Percent genotyped:   96 
-# 
-#     Number of markers per type:
-#        AA : AB : BB -->  2932
-# 
-# This data contains no phenotypic information
-
-# two-point rf data  
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/right/twopts.f2.05.12.Rdata")
-
-# order data 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15/madmapper/LG.f2.ord.C.Rdata")
-
-# get order 
-LG.f2.C <- list()
-
-for (i in 1:length(LG.f2.ord.C)){
-  LG.f2.C[[i]] <- make.seq(LG.f2.ord.C[[i]], "force") 
-}
-
-# rf.graph.table(LG.f2.C[[i]])
-par(mfrow=c(1,1))
-draw.map(LG.f2.C, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
-write.map(LG.f2.C, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.map") 
-
-# use safe mode 
-LG.f2.C.safe <- list()
-
-for (i in 1:length(LG.f2.ord.C)){
-  LG.f2.C.safe[[i]] <- make.seq(LG.f2.ord.C[[i]], "safe") 
-} 
-
-rf.graph.table(LG.f2.C.safe[[i]])
-par(mfrow=c(1,1))
-draw.map(LG.f2.C.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
-write.map(LG.f2.C.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
-```
 
 # A subgenome
 ```{r}
@@ -1259,5 +1222,38 @@ MDS.F2.map <- function(F2_geno_data, LG, groupA, groupB){
 # 2) 
 ```
 
+### appendix 
+### check double cross over 
+```{r}
+cross.drop.marker <- LG.f2.C8
+
+for (chr in names(cross.drop.marker$geno)) { # for each chromosome in cross genotype data
+  my.chr <- get(chr,cross.drop.marker$geno) # return the genotype data, including data & map
+  print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+  if(ncol(my.chr$data) > 3) { 
+    my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+      apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+        if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+        if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+        if ( length(unique(gt))  == 3) return(NA)
+        return(gt[2])
+      })
+    })
+  }
+  cross.drop.marker$geno <- within(cross.drop.marker$geno,assign(chr,my.chr))
+  print(paste(chr,"NA after",sum(is.na(get(chr,cross.drop.marker$geno)$data))))
+} 
+
+write.csv(pull.geno(cross.drop.marker),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/cross.drop.marker.csv")
+
+newmap.drop.marker <- est.map(cross.drop.marker,verbose=T,error.prob=.01) # why going through 
+# the last section of code doesn't assign new map 
+plot.map(map.F2, alternate.chrid = T) # the old genetic map
+plot.map(map.F2,newmap.drop.marker, alternate.chrid = T) # genetic map comparison
+
+geno.image(cross.drop.marker, alternate.chrid = T) # grid with color pixels for different genotypes
+
+save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
+``` 
 
 

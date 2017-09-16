@@ -64,7 +64,7 @@ LG3.f2.ord <- order.seq(input.seq=LG3.f2, n.init = 5,
                          touchdown=TRUE)
 
 (LG3.f2.final <- make.seq(LG3.f2.ord,"force"))
-ripple.seq(ws=5, LG3.f2.final)
+test <- ripple.seq(ws=5, LG3.f2.final)
 
 # with arbitrary order 
 LG3seq.f2 <- make.seq(twopts.f2,c(47,38,59,16,62,21,20,48,22))
