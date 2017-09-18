@@ -119,8 +119,6 @@ dim(F2_geno_data_2) # 3443  166, end up with 2932 SNPs for map construction
 save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs with missing data less than 0.1
 ``` 
 
-######## down to here, missing rate based on the right number of lines were calculated and new F2 data were generated. ##########  
-
 # format data for onemap  
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
@@ -411,6 +409,55 @@ draw.map(LG.f2.C.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T
 write.map(LG.f2.C.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
 ```
 
+### Now import A subgenome 
+### analyze result C sub genome 
+### import data 
+```{r}
+######## import data #######
+# marker data 
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
+F2.data 
+# This is an object of class 'f2.onemap'
+#     No. individuals:     166 
+#     No. markers:         3443 
+#     Percent genotyped:   95 
+# 
+#     Number of markers per type:
+#        AA : AB : BB -->  3443
+# 
+# This data contains no phenotypic information
+
+# two-point rf data  
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata")
+
+# order data 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/madmapper/LG.f2.ord.A.Rdata")
+
+# get order 
+LG.f2.A <- list()
+
+for (i in 1:length(LG.f2.ord.A)){
+  LG.f2.A[[i]] <- make.seq(LG.f2.ord.A[[i]], "force") 
+}
+
+rf.graph.table(LG.f2.A[[7]])
+par(mfrow=c(1,1))
+draw.map(LG.f2.A, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.A, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.map") 
+
+# use safe mode 
+LG.f2.A.safe <- list()
+
+for (i in 1:length(LG.f2.ord.A)){
+  LG.f2.A.safe[[i]] <- make.seq(LG.f2.ord.A[[i]], "safe") 
+} 
+
+# rf.graph.table(LG.f2.C.safe[[13]])
+par(mfrow=c(1,1))
+draw.map(LG.f2.A.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.A.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.safe.map")
+```
+
 # R/qtl package to plot LOD & rf headmap to check marker order & assignment to LG correctness  
 ```{r}
 library("qtl")
@@ -435,12 +482,28 @@ geno.image(LG.f2.C, alternate.chrid = T) # grid with color pixels for different 
 # geno.image(LG.f2.A, alternate.chrid = T) # grid with color pixels for different genotypes
 
 # save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
-```
- 
 
+####### A sub
+LG.f2.A <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.map")
+
+summary(LG.f2.A)
+plotMap(LG.f2.A)
+plot.rf(LG.f2.A)
+
+totmar(LG.f2.C) # 945
+
+LG.f2.C.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
+
+summary(LG.f2.C.safe)
+plotMap(LG.f2.C.safe)
+plot.rf(LG.f2.C.safe) 
+```
 
 ######### above is for madmapper 
 
+
+
+########### down to here Sep 17 2017 ################
 # construct each LG on whitney 
 ```{r}
 # eg. 
