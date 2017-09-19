@@ -493,7 +493,7 @@ plot.rf(LG.f2.A.safe)
 ######### above is for madmapper 
 
 ########### what if I use mapping order to order markers ################
-# get marker index within each chromosome 
+get marker index within each chromosome 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
 dim(F2_geno_data_2) # 3443 166
@@ -522,57 +522,30 @@ order
 save(order, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/order.Rdata")
 ```
 
-# use mapping order to order markers  
-A01 
+use mapping order to order markers  
 ```{r}
 # load data 
 F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata") # LOD=3, max rf=0.5 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/order.Rdata")
 
-# mapping order 
-LG.f2.arbi.A01 <- make.seq(twopts.f2.LOD3_rf0.5, order[[1]])
-LG.f2.arbi.A01
-marker.type(LG.f2.arbi.A01)
-LG.f2.arbi.A01.map <- map(LG.f2.arbi.A01)
+# must unload tydiverse, otherwise error 
 unloadNamespace("tidyverse")
 detach("package:tidyverse", unload=TRUE) 
 
-rf.graph.table(LG.f2.arbi.A01.map) 
-draw.map(LG.f2.arbi.A01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
+# mapping order 
+LG.f2.arbi <- list()
 
-# map estimation for arbitrary order 
-LG.f2.arbi.A02 <- make.seq(twopts.f2.LOD3_rf0.5, order[[2]])
-LG.f2.arbi.A02 
-LG.f2.arbi.A02.map <- map(LG.f2.arbi.A02)  
-rf.graph.table(LG.f2.arbi.A02.map) 
+for (i in 1:length(order)){
+  tmp <- make.seq(twopts.f2.LOD3_rf0.5, order[[i]])
+  LG.f2.arbi[[i]] <- map(tmp)
+} 
 
-draw.map(LG.f2.arbi.A02.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
-
-#####
-mark.f2.A02 <- make.seq(twopts.f2.05.12, 193:270)
-LG.f2.ord.A02.1 <- order.seq(input.seq = mark.f2.A02, n.init = 5,
-                        subset.search = "twopt",
-                        twopt.alg = "rcd", THRES = 7,
-                        draw.try = T, wait = 1
-                        )
-
-LG.f2.A02.2 <- make.seq(LG.f2.ord.A02.1, "safe")
-LG.f2.A02.2
-rf.graph.table(LG.f2.A02)  
-draw.map(LG.f2.A02.2, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T) 
-
-# map estimation for arbitrary order 
-LG.f2.arbi.C01 <- make.seq(twopts.f2.LOD3_rf0.5, order[[19]])
-LG.f2.arbi.C01
-LG.f2.arbi.C01.map <- map(LG.f2.arbi.C01) 
-rf.graph.table(LG.f2.arbi.C01.map) 
-
-draw.map(LG.f2.arbi.C01.map, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+rf.graph.table(LG.f2.arbi[[1]])
+par(mfrow=c(1,1))
+draw.map(LG.f2.arbi, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2.arbi, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map") 
 ```
-
-
-
 
 Below can be useful probably in the future... 
 ```{r}
