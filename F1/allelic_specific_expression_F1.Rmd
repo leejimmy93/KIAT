@@ -383,9 +383,9 @@ plot(hyp2)
 ```
 
 ```{r}
-gene2 <- F1.counts.long %>% filter(gene_ID=="BnaA01g00030D")
+gene2 <- F1.counts.long %>% filter(gene_ID=="BnaA01g00050D")
 brms3 <- update(brms2,newdata=gene2)
-pairs(brms3)
+# pairs(brms3)
 ```
 
 ```{r}
