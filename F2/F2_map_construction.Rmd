@@ -257,34 +257,34 @@ check madmapper output (export *.tree.clust file to Excel, and decide which SNP 
 ```{r}
 madmapper.result <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/F2_geno_data_m_loc_mmout.x_tree_clust.csv", header = F)
 
-LG.A01 <- madmapper.result$V26[1:212]
-LG.C01 <- madmapper.result$V26[225:355]
-LG.A03 <- madmapper.result$V26[356:621]
-LG.C03 <- madmapper.result$V26[659:844]
-LG.A09 <- madmapper.result$V26[845:1186]
-LG.C08 <- madmapper.result$V26[1187:1248]
-LG.A06 <- madmapper.result$V26[1261:1699]
-LG.A05 <- madmapper.result$V26[1717:1871]
-LG.C05 <- madmapper.result$V26[1872:1909] 
-LG.A02 <- madmapper.result$V26[1924:2015]
-LG.A04 <- madmapper.result$V26[2016:2178]
-LG.C04 <- madmapper.result$V26[2179:2335]
-LG.A07 <- madmapper.result$V26[2336:2626]
-LG.A10 <- madmapper.result$V26[2627:2921]
-LG.C06 <- madmapper.result$V26[2922:3026]
-LG.C09 <- madmapper.result$V26[3027:3062]
-LG.A08 <- madmapper.result$V26[3075:3251]
-LG.C02 <- madmapper.result$V26[3252:3319]
-LG.C07 <- madmapper.result$V26[3320:3442]
+LG.A01 <- madmapper.result$V26[1:212] # 212 
+LG.C01 <- madmapper.result$V26[225:355] # 131
+LG.A03 <- madmapper.result$V26[356:621] # 266
+LG.C03 <- madmapper.result$V26[659:844] # 186
+LG.A09 <- madmapper.result$V26[845:1186] # 342
+LG.C08 <- madmapper.result$V26[1187:1248] # 62
+LG.A06 <- madmapper.result$V26[1261:1699] # 439
+LG.A05 <- madmapper.result$V26[1717:1871] # 155
+LG.C05 <- madmapper.result$V26[1872:1909] # 38
+LG.A02 <- madmapper.result$V26[1924:2015] # 92
+LG.A04 <- madmapper.result$V26[2016:2178] # 163
+LG.C04 <- madmapper.result$V26[2179:2335] # 157
+LG.A07 <- madmapper.result$V26[2336:2626] # 291
+LG.A10 <- madmapper.result$V26[2627:2921] # 295
+LG.C06 <- madmapper.result$V26[2922:3026] # 105
+LG.C09 <- madmapper.result$V26[3027:3062] # 36
+LG.A08 <- madmapper.result$V26[3075:3251] # 177
+LG.C02 <- madmapper.result$V26[3252:3319] # 68
+LG.C07 <- madmapper.result$V26[3320:3442] # 123
 
 ######### unincorported LGs
-LG.A01.2 <- madmapper.result$V26[213:224]
-LG.A03.2 <- madmapper.result$V26[622:658]
-LG.A09.2 <- madmapper.result$V26[1251:1259]
-LG.C04.C05 <- madmapper.result$V26[1703:1716]
-LG.C05.2 <- madmapper.result$V26[1910:1913]
-LG.C08.2 <- madmapper.result$V26[1914:1923]
-LG.C09.2 <- madmapper.result$V26[3063:3073] 
+LG.A01.2 <- madmapper.result$V26[213:224] # 12
+LG.A03.2 <- madmapper.result$V26[622:658] # 37
+LG.A09.2 <- madmapper.result$V26[1251:1259] # 9
+LG.C04.C05 <- madmapper.result$V26[1703:1716] # 14
+LG.C05.2 <- madmapper.result$V26[1910:1913] # 4
+LG.C08.2 <- madmapper.result$V26[1914:1923] # 10 
+LG.C09.2 <- madmapper.result$V26[3063:3073] # 11
 #########
 
 LG.A <- list(LG.A01, LG.A01.2, LG.A02, LG.A03, LG.A03.2, LG.A04, LG.A05, LG.A06, LG.A07, LG.A08, LG.A09, LG.A09.2, LG.A10)
@@ -451,13 +451,13 @@ write.map(LG.f2.A.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2
 
 # R/qtl package to plot LOD & rf headmap to check marker order & assignment to LG correctness  
 ```{r}
-library("qtl")
+library("qtl") 
 
 LG.f2.C <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.map")
 
 summary(LG.f2.C)
 plotMap(LG.f2.C)
-# plot.rf(LG.f2.C)
+# plot.rf(LG.f2.C) 
 
 totmar(LG.f2.C) # 945
 
@@ -465,7 +465,7 @@ LG.f2.C.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq
 
 summary(LG.f2.C.safe)
 plotMap(LG.f2.C.safe)
-# plot.rf(LG.f2.C.safe)
+# plot.rf(LG.f2.C.safe) 
 
 totmar(LG.f2.C.safe) # 631 
 
@@ -485,13 +485,19 @@ totmar(LG.f2.C) # 945
 
 LG.f2.A.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.safe.map")
 
-summary(LG.f2.A.safe)
-plotMap(LG.f2.A.safe)
+summary(LG.f2.A.safe) 
+plotMap(LG.f2.A.safe) 
+totmar(LG.f2.C.safe) # 
 # plot.rf(LG.f2.A.safe) 
 ```
 
+remove small LGs 
+```{r}
+LG.f2.A.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.safe.map")
 
-
+LG.f2.A.safe_2 <- LG.f2.A.safe
+# leave for later? 
+```
 
 
 
