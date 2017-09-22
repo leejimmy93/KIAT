@@ -292,12 +292,15 @@ LG.A <- list(LG.A01, LG.A01.2, LG.A02, LG.A03, LG.A03.2, LG.A04, LG.A05, LG.A06,
 LG.C <- list(LG.C01, LG.C02, LG.C03, LG.C04, LG.C04.C05, LG.C05, LG.C05.2, LG.C06, LG.C07, LG.C08, LG.C08.2, LG.C09, LG.C09.2)
 length(LG.A) # 13 linkage groups 
 length(LG.C) # 13 linkage groups 
+
+LG.madmapper <- list(LG.A01, LG.A02, LG.A03, LG.A04, LG.A05, LG.A06, LG.A07, LG.A08, LG.A09, LG.A10, LG.C01, LG.C02, LG.C03, LG.C04, LG.C05, LG.C06, LG.C07, LG.C08, LG.C09) 
+length(LG.madmapper) # 19 
 ```  
 
 # get index for the above markers in different linkage group 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata")
-twopts.f2.LOD3_rf0.5$marnames 
+twopts.f2.LOD3_rf0.5$marnames
 
 group.A <- list()
 
@@ -314,6 +317,14 @@ for (i in 1:length(LG.C)) {
 
 group.C
 save(group.A, group.C, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.Rdata")
+
+group.AC <- list()
+
+for (i in 1:length(LG.madmapper)) {
+  group.AC[[i]] <-  which(twopts.f2.LOD3_rf0.5$marnames %in% LG.madmapper[[i]])
+}
+group.AC 
+save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.AC.Rdata")  
 ```
 
 #### order within each chromosome 
@@ -496,7 +507,26 @@ remove small LGs
 LG.f2.A.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.safe.map")
 
 LG.f2.A.safe_2 <- LG.f2.A.safe
-# leave for later? 
+LG.f2.A.safe_2$geno[[2]] <- NULL
+LG.f2.A.safe_2$geno[[4]] <- NULL 
+LG.f2.A.safe_2$geno[[10]] <- NULL
+
+LG.f2.A.safe_2 # 1448 
+LG.f2.A.safe # 1411
+
+LG.f2.C.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
+
+LG.f2.C.safe_2 <- LG.f2.C.safe
+LG.f2.C.safe_2$geno[[5]] <- NULL
+LG.f2.C.safe_2$geno[[6]] <- NULL 
+LG.f2.C.safe_2$geno[[9]] <- NULL
+LG.f2.C.safe_2$geno[[10]] <- NULL
+
+LG.f2.C.safe # 631
+LG.f2.C.safe_2 # 602 
+
+LG.f2.madmarker <- c(LG.f2.A.safe_2$geno, LG.f2.C.safe_2$geno)
+
 ```
 
 
