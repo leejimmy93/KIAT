@@ -465,11 +465,11 @@ LG.f2.C.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq
 
 summary(LG.f2.C.safe)
 plotMap(LG.f2.C.safe)
-plot.rf(LG.f2.C.safe)
+# plot.rf(LG.f2.C.safe)
 
 totmar(LG.f2.C.safe) # 631 
 
-geno.image(LG.f2.C, alternate.chrid = T) # grid with color pixels for different genotypes
+# geno.image(LG.f2.C, alternate.chrid = T) # grid with color pixels for different genotypes
 # geno.image(LG.f2.A, alternate.chrid = T) # grid with color pixels for different genotypes
 
 # save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
@@ -479,7 +479,7 @@ LG.f2.A <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/o
 
 summary(LG.f2.A)
 plotMap(LG.f2.A)
-plot.rf(LG.f2.A)
+# plot.rf(LG.f2.A)
 
 totmar(LG.f2.C) # 945
 
@@ -487,8 +487,14 @@ LG.f2.A.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq
 
 summary(LG.f2.A.safe)
 plotMap(LG.f2.A.safe)
-plot.rf(LG.f2.A.safe) 
+# plot.rf(LG.f2.A.safe) 
 ```
+
+
+
+
+
+
 
 ######### above is for madmapper 
 
@@ -544,7 +550,7 @@ for (i in 1:length(order)){
 rf.graph.table(LG.f2.arbi[[19]])
 par(mfrow=c(1,1))
 draw.map(LG.f2.arbi, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
-write.map(LG.f2.arbi, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map") 
+# write.map(LG.f2.arbi, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map") 
 
 ########### use R/qtl ######################## 
 # data import 
@@ -556,14 +562,15 @@ map.F2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/ou
 # get rf figure & map figure for mapping order based map 
 summary(map.F2)
 plotMap(map.F2)
-plot.rf(map.F2) 
+# plot.rf(map.F2) 
 
 # newmap <- est.map(map.F2, tol=1e-6, map.function="kosambi") 
 # newmap doesn't look better at all 
 ```
 
 
-########### work from here next time ################## 
+
+
 # a bunch of checks in R/qtl 
 ```{r}
 summary(map.F2)
@@ -611,90 +618,7 @@ pull.map(cross_m)
 ```
 
 
-# MDS 
-The idea is that because Alex's pipeline seperate my marker into multiple LGs for each chromosome, although markers from the same chromosome do cluster together. By checking the LOD score & rf matrix, I found that markers from the same chromosome, which were assigned to different LGs are genetically linked by LOD score, but their rf is very low too. 
 
-Julin hypothezied that this might be caused by the different rf between markers that were present in the chromosome through evolution and markers that were integrated into the chromosome in this newly synthetic polyploid B.napus. We will arrange a meeting with Luca Comai to discuss this possibility. 
-
-At the same time, Julin asked me to do MDS using markers from the same chromosome but assigned to different LGs, to see whether they form two clusters by LGs. 
-```{r}
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
-dim(F2_geno_data_2) # 2932 166
-
-# use C subgenome LG15 & LG16 
-LG.A_15_16 <- F2_geno_data_2[rownames(F2_geno_data_2) %in% LG.A[[5]] | rownames(F2_geno_data_2) %in% LG.A[[6]],] 
-
-LG.A_15_16.trans <- transform_geno(temp2 = LG.A_15_16)
-
-# MDS 
-MDS.result <- MDS(genotype_file = LG.A_15_16.trans)
-plot(MDS(genotype_file = LG.A_15_16.trans))
-
-# plot 
-MDS.result$LG <- ifelse(rownames(MDS.result) %in% LG.A[[5]], "5", "6")
-ggplot(data = MDS.result, mapping = aes(x=V1, y = V2, color=LG)) + geom_point() + labs(title="A03")
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/ChrA03.png", width = 7, height = 5)  
-
-# use A subgenome LG15 & LG16 
-LG.C_15_16 <- F2_geno_data_2[rownames(F2_geno_data_2) %in% LG.C[[15]] | rownames(F2_geno_data_2) %in% LG.C[[16]],] 
-
-LG.C_15_16.trans <- transform_geno(temp2 = LG.C_15_16)
-
-# MDS 
-MDS.result <- MDS(genotype_file = LG.C_15_16.trans)
-plot(MDS(genotype_file = LG.C_15_16.trans))
-
-# plot 
-MDS.result$LG <- ifelse(rownames(MDS.result) %in% LG.C[[15]], "15", "16")
-ggplot(data = MDS.result, mapping = aes(x=V1, y = V2, color=LG)) + geom_point() + labs(title="C07")
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/ChrC07.png", width = 7, height = 5)
-
-### to demonstrate this more, plot all the C subgenome markers in MDS 1stly 
-length(unlist(LG.C)) 
-
-LG.C_all <- F2_geno_data_2[rownames(F2_geno_data_2) %in% unlist(LG.C),] 
-
-### Do LG15 & LG16 really belong to the same chromosome? yes 
-MDS.F2.map(F2_geno_data = F2_geno_data_2, LG = LG.A, groupA = 5, groupB = 6)
-```
-
-# appendix 
-```{r} 
-transform_geno <- function(temp2){
-  rnames <- rownames(temp2)
-  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","0",x)))
-  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","1",x)))
-  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","2",x)))
-  row.names(temp2) <- rnames 
-  return(temp2)
-} 
-
-MDS <- function(genotype_file){
-  genDist <- as.matrix(dist(genotype_file))
-  #perform the multi-dimensional scaling
-  geno.mds <- as.data.frame(cmdscale(genDist))
-  plot(geno.mds)  
-
-  return(geno.mds) 
-} 
-
-# MDS of SNPs from same chromosome but differnet LGs 
-MDS.F2.map <- function(F2_geno_data, LG, groupA, groupB){
-  LG.groupA_groupB <- F2_geno_data[rownames(F2_geno_data) %in% LG[[groupA]] | rownames(F2_geno_data) %in% LG.C[[groupB]],]
-
-  LG.groupA_groupB.trans <- transform_geno(temp2 = LG.groupA_groupB)
-
-  # MDS 
-  MDS.result <- MDS(genotype_file = LG.groupA_groupB.trans)
-  plot(MDS(genotype_file = LG.groupA_groupB.trans))
-
-  # plot 
-  MDS.result$LG <- ifelse(rownames(MDS.result) %in% LG.C[[groupA]], groupA, groupB)
-  plot <- ggplot(data = MDS.result, mapping = aes(x=V1, y = V2, color=LG)) + geom_point()
-  
-  return(plot)
-} 
-``` 
 
 ### appendix 
 ### check double cross over 

@@ -2948,5 +2948,25 @@ p.AveLogCPM
 ggsave(p.AveLogCPM, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/p.AveLogCPM.png", width = 4, height = 4)  
 ```
 
+tmp 
+```{r}
+tmp <- sample_des %>% select(SampleID, TotalReads) %>% mutate(TotalRead = TotalReads/2) %>% select(SampleID, TotalRead) 
+tmp2 <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/tmp", header = F)
+tmp2 
+
+tmp %>% head()
+tmp2 %>% head()
+tmp2$SampleID <- gsub("([[:print:]]+)(_)(1|2)(.fq.gz)", "\\1", tmp2$V1)
+
+test <- left_join(tmp2, tmp, by="SampleID")
+test$bam_folder <- paste(test$SampleID, ".star.trim.dir", sep = "")
+test$bam_folder_2 <- paste("whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/2016_summer/raw_data", test$bam_folder, sep = "/")
+write.csv(test, file = "~/Desktop/test.csv")
+
+tmp3 <- read.csv("~/Desktop/test.csv")
+tmp3$folder2 <- paste("Cabernet:/share/malooflab/Ruijuan/parent_assembly/cufflinks", tmp3$folder, "cufflink_output", sep = "/")
+tmp3$folder2
+write.csv(tmp3, file = "~/Desktop/test.csv")
+```
 
 
