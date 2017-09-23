@@ -547,6 +547,8 @@ write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_s
 # remove double crossover 
 LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
 
+LG.f2.madmapper.before.crossover <- LG.f2.madmapper
+
 for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genotype data
   my.chr <- get(chr,LG.f2.madmapper$geno) # return the genotype data, including data & map
   print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
@@ -604,6 +606,16 @@ for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genoty
 # [1] "19 NA after 235"
 
 write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
+```
+
+# work on maps with double crossover removed 
+```{r}
+f2.map.new <- est.map(LG.f2.madmapper,verbose=T,error.prob=.01) # why going through 
+LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
+plot.map(LG.f2.madmapper, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper, alternate.chrid = T) # genetic map comparison
+
+
 ```
 
 ######### above is for madmapper 
