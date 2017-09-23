@@ -383,9 +383,9 @@ plot(hyp2)
 ```
 
 ```{r}
-gene2 <- F1.counts.long %>% filter(gene_ID=="BnaA01g00030D")
+gene2 <- F1.counts.long %>% filter(gene_ID=="BnaA01g00180D")
 brms3 <- update(brms2,newdata=gene2)
-pairs(brms3)
+# pairs(brms3)
 ```
 
 ```{r}
@@ -491,15 +491,58 @@ run iteration on cluster
 # mixed effct: https://github.com/leejimmy93/KIAT_cabernet/blob/master/F1/ASE.slurm  
 ```
 
-# check result for fixed effect & mixed effect 
+check result for fixed effect & mixed effect 
 ```{r}
 # mixed effect (on cabernet)
 # srun -N 1 -n 20 --mem 100000 --time 07-00:00:00 --pty /bin/bash (large memory is required to load the data)
 
 # Questions that we are intrested: 
-# 1) is there cross effect for each gene? i.e. Ae.counts is affected by the kind of cross, which might affect the expression level of those genes between the two kinds of crosses. 
+# 1) is there cross effect for each gene? i.e. Ae.counts is affected by the kind of cross, which might affect the expression level of those genes between the two crosses. 
 # all on cabernet 
 ```
+
+* gene imprinting, ie. genes inherited from one parent is methylated so that allele is not expressed or expressed at a very low level. 
+
+After checking the result, I realized that there are many genes which show different ASE between crosses but not differentialy expressed between crosses, or genes that are differentially expressed but not show ASE.  
+
+For genes that show DE but not different ASE, there can be several different conditions:
+
+1) non-genetic, which is due to maternal effect, ie. the maternal environment effect
+2) genetic, genes which show different ASE are transcription factors which affect the expression of other genes, although the affected genes don'g show different ASE. (FLC example)
+
+but why different ASE but no different expression? ... 
+too much power to detect ASE? ... 
+
+* as a summary of the result: 4024 genes show DE between the two corsses (414 & 415), but only around 200 genes show different ASE using brms. 
+
+We have over 60,000 genes have detectable expression in young tissue, so can use fisher's exact test to see whether there is enrichment of ASE in differentially expressed genes. I think we are expecting a yes. 
+
+Also, since ASE can only be detected among genes which have SNPs, so the fisher's exact test needs to be done based on genes which have SNPs. 
+
+```{r}
+ASE_DE_SNP <- data.frame(DE = c(219, 2311), 
+                         no_DE = c(2797, 6336))
+
+rownames(ASE_DE_SNP) = c("ASE", "no_ASE")
+
+fisher.test(ASE_DE_SNP) 
+
+2300/53700*3800 # before not filtered by genes with SNP
+2311/6336*2797 # there is an enrichment in the non DE genes. wierd... 
+
+# also tried to increase iteraions to 10,000 to see whether can get Rhat all equal to 1 and avoid "## Warning: There were 2 divergent transitions after warmup. Increasing adapt_delta above 0.8 may help.". seems helped with the error, but Rhat still greater than 1. 
+
+
+```
+
+use MBASED for ASE in F1 
+```{r}
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("MBASED")
+library(MBASED)
+
+```
+
 
 
 

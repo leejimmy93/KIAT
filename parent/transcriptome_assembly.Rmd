@@ -74,9 +74,14 @@ output:
 # 10) blastp against nr protein database to get an idea of what genes they are 
 # blastp -query longest_orfs.pep  -db /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/NCBI/nr/nr  -max_target_seqs 1 -outfmt 6 -evalue 1e-6 -num_threads 6 -out ${i}_nr.out 
 
-# the number of novel genes which can be annotated 
+# 11) the number of novel genes which can be annotated 
 # cat longest_orfs.pep | grep ">" | sed 's/:/\t/g' | awk '{print $2}' | sort | uniq | wc -l
 # for Da-Ae 2311; for Da-Ol-1 2427 
+
+# extract sequences that need go for annotation 
+# cat longest_orfs.pep | grep ">" | sed 's/:/\t/g' | awk '{print $2}' | sort | uniq > for_annotation
+
+# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/transdecoder/after_cap3/Ol.u.fa.cap.contigs_singlets.transdecoder_dir/for_annotation_ID Ol.u.fa.cap.contigs_singlets > Ol_ref_for_annotation.fa
 ```
 
 #### de-novo based 

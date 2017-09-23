@@ -115,6 +115,200 @@ Notice the 3-fold decrease in pValueASE for gene2 when we skipped the simulation
 The use of parallelization is illustrated in the example below (not evaluated):
 
 ```{r}
+##re-run analysis while parallelizing computations
+## results are same as before
+## with some random flactuations due to simulations
+summarizeASEResults_1s(
+runMBASED(
+ASESummarizedExperiment=mySample,
+isPhased=FALSE,
+numSim=10^6,
+BPPARAM = MulticoreParam()
+)
+)$geneOutput
 
+## Number of seconds it takes to run results without parallelizing:
+system.time(runMBASED(
+ASESummarizedExperiment=mySample,
+isPhased=FALSE,
+numSim=10^6,
+BPPARAM = SerialParam()
+))['elapsed'] ## ~ 15 sec on our machine
+
+## Number of seconds it takes to run results with parallelizing:
+system.time(runMBASED(
+ASESummarizedExperiment=mySample,
+isPhased=FALSE,
+numSim=10^6,
+BPPARAM = MulticoreParam()
+))['elapsed'] ## ~9 sec on our machine
 ```
+
+We also note that for a single-locus gene1, the phasing plays no role, and the simulation-based p-values are very close to
+each other (there’s some variability due to random nature of simulations) and are approximately equal to the analytical
+p-value based on the binomial test:
+
+```{r}
+binom.test(25, 45, 0.5, 'two.sided')$p.value
+```
+
+Finally, let’s consider a case of isoform-specific ASE. Suppose that the 3 SNVs in gene2 correspond to 3 different exons, and that 2 transcript isoforms of gene 2 exist: isoform1 uses all 3 exons, and isoform2 uses only the last 2 exons. Further,
+let us assume that
+• both isoforms are present in 50/50 ratio
+• isoform1 shows no ASE
+• isoform2 shows complete silencing of one of the alleles (monoallelic expression, an extreme form of ASE).
+Here is an example of data one could observe under this toy scenario:
+
+Notice that SNV1 shows lower coverage than the other 2 SNVs, since it is only expressed by isoform1. Also note that
+alternative allele at SNV2 and reference allele at SNV3 are silenced in isoform2. Overall, each isoform is represented by
+approximately 50 reads at each SNV that is a part of that isoform.
+
+```{r}
+isoSpecificExampleSNVs <- mySNVs[2:4,]
+## create input RangedSummarizedExperiment object
+isoSpecificExample <- SummarizedExperiment(
+assays=list(
+lociAllele1Counts=matrix(
+  c(23, 65, 30),
+  ncol=1,
+  dimnames=list(
+  names(isoSpecificExampleSNVs),
+  'mySample'
+  )
+),
+lociAllele2Counts=matrix(
+c(26,25,70),
+ncol=1,
+dimnames=list(
+names(isoSpecificExampleSNVs),
+'mySample'
+)
+)
+),
+rowRanges=isoSpecificExampleSNVs
+)
+
+summarizeASEResults_1s(
+runMBASED(
+ASESummarizedExperiment=isoSpecificExample,
+isPhased=FALSE,
+numSim=10^6,
+BPPARAM = MulticoreParam()
+)
+)
+```
+
+# 2-sample analysis 
+```{r}
+mySNVs_2s <- GRanges(
+seqnames=c('chr1', 'chr2', 'chr2', 'chr2', 'chr3'),
+ranges=IRanges(start=c(100, 1000, 1100, 1200, 2000), width=1),
+aseID=c('gene1', rep('gene2', 3), 'gene3'),
+allele1=c('G', 'A', 'C', 'A', 'T'),
+allele2=c('T', 'C', 'T', 'G', 'G')
+)
+mySNVs_2s
+names(mySNVs_2s) <- c('gene1_SNV1', 'gene2_SNV1', 'gene2_SNV2', 'gene2_SNV3', 'gene3_SNV1')
+
+## create input RangedSummarizedExperiment object
+myTumorNormalExample <- SummarizedExperiment(
+assays=list(
+  lociAllele1Counts=matrix(
+  c(
+  c(25,10,35,14,35),
+  c(18,17,21,25,40)
+  ),
+  ncol=2,
+  dimnames=list(
+  names(mySNVs_2s),
+  c('tumor','normal')
+  )
+  ),
+  lociAllele2Counts=matrix(
+  c(
+  c(20,29,15,40,9),
+  c(23,19,24,31,10)
+  ),
+  ncol=2,
+  dimnames=list(
+  names(mySNVs_2s),
+  c('tumor','normal')
+  )
+  )
+  ),
+  rowRanges=mySNVs_2s
+  )
+
+myTumorNormalExample
+
+##example of use
+ASEresults_2s <- runMBASED(
+ASESummarizedExperiment=myTumorNormalExample,
+isPhased=FALSE,
+numSim=10^6,
+BPPARAM = SerialParam()
+)
+
+ASEresults_2s
+## explore the return object
+class(ASEresults_2s)
+names(assays(ASEresults_2s))
+assays(ASEresults_2s)$majorAlleleFrequencyDifference
+assays(ASEresults_2s)$pValueASE
+assays(ASEresults_2s)$pValueHeterogeneity
+rowRanges(ASEresults_2s)
+
+names(metadata(ASEresults_2s))
+class(metadata(ASEresults_2s)$locusSpecificResults)
+names(assays(metadata(ASEresults_2s)$locusSpecificResults))
+assays(metadata(ASEresults_2s)$locusSpecificResults)$allele1IsMajor
+assays(metadata(ASEresults_2s)$locusSpecificResults)$MAFDifference
+rowRanges(metadata(ASEresults_2s)$locusSpecificResults)
+
+## define function to print out the summary of ASE results
+summarizeASEResults_2s <- function(MBASEDOutput) {
+geneOutputDF <- data.frame(
+majorAlleleFrequencyDifference=assays(MBASEDOutput)$majorAlleleFrequencyDifference[,1],
+pValueASE=assays(MBASEDOutput)$pValueASE[,1],
+pValueHeterogeneity=assays(MBASEDOutput)$pValueHeterogeneity[,1]
+)
+lociOutputGR <- rowRanges(metadata(MBASEDOutput)$locusSpecificResults)
+lociOutputGR$allele1IsMajor <- assays(metadata(MBASEDOutput)$locusSpecificResults)$allele1IsMajor[,1]
+lociOutputGR$MAFDifference <- assays(metadata(MBASEDOutput)$locusSpecificResults)$MAFDifference[,1]
+lociOutputList <- split(lociOutputGR, factor(lociOutputGR$aseID, levels=unique(lociOutputGR$aseID)))
+return(
+list(
+geneOutput=geneOutputDF,
+locusOutput=lociOutputList
+)
+)
+}
+summarizeASEResults_2s(ASEresults_2s)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
