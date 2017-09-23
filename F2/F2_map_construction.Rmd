@@ -530,6 +530,80 @@ summary(LG.f2.A.safe)
 plotMap(LG.f2.A.safe) 
 totmar(LG.f2.C.safe) # 
 # plot.rf(LG.f2.A.safe) 
+
+## all markers on A & C 
+LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
+
+summary(LG.f2.madmapper) # 2013 
+plotMap(LG.f2.madmapper) 
+totmar(LG.f2.madmapper)  
+plot.rf(LG.f2.madmapper) 
+
+write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.doublecrossover.csv") 
+```
+
+### refine map 
+```{r}
+# remove double crossover 
+LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
+
+for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genotype data
+  my.chr <- get(chr,LG.f2.madmapper$geno) # return the genotype data, including data & map
+  print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+  if(ncol(my.chr$data) > 3) { 
+    my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+      apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+        if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+        if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+        if ( length(unique(gt))  == 3) return(NA)
+        return(gt[2])
+      })
+    })
+  }
+  LG.f2.madmapper$geno <- within(LG.f2.madmapper$geno,assign(chr,my.chr))
+  print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2.madmapper$geno)$data))))
+}  
+
+# [1] "1 NA before 969"
+# [1] "1 NA after 1270"
+# [1] "2 NA before 425"
+# [1] "2 NA after 617"
+# [1] "3 NA before 1095"
+# [1] "3 NA after 1452"
+# [1] "4 NA before 841"
+# [1] "4 NA after 1092"
+# [1] "5 NA before 823"
+# [1] "5 NA after 1109"
+# [1] "6 NA before 1849"
+# [1] "6 NA after 2487"
+# [1] "7 NA before 1210"
+# [1] "7 NA after 1600"
+# [1] "8 NA before 827"
+# [1] "8 NA after 1095"
+# [1] "9 NA before 1527"
+# [1] "9 NA after 2046"
+# [1] "10 NA before 1283"
+# [1] "10 NA after 1686"
+# [1] "11 NA before 724"
+# [1] "11 NA after 957"
+# [1] "12 NA before 325"
+# [1] "12 NA after 452"
+# [1] "13 NA before 952"
+# [1] "13 NA after 1309"
+# [1] "14 NA before 785"
+# [1] "14 NA after 1160"
+# [1] "15 NA before 232"
+# [1] "15 NA after 311"
+# [1] "16 NA before 463"
+# [1] "16 NA after 679"
+# [1] "17 NA before 740"
+# [1] "17 NA after 1033"
+# [1] "18 NA before 309"
+# [1] "18 NA after 419"
+# [1] "19 NA before 140"
+# [1] "19 NA after 235"
+
+write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
 ```
 
 ######### above is for madmapper 
