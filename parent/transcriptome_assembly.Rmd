@@ -133,6 +133,20 @@ output:
 
 ```
 
+# filtering based on ID
+```{r}
+library(tidyverse)
+Ae_unmapped.cds_ID <- read.table(file = "~/assembly_parent/De_novo/filtering/Ae_unmapped.cds_ID")
+
+Ae_unmapped.cds_ID %>% head()
+Ae_unmapped.blastx.trinity <- read.csv("~/assembly_parent/De_novo/filtering/Ae_unmapped.blastx.trinity2")
+
+
+```
+
+#### used for chimera
+* get size info for all transcript, used in chimera remove in Uchime 
+
 # structure annotation (possible tool: maker2)
 ```{r}
 
