@@ -332,6 +332,7 @@ save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.A
 # scp group.A & group.C to whitney 
 # https://github.com/leejimmy93/KIAT/blob/master/F2/map_A.R
 # https://github.com/leejimmy93/KIAT/blob/master/F2/map_C.R 
+# https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC.R 
 ``` 
 
 #### analyze result 
@@ -460,6 +461,35 @@ draw.map(LG.f2.A.safe, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T
 write.map(LG.f2.A.safe, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.safe.map")
 ```
 
+### combine A & C subgenome 
+```{r}
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
+F2.data
+
+# two-point rf data  
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata")
+
+# order data 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/madmapper/LG.f2.ord.A.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/madmapper/LG.f2.ord.C.Rdata")
+
+# get order for A sub
+LG.f2 <- list() 
+
+for (i in c(1, 3, 4, 6, 7, 8, 9, 10, 11, 13)){
+  LG.f2[[i]] <- make.seq(LG.f2.ord.A[[i]], "safe") 
+}
+
+for (i in c(1, 2, 3, 4, 6, 8, 9, 10, 12)){
+  LG.f2[[13+i]] <- make.seq(LG.f2.ord.C[[i]], "safe") 
+} 
+
+# remove null LGs 
+LG.f2 = LG.f2[-which(sapply(LG.f2, is.null))] 
+draw.map(LG.f2, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map") 
+```
+
 # R/qtl package to plot LOD & rf headmap to check marker order & assignment to LG correctness  
 ```{r}
 library("qtl") 
@@ -501,36 +531,6 @@ plotMap(LG.f2.A.safe)
 totmar(LG.f2.C.safe) # 
 # plot.rf(LG.f2.A.safe) 
 ```
-
-remove small LGs 
-```{r}
-LG.f2.A.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.A.safe.map")
-
-LG.f2.A.safe_2 <- LG.f2.A.safe
-LG.f2.A.safe_2$geno[[2]] <- NULL
-LG.f2.A.safe_2$geno[[4]] <- NULL 
-LG.f2.A.safe_2$geno[[10]] <- NULL
-
-LG.f2.A.safe_2 # 1448 
-LG.f2.A.safe # 1411
-
-LG.f2.C.safe <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.safe.map")
-
-LG.f2.C.safe_2 <- LG.f2.C.safe
-LG.f2.C.safe_2$geno[[5]] <- NULL
-LG.f2.C.safe_2$geno[[6]] <- NULL 
-LG.f2.C.safe_2$geno[[9]] <- NULL
-LG.f2.C.safe_2$geno[[10]] <- NULL
-
-LG.f2.C.safe # 631
-LG.f2.C.safe_2 # 602 
-
-LG.f2.madmarker <- c(LG.f2.A.safe_2$geno, LG.f2.C.safe_2$geno)
-
-```
-
-
-
 
 ######### above is for madmapper 
 
