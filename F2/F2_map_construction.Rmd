@@ -615,6 +615,8 @@ LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
 plot.map(LG.f2.madmapper, alternate.chrid = T) # the old genetic map
 plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper, alternate.chrid = T) # genetic map comparison
 
+plot.rf(LG.f2.madmapper, col.scheme = "redblue", alternate.chrid = T) 
+par(mfrow=c(1,1)) # reset to 1:1
 
 ```
 

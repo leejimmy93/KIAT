@@ -279,16 +279,18 @@ max(vcf.freebayes.HQ.1.reform.Ae$Ae_gt.qual)
 vcf.freebayes.HQ.2.test1.Ae.het <- 
 vcf.freebayes.HQ.2.test1.Ae[vcf.freebayes.HQ.2.test1.Ae$Ae_gt=="0/1",]
 
-vcf.freebayes.HQ.2.test1.Ae.het$allele_ratio <- round(vcf.freebayes.HQ.2.test1.Ae.het$Ae_alt.depth/vcf.freebayes.HQ.2.test1.Ae.het$Ae_ref.depth, digits = 2)
+vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio <- round(vcf.freebayes.HQ.2.test1.Ae.het$Ae_alt.depth/(vcf.freebayes.HQ.2.test1.Ae.het$Ae_ref.depth+vcf.freebayes.HQ.2.test1.Ae.het$Ae_alt.depth), digits = 2)
 
-hist(log10(vcf.freebayes.HQ.2.test1.Ae.het$allele_ratio), breaks= 150) 
+hist(log10(vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio), breaks= 150) 
 
 
-nrow(vcf.freebayes.HQ.2.test1.Ae.het[vcf.freebayes.HQ.2.test1.Ae.het$allele_ratio>0,])
+nrow(vcf.freebayes.HQ.2.test1.Ae.het[vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio>0,])
 nrow(vcf.freebayes.HQ.2.test1.Ae.het) 
+min(vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio) # 0.2 
+max(vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio) # 0.92
 
 pl <- ggplot(data = vcf.freebayes.HQ.2.test1.Ae.het) 
-pl <- pl + geom_histogram(aes(allele_ratio)) 
+pl <- pl + geom_histogram(aes(alt_ratio)) 
 pl <- pl +labs(list(x="alt.depth/ref.depth", y="nunber of SNPs"))
 pl 
 
@@ -821,16 +823,18 @@ ggsave(p.MBR.Ae, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/
 vcf.freebayes.HQ.2.test1.Ae.het <- 
 vcf.freebayes.HQ.2.test1.Ae[vcf.freebayes.HQ.2.test1.Ae$Ae_gt=="0/1",]
 
-vcf.freebayes.HQ.2.test1.Ae.het$allele_ratio <- round(vcf.freebayes.HQ.2.test1.Ae.het$Ae_alt.depth/vcf.freebayes.HQ.2.test1.Ae.het$Ae_ref.depth, digits = 2)
+vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio <- round(vcf.freebayes.HQ.2.test1.Ae.het$Ae_alt.depth/(vcf.freebayes.HQ.2.test1.Ae.het$Ae_ref.depth + vcf.freebayes.HQ.2.test1.Ae.het$Ae_alt.depth), digits = 2)
 
-hist(log10(vcf.freebayes.HQ.2.test1.Ae.het$allele_ratio), breaks= 150) 
+hist(log10(vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio), breaks= 150) 
 
 
-nrow(vcf.freebayes.HQ.2.test1.Ae.het[vcf.freebayes.HQ.2.test1.Ae.het$allele_ratio>0,])
+nrow(vcf.freebayes.HQ.2.test1.Ae.het[vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio>0,])
 nrow(vcf.freebayes.HQ.2.test1.Ae.het) 
+max(vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio) # 0.92
+min(vcf.freebayes.HQ.2.test1.Ae.het$alt_ratio) # 0.2 
 
 pl <- ggplot(data = vcf.freebayes.HQ.2.test1.Ae.het) 
-pl <- pl + geom_histogram(aes(allele_ratio)) 
+pl <- pl + geom_histogram(aes(alt_ratio)) 
 pl <- pl +labs(list(x="alt.depth/ref.depth", y="nunber of SNPs"))
 pl
 
