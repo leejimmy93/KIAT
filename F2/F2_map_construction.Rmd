@@ -18,6 +18,7 @@ library(onemap)
 library(ggplot2)
 library(reshape) 
 library(tidyverse) 
+library("qtl") 
 ```
 
 # import & format data (MAC version)
@@ -492,8 +493,6 @@ write.map(LG.f2, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmap
 
 # R/qtl package to plot LOD & rf headmap to check marker order & assignment to LG correctness  
 ```{r}
-library("qtl") 
-
 LG.f2.C <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.C.map")
 
 summary(LG.f2.C)
@@ -543,7 +542,7 @@ write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_s
 ```
 
 ### refine map 
-```{r}
+```{r} 
 # remove double crossover 
 LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
 
@@ -612,12 +611,13 @@ write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_s
 ```{r}
 f2.map.new <- est.map(LG.f2.madmapper,verbose=T,error.prob=.01) # why going through 
 LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
-plot.map(LG.f2.madmapper, alternate.chrid = T) # the old genetic map
-plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper, alternate.chrid = T) # genetic map comparison
+LG.f2.madmapper.after.crossover <- LG.f2.madmapper
+plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
 
-plot.rf(LG.f2.madmapper, col.scheme = "redblue", alternate.chrid = T) 
-par(mfrow=c(1,1)) # reset to 1:1
-
+# plot.rf(LG.f2.madmapper, col.scheme = "redblue", alternate.chrid = T) 
+# par(mfrow=c(1,1)) # reset to 1:1
+save(LG.f2.madmapper.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
 ```
 
 ######### above is for madmapper 
@@ -675,11 +675,11 @@ rf.graph.table(LG.f2.arbi[[19]])
 par(mfrow=c(1,1))
 draw.map(LG.f2.arbi, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
 # write.map(LG.f2.arbi, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map") 
+```
 
-########### use R/qtl ######################## 
-# data import 
-library("qtl")
-
+remove markers with double crossover 
+```{r}
+########### use R/qtl ########################  
 # import data 
 map.F2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map")
 
@@ -688,12 +688,58 @@ summary(map.F2)
 plotMap(map.F2)
 # plot.rf(map.F2) 
 
-# newmap <- est.map(map.F2, tol=1e-6, map.function="kosambi") 
-# newmap doesn't look better at all 
+LG.f2.mappingpos.before.crossover <- map.F2
+rm.double.crossover(map.F2)
+
+# [1] "1 NA before 1950"
+# [1] "1 NA after 2744"
+# [1] "2 NA before 842"
+# [1] "2 NA after 1205"
+# [1] "3 NA before 2448"
+# [1] "3 NA after 3412"
+# [1] "4 NA before 1344"
+# [1] "4 NA after 1932"
+# [1] "5 NA before 1371"
+# [1] "5 NA after 1958"
+# [1] "6 NA before 3573"
+# [1] "6 NA after 4857"
+# [1] "7 NA before 2511"
+# [1] "7 NA after 3337"
+# [1] "8 NA before 1460"
+# [1] "8 NA after 2044"
+# [1] "9 NA before 3015"
+# [1] "9 NA after 4211"
+# [1] "10 NA before 2510"
+# [1] "10 NA after 3401"
+# [1] "11 NA before 1188"
+# [1] "11 NA after 1805"
+# [1] "12 NA before 495"
+# [1] "12 NA after 724"
+# [1] "13 NA before 1565"
+# [1] "13 NA after 2282"
+# [1] "14 NA before 1301"
+# [1] "14 NA after 1933"
+# [1] "15 NA before 439"
+# [1] "15 NA after 694"
+# [1] "16 NA before 924"
+# [1] "16 NA after 1343"
+# [1] "17 NA before 1069"
+# [1] "17 NA after 1642"
+# [1] "18 NA before 660"
+# [1] "18 NA after 965"
+# [1] "19 NA before 340"
+# [1] "19 NA after 554"
+
+# write.csv(pull.geno(LG.f2.mappingpos.before.crossover),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.mappingpos.before.crossover.csv") 
+
+f2.map.new <- est.map(LG.f2.mappingpos.before.crossover,verbose=T,error.prob=.01) # why going through
+save(f2.map.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/f2.map.new.mapping.Rdata")
+map.F2 <- replace.map(map.F2, f2.map.new)
+LG.f2.mappingpos.after.crossover <- map.F2
+
+plot.map(LG.f2.mappingpos.after.crossover, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison 
 ```
-
-
-
 
 # a bunch of checks in R/qtl 
 ```{r}
@@ -747,10 +793,9 @@ pull.map(cross_m)
 ### appendix 
 ### check double cross over 
 ```{r}
-cross.drop.marker <- LG.f2.C8
-
-for (chr in names(cross.drop.marker$geno)) { # for each chromosome in cross genotype data
-  my.chr <- get(chr,cross.drop.marker$geno) # return the genotype data, including data & map
+rm.double.crossover <- function(LG){
+for (chr in names(LG$geno)) { # for each chromosome in cross genotype data
+  my.chr <- get(chr,LG$geno) # return the genotype data, including data & map
   print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
   if(ncol(my.chr$data) > 3) { 
     my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
@@ -762,20 +807,22 @@ for (chr in names(cross.drop.marker$geno)) { # for each chromosome in cross geno
       })
     })
   }
-  cross.drop.marker$geno <- within(cross.drop.marker$geno,assign(chr,my.chr))
-  print(paste(chr,"NA after",sum(is.na(get(chr,cross.drop.marker$geno)$data))))
+  LG$geno <- within(LG$geno,assign(chr,my.chr))
+  print(paste(chr,"NA after",sum(is.na(get(chr,LG$geno)$data))))
 } 
+}
 
-write.csv(pull.geno(cross.drop.marker),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/cross.drop.marker.csv")
 
-newmap.drop.marker <- est.map(cross.drop.marker,verbose=T,error.prob=.01) # why going through 
-# the last section of code doesn't assign new map 
-plot.map(map.F2, alternate.chrid = T) # the old genetic map
-plot.map(map.F2,newmap.drop.marker, alternate.chrid = T) # genetic map comparison
+# write.csv(pull.geno(cross.drop.marker),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/cross.drop.marker.csv")
 
-geno.image(cross.drop.marker, alternate.chrid = T) # grid with color pixels for different genotypes
-
-save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
+# newmap.drop.marker <- est.map(cross.drop.marker,verbose=T,error.prob=.01) # why going through 
+# # the last section of code doesn't assign new map 
+# plot.map(map.F2, alternate.chrid = T) # the old genetic map
+# plot.map(map.F2,newmap.drop.marker, alternate.chrid = T) # genetic map comparison
+# 
+# geno.image(cross.drop.marker, alternate.chrid = T) # grid with color pixels for different genotypes
+# 
+# save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
 ``` 
 
 
