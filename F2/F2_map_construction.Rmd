@@ -607,7 +607,7 @@ for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genoty
 write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
 ```
 
-# work on maps with double crossover removed 
+#### work on maps with double crossover removed 
 ```{r}
 f2.map.new <- est.map(LG.f2.madmapper,verbose=T,error.prob=.01) # why going through 
 LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
@@ -619,6 +619,36 @@ plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alter
 # par(mfrow=c(1,1)) # reset to 1:1
 save(LG.f2.madmapper.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
 ```
+
+### continue refine map (refer to Cody's code)
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
+summaryMap(LG.f2.madmapper.after.crossover)
+plotMap(LG.f2.madmapper.after.crossover)
+
+totmar(LG.f2.madmapper.after.crossover) # 2013
+
+# identify markers with possible segregation distortion
+gt <- geno.table(LG.f2.madmapper.after.crossover)
+seg_dist <- gt[gt$P.value < 0.05/totmar(LG.f2.madmapper.after.crossover),]
+seg_dist
+dim(seg_dist) # 67 8 
+
+#                 chr missing AA  AB BB not.BB not.AA      P.value
+# chrA01_684630     1      13  9 106 38      0      0 4.702676e-08
+# chrA01_4318350    1      25  7  99 35      0      0 3.815686e-08
+# chrA01_4081437    1      12 12 114 28      0      0 3.602786e-09
+# chrA02_6523578    2       8 13  98 47      0      0 6.885616e-06
+# chrA02_6264806    2      20  6  93 47      0      0 4.168391e-08 .... this many might be caused by missing data replace SNPs with double cross over 
+
+# now remove markers that obviously do not belong
+# make a copy so I can go back and not have to reestimate the map
+LG.f2.madmapper.2 <- LG.f2.madmapper.after.crossover
+rffull <- pull.rf(LG.f2.madmapper.2)
+
+
+```
+
 
 ######### above is for madmapper 
 
@@ -672,7 +702,7 @@ for (i in 1:length(order)){
 } 
 
 rf.graph.table(LG.f2.arbi[[19]])
-par(mfrow=c(1,1))
+par(mfrow=c(1,1)) 
 draw.map(LG.f2.arbi, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
 # write.map(LG.f2.arbi, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map") 
 ```
@@ -738,7 +768,7 @@ map.F2 <- replace.map(map.F2, f2.map.new)
 LG.f2.mappingpos.after.crossover <- map.F2
 
 plot.map(LG.f2.mappingpos.after.crossover, alternate.chrid = T) # the old genetic map
-plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison 
+plot.map(LG.f2.mappingpos.before.crossover, LG.f2.mappingpos.after.crossover, alternate.chrid = T) # genetic map comparison 
 ```
 
 # a bunch of checks in R/qtl 
@@ -785,10 +815,7 @@ nm <- est.map(map.F2)
 plot(nm, alternate.chrid = T) 
 pull.map(cross_m, chr = c("A03","A05")) # longer length was plot than what was indicated in the data? 
 pull.map(cross_m) 
-```
-
-
-
+``` 
 
 ### appendix 
 ### check double cross over 
