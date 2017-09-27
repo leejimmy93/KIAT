@@ -99,12 +99,12 @@ plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # ge
 save(LG.f2.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.after.crossover.Rdata")
 ```
 
-### initial QTL analysis 
+### initial QTL analysis (practice)
 ```{r}
-LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover, step=2)
-out.em <- scanone(LG.f2.after.crossover, method="em")
-out.hk <- scanone(LG.f2.after.crossover, method="hk")
-plot(out.em, out.hk, col=c("blue","red")) 
+# LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover, step=2)
+# out.em <- scanone(LG.f2.after.crossover, method="em")
+# out.hk <- scanone(LG.f2.after.crossover, method="hk")
+# plot(out.em, out.hk, col=c("blue","red")) 
 ```
 
 ### follow Julin's CSHL code 
@@ -138,18 +138,46 @@ perm95 <- summary(scanone.perm.imp)[1] #keep the 95th percentile for future use.
   #disadvantage is that it is slower.  Not a big deal on current computers.
 # Erucic acid 
 scanone.imp.Erucic <- scanone(LG.f2.after.crossover,pheno.col=15,method="imp") # 
-plot(scanone.imp.Erucic,bandcol="gray90")
+plot(scanone.imp.Erucic,bandcol="gray90", main="Erucic_acid")
 abline(h=perm95,lty=2) #add permuation threshold
 
 # Oleic acid 
 scanone.imp.Oleic <- scanone(LG.f2.after.crossover,pheno.col=8,method="imp") # 
-plot(scanone.imp.Oleic,bandcol="gray90")
+plot(scanone.imp.Oleic,bandcol="gray90", main="Oleic_acid")
 abline(h=perm95,lty=2) #add permuation threshold
+```
 
-#### run this for all trait at one time 
+### run one dimeonsional mapping for all traits at once 
+```{r}
+scanone.imp <- 
+lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
+  print(trait)
+  scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
+}) 
 
+names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)
 
+plots <- scanone.imp %>% 
+  map(~plot(.,bandcol="gray90") 
+      abline(h=perm95,lty=2))
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
