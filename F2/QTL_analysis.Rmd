@@ -157,10 +157,15 @@ lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
 
 names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)
 
-plots <- scanone.imp %>% 
-  map(~plot(.,bandcol="gray90") 
-      abline(h=perm95,lty=2))
+png("~/F2/output/QTL_analysis/figure/QTL_one_dim.png", width=25, height=15, units="in", res=300)
+par(mfrow=c(6,7))
 
+for (i in names(scanone.imp)){
+  plot(scanone.imp[[i]],bandcol="gray90", main=i)
+  abline(h=perm95,lty=2)
+}
+
+dev.off()  
 ```
 
 
