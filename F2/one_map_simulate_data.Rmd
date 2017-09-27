@@ -85,7 +85,25 @@ rf.graph.table(LG3.f2.wrong)
 temp.seq <- drop.marker(LG3.f2.wrong,38)
 temp.map <- map(temp.seq)
 temp.try <- try.seq(temp.map, 38, draw.try=TRUE)
-(LG3.f2.final<-make.seq(temp.try, 4)) 
+(LG3.f2.final<-make.seq(temp.try, 4))  
 
+maps.list<-list(LG1.f2.final, LG2.f2.final, LG3.f2.final)
+draw.map(maps.list, names= TRUE, grid=TRUE, cex.mrk=0.7)
+draw.map(LG1.f2.final, names= TRUE, grid=TRUE, cex.mrk=0.7)
+write.map(maps.list, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/fake.f2.onemap.map")
+```
+
+### for QTL analysis 
+```{r}
+raw.file<-paste(system.file("example",package="onemap"),
+                "fake.f2.onemap.raw", sep="/")
+raw.file 
+fake.f2.qtl <- read.cross("mm", file=raw.file, mapfile="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/fake.f2.onemap.map")
+newmap <- est.map(fake.f2.qtl, tol=1e-6, map.function="kosambi")
+plot.map(fake.f2.qtl, newmap)
+fake.f2.qtl <- calc.genoprob(fake.f2.qtl, step=2)
+out.em <- scanone(fake.f2.qtl, method="em")
+out.hk <- scanone(fake.f2.qtl, method="hk")
+plot(out.em, out.hk, col=c("blue","red"))
 ```
 

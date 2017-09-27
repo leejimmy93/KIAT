@@ -642,7 +642,26 @@ reform.vcf <- function(temp){
   return(temp2) 
 }
 
-
+# function to remove double crossover 
+### check double cross over 
+rm.double.crossover <- function(LG){
+  for (chr in names(LG$geno)) { # for each chromosome in cross genotype data
+    my.chr <- get(chr,LG$geno) # return the genotype data, including data & map
+    print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+    if(ncol(my.chr$data) > 3) { 
+      my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+        apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+          if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+          if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+          if ( length(unique(gt))  == 3) return(NA)
+          return(gt[2])
+        })
+      })
+    }
+    LG$geno <- within(LG$geno,assign(chr,my.chr))
+    print(paste(chr,"NA after",sum(is.na(get(chr,LG$geno)$data))))
+  } 
+}
 
 
 

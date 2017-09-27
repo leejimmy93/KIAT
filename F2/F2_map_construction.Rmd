@@ -101,7 +101,7 @@ for (i in 1:nrow(dup.cordinate)){
  dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
 }
 
-length(dup.pair[,2]) # 172 
+length(dup.pair[,2]) # 171 
 rem <- unique(dup.pair[,2])
 length(rem) # 163 markers are removed due to pairwise correlation of 1 
 
@@ -164,7 +164,7 @@ dim(F2_geno_data_2_Ae_Ol_new) # 3443 166
 write.table(F2_geno_data_2_Ae_Ol_new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.txt")
 # change file format in linux 
 # cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
-# tail -3443 tmp > tmp.1
+# tail -3443 tmp > tmp.1 
 
 write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info.txt" )
 # cat marker_info.txt | awk '{print "*"$2}' | tail -5556 | sed 's/"//g' > marker_info_reform.txt
@@ -536,9 +536,9 @@ LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_
 summary(LG.f2.madmapper) # 2013 
 plotMap(LG.f2.madmapper) 
 totmar(LG.f2.madmapper)  
-plot.rf(LG.f2.madmapper) 
+# plot.rf(LG.f2.madmapper) 
 
-write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.doublecrossover.csv") 
+# write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.doublecrossover.csv") 
 ```
 
 ### refine map 
@@ -602,7 +602,7 @@ for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genoty
 # [1] "18 NA before 309"
 # [1] "18 NA after 419"
 # [1] "19 NA before 140"
-# [1] "19 NA after 235"
+# [1] "19 NA after 235" 
 
 write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
 ```
@@ -618,6 +618,14 @@ plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alter
 # plot.rf(LG.f2.madmapper, col.scheme = "redblue", alternate.chrid = T) 
 # par(mfrow=c(1,1)) # reset to 1:1
 save(LG.f2.madmapper.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
+```
+
+### check rf graph for map 
+```{r}
+plot.rf(LG.f2.madmapper.after.crossover, chr = '19')
+LG.f2.madmapper.after.crossover$geno$`1`$data
+LG.f2.mappingpos.before.crossover$geno$`1`
+plot.rf(LG.f2.mappingpos.before.crossover, chr = '10')
 ```
 
 ### continue refine map (refer to Cody's code)

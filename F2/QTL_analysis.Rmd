@@ -1,0 +1,95 @@
+---
+title: "QTL_analysis"
+author: "Ruijuan Li"
+date: "9/26/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+Goal of this project: to map QTL using the genetic map that I constructed from F2 mapping population created from Da-Ae & Da-Ol-1 
+
+```{r}
+library(tidyverse)
+library(qtl)
+```
+
+### reformat file with geno and pheno info
+```{r}
+# geno data 
+F2_geno_data_2_Ae_Ol_new <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.txt")
+dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
+
+# pheno data 
+pheno <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Phenotype_Bnapus_all.csv", header = T, row.names = 1)
+dim(pheno) # 42 166 
+pheno[1:10, 1:10]
+rownames(pheno) <- gsub("\ ", "_", rownames(pheno))
+rownames(pheno) <- gsub("-", "_", rownames(pheno))
+rownames(pheno) <- gsub("\\.", "_", rownames(pheno)) 
+
+# combine geno & pheno data for QTL analysis 
+colnames(F2_geno_data_2_Ae_Ol_new) <- gsub("X", "ID_", colnames(F2_geno_data_2_Ae_Ol_new))
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
+
+F2_geno_data_2_Ae_Ol_new.t <- as.data.frame(t(F2_geno_data_2_Ae_Ol_new))
+F2_geno_data_2_Ae_Ol_new.t$ID <- rownames(F2_geno_data_2_Ae_Ol_new.t)
+pheno.t <- as.data.frame(t(pheno)) 
+pheno.t$ID <- rownames(pheno.t)
+
+F2_geno_data_2_Ae_Ol_new.2 <- 
+F2_geno_data_2_Ae_Ol_new.t %>% 
+  left_join(pheno.t) %>% 
+  select(-ID)  
+
+dim(F2_geno_data_2_Ae_Ol_new.2) # 166 3485 
+F2_geno_data_2_Ae_Ol_new.2[1:10, 3440:3485] 
+F2_geno_data_2_Ae_Ol_new.2 <- t(F2_geno_data_2_Ae_Ol_new.2)
+
+write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/F2_geno_data_2_Ae_Ol_new.2.txt")
+# change file format in linux 
+# cat F2_geno_data_2_Ae_Ol_new.2.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' > tmp
+# tail -3485 tmp > tmp.1 
+
+write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/marker_info.txt" )
+# cat marker_info.txt | awk '{print "*"$2}' | tail -3485 | sed 's/"//g' > marker_info_reform.txt
+
+# paste marker_info_reform.txt tmp.1  | tr "\t" "\ " > F2_geno_for_one_map.txt
+# cat ../../header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt 
+# change header info: maker number to the right marker number 
+```
+
+### load data 
+```{r}
+LG.f2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
+```
+
+### re-estimate map
+```{r}
+LG.f2.before.crossover <- LG.f2
+
+rm.double.crossover(LG = LG.f2)
+
+### start from here tonight... 
+map.new <- est.map(LG.f2,verbose=T,error.prob=.01) 
+
+
+
+LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
+LG.f2.madmapper.after.crossover <- LG.f2.madmapper
+plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
+
+```
+
+### initial QTL analysis 
+```{r}
+newmap <- est.map(fake.f2.qtl, tol=1e-6, map.function="kosambi")
+plot.map(fake.f2.qtl, newmap)
+fake.f2.qtl <- calc.genoprob(fake.f2.qtl, step=2)
+out.em <- scanone(fake.f2.qtl, method="em")
+out.hk <- scanone(fake.f2.qtl, method="hk")
+plot(out.em, out.hk, col=c("blue","red")) 
+```
+

@@ -1,0 +1,14 @@
+---
+title: "QTL_practice_Julin"
+author: "Ruijuan Li"
+date: "9/26/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+### Preliminary analysis of hypocotyl data 
+```{r}
+
+```
+
