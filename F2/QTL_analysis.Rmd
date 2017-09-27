@@ -61,35 +61,52 @@ write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/Desktop/Brassica_pro
 ```
 
 ### load data 
-```{r}
+```{r} 
 LG.f2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
 ```
 
 ### re-estimate map
 ```{r}
+LG.f2
+
 LG.f2.before.crossover <- LG.f2
 
-rm.double.crossover(LG = LG.f2)
+for (chr in names(LG.f2$geno)) { # for each chromosome in cross genotype data
+  my.chr <- get(chr,LG.f2$geno) # return the genotype data, including data & map
+  print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+  if(ncol(my.chr$data) > 3) { 
+    my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+      apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+        if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+        if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+        if ( length(unique(gt))  == 3) return(NA)
+        return(gt[2])
+      })
+    })
+  }
+  LG.f2$geno <- within(LG.f2$geno,assign(chr,my.chr))
+  print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2$geno)$data))))
+}  
 
-### start from here tonight... 
 map.new <- est.map(LG.f2,verbose=T,error.prob=.01) 
 save(map.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/map.new.Rdata")
 
+LG.f2 <- replace.map(LG.f2, map.new)
+LG.f2.after.crossover <- LG.f2
 
-LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
-LG.f2.madmapper.after.crossover <- LG.f2.madmapper
-plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # the old genetic map
-plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
+plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison
 
 ```
 
 ### initial QTL analysis 
 ```{r}
-newmap <- est.map(fake.f2.qtl, tol=1e-6, map.function="kosambi")
-plot.map(fake.f2.qtl, newmap)
-fake.f2.qtl <- calc.genoprob(fake.f2.qtl, step=2)
-out.em <- scanone(fake.f2.qtl, method="em")
-out.hk <- scanone(fake.f2.qtl, method="hk")
+# newmap <- est.map(fake.f2.qtl, tol=1e-6, map.function="kosambi")
+# plot.map(fake.f2.qtl, newmap)
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover, step=2)
+out.em <- scanone(LG.f2.after.crossover, method="em")
+out.hk <- scanone(LG.f2.after.crossover, method="hk")
 plot(out.em, out.hk, col=c("blue","red")) 
 ```
+
 

@@ -684,5 +684,3 @@ rm.double.crossover <- function(LG){
 
 
 
-
-
