@@ -73,7 +73,7 @@ rm.double.crossover(LG = LG.f2)
 
 ### start from here tonight... 
 map.new <- est.map(LG.f2,verbose=T,error.prob=.01) 
-
+save(map.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/map.new.Rdata")
 
 
 LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
