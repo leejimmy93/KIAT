@@ -642,7 +642,7 @@ reform.vcf <- function(temp){
   return(temp2) 
 }
 
-# function to remove double crossover 
+# function to remove double crossover (does not work as expected...)
 ### check double cross over 
 rm.double.crossover <- function(LG){
   for (chr in names(LG$geno)) { # for each chromosome in cross genotype data

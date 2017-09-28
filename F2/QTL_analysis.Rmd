@@ -97,15 +97,22 @@ LG.f2.after.crossover <- LG.f2
 
 plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
 plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison 
-save(LG.f2.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.after.crossover.Rdata")
+save(LG.f2.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/LG.f2.after.crossover.Rdata")
 ```
 
 ### initial QTL analysis (practice)
 ```{r}
+<<<<<<< HEAD
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover, step=2)
+out.em <- scanone(LG.f2.after.crossover, method="em")
+out.hk <- scanone(LG.f2.after.crossover, method="hk") 
+plot(out.em, out.hk, col=c("blue","red")) 
+=======
 # LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover, step=2)
 # out.em <- scanone(LG.f2.after.crossover, method="em")
 # out.hk <- scanone(LG.f2.after.crossover, method="hk")
 # plot(out.em, out.hk, col=c("blue","red")) 
+>>>>>>> 4b023264218e10ce398f2b9ec7f28fb583a1f674
 ```
 
 ### follow Julin's CSHL code 

@@ -116,7 +116,7 @@ output:
 # cat Ol_bwa_mem.sam | awk 'NF > 8' | grep -v "XA:Z" | awk '{print $1}' | sort | uniq | wc -l 4118
 
 # Da-Ae: 4728 genes are uniquely mapped to B.napus genome; 
-# Da-Ae: 4118 genes are uniquely mapped to B.napus genome; 
+# Da-Ol-1: 4118 genes are uniquely mapped to B.napus genome; 
 
 # 8) blastx against Uniref protein database (on whitney)
 # Da-Ae: 4076 blastx against 3690 Uniref protein (for unknown reason, not every Uniref protein has annotation here using batch entrez, but the ones that are proved to be plant genes are 2873, 10 non-plant genes)
@@ -128,8 +128,15 @@ output:
 
 # 10) remove chimera RNA: chimera RNAs are composed of exons from two or more different genes and the potential to encode novel proteins. While natual chimeric transcripts exist in some cancer tissues but are very rare, and most of the cases they are resulted from mis-assembly in transcriptome assembly. So they need to be removed...   
 
+# 11) combine ref based & de-novo assembly 
+# Da-Ae 6065+2320
+# Da-Ol-1 5548+2427
 
+# 12) after CAP3
+# Da-Ae: 6622
+# Da-Ol-1: 6430 
 
+# 13) dammit for annotation 
 
 ```
 
