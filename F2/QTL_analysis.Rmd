@@ -12,6 +12,7 @@ Goal of this project: to map QTL using the genetic map that I constructed from F
 ```{r}
 library(tidyverse)
 library(qtl)
+library(snowfall)
 ```
 
 ### reformat file with geno and pheno info
@@ -125,12 +126,21 @@ LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate
 # map
 # start from one dimensional scan on imputed genotypes 
 # permute the data to set a significance threshold 
-scanone.perm.imp <- scanone(LG.f2.after.crossover,method="imp",n.perm=1000) # takes 6 mins (already run 1000 times of mapping after permutating pheno data?) 
 
-# look at summary of our permutation 
-summary(scanone.perm.imp) #shows the 90th and 95th percentile of LOD scores in randomized data 
-perm95 <- summary(scanone.perm.imp)[1] #keep the 95th percentile for future use.
-                                       #This corresponds to p <0.05
+sfInit(parallel = TRUE, cpus = parallel::detectCores()) 
+sfExport("LG.f2.after.crossover")
+sfLibrary(qtl)
+
+scanone.perm.imp <- 
+  sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
+    print(trait) # print doesn't work in here 
+    tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes 40 mins to finish 
+
+sfStop() 
+
+names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
 
 #note method "em" = interval mapping; "mr" = marker regression
 #here we use method "imp" for multiple imputation.
@@ -139,12 +149,12 @@ perm95 <- summary(scanone.perm.imp)[1] #keep the 95th percentile for future use.
 # Erucic acid 
 scanone.imp.Erucic <- scanone(LG.f2.after.crossover,pheno.col=15,method="imp") # 
 plot(scanone.imp.Erucic,bandcol="gray90", main="Erucic_acid")
-abline(h=perm95,lty=2) #add permuation threshold
+abline(h=scanone.perm.imp[["Erucic_acid"]],lty=2) #add permuation threshold
 
 # Oleic acid 
 scanone.imp.Oleic <- scanone(LG.f2.after.crossover,pheno.col=8,method="imp") # 
 plot(scanone.imp.Oleic,bandcol="gray90", main="Oleic_acid")
-abline(h=perm95,lty=2) #add permuation threshold
+abline(h=scanone.perm.imp[["Oleic_acid"]],lty=2) #add permuation threshold
 ```
 
 ### run one dimeonsional mapping for all traits at once 
@@ -162,11 +172,76 @@ par(mfrow=c(6,7))
 
 for (i in names(scanone.imp)){
   plot(scanone.imp[[i]],bandcol="gray90", main=i)
-  abline(h=perm95,lty=2)
+  abline(h=scanone.perm.imp[[i]],lty=2)
 }
 
 dev.off()  
 ```
+
+### cim mapping (composite interval mapping)
+a more sophisticated model is to use the most significant markers as covariates during a 1D scan.  This is known as composite interval mapping (CIM) and is implmented using the function cim 
+
+```{r}
+cim.qtl <- 
+lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
+  print(trait)
+  cim(LG.f2.after.crossover, n.marcovar=5, pheno.col=trait,method="em")
+}) 
+# here we use the interval mapping method "em" as this is how cim was originaly implmented.the n.marcovar= argument defines the maximum number of marker covariates to use.
+names(cim.qtl) <- colnames(LG.f2.after.crossover$pheno)
+
+cim.perm <- cim(LG.f2.after.crossover,n.marcovar=5,method="em",n.perm=1000) #takes almost an hour 
+save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.Rdata")
+summary(cim.perm)
+cim.perm95 <- summary(cim.perm)[1] 
+
+sfInit(parallel = TRUE, cpus = parallel::detectCores()) 
+sfExport("LG.f2.after.crossover")
+sfLibrary(qtl)  
+
+cim.perm <- 
+  sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
+    message(trait) # message doesn't work in here either 
+    tmp <- cim(LG.f2.after.crossover,
+               pheno.col = trait, 
+               n.marcovar=5, 
+               method="em",
+               n.perm=1000)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes almost 4 hours to finish 
+
+sfStop() 
+
+names(cim.perm) <- colnames(LG.f2.after.crossover$pheno)
+
+# plot out result and save plot 
+png("~/F2/output/QTL_analysis/figure/QTL_cim_1.png", width=25, height=15, units="in", res=300)
+par(mfrow=c(6,7))
+
+for (i in names(cim.qtl)){
+  plot(cim.qtl[[i]],bandcol="gray90", main=i)
+  abline(h=cim.perm[[i]],lty=2)
+}
+
+dev.off()  
+# more QTL found for cim method 
+```
+
+### output result from scanone & cim 
+```{r}
+
+
+
+```
+
+
+### 2D scan
+The above methods only evaluate the evidence for a QTL one location a time.  It is possible to instead scan two locations at once.  This can be particularly advantageous in identifying QTL if there is epistasis.
+
+```{r}
+
+```
+
 
 
 
