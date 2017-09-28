@@ -99,25 +99,97 @@ plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # ge
 save(LG.f2.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/LG.f2.after.crossover.Rdata")
 ```
 
-### initial QTL analysis 
+### initial QTL analysis (practice)
 ```{r}
+<<<<<<< HEAD
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover, step=2)
 out.em <- scanone(LG.f2.after.crossover, method="em")
 out.hk <- scanone(LG.f2.after.crossover, method="hk") 
 plot(out.em, out.hk, col=c("blue","red")) 
+=======
+# LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover, step=2)
+# out.em <- scanone(LG.f2.after.crossover, method="em")
+# out.hk <- scanone(LG.f2.after.crossover, method="hk")
+# plot(out.em, out.hk, col=c("blue","red")) 
+>>>>>>> 4b023264218e10ce398f2b9ec7f28fb583a1f674
 ```
 
 ### follow Julin's CSHL code 
 ```{r}
+load("~/F2/data/QTL_analysis/LG.f2.after.crossover.Rdata")
 summary(LG.f2.after.crossover)
 # take a look at the geno and pheno data as well as the rf plot (rf plot shows further refinement is required)
 plot(LG.f2.after.crossover)
 plot.rf(LG.f2.after.crossover)
 
 # look for possible genotyping errors
-LG.f2.after.crossover <- calc.errorlod(LG.f2.after.crossover, error.prob=0.01)
-top.errorlod(LG.f2.after.crossover)
+# LG.f2.after.crossover <- calc.errorlod(LG.f2.after.crossover, error.prob=0.01) # takes too long time, leave for later... 
+# top.errorlod(LG.f2.after.crossover)
 
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation? 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability? 
+
+# map
+# start from one dimensional scan on imputed genotypes 
+# permute the data to set a significance threshold 
+scanone.perm.imp <- scanone(LG.f2.after.crossover,method="imp",n.perm=1000) # takes 6 mins (already run 1000 times of mapping after permutating pheno data?) 
+
+# look at summary of our permutation 
+summary(scanone.perm.imp) #shows the 90th and 95th percentile of LOD scores in randomized data 
+perm95 <- summary(scanone.perm.imp)[1] #keep the 95th percentile for future use.
+                                       #This corresponds to p <0.05
+
+#note method "em" = interval mapping; "mr" = marker regression
+#here we use method "imp" for multiple imputation.
+  #advantage of "imp" is better for missing genotype data
+  #disadvantage is that it is slower.  Not a big deal on current computers.
+# Erucic acid 
+scanone.imp.Erucic <- scanone(LG.f2.after.crossover,pheno.col=15,method="imp") # 
+plot(scanone.imp.Erucic,bandcol="gray90", main="Erucic_acid")
+abline(h=perm95,lty=2) #add permuation threshold
+
+# Oleic acid 
+scanone.imp.Oleic <- scanone(LG.f2.after.crossover,pheno.col=8,method="imp") # 
+plot(scanone.imp.Oleic,bandcol="gray90", main="Oleic_acid")
+abline(h=perm95,lty=2) #add permuation threshold
 ```
+
+### run one dimeonsional mapping for all traits at once 
+```{r}
+scanone.imp <- 
+lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
+  print(trait)
+  scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
+}) 
+
+names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)
+
+png("~/F2/output/QTL_analysis/figure/QTL_one_dim.png", width=25, height=15, units="in", res=300)
+par(mfrow=c(6,7))
+
+for (i in names(scanone.imp)){
+  plot(scanone.imp[[i]],bandcol="gray90", main=i)
+  abline(h=perm95,lty=2)
+}
+
+dev.off()  
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
