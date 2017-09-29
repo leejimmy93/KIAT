@@ -223,30 +223,71 @@ save(cim.qtl, cim.perm, file = "~/F2/output/QTL_analysis/cim.Rdata")
 save(scanone.imp, scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.Rdata")
 ```
 
-### output result from scanone & cim 
+### output result from scanone & cim, QTL result visulization
 ```{r}
-load("~/F2/output/QTL_analysis/cim.Rdata")
-load("~/F2/output/QTL_analysis/scanone.Rdata")
+# devtools::install_github("kbroman/qtlcharts")
+library(qtlcharts)
 
-cim.qtl[[1]]$chr
-cim.qtl[[1]]$pos
-plot(cim.qtl[[1]]$lod) 
+load("./F2/output/QTL_analysis/cim.Rdata")
+load("./F2/output/QTL_analysis/scanone.Rdata")
+load("./F2/output/QTL_analysis/LG.f2.after.crossover.Rdata")
 
 plot(cim.qtl[[1]], chr=c(19))  
+colnames(LG.f2.after.crossover$pheno)
 
-qtl_plot(input = cim.qtl[[1]]) 
+# flower related 
+qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to_flower"), 
+                       data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_bolt")),
+         chrs = c(10, 16), 
+         # lod = cim.perm[[1]], 
+         rug = TRUE)
 
-qtl_plot(input = rbind(data.frame(cim.qtl[[1]], method = "EM algorithm"), 
-                       data.frame(cim.qtl[[2]], method = "Haley-Knott regression"), 
-                       data.frame(cim.qtl[[3]], method = "Multiple imputation")), 
-         chrs = c(1, 4), 
-         lod = cim.perm[[1]], 
-         rug = TRUE) 
+# oil related  
+qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic_acid"), 
+                       data.frame(cim.qtl[["Stearic_acid"]], method = "Stearic_acid"), 
+                       data.frame(cim.qtl[["Oleic_acid"]], method = "Oleic_acid"),
+                       data.frame(cim.qtl[["vaccenic_acid"]], method = "vaccenic_acid"), 
+                       data.frame(cim.qtl[["Linoleic_acid"]], method = "Linoleic_acid"),
+                       data.frame(cim.qtl[["Arachidic_acid"]], method = "Arachidic_acid"),
+                       data.frame(cim.qtl[["Linolenic_acid"]], method = "Linolenic_acid"),
+                       data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid")),
+         chrs = c(8, 13), 
+         # lod = cim.perm[[1]], 
+         rug = TRUE)
 
-ggplot(cim.qtl, aes(cumsum(gen_map), lod, colour=chr) + geom_point())
+# growth related  
+qtl_plot(input = rbind(data.frame(cim.qtl[["root_weight_2016_05_13"]], method = "root_weight_2016_05_13"), 
+                       data.frame(cim.qtl[["plant_height_2016_05_13"]], method = "plant_height_2016_05_13"), 
+                       data.frame(cim.qtl[["leaf_number_2016_03_21"]], method = "leaf_number_2016_03_21")),
+         chrs = c(10), 
+         # lod = cim.perm[[1]], 
+         rug = TRUE)
 
+# compare between different models 
+# flower 
+qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "cim"), 
+                       data.frame(scanone.imp[["days_to_flower"]], method = "scanone")),
+         chrs = c(10, 16), 
+         # lod = cim.perm[[1]], 
+         rug = TRUE)
+
+# bolt
+qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "cim"), 
+                       data.frame(scanone.imp[["days_to_bolt"]], method = "scanone")),
+         chrs = c(10, 16), 
+         # lod = cim.perm[[1]], 
+         rug = TRUE)
+
+# 
+qtl_plot(input = rbind(data.frame(cim.qtl[["Behenic_acid"]], method = "cim"), 
+                       data.frame(scanone.imp[["Behenic_acid"]], method = "scanone")),
+         chrs = c(8), 
+         # lod = cim.perm[[1]], 
+         rug = TRUE)
+
+# refine and save figure 
+# to do, find SNPs underline ... 
 ```
-
 
 ### 2D scan
 The above methods only evaluate the evidence for a QTL one location a time.  It is possible to instead scan two locations at once.  This can be particularly advantageous in identifying QTL if there is epistasis.
@@ -314,15 +355,15 @@ qtl_plot <- function(input,              # data frame input from scanone
                   } + {
 
                     # if input has column method but not group, plot line and color by method
-                    if (!is.null(input$method) & is.null(input$group)) geom_line(aes(color = method), size = 2, alpha = 0.6)
+                    if (!is.null(input$method) & is.null(input$group)) geom_line(aes(color = method), size = 1, alpha = 0.6)
                   } + {
 
                     # if input has column group but not method, plot line and color by group
-                    if (!is.null(input$group) & is.null(input$method)) geom_line(aes(color = group), size = 2, alpha = 0.6)
+                    if (!is.null(input$group) & is.null(input$method)) geom_line(aes(color = group), size = 1, alpha = 0.6)
                   } + {
 
                     # if input has columns method and group, plot line and color by method & linetype by group
-                    if (!is.null(input$group) & !is.null(input$method)) geom_line(aes(color = method, linetype = group), size = 2, alpha = 0.6)
+                    if (!is.null(input$group) & !is.null(input$method)) geom_line(aes(color = method, linetype = group), size = 1, alpha = 0.6)
                   } + {
 
                     # set linetype, if input has columns method and group
@@ -330,7 +371,7 @@ qtl_plot <- function(input,              # data frame input from scanone
                   } + {
 
                     # if input has neither columns method nor group, plot black line
-                    if (is.null(input$group) & is.null(input$method)) geom_line(size = 2, alpha = 0.6)
+                    if (is.null(input$group) & is.null(input$method)) geom_line(size = 1, alpha = 0.6)
                   } + {
 
                     # if QTL positions are given in labels df, plot as point...
