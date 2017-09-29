@@ -236,13 +236,18 @@ plot(cim.qtl[[1]], chr=c(19))
 colnames(LG.f2.after.crossover$pheno)
 
 # flower related 
+flower_cim <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to_flower"), 
                        data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_bolt")),
          chrs = c(10, 16), 
-         # lod = cim.perm[[1]], 
+         # lod = c(cim.perm[["days_to_bolt"]]),
          rug = TRUE)
 
+flower_cim$plot
+ggsave(flower_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /flower_cim.png", width = 11, height = 8)
+
 # oil related  
+oil_cim <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic_acid"), 
                        data.frame(cim.qtl[["Stearic_acid"]], method = "Stearic_acid"), 
                        data.frame(cim.qtl[["Oleic_acid"]], method = "Oleic_acid"),
@@ -255,7 +260,10 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic
          # lod = cim.perm[[1]], 
          rug = TRUE)
 
+ggsave(oil_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /oil_cim.png", width = 11, height = 8)
+
 # growth related  
+growth_cim <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["root_weight_2016_05_13"]], method = "root_weight_2016_05_13"), 
                        data.frame(cim.qtl[["plant_height_2016_05_13"]], method = "plant_height_2016_05_13"), 
                        data.frame(cim.qtl[["leaf_number_2016_03_21"]], method = "leaf_number_2016_03_21")),
@@ -263,30 +271,31 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["root_weight_2016_05_13"]], method = 
          # lod = cim.perm[[1]], 
          rug = TRUE)
 
+ggsave(growth_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /growth_cim.png", width = 11, height = 8) 
+
 # compare between different models 
 # flower 
+flower_cim_scanone <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "cim"), 
                        data.frame(scanone.imp[["days_to_flower"]], method = "scanone")),
          chrs = c(10, 16), 
-         # lod = cim.perm[[1]], 
+         lod = data.frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm[["days_to_flower"]], scanone.perm.imp[["days_to_flower"]])), 
          rug = TRUE)
 
+ggsave(flower_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /flower_cim_scanone.png", width = 11, height = 8) 
+
 # bolt
+bolt_cim_scanone <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "cim"), 
                        data.frame(scanone.imp[["days_to_bolt"]], method = "scanone")),
          chrs = c(10, 16), 
-         # lod = cim.perm[[1]], 
-         rug = TRUE)
+         lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm[["days_to_bolt"]],
+                                  scanone.perm.imp[["days_to_bolt"]])), 
+         rug = TRUE) 
 
-# 
-qtl_plot(input = rbind(data.frame(cim.qtl[["Behenic_acid"]], method = "cim"), 
-                       data.frame(scanone.imp[["Behenic_acid"]], method = "scanone")),
-         chrs = c(8), 
-         # lod = cim.perm[[1]], 
-         rug = TRUE)
-
-# refine and save figure 
-# to do, find SNPs underline ... 
+ggsave(bolt_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /bolt_cim_scanone.png", width = 11, height = 8)  
 ```
 
 ### 2D scan
