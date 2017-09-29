@@ -14,6 +14,8 @@ library(tidyverse)
 library(qtl)
 library(snowfall)
 library(ggrepel) 
+library(Biostrings)
+source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 ```
 
 ### reformat file with geno and pheno info
@@ -101,7 +103,7 @@ plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # ge
 save(LG.f2.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/LG.f2.after.crossover.Rdata")
 ```   
 
-### follow Julin's CSHL code 
+### follow Julin's CSHL code for QTL mapping 
 ```{r}
 load("~/F2/data/QTL_analysis/LG.f2.after.crossover.Rdata")
 summary(LG.f2.after.crossover)
@@ -296,6 +298,18 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "cim"),
          rug = TRUE) 
 
 ggsave(bolt_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /bolt_cim_scanone.png", width = 11, height = 8)  
+
+# Erucic acid 
+Erucic_cim_scanone <- 
+qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "cim"), 
+                       data.frame(scanone.imp[["Erucic_acid"]], method = "scanone")),
+         chrs = c(8, 13), 
+         lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm[["Erucic_acid"]],
+                                  scanone.perm.imp[["Erucic_acid"]])), 
+         rug = TRUE) 
+
+ggsave(Erucic_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /Erucic_cim_scanone.png", width = 11, height = 8)   
 ```
 
 ### 2D scan
@@ -305,12 +319,50 @@ The above methods only evaluate the evidence for a QTL one location a time.  It 
 
 ```
 
+### find significant SNPs for certain trait and design primers 
+```{r}
+SNP_Erucic <-  
+rbind(bayesint(cim.qtl[["Erucic_acid"]], chr=8, prob=0.95, expandtomarkers=TRUE),
+      bayesint(cim.qtl[["Erucic_acid"]], chr=13, prob=0.95, expandtomarkers=TRUE))
 
+SNP_flower <- 
+rbind(bayesint(cim.qtl[["days_to_flower"]], chr=10, prob=0.95, expandtomarkers=TRUE), 
+      bayesint(cim.qtl[["days_to_flower"]], chr=16, prob=0.95, expandtomarkers=TRUE))
 
+SNP_height <- bayesint(cim.qtl[["plant_height_2016_05_13"]], chr=10, prob=0.95, expandtomarkers=TRUE) 
 
+# get genome fasta sequence
+napus <-readDNAStringSet("~/Desktop/Brassica_project/IGV_file/Brassica_napus_v4.1.chromosomes.fa") 
 
+# function to reform SNP 
+reform.SNP <- function(input){
+  data.frame(CHROM = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", rownames(input)), 
+                         POS = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", rownames(input))
+)
+}
+  
+SNP_qtl <- list(SNP_Erucic, SNP_flower, SNP_height)
+names(SNP_qtl) <- c("Erucic", "flower", "height")
+  
+SNP_qtl_seq <- 
+lapply(names(SNP_qtl), function(trait) {
+  reformed <- reform.SNP(SNP_qtl[[trait]])
+  get.fasta(reformed, napus)
+})
 
+names(SNP_qtl_seq) <- c("Erucic", "flower", "height") 
 
+writeXStringSet(SNP_qtl_seq[[1]], filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/Erucic.fa") 
+
+writeXStringSet(SNP_qtl_seq[[2]], filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/flower.fa") 
+
+writeXStringSet(SNP_qtl_seq[[3]], filepath = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/height.fa") 
+```
+
+### sanger sequencing PCR & CAPS PCR for the sequences above 
+```{r}
+
+```
 
 
 
