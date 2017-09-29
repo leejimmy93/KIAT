@@ -360,10 +360,13 @@ writeXStringSet(SNP_qtl_seq[[3]], filepath = "~/Desktop/Brassica_project/KIAT_RN
 ```
 
 ### sanger sequencing PCR & CAPS PCR for the sequences above 
-```{r}
+use NCBI primer_BLAST for sanger sequening primer design (refer to https://github.com/leejimmy93/KIAT/blob/master/parent/KIAT_SNP.Rmd)
 
-```
-
+use apeE for caps primer design. 
+1) paste fasta seq to apeE window
+2) highlight SNP position --> click on tools --> dCAPs caculator 
+3) if there is primer, take it, otherwise, add mutation to the sequence to get primer
+4) for the other pair of primer, extract from the sequence itself, make sure the final product is not too short, greater than 100bp? 
 
 
 
