@@ -246,7 +246,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to
          rug = TRUE)
 
 flower_cim$plot
-ggsave(flower_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /flower_cim.png", width = 11, height = 8)
+ggsave(flower_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /flower_cim.png", width = 7, height = 4)
 
 # oil related  
 oil_cim <- 
@@ -262,7 +262,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic
          # lod = cim.perm[[1]], 
          rug = TRUE)
 
-ggsave(oil_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /oil_cim.png", width = 11, height = 8)
+ggsave(oil_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /oil_cim.png", width = 8, height = 5)
 
 # growth related  
 growth_cim <- 
@@ -273,7 +273,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["root_weight_2016_05_13"]], method = 
          # lod = cim.perm[[1]], 
          rug = TRUE)
 
-ggsave(growth_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /growth_cim.png", width = 11, height = 8) 
+ggsave(growth_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /growth_cim.png", width = 7, height = 4) 
 
 # compare between different models 
 # flower 
@@ -285,7 +285,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "cim"),
                           lod = c(cim.perm[["days_to_flower"]], scanone.perm.imp[["days_to_flower"]])), 
          rug = TRUE)
 
-ggsave(flower_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /flower_cim_scanone.png", width = 11, height = 8) 
+ggsave(flower_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /flower_cim_scanone.png", width = 7, height = 4) 
 
 # bolt
 bolt_cim_scanone <- 
@@ -297,7 +297,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "cim"),
                                   scanone.perm.imp[["days_to_bolt"]])), 
          rug = TRUE) 
 
-ggsave(bolt_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /bolt_cim_scanone.png", width = 11, height = 8)  
+ggsave(bolt_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /bolt_cim_scanone.png", width = 7, height = 4)  
 
 # Erucic acid 
 Erucic_cim_scanone <- 
@@ -309,7 +309,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "cim"),
                                   scanone.perm.imp[["Erucic_acid"]])), 
          rug = TRUE) 
 
-ggsave(Erucic_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /Erucic_cim_scanone.png", width = 11, height = 8)   
+ggsave(Erucic_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /Erucic_cim_scanone.png", width = 7, height = 4)    
 ```
 
 ### 2D scan
@@ -366,14 +366,5 @@ use apeE for caps primer design.
 1) paste fasta seq to apeE window
 2) highlight SNP position --> click on tools --> dCAPs caculator 
 3) if there is primer, take it, otherwise, add mutation to the sequence to get primer
-4) for the other pair of primer, extract from the sequence itself, make sure the final product is not too short, greater than 100bp? 
-
-
-
-
-
-
-
-
-
+4) for the other pair of primer, extract from the sequence itself, make sure the final product is not too short, greater than 100bp?  
 

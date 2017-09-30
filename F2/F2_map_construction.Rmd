@@ -547,6 +547,7 @@ totmar(LG.f2.madmapper)
 LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
 
 LG.f2.madmapper.before.crossover <- LG.f2.madmapper
+save(LG.f2.madmapper.before.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
 
 for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genotype data
   my.chr <- get(chr,LG.f2.madmapper$geno) # return the genotype data, including data & map
@@ -622,10 +623,32 @@ save(LG.f2.madmapper.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RN
 
 ### check rf graph for map 
 ```{r}
-plot.rf(LG.f2.madmapper.after.crossover, chr = '19')
-LG.f2.madmapper.after.crossover$geno$`1`$data
-LG.f2.mappingpos.before.crossover$geno$`1`
-plot.rf(LG.f2.mappingpos.before.crossover, chr = '10')
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /rf_chr10.png", width=8, height=8, units="in", res=300)
+plot.rf(LG.f2.madmapper.before.crossover, chr = '10', main = "RF and LOD scores for chrom A10")
+dev.off()
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /rf_madmapper.png", width=8, height=8, units="in", res=300)
+plot.rf(LG.f2.madmapper.before.crossover, main = "RF and LOD scores")
+dev.off() 
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /rf_chr10.png", width=8, height=8, units="in", res=300)
+plot.rf(LG.f2.madmapper.after.crossover, chr = '10', main = "RF and LOD scores for chrom A10")
+dev.off() 
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /map_before_crossover.png", width=8, height=8, units="in", res=300)
+plot.map(LG.f2.madmapper.before.crossover, alternate.chrid = T) # the old genetic map
+dev.off()   
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /map_after_crossover.png", width=8, height=8, units="in", res=300)
+plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
+dev.off()
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /map_comparison_1.png", width=8, height=8, units="in", res=300)
+plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
+dev.off() 
 ```
 
 ### continue refine map (refer to Cody's code)
