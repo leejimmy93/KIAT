@@ -671,7 +671,8 @@ qtl_plot <- function(input,              # data frame input from scanone
                      lod = NA,           # LOD threshold
                      rug = FALSE,        # plot marker positions as rug?
                      ncol = NA,          # number of columns for facetting
-                     labels = NA         # optional dataframe to plot QTL labels
+                     labels = NA,         # optional dataframe to plot QTL labels
+                     title = NA          # title of the figure 
 ) {
   
   # if we have multiple phenotypes and/or a 2part model, gather input
@@ -703,6 +704,11 @@ qtl_plot <- function(input,              # data frame input from scanone
     if (is.null(labels$name)) {
       labels$name <- rownames(labels)
     }
+  }
+  
+  # if tile are given
+  if (!is.na(title)){
+    labs(title = "title")
   }
   
   # plot input data frame position and LOD score
@@ -758,12 +764,11 @@ qtl_plot <- function(input,              # data frame input from scanone
     labs(x = "Chromosome",
          y = "LOD",
          color = "",
-         linetype = "")
+         linetype = "", 
+         title = title)
   
   print(plot)
 } 
-
-
 
 
 
