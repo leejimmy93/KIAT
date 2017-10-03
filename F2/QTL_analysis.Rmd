@@ -364,7 +364,7 @@ reform.SNP <- function(input){
 )
 }
   
-SNP_qtl <- list(SNP_Erucic, SNP_flower, SNP_height)
+SNP_qtl <- list(SNP_Erucic, SNP_flower, SNP_height) 
 names(SNP_qtl) <- c("Erucic", "flower", "height")
   
 SNP_qtl_seq <- 
