@@ -325,7 +325,7 @@ for (i in 1:length(LG.madmapper)) {
   group.AC[[i]] <-  which(twopts.f2.LOD3_rf0.5$marnames %in% LG.madmapper[[i]])
 }
 group.AC 
-# save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.AC.Rdata")  
+save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.AC.Rdata")  
 ```
 
 #### order within each chromosome 
@@ -614,9 +614,6 @@ f2.map.new <- est.map(LG.f2.madmapper,verbose=T,error.prob=.01) # why going thro
 LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
 LG.f2.madmapper.after.crossover <- LG.f2.madmapper
 plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # the old genetic map
-summaryMap(LG.f2.madmapper.after.crossover)
-summaryMap(LG.f2.madmapper.before.crossover)
-
 plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
 
 # plot.rf(LG.f2.madmapper, col.scheme = "redblue", alternate.chrid = T) 
@@ -851,13 +848,6 @@ pull.map(cross_m, chr = c("A03","A05")) # longer length was plot than what was i
 pull.map(cross_m) 
 ``` 
 
-### re-build the map 
-While I used safe mode to secure all the markers to different LGs, over 1000 markers were lost during the process, because they could not satisfy the threshold (max rf = 0.5 and LOD score of 3). Julin suggested that we might want to increase the threshold to map markers, like max rf = 0.55, because there can be some makers by chance have a max rf greater than 0.5 but still can be mapped to different LGs. 
-```{r}
-# re calculate recombination fraction using 
-# https://github.com/leejimmy93/KIAT/blob/master/F2/F2_map_construction_LOD3_rf0.55_missing_0.10.R  
-``` 
-
 ### appendix 
 ### check double cross over 
 ```{r}
@@ -880,6 +870,7 @@ for (chr in names(LG$geno)) { # for each chromosome in cross genotype data
 } 
 }
 
+
 # write.csv(pull.geno(cross.drop.marker),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/cross.drop.marker.csv")
 
 # newmap.drop.marker <- est.map(cross.drop.marker,verbose=T,error.prob=.01) # why going through 
@@ -891,27 +882,5 @@ for (chr in names(LG$geno)) { # for each chromosome in cross genotype data
 # 
 # save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
 ``` 
-
-```{r}
-
-
-
-
-
-
-
-
-```
-
-
-
-
-
-
-
-
-
-
-
 
 
