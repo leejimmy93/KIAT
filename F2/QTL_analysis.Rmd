@@ -310,6 +310,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "cim"),
          rug = TRUE) 
 
 ggsave(Erucic_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /Erucic_cim_scanone.png", width = 7, height = 4)    
+<<<<<<< HEAD
 
 qtl_plot(input = rbind(data.frame(cim.qtl[["vaccenic_acid"]], method = "cim"), 
                        data.frame(scanone.imp[["vaccenic_acid"]], method = "scanone")),
@@ -359,6 +360,9 @@ names(im.qtl.result) <- names(scanone.imp)
 
 
 ``` 
+=======
+```
+>>>>>>> b1461f8b189039a727464b453e7f0ce3fe66e037
 
 ### 2D scan
 The above methods only evaluate the evidence for a QTL one location a time.  It is possible to instead scan two locations at once.  This can be particularly advantageous in identifying QTL if there is epistasis.
