@@ -654,14 +654,68 @@ plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alter
 dev.off() 
 ```
 
-### continue refine map (refer to Cody's code)
+### continue refine map, ripple 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
 summaryMap(LG.f2.madmapper.after.crossover)
 plotMap(LG.f2.madmapper.after.crossover)
 
-totmar(LG.f2.madmapper.after.crossover) # 2013
+totmar(LG.f2.madmapper.after.crossover) # 2013 
 
+# work on A10 
+plot.rf(LG.f2.madmapper.after.crossover, chr = "10") # this 
+plotMap(LG.f2.madmapper.after.crossover, chr = '10') 
+
+set.seed(16)
+LG.f2.madmapper.after.crossover <- orderMarkers(LG.f2.madmapper.after.crossover, chr = c(10), 
+	                        window = 5, use.ripple = TRUE, maxit = 4000, 
+	                        error.prob = 0.0001, verbose = T)
+
+plotMap(LG.f2.madmapper.after.crossover, chr = '10') 
+plot.rf(LG.f2.madmapper.after.crossover, chr = '10') # plot appears better but length increased... doesn't seem to be a good way. 
+```
+
+# follow Julin's suggestion, to remove markers with high double crossover (genotyping error)
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
+summaryMap(LG.f2.madmapper.after.crossover)
+plotMap(LG.f2.madmapper.after.crossover)
+
+totmar(LG.f2.madmapper.after.crossover) # 2013 
+
+geno_new <- pull.geno(LG.f2.madmapper.after.crossover)
+geno <- pull.geno(LG.f2.madmapper.before.crossover)
+dim(geno); dim(geno_new)
+geno[1:10, 1:10]; geno_new[1:10, 1:10]
+
+double.crossover.count <- sapply(colnames(geno), function(marker){
+  sum(is.na(geno_new[,marker]))-sum(is.na(geno[,marker]))
+} 
+)
+
+double.crossover.count <- as.data.frame(double.crossover.count)
+double.crossover.count
+hist(double.crossover.count)
+marker.drop <- rownames(subset(double.crossover.count, double.crossover.count>10))
+marker.drop
+
+# drop marker with double crossover more than 10 times 
+LG.f2.madmapper.after.crossover.drop <- drop.markers(LG.f2.madmapper.after.crossover, marker.drop)
+totmar(LG.f2.madmapper.after.crossover.drop) # 1965 
+
+LG.f2.madmapper.after.crossover.drop <- 
+                          orderMarkers(LG.f2.madmapper.after.crossover.drop, 
+	                        window = 4, use.ripple = TRUE, maxit = 4000, 
+	                        error.prob = 0.0001)
+
+map.new.new <- est.map(LG.f2.madmapper.after.crossover.drop)
+plot.map(map.new.new, alternate.chrid = TRUE)
+
+# even longer... bad.... 
+```
+
+# continue refine later... 
+```{r}
 # identify markers with possible segregation distortion
 gt <- geno.table(LG.f2.madmapper.after.crossover)
 seg_dist <- gt[gt$P.value < 0.05/totmar(LG.f2.madmapper.after.crossover),]
@@ -678,9 +732,7 @@ dim(seg_dist) # 67 8
 # now remove markers that obviously do not belong
 # make a copy so I can go back and not have to reestimate the map
 LG.f2.madmapper.2 <- LG.f2.madmapper.after.crossover
-rffull <- pull.rf(LG.f2.madmapper.2)
-
-
+rffull <- pull.rf(LG.f2.madmapper.2) 
 ```
 
 
@@ -753,7 +805,25 @@ plotMap(map.F2)
 # plot.rf(map.F2) 
 
 LG.f2.mappingpos.before.crossover <- map.F2
-rm.double.crossover(map.F2)
+
+LG <- map.F2
+
+  for (chr in names(LG$geno)) { # for each chromosome in cross genotype data
+    my.chr <- get(chr,LG$geno) # return the genotype data, including data & map
+    print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+    if(ncol(my.chr$data) > 3) { 
+      my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+        apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+          if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+          if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+          if ( length(unique(gt))  == 3) return(NA)
+          return(gt[2])
+        })
+      })
+    }
+    LG$geno <- within(LG$geno,assign(chr,my.chr))
+    print(paste(chr,"NA after",sum(is.na(get(chr,LG$geno)$data))))
+  } 
 
 # [1] "1 NA before 1950"
 # [1] "1 NA after 2744"
@@ -794,9 +864,9 @@ rm.double.crossover(map.F2)
 # [1] "19 NA before 340"
 # [1] "19 NA after 554"
 
-# write.csv(pull.geno(LG.f2.mappingpos.before.crossover),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.mappingpos.before.crossover.csv") 
+map.F2 <- LG
 
-f2.map.new <- est.map(LG.f2.mappingpos.before.crossover,verbose=T,error.prob=.01) # why going through
+f2.map.new <- est.map(map.F2,verbose=T,error.prob=.01) 
 save(f2.map.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/f2.map.new.mapping.Rdata")
 map.F2 <- replace.map(map.F2, f2.map.new)
 LG.f2.mappingpos.after.crossover <- map.F2
@@ -891,27 +961,4 @@ for (chr in names(LG$geno)) { # for each chromosome in cross genotype data
 # 
 # save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
 ``` 
-
-```{r}
-
-
-
-
-
-
-
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
 

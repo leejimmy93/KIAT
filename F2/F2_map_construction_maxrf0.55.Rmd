@@ -1,0 +1,50 @@
+---
+title: "F2_map_construction_maxrf0.55"
+author: "Ruijuan Li"
+date: "10/4/2017"
+output: html_document
+---
+
+### Goal
+The goal of this analysis is to build genetic map using F2 genotyping information, F2 genotyping was done based on the SNPs we identified from its parents 
+difference compared to the other script, this time I am using max.rf = 0.55  
+
+1) calculate rf using max rf = 0.55 and LOD score = 3 (one map) # https://github.com/leejimmy93/KIAT/blob/master/F2/F2_map_construction_LOD3_rf0.55_missing_0.10.R
+2) assign marker to different LG based on madmapper result 
+3) order marker within each LG (one map) https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC_maxrf_0.55.R 
+
+```{r}
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
+
+# two-point rf data  
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.55.Rdata")
+
+# order data 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/madmapper/LG.f2.ord.AC.0.55.Rdata")
+
+# get order for LGs
+set.map.fun(type = "kosambi")
+LG.f2 <- list() 
+
+for (i in 1:length(LG.f2.ord.0.55)){
+  LG.f2[[i]] <- make.seq(LG.f2.ord.0.55[[i]], "safe") 
+}
+
+LG.f2
+# remove null LGs 
+rf.graph.table(LG.f2[[10]])
+draw.map(LG.f2, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.0.55.map") 
+```
+
+# remove marker with double crossover 
+```{r}
+########### use R/qtl ########################  
+# import data 
+map <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.0.55.map")
+
+# get rf figure & map figure for mapping order based map 
+summary(map) # 2016 
+```
+
+# only 3 more markers are added, doen't really help... 

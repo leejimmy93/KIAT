@@ -322,15 +322,40 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["vaccenic_acid"]], method = "cim"),
 colnames(LG.f2.after.crossover$pheno)
 
 # make scanone & cim plot for each trait 
-qtl_plot_2(input = rbind(data.frame(cim.qtl[["vaccenic_acid"]], method = "cim"), 
-                       data.frame(scanone.imp[["vaccenic_acid"]], method = "scanone")),
+qtl_all <- 
+  lapply(names(cim.qtl), function(trait) {
+    qtl_plot(input = rbind(data.frame(cim.qtl[[trait]], method = "cim"), 
+                       data.frame(scanone.imp[[trait]], method = "scanone")),
          lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
-                          lod = c(cim.perm[["vaccenic_acid"]],
-                                  scanone.perm.imp[["vaccenic_acid"]])), 
+                          lod = c(cim.perm[[trait]],
+                                  scanone.perm.imp[[trait]])), 
          rug = TRUE, 
-         title = "vaccenic_acid"
+         title = trait
          )  
+  })
 
+plots <- lapply(1:length(qtl_all), function(trait) qtl_all[[trait]]$plot)
+
+paths <- stringr::str_c(names(cim.qtl), ".pdf")
+paths
+
+pwalk(list(paths, plots), ggsave, path = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /", width = 15, height = 7)
+``` 
+
+### need a script to tell me which LG has significant QTL for different traits 
+```{r}
+cim.qtl.result <- 
+lapply(names(cim.qtl), function(trait) {
+  as.numeric(unique(cim.qtl[[trait]][(cim.qtl[[trait]]$lod > cim.perm[[trait]]),]$chr))
+})
+
+im.qtl.result <- 
+lapply(names(scanone.imp), function(trait) {
+  as.numeric(unique(scanone.imp[[trait]][(scanone.imp[[trait]]$lod > scanone.perm.imp[[trait]]),]$chr))
+})
+
+names(cim.qtl.result) <- names(cim.qtl)
+names(im.qtl.result) <- names(scanone.imp)
 
 
 ``` 
