@@ -542,6 +542,18 @@ totmar(LG.f2.madmapper)
 ```
 
 ### refine map 
+### ripple
+ripple uses two methods for comparing orders: maximium likelihood and minimal obligate crossovers. It is simpler to count the number of obligate crossover in the data, for a given order, and then choose the order for which the number of obligate crossover is minimized. It is generally recommended using the crossover count method with a large window, followed by maximum likelihood with a smaller window. 
+```{r}
+LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
+
+rip1 <- ripple(cross = LG.f2.madmapper, window = 8, chr = 1, method = "countxo")
+
+
+
+```
+
+### remove double crossover 
 ```{r} 
 # remove double crossover 
 LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
@@ -681,6 +693,7 @@ conclussion: removing markers with high double crossover makes the map even long
 
 # continue refine 
 ```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
 
 # identify markers with possible segregation distortion
 gt <- geno.table(LG.f2.madmapper.after.crossover)
@@ -695,10 +708,22 @@ dim(seg_dist) # 67 8
 # chrA02_6523578    2       8 13  98 47      0      0 6.885616e-06
 # chrA02_6264806    2      20  6  93 47      0      0 4.168391e-08 .... this many might be caused by missing data replace SNPs with double cross over 
 
-# now remove markers that obviously do not belong
-# make a copy so I can go back and not have to reestimate the map
-LG.f2.madmapper.2 <- LG.f2.madmapper.after.crossover
-rffull <- pull.rf(LG.f2.madmapper.2) 
+# compare individuals's genotypes 
+cg <- comparegeno(LG.f2.madmapper.after.crossover)
+hist(cg, breaks = 200)
+rug(cg)
+which(cg > 0.9, arr.ind = T) 
+# is it possible for two F2s with the same or very similar genotypes? 
+
+# check marker order 
+checkAlleles(LG.f2.madmapper.after.crossover) # no apparent problem 
+
+
+
+
+
+
+
 ```
 
 
