@@ -542,6 +542,18 @@ totmar(LG.f2.madmapper)
 ```
 
 ### refine map 
+### ripple
+ripple uses two methods for comparing orders: maximium likelihood and minimal obligate crossovers. It is simpler to count the number of obligate crossover in the data, for a given order, and then choose the order for which the number of obligate crossover is minimized. It is generally recommended using the crossover count method with a large window, followed by maximum likelihood with a smaller window. 
+```{r}
+LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
+
+rip1 <- ripple(cross = LG.f2.madmapper, window = 8, chr = 1, method = "countxo")
+
+
+
+```
+
+### remove double crossover 
 ```{r} 
 # remove double crossover 
 LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
@@ -566,51 +578,12 @@ for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genoty
   print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2.madmapper$geno)$data))))
 }  
 
-# [1] "1 NA before 969"
-# [1] "1 NA after 1270"
-# [1] "2 NA before 425"
-# [1] "2 NA after 617"
-# [1] "3 NA before 1095"
-# [1] "3 NA after 1452"
-# [1] "4 NA before 841"
-# [1] "4 NA after 1092"
-# [1] "5 NA before 823"
-# [1] "5 NA after 1109"
-# [1] "6 NA before 1849"
-# [1] "6 NA after 2487"
-# [1] "7 NA before 1210"
-# [1] "7 NA after 1600"
-# [1] "8 NA before 827"
-# [1] "8 NA after 1095"
-# [1] "9 NA before 1527"
-# [1] "9 NA after 2046"
-# [1] "10 NA before 1283"
-# [1] "10 NA after 1686"
-# [1] "11 NA before 724"
-# [1] "11 NA after 957"
-# [1] "12 NA before 325"
-# [1] "12 NA after 452"
-# [1] "13 NA before 952"
-# [1] "13 NA after 1309"
-# [1] "14 NA before 785"
-# [1] "14 NA after 1160"
-# [1] "15 NA before 232"
-# [1] "15 NA after 311"
-# [1] "16 NA before 463"
-# [1] "16 NA after 679"
-# [1] "17 NA before 740"
-# [1] "17 NA after 1033"
-# [1] "18 NA before 309"
-# [1] "18 NA after 419"
-# [1] "19 NA before 140"
-# [1] "19 NA after 235" 
-
 write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
 ```
 
-#### work on maps with double crossover removed 
+#### restimate map with double crossover removed 
 ```{r}
-f2.map.new <- est.map(LG.f2.madmapper,verbose=T,error.prob=.01) # why going through 
+f2.map.new <- est.map(LG.f2.madmapper,verbose=T,error.prob=.01)  
 LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
 LG.f2.madmapper.after.crossover <- LG.f2.madmapper
 plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # the old genetic map
@@ -619,8 +592,10 @@ plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alter
 # plot.rf(LG.f2.madmapper, col.scheme = "redblue", alternate.chrid = T) 
 # par(mfrow=c(1,1)) # reset to 1:1
 save(LG.f2.madmapper.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
+save(f2.map.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/f2.map.new.Rdata") 
 ```
 
+### on A10 
 ### check rf graph for map 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
@@ -651,13 +626,74 @@ plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alter
 dev.off() 
 ```
 
-### continue refine map (refer to Cody's code)
+### continue refine map, ripple 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
 summaryMap(LG.f2.madmapper.after.crossover)
 plotMap(LG.f2.madmapper.after.crossover)
 
-totmar(LG.f2.madmapper.after.crossover) # 2013
+totmar(LG.f2.madmapper.after.crossover) # 2013 
+
+# work on A10 
+plot.rf(LG.f2.madmapper.after.crossover, chr = "10") # this 
+plotMap(LG.f2.madmapper.after.crossover, chr = '10') 
+
+set.seed(16)
+LG.f2.madmapper.after.crossover <- orderMarkers(LG.f2.madmapper.after.crossover, chr = c(10), 
+	                        window = 5, use.ripple = TRUE, maxit = 4000, 
+	                        error.prob = 0.0001, verbose = T)
+
+plotMap(LG.f2.madmapper.after.crossover, chr = '10') 
+plot.rf(LG.f2.madmapper.after.crossover, chr = '10') # plot appears better but length increased... doesn't seem to be a good way. 
+```
+
+# follow Julin's suggestion, to remove markers with high double crossover (genotyping error)
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
+
+summaryMap(LG.f2.madmapper.after.crossover) 
+plotMap(LG.f2.madmapper.after.crossover, LG.f2.madmapper.before.crossover)
+
+totmar(LG.f2.madmapper.after.crossover) # 2013 
+
+geno_new <- pull.geno(LG.f2.madmapper.after.crossover)
+geno <- pull.geno(LG.f2.madmapper.before.crossover)
+identical(geno_new, geno) 
+dim(geno); dim(geno_new)
+geno[1:10, 1:10]
+geno_new[1:10, 1:10]
+
+double.crossover.count <- sapply(colnames(geno), function(marker){
+  sum(is.na(geno_new[,marker]))-sum(is.na(geno[,marker]))
+} 
+)
+
+double.crossover.count <- as.data.frame(double.crossover.count)
+double.crossover.count
+hist(double.crossover.count$double.crossover.count)
+marker.drop <- rownames(subset(double.crossover.count, double.crossover.count>10))
+length(marker.drop) # 48 markers 
+
+# drop marker with double crossover more than 10 times，  
+LG.f2.madmapper.after.crossover.drop <- drop.markers(LG.f2.madmapper.after.crossover, marker.drop)
+totmar(LG.f2.madmapper.after.crossover.drop) # 1965 
+
+LG.f2.madmapper.after.crossover.drop <- 
+                          orderMarkers(LG.f2.madmapper.after.crossover.drop, 
+	                        window = 4, use.ripple = TRUE, maxit = 4000, 
+	                        error.prob = 0.0001) # takes 20 mins 
+
+map.new.new <- est.map(LG.f2.madmapper.after.crossover.drop) # takes 1 min 
+plot.map(map.new.new, alternate.chrid = TRUE)
+# even longer... bad.... 
+save(map.new.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/map.new.new.Rdata")
+```
+conclussion: removing markers with high double crossover makes the map even longer... why? 
+
+# continue refine 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
 
 # identify markers with possible segregation distortion
 gt <- geno.table(LG.f2.madmapper.after.crossover)
@@ -672,181 +708,28 @@ dim(seg_dist) # 67 8
 # chrA02_6523578    2       8 13  98 47      0      0 6.885616e-06
 # chrA02_6264806    2      20  6  93 47      0      0 4.168391e-08 .... this many might be caused by missing data replace SNPs with double cross over 
 
-# now remove markers that obviously do not belong
-# make a copy so I can go back and not have to reestimate the map
-LG.f2.madmapper.2 <- LG.f2.madmapper.after.crossover
-rffull <- pull.rf(LG.f2.madmapper.2)
-
-
-```
-
-
-######### above is for madmapper 
-
-########### what if I use mapping order to order markers ################
-get marker index within each chromosome 
-```{r}
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
-dim(F2_geno_data_2) # 3443 166
-
-F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2)) 
-F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2)) 
-F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
-
-# figure out the index positon within each chromosome for all chromosomes 
-F2_geno_data_info <- F2_geno_data_2[,c("Chr", "Pos", "index")]
-dim(F2_geno_data_info) # 3443 3 
-F2_geno_data_info[1:10,]
-
-out <- split( F2_geno_data_info, f = F2_geno_data_info$Chr)
-length(out) # 19 
-out
-
-order <- list()
-
-for (i in 1:length(out)){
-  out[[i]]$Pos <- as.numeric(out[[i]]$Pos)
-  order[[i]] <- out[[i]][order(out[[i]]$Pos),]$index 
-}
-
-order 
-save(order, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/order.Rdata")
-```
-
-use mapping order to order markers  
-```{r}
-# load data 
-F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata") # LOD=3, max rf=0.5 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/order.Rdata")
-
-# must unload tydiverse, otherwise error, still need to fix these two lines 
-unloadNamespace("tidyverse")
-detach("package:purrr", unload=TRUE) 
-
-# mapping order 
-LG.f2.arbi <- list()
-
-for (i in 1:length(order)){
-  tmp <- make.seq(twopts.f2.LOD3_rf0.5, order[[i]])
-  LG.f2.arbi[[i]] <- map(tmp)
-} 
-
-rf.graph.table(LG.f2.arbi[[19]])
-par(mfrow=c(1,1)) 
-draw.map(LG.f2.arbi, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
-# write.map(LG.f2.arbi, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map") 
-```
-
-remove markers with double crossover 
-```{r}
-########### use R/qtl ########################  
-# import data 
-map.F2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map")
-
-# get rf figure & map figure for mapping order based map 
-summary(map.F2)
-plotMap(map.F2)
-# plot.rf(map.F2) 
-
-LG.f2.mappingpos.before.crossover <- map.F2
-rm.double.crossover(map.F2)
-
-# [1] "1 NA before 1950"
-# [1] "1 NA after 2744"
-# [1] "2 NA before 842"
-# [1] "2 NA after 1205"
-# [1] "3 NA before 2448"
-# [1] "3 NA after 3412"
-# [1] "4 NA before 1344"
-# [1] "4 NA after 1932"
-# [1] "5 NA before 1371"
-# [1] "5 NA after 1958"
-# [1] "6 NA before 3573"
-# [1] "6 NA after 4857"
-# [1] "7 NA before 2511"
-# [1] "7 NA after 3337"
-# [1] "8 NA before 1460"
-# [1] "8 NA after 2044"
-# [1] "9 NA before 3015"
-# [1] "9 NA after 4211"
-# [1] "10 NA before 2510"
-# [1] "10 NA after 3401"
-# [1] "11 NA before 1188"
-# [1] "11 NA after 1805"
-# [1] "12 NA before 495"
-# [1] "12 NA after 724"
-# [1] "13 NA before 1565"
-# [1] "13 NA after 2282"
-# [1] "14 NA before 1301"
-# [1] "14 NA after 1933"
-# [1] "15 NA before 439"
-# [1] "15 NA after 694"
-# [1] "16 NA before 924"
-# [1] "16 NA after 1343"
-# [1] "17 NA before 1069"
-# [1] "17 NA after 1642"
-# [1] "18 NA before 660"
-# [1] "18 NA after 965"
-# [1] "19 NA before 340"
-# [1] "19 NA after 554"
-
-# write.csv(pull.geno(LG.f2.mappingpos.before.crossover),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.mappingpos.before.crossover.csv") 
-
-f2.map.new <- est.map(LG.f2.mappingpos.before.crossover,verbose=T,error.prob=.01) # why going through
-save(f2.map.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/f2.map.new.mapping.Rdata")
-map.F2 <- replace.map(map.F2, f2.map.new)
-LG.f2.mappingpos.after.crossover <- map.F2
-
-plot.map(LG.f2.mappingpos.after.crossover, alternate.chrid = T) # the old genetic map
-plot.map(LG.f2.mappingpos.before.crossover, LG.f2.mappingpos.after.crossover, alternate.chrid = T) # genetic map comparison 
-```
-
-# a bunch of checks in R/qtl 
-```{r}
-summary(map.F2)
-plotMap(map.F2)
-# plot.rf(map.F2)
-
-totmar(map.F2)
-
-# 1) segregation distortion 
-test <- geno.table(map.F2)
-seg_dist <- test[test$P.value < 0.01,]
-seg_dist
-dim(seg_dist) # 340 markers 
-
-##### drop markers with segregation distortion 
-# map.F2.after.drop <- drop.marker(map.F2, rownames(seg_dist)) # doesn't work... 
-map.F2
-
-# rffull.Asub <- pull.rf(map.F2)
-
-# work with each chromosome seperately 
-# plot.rf(map.F2, chr = "chrA02")
-rfA02 <- pull.rf(map.F2, chr = 'chrA02')
-chrA02 <- markernames(map.F2, chr = 'chrA02')
-chrA02
-
-# 2) compare individual's genotype similarity. Assumption: no two individuals with very similary genotypes
-cg <- comparegeno(map.F2) 
-dim(cg) 
-hist(cg, breaks = 200,
-     xlab="Proportion of identical genotypes")
+# compare individuals's genotypes 
+cg <- comparegeno(LG.f2.madmapper.after.crossover)
+hist(cg, breaks = 200)
 rug(cg)
-which(cg >0.9, arr.ind = TRUE) # no individuals with high genotype similarities
+which(cg > 0.9, arr.ind = T) 
+# is it possible for two F2s with the same or very similar genotypes? 
 
-# No apparent problem, make a plot to see the data
-plot.rf(map.F2, col.scheme = "redblue", alternate.chrid = T)
+# check marker order 
+checkAlleles(LG.f2.madmapper.after.crossover) # no apparent problem 
 
-# looks like they are on the right chromosomes but wrong order within each chromosome
 
-# estimate the genetic map
-nm <- est.map(map.F2)
-plot(nm, alternate.chrid = T) 
-pull.map(cross_m, chr = c("A03","A05")) # longer length was plot than what was indicated in the data? 
-pull.map(cross_m) 
-``` 
+
+
+
+
+
+```
+
+
+
+
+
 
 ### appendix 
 ### check double cross over 
@@ -882,5 +765,3 @@ for (chr in names(LG$geno)) { # for each chromosome in cross genotype data
 # 
 # save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
 ``` 
-
-
