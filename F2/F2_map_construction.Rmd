@@ -566,51 +566,12 @@ for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genoty
   print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2.madmapper$geno)$data))))
 }  
 
-# [1] "1 NA before 969"
-# [1] "1 NA after 1270"
-# [1] "2 NA before 425"
-# [1] "2 NA after 617"
-# [1] "3 NA before 1095"
-# [1] "3 NA after 1452"
-# [1] "4 NA before 841"
-# [1] "4 NA after 1092"
-# [1] "5 NA before 823"
-# [1] "5 NA after 1109"
-# [1] "6 NA before 1849"
-# [1] "6 NA after 2487"
-# [1] "7 NA before 1210"
-# [1] "7 NA after 1600"
-# [1] "8 NA before 827"
-# [1] "8 NA after 1095"
-# [1] "9 NA before 1527"
-# [1] "9 NA after 2046"
-# [1] "10 NA before 1283"
-# [1] "10 NA after 1686"
-# [1] "11 NA before 724"
-# [1] "11 NA after 957"
-# [1] "12 NA before 325"
-# [1] "12 NA after 452"
-# [1] "13 NA before 952"
-# [1] "13 NA after 1309"
-# [1] "14 NA before 785"
-# [1] "14 NA after 1160"
-# [1] "15 NA before 232"
-# [1] "15 NA after 311"
-# [1] "16 NA before 463"
-# [1] "16 NA after 679"
-# [1] "17 NA before 740"
-# [1] "17 NA after 1033"
-# [1] "18 NA before 309"
-# [1] "18 NA after 419"
-# [1] "19 NA before 140"
-# [1] "19 NA after 235" 
-
 write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
 ```
 
-#### work on maps with double crossover removed 
+#### restimate map with double crossover removed 
 ```{r}
-f2.map.new <- est.map(LG.f2.madmapper,verbose=T,error.prob=.01) # why going through 
+f2.map.new <- est.map(LG.f2.madmapper,verbose=T,error.prob=.01)  
 LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
 LG.f2.madmapper.after.crossover <- LG.f2.madmapper
 plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # the old genetic map
@@ -619,8 +580,10 @@ plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alter
 # plot.rf(LG.f2.madmapper, col.scheme = "redblue", alternate.chrid = T) 
 # par(mfrow=c(1,1)) # reset to 1:1
 save(LG.f2.madmapper.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
+save(f2.map.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/f2.map.new.Rdata") 
 ```
 
+### on A10 
 ### check rf graph for map 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
@@ -675,15 +638,19 @@ plot.rf(LG.f2.madmapper.after.crossover, chr = '10') # plot appears better but l
 # follow Julin's suggestion, to remove markers with high double crossover (genotyping error)
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
-summaryMap(LG.f2.madmapper.after.crossover)
-plotMap(LG.f2.madmapper.after.crossover)
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
+
+summaryMap(LG.f2.madmapper.after.crossover) 
+plotMap(LG.f2.madmapper.after.crossover, LG.f2.madmapper.before.crossover)
 
 totmar(LG.f2.madmapper.after.crossover) # 2013 
 
 geno_new <- pull.geno(LG.f2.madmapper.after.crossover)
 geno <- pull.geno(LG.f2.madmapper.before.crossover)
+identical(geno_new, geno) 
 dim(geno); dim(geno_new)
-geno[1:10, 1:10]; geno_new[1:10, 1:10]
+geno[1:10, 1:10]
+geno_new[1:10, 1:10]
 
 double.crossover.count <- sapply(colnames(geno), function(marker){
   sum(is.na(geno_new[,marker]))-sum(is.na(geno[,marker]))
@@ -692,27 +659,29 @@ double.crossover.count <- sapply(colnames(geno), function(marker){
 
 double.crossover.count <- as.data.frame(double.crossover.count)
 double.crossover.count
-hist(double.crossover.count)
+hist(double.crossover.count$double.crossover.count)
 marker.drop <- rownames(subset(double.crossover.count, double.crossover.count>10))
-marker.drop
+length(marker.drop) # 48 markers 
 
-# drop marker with double crossover more than 10 times 
+# drop marker with double crossover more than 10 times，  
 LG.f2.madmapper.after.crossover.drop <- drop.markers(LG.f2.madmapper.after.crossover, marker.drop)
 totmar(LG.f2.madmapper.after.crossover.drop) # 1965 
 
 LG.f2.madmapper.after.crossover.drop <- 
                           orderMarkers(LG.f2.madmapper.after.crossover.drop, 
 	                        window = 4, use.ripple = TRUE, maxit = 4000, 
-	                        error.prob = 0.0001)
+	                        error.prob = 0.0001) # takes 20 mins 
 
-map.new.new <- est.map(LG.f2.madmapper.after.crossover.drop)
+map.new.new <- est.map(LG.f2.madmapper.after.crossover.drop) # takes 1 min 
 plot.map(map.new.new, alternate.chrid = TRUE)
-
 # even longer... bad.... 
+save(map.new.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/map.new.new.Rdata")
 ```
+conclussion: removing markers with high double crossover makes the map even longer... why? 
 
-# continue refine later... 
+# continue refine 
 ```{r}
+
 # identify markers with possible segregation distortion
 gt <- geno.table(LG.f2.madmapper.after.crossover)
 seg_dist <- gt[gt$P.value < 0.05/totmar(LG.f2.madmapper.after.crossover),]
