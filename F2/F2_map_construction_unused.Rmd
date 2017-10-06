@@ -89,3 +89,232 @@ MDS.F2.map <- function(F2_geno_data, LG, groupA, groupB){
   return(plot)
 } 
 ``` 
+
+# use mapping order for map construction 
+########### what if I use mapping order to order markers ################
+get marker index within each chromosome 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
+dim(F2_geno_data_2) # 3443 166
+
+F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2)) 
+F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2)) 
+F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
+
+# figure out the index positon within each chromosome for all chromosomes 
+F2_geno_data_info <- F2_geno_data_2[,c("Chr", "Pos", "index")]
+dim(F2_geno_data_info) # 3443 3 
+F2_geno_data_info[1:10,]
+
+out <- split( F2_geno_data_info, f = F2_geno_data_info$Chr)
+length(out) # 19 
+out
+
+order <- list()
+
+for (i in 1:length(out)){
+  out[[i]]$Pos <- as.numeric(out[[i]]$Pos)
+  order[[i]] <- out[[i]][order(out[[i]]$Pos),]$index 
+}
+
+order 
+save(order, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/order.Rdata")
+```
+
+use mapping order to order markers  
+```{r}
+# load data 
+F2.data <- read.mapmaker(file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt") 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata") # LOD=3, max rf=0.5 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/order.Rdata")
+
+# must unload tydiverse, otherwise error, still need to fix these two lines 
+unloadNamespace("tidyverse")
+detach("package:purrr", unload=TRUE) 
+
+# mapping order 
+LG.f2.arbi <- list()
+
+for (i in 1:length(order)){
+  tmp <- make.seq(twopts.f2.LOD3_rf0.5, order[[i]])
+  LG.f2.arbi[[i]] <- map(tmp)
+} 
+
+rf.graph.table(LG.f2.arbi[[19]])
+par(mfrow=c(1,1)) 
+draw.map(LG.f2.arbi, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+# write.map(LG.f2.arbi, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map") 
+```
+
+remove markers with double crossover 
+```{r}
+########### use R/qtl ########################  
+# import data 
+map.F2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.arbi.map")
+
+# get rf figure & map figure for mapping order based map 
+summary.map(map.F2)
+#         n.mar  length ave.spacing max.spacing
+# 1         221   867.8         3.9        91.1
+# 2          92   375.3         4.1        20.2
+# 3         303  1325.7         4.4       345.4
+# 4         165   600.9         3.7        65.4
+# 5         156  1043.8         6.7       345.4
+# 6         439  1246.5         2.8        25.8
+# 7         290   801.1         2.8        15.0
+# 8         178  1159.3         6.5       345.4
+# 9         352  2397.5         6.8       345.4
+# 10        295   798.5         2.7        12.1
+# 11        135   586.8         4.4        19.0
+# 12         67   239.9         3.6        14.8
+# 13        188   750.9         4.0        48.0
+# 14        161  1275.9         8.0       345.4
+# 15         51   304.3         6.1        20.5
+# 16        105   409.5         3.9        16.0
+# 17        124   660.1         5.4       108.4
+# 18         73   326.8         4.5        20.1
+# 19         48   248.0         5.3        26.0
+# overall  3443 15418.5         4.5       345.4
+
+plotMap(map.F2)
+# plot.rf(map.F2) 
+
+LG.f2.mappingpos.before.crossover <- map.F2
+
+LG <- map.F2
+
+  for (chr in names(LG$geno)) { # for each chromosome in cross genotype data
+    my.chr <- get(chr,LG$geno) # return the genotype data, including data & map
+    print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+    if(ncol(my.chr$data) > 3) { 
+      my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+        apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+          if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+          if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+          if ( length(unique(gt))  == 3) return(NA)
+          return(gt[2])
+        })
+      })
+    }
+    LG$geno <- within(LG$geno,assign(chr,my.chr))
+    print(paste(chr,"NA after",sum(is.na(get(chr,LG$geno)$data))))
+  } 
+
+# [1] "1 NA before 1950"
+# [1] "1 NA after 2744"
+# [1] "2 NA before 842"
+# [1] "2 NA after 1205"
+# [1] "3 NA before 2448"
+# [1] "3 NA after 3412"
+# [1] "4 NA before 1344"
+# [1] "4 NA after 1932"
+# [1] "5 NA before 1371"
+# [1] "5 NA after 1958"
+# [1] "6 NA before 3573"
+# [1] "6 NA after 4857"
+# [1] "7 NA before 2511"
+# [1] "7 NA after 3337"
+# [1] "8 NA before 1460"
+# [1] "8 NA after 2044"
+# [1] "9 NA before 3015"
+# [1] "9 NA after 4211"
+# [1] "10 NA before 2510"
+# [1] "10 NA after 3401"
+# [1] "11 NA before 1188"
+# [1] "11 NA after 1805"
+# [1] "12 NA before 495"
+# [1] "12 NA after 724"
+# [1] "13 NA before 1565"
+# [1] "13 NA after 2282"
+# [1] "14 NA before 1301"
+# [1] "14 NA after 1933"
+# [1] "15 NA before 439"
+# [1] "15 NA after 694"
+# [1] "16 NA before 924"
+# [1] "16 NA after 1343"
+# [1] "17 NA before 1069"
+# [1] "17 NA after 1642"
+# [1] "18 NA before 660"
+# [1] "18 NA after 965"
+# [1] "19 NA before 340"
+# [1] "19 NA after 554"
+
+map.F2 <- LG
+
+f2.map.new <- est.map(map.F2,verbose=T,error.prob=.01) 
+save(f2.map.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/f2.map.new.mapping.Rdata")
+map.F2 <- replace.map(map.F2, f2.map.new)
+LG.f2.mappingpos.after.crossover <- map.F2
+
+plot.map(LG.f2.mappingpos.after.crossover, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.mappingpos.before.crossover, LG.f2.mappingpos.after.crossover, alternate.chrid = T) # genetic map comparison 
+save(LG.f2.mappingpos.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.mappingpos.after.crossover.Rdata")
+```
+
+# follow Cody's step to clean the map 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.mappingpos.after.crossover.Rdata")
+summaryMap(LG.f2.mappingpos.after.crossover)
+
+#         n.mar length ave.spacing max.spacing
+# 1         221  332.6         1.5        98.8
+# 2          92  153.5         1.7        19.8
+# 3         303  492.8         1.6       142.3
+# 4         165  107.7         0.7         6.6
+# 5         156  170.1         1.1        12.9
+# 6         439  316.7         0.7        27.4
+# 7         290  198.8         0.7        10.7
+# 8         178  133.6         0.8        15.4
+# 9         352  304.8         0.9        16.8
+# 10        295  171.9         0.6        11.9
+# 11        135  172.3         1.3        13.4
+# 12         67   92.8         1.4        12.7
+# 13        188  227.8         1.2        10.6
+# 14        161 2155.8        13.5      1001.5
+# 15         51  144.7         2.9        19.4
+# 16        105  129.5         1.2         8.3
+# 17        124  154.7         1.3         9.9
+# 18         73  122.4         1.7        22.2
+# 19         48  128.8         2.7        29.8
+# overall  3443 5711.6         1.7      1001.5
+
+# find potential duplicate 
+
+# 1) find potential duplicates and drop them 
+# dup <- findDupMarkers(LG.f2.mappingpos.after.crossover, exact.only = FALSE)
+# length(dup) # 29 
+# 
+# totmar(LG.f2.mappingpos.after.crossover) # 3443 
+
+# LG.f2.mappingpos.after.crossover <- drop.markers(LG.f2.mappingpos.after.crossover, unlist(dup))
+# totmar(LG.f2.mappingpos.after.crossover) # 3407 
+
+# 2) identify markers with possible segregation distortion, checked but didn't do anything ... 
+gt <- geno.table(LG.f2.mappingpos.after.crossover)
+seg_dist <- gt[gt$P.value < 1e-7,]
+seg_dist
+dim(seg_dist) # 52 segregation distortion greater than 1e-7 
+# Cody didn't remove them, I will also keep them but make notes on these markers 
+
+# reestimate map with dropped duplicate markers
+# newmap <- est.map(LG.f2.mappingpos.after.crossover, error.prob = 0.0005) # take at least 30 mins
+# summaryMap(newmap) # why dropping marker makes the LG even longer? 
+# summaryMap(LG.f2.mappingpos.after.crossover)
+# save(newmap, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap_afterdropping.R")
+
+# now remove markers that obviously don't belong 
+rffull <- pull.rf(LG.f2.mappingpos.after.crossover)
+save(rffull, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/rffull.R")
+summary.map(LG.f2.mappingpos.after.crossover)
+
+# start from A01
+plot.rf(LG.f2.mappingpos.after.crossover, chr = c(1, 3, 6, 9, 13, 14))
+plot.rf(LG.f2.mappingpos.after.crossover, chr = c(1))
+
+rf1 <- pull.rf(LG.f2.mappingpos.after.crossover, chr = "1")
+chr1 <- markernames(LG.f2.mappingpos.after.crossover, chr = "1")
+chr1
+
+plot(rffull, chr1[81], bandcol="gray70", ylim=c(0,1), alternate.chrid=TRUE)
+``` 
+
