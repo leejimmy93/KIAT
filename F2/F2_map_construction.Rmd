@@ -471,7 +471,9 @@ LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossove
 save(LG.f2.madmapper.before.crossover, file = "~/F2/output/LG.f2.madmapper.before.crossover.ripple1.Rdata")
 
 # ripple using maximum likelihood method, window size 3 
+# ripple_maximum_likelihood.R 
 
+# after ripple with maximum likelihood, check the result and select orders which gives me the smallest LOD and chrlen --> remove double crossver --> ...  
 ```
 
 ### remove double crossover 
