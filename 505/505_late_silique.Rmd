@@ -1146,7 +1146,7 @@ ggsave("~/505/output/figure/clustering_common_leaf_late_silique_92.png", width =
 # run_3, using PCA = 0 
 ```
 
-# display GWAS result 
+# display GWAS result #### this is the final result that I used for presentation 
 ```{r}
 # install.packages("qqman")
 library("qqman")
