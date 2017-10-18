@@ -471,9 +471,13 @@ LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossove
 save(LG.f2.madmapper.before.crossover, file = "~/F2/output/LG.f2.madmapper.before.crossover.ripple1.Rdata")
 
 # ripple using maximum likelihood method, window size 3 
-# ripple_maximum_likelihood.R 
+# ripple_maximum_likelihood.R (takes extremely long time) --> decided to run for each LG seperately... 
 
-# after ripple with maximum likelihood, check the result and select orders which gives me the smallest LOD and chrlen --> remove double crossver --> ...  
+load("~/F2/output/missing_rate_0.10/rip2.2.Rdata")
+summary(rip2.2)
+summary(rip2.1)
+
+# after ripple with maximum likelihood, check the result and select orders which gives me the largest LOD and shortest chrlen --> remove double crossver --> ...  
 ```
 
 ### remove double crossover 
@@ -613,7 +617,6 @@ plot.map(map.new.new, alternate.chrid = TRUE)
 save(map.new.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/map.new.new.Rdata")
 ```
 conclussion: removing markers with high double crossover makes the map even longer... why? 
-
 # continue refine 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
