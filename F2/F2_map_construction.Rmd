@@ -420,6 +420,10 @@ totmar(LG.f2.madmapper)
 ### ripple 
 ripple uses two methods for comparing orders: maximium likelihood and minimal obligate crossovers. It is simpler to count the number of obligate crossover in the data, for a given order, and then choose the order for which the number of obligate crossover is minimized. It is generally recommended using the crossover count method with a large window, followed by maximum likelihood with a smaller window. 
 ```{r} 
+LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
+
+LG.f2.madmapper.before.crossover <- LG.f2.madmapper
+save(LG.f2.madmapper.before.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata") 
 load("~/F2/output/LG.f2.madmapper.before.crossover.Rdata") 
 
 # LG1 looks good, no better order based on ripple 
@@ -469,24 +473,67 @@ LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossove
 LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[18]][2,], chr = 18)
 
 save(LG.f2.madmapper.before.crossover, file = "~/F2/output/LG.f2.madmapper.before.crossover.ripple1.Rdata")
-
+load(file = "~/F2/output/LG.f2.madmapper.before.crossover.ripple1.Rdata")
 # ripple using maximum likelihood method, window size 3 
 # ripple_maximum_likelihood.R (takes extremely long time) --> decided to run for each LG seperately... 
 
 load("~/F2/output/missing_rate_0.10/rip2.2.Rdata")
-summary(rip2.2)
-summary(rip2.1)
+summary(rip2.2) # 2nd is the best
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 2, rip2.2[2,])
+load("~/F2/output/missing_rate_0.10/rip2.3.Rdata")
+summary(rip2.3) # 2nd is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 3, rip2.3[2,]) 
+load("~/F2/output/missing_rate_0.10/rip2.4.Rdata")
+summary(rip2.4) # 2nd is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 4, rip2.4[2,]) 
+load("~/F2/output/missing_rate_0.10/rip2.5.Rdata")
+summary(rip2.5) # 2nd is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 5, rip2.5[2,])
+load("~/F2/output/missing_rate_0.10/rip2.6.Rdata")
+summary(rip2.6) # questionable 
+load("~/F2/output/missing_rate_0.10/rip2.7.Rdata")
+summary(rip2.7) # questionqable 
+load("~/F2/output/missing_rate_0.10/rip2.8.Rdata")
+summary(rip2.8) # 2nd is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 8, rip2.8[2,])
+
+load("~/F2/output/missing_rate_0.10/rip2.11.Rdata")
+summary(rip2.11) # default
+load("~/F2/output/missing_rate_0.10/rip2.12.Rdata")
+summary(rip2.12) # second is the best
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 12, rip2.12[2,])
+load("~/F2/output/missing_rate_0.10/rip2.13.Rdata")
+summary(rip2.13) # second is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 13, rip2.13[2,])
+load("~/F2/output/missing_rate_0.10/rip2.14.Rdata")
+summary(rip2.14) # second is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 14, rip2.14[2,])
+load("~/F2/output/missing_rate_0.10/rip2.15.Rdata")
+summary(rip2.15) # default 
+load("~/F2/output/missing_rate_0.10/rip2.16.Rdata")
+summary(rip2.16) # default 
+load("~/F2/output/missing_rate_0.10/rip2.17.Rdata")
+summary(rip2.17) # default 
+load("~/F2/output/missing_rate_0.10/rip2.18.Rdata")
+summary(rip2.18) # second is the best
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 18, rip2.18[2,])
+load("~/F2/output/missing_rate_0.10/rip2.19.Rdata")
+summary(rip2.19) # default is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 19, rip2.19[2,])
 
 # after ripple with maximum likelihood, check the result and select orders which gives me the largest LOD and shortest chrlen --> remove double crossver --> ...  
+
+# reestimate map 
+f2.map.new1 <- est.map(LG.f2.madmapper.before.crossover,verbose=T,error.prob=.01)  
+LG.f2.madmapper.before.crossover <- replace.map(LG.f2.madmapper.before.crossover, f2.map.new1)
+summaryMap(LG.f2.madmapper.before.crossover)
+save(LG.f2.madmapper.before.crossover, file = "~/F2/output/missing_rate_0.10/LG.f2.madmapper.before.crossover.ripple2.Rdata")
 ```
 
 ### remove double crossover 
 ```{r} 
 # remove double crossover 
-LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
 
-LG.f2.madmapper.before.crossover <- LG.f2.madmapper
-save(LG.f2.madmapper.before.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
 
 for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genotype data
   my.chr <- get(chr,LG.f2.madmapper$geno) # return the genotype data, including data & map
