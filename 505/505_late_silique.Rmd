@@ -1181,6 +1181,13 @@ unique(Erucic_acid[Erucic_acid$P < 0.00001,]$CHR) # no SNPs
 unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs  
 ```
 
+### overlay current result with previous finding 
+```{r}
+
+
+
+```
+
 # compare leaf & late silique 131 samples, how many lines are overlapped  
 ```{r}
 load("~/505/output/pheno_data_505_leaf.R")
