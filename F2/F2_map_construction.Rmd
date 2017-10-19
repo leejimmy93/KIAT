@@ -533,7 +533,9 @@ save(LG.f2.madmapper.before.crossover, file = "~/F2/output/missing_rate_0.10/LG.
 ### remove double crossover 
 ```{r} 
 # remove double crossover 
-
+load("~/F2/output/missing_rate_0.10/LG.f2.madmapper.before.crossover.ripple2.Rdata")
+summaryMap(LG.f2.madmapper.before.crossover) # 3586.9 
+LG.f2.madmapper <- LG.f2.madmapper.before.crossover
 
 for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genotype data
   my.chr <- get(chr,LG.f2.madmapper$geno) # return the genotype data, including data & map
@@ -552,7 +554,7 @@ for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genoty
   print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2.madmapper$geno)$data))))
 }  
 
-write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
+# write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
 ```
 
 #### restimate map with double crossover removed 
