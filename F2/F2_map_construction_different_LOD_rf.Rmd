@@ -1,0 +1,22 @@
+---
+title: "F2_map_construction_different_LOD_rf"
+output: html_document
+---
+
+Since we always see map expansion problem, even after removing double crossover and ripple. So I decided to try different threhold of min LOD and max rf 
+
+### min LOD 4.0 & max rf 0.5 
+```{r}
+
+```
+
+### min LOD 3.0 & max rf 0.4 
+```{r}
+
+```
+
+### min LOD 4.0 and max rf 0.4 
+```{r}
+
+```
+

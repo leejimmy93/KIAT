@@ -1,0 +1,8 @@
+---
+title: "eQTL"
+output: html_document
+---
+
+Purpose of this script is to find loci controling expression of different genes. We will firstly focus on fatty acid related genes. 
+
+

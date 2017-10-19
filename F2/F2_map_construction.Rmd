@@ -180,53 +180,12 @@ write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_proje
 # F2_map_construction_LOD3_rf0.5_missing_0.10.R 
 ```
 
-### assign markers to different linkage groups based on their chromsome assignment 
-use this method to test if I get correct result, test it on one chromosome with the least number of markers 
+While ripple doesn't help to condense map distance, I decided to increase min LOD and max rf to see whether this way can help reduce map distance 
 ```{r}
-# get the number of markers for each chromosome 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
-dim(F2_geno_data_2) # 3443 166
-
-F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2)) 
-F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2)) 
-F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
-
-head(F2_geno_data_2[F2_geno_data_2$Chr=="chrA04",],1)
-tail(F2_geno_data_2[F2_geno_data_2$Chr=="chrC09",],1)
-
-sum(F2_geno_data_2$Chr=="chrA01") # 221 1-221  
-sum(F2_geno_data_2$Chr=="chrA02") # 92 222-313
-sum(F2_geno_data_2$Chr=="chrA03") # 303 314-616
-sum(F2_geno_data_2$Chr=="chrA04") # 165 617-781
-sum(F2_geno_data_2$Chr=="chrA05") # 156 782-937
-sum(F2_geno_data_2$Chr=="chrA06") # 439 938-1376
-sum(F2_geno_data_2$Chr=="chrA07") # 290 1377-1666
-sum(F2_geno_data_2$Chr=="chrA08") # 178 1667-1844
-sum(F2_geno_data_2$Chr=="chrA09") # 352 1845-2196
-sum(F2_geno_data_2$Chr=="chrA10") # 295 2197-2491
-sum(F2_geno_data_2$Chr=="chrC01") # 135 2492-2626
-sum(F2_geno_data_2$Chr=="chrC02") # 67 2627-2693
-sum(F2_geno_data_2$Chr=="chrC03") # 188 2694-2881
-sum(F2_geno_data_2$Chr=="chrC04") # 161 2882-3042
-sum(F2_geno_data_2$Chr=="chrC05") # 51 3043-3093
-sum(F2_geno_data_2$Chr=="chrC06") # 105 3094-3198
-sum(F2_geno_data_2$Chr=="chrC07") # 124 3199-3322
-sum(F2_geno_data_2$Chr=="chrC08") # 73 3323-3395
-sum(F2_geno_data_2$Chr=="chrC09") # 48 3396-3443  
-
-i = 1
-index = vector()
-for (ch in unique(F2_geno_data_2$Chr)){
-  while (F2_geno_data_2$Chr[i]==ch){
-      i = i + 1 
-  }
-  print (i-1)
-  index[ch] = i-1
-}
-
-index 
-# test on C09 
-# https://github.com/leejimmy93/KIAT/map_A01.R .... mapC09.R 
+# on whitney # takes about 45 mins 
+# min LOD 4.0 and max rf 5.0 
+# min LOD 3.0 and max rf 4.0 
+# min LOD 4.0 and max rf 4.0
 ```
 
 ### use madmapper to assign markers to clusters/LGs 
@@ -304,33 +263,17 @@ length(LG.madmapper) # 19
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/twopts.LOD3_rf0.5.Rdata")
 twopts.f2.LOD3_rf0.5$marnames
 
-group.A <- list()
-
-for (i in 1:length(LG.A)) {
-  group.A[[i]] <-  which(twopts.f2.LOD3_rf0.5$marnames %in% LG.A[[i]])
-}
-group.A
-
-group.C <- list()
-
-for (i in 1:length(LG.C)) {
-  group.C[[i]] <-  which(twopts.f2.LOD3_rf0.5$marnames %in% LG.C[[i]])
-}
-
-group.C
-save(group.A, group.C, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.Rdata")
-
 group.AC <- list()
 
 for (i in 1:length(LG.madmapper)) {
   group.AC[[i]] <-  which(twopts.f2.LOD3_rf0.5$marnames %in% LG.madmapper[[i]])
 }
 group.AC 
-save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.AC.Rdata")  
+save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.AC.Rdata") 
 ```
 
 #### order within each chromosome 
-```{r}
+```{r} 
 # scp group.A & group.C to whitney 
 # https://github.com/leejimmy93/KIAT/blob/master/F2/map_A.R
 # https://github.com/leejimmy93/KIAT/blob/master/F2/map_C.R 
@@ -496,6 +439,9 @@ summary(rip2.7) # questionqable
 load("~/F2/output/missing_rate_0.10/rip2.8.Rdata")
 summary(rip2.8) # 2nd is the best 
 LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 8, rip2.8[2,])
+load("~/F2/output/missing_rate_0.10/rip2.9.Rdata")
+summary(rip2.9) # 2nd is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 9, rip2.9[2,])
 
 load("~/F2/output/missing_rate_0.10/rip2.11.Rdata")
 summary(rip2.11) # default
@@ -524,6 +470,10 @@ LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossove
 # after ripple with maximum likelihood, check the result and select orders which gives me the largest LOD and shortest chrlen --> remove double crossver --> ...  
 
 # reestimate map 
+
+
+
+############ need to reestimate map after switch order for LG9 
 f2.map.new1 <- est.map(LG.f2.madmapper.before.crossover,verbose=T,error.prob=.01)  
 LG.f2.madmapper.before.crossover <- replace.map(LG.f2.madmapper.before.crossover, f2.map.new1)
 summaryMap(LG.f2.madmapper.before.crossover)
