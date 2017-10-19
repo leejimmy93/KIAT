@@ -19,6 +19,7 @@ library(ggplot2)
 library(reshape) 
 library(tidyverse) 
 library("qtl") 
+library(snowfall)
 ```
 
 # import & format data (MAC version)
@@ -416,24 +417,125 @@ totmar(LG.f2.madmapper)
 ```
 
 ### refine map 
-### ripple
+### ripple 
 ripple uses two methods for comparing orders: maximium likelihood and minimal obligate crossovers. It is simpler to count the number of obligate crossover in the data, for a given order, and then choose the order for which the number of obligate crossover is minimized. It is generally recommended using the crossover count method with a large window, followed by maximum likelihood with a smaller window. 
-```{r}
+```{r} 
 LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
 
-rip1 <- ripple(cross = LG.f2.madmapper, window = 8, chr = 1, method = "countxo")
+LG.f2.madmapper.before.crossover <- LG.f2.madmapper
+save(LG.f2.madmapper.before.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata") 
+load("~/F2/output/LG.f2.madmapper.before.crossover.Rdata") 
 
+# LG1 looks good, no better order based on ripple 
+# LG2 
+rip2 <- ripple(cross = LG.f2.madmapper.before.crossover, window = 5, chr = 2, method = "countxo")
+summary(rip2)
 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip2[2,], chr = 2) # second order has the lowest crossover, replace with that order 
 
+rip2.1 <- ripple(LG.f2.madmapper.before.crossover, method = "likelihood", 
+                 error.prob = 0.001, verbose = FALSE, chr = 2, window = 3)
+
+summary(rip2.1) # original order has the lowest LOD, keep it 
+
+# iterate over all LGs 
+# rename to the right name 
+names(LG.f2.madmapper.before.crossover$geno)[1:10] <- paste("A", c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"), sep = "")
+names(LG.f2.madmapper.before.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04", "05", "06", "07", "08", "09"), sep = "")
+
+sfInit(parallel = TRUE, cpus = 12)
+sfLibrary(qtl)
+sfExport("LG.f2.madmapper.before.crossover")
+
+rip <- 
+  sfLapply(names(LG.f2.madmapper.before.crossover$geno), function(LG) {
+    ripple(cross = LG.f2.madmapper.before.crossover, window = 7, chr = LG, method = "countxo")
+  })
+
+sfStop()
+
+save(rip, file = "~/F2/output/missing_rate_0.10/rip.Rdata")
+ 
+### pick a better order based on double crossover 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[2]][2,], chr = 2)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[4]][2,], chr = 4)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[5]][2,], chr = 5)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[6]][2,], chr = 6)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[7]][2,], chr = 7)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[8]][2,], chr = 8)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[9]][2,], chr = 9)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[10]][2,], chr = 10)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[12]][2,], chr = 12)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[13]][2,], chr = 13)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[14]][2,], chr = 14)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[16]][2,], chr = 16)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[17]][2,], chr = 17)
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, rip[[18]][2,], chr = 18)
+
+save(LG.f2.madmapper.before.crossover, file = "~/F2/output/LG.f2.madmapper.before.crossover.ripple1.Rdata")
+load(file = "~/F2/output/LG.f2.madmapper.before.crossover.ripple1.Rdata")
+# ripple using maximum likelihood method, window size 3 
+# ripple_maximum_likelihood.R (takes extremely long time) --> decided to run for each LG seperately... 
+
+load("~/F2/output/missing_rate_0.10/rip2.2.Rdata")
+summary(rip2.2) # 2nd is the best
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 2, rip2.2[2,])
+load("~/F2/output/missing_rate_0.10/rip2.3.Rdata")
+summary(rip2.3) # 2nd is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 3, rip2.3[2,]) 
+load("~/F2/output/missing_rate_0.10/rip2.4.Rdata")
+summary(rip2.4) # 2nd is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 4, rip2.4[2,]) 
+load("~/F2/output/missing_rate_0.10/rip2.5.Rdata")
+summary(rip2.5) # 2nd is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 5, rip2.5[2,])
+load("~/F2/output/missing_rate_0.10/rip2.6.Rdata")
+summary(rip2.6) # questionable 
+load("~/F2/output/missing_rate_0.10/rip2.7.Rdata")
+summary(rip2.7) # questionqable 
+load("~/F2/output/missing_rate_0.10/rip2.8.Rdata")
+summary(rip2.8) # 2nd is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 8, rip2.8[2,])
+
+load("~/F2/output/missing_rate_0.10/rip2.11.Rdata")
+summary(rip2.11) # default
+load("~/F2/output/missing_rate_0.10/rip2.12.Rdata")
+summary(rip2.12) # second is the best
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 12, rip2.12[2,])
+load("~/F2/output/missing_rate_0.10/rip2.13.Rdata")
+summary(rip2.13) # second is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 13, rip2.13[2,])
+load("~/F2/output/missing_rate_0.10/rip2.14.Rdata")
+summary(rip2.14) # second is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 14, rip2.14[2,])
+load("~/F2/output/missing_rate_0.10/rip2.15.Rdata")
+summary(rip2.15) # default 
+load("~/F2/output/missing_rate_0.10/rip2.16.Rdata")
+summary(rip2.16) # default 
+load("~/F2/output/missing_rate_0.10/rip2.17.Rdata")
+summary(rip2.17) # default 
+load("~/F2/output/missing_rate_0.10/rip2.18.Rdata")
+summary(rip2.18) # second is the best
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 18, rip2.18[2,])
+load("~/F2/output/missing_rate_0.10/rip2.19.Rdata")
+summary(rip2.19) # default is the best 
+LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossover, chr = 19, rip2.19[2,])
+
+# after ripple with maximum likelihood, check the result and select orders which gives me the largest LOD and shortest chrlen --> remove double crossver --> ...  
+
+# reestimate map 
+f2.map.new1 <- est.map(LG.f2.madmapper.before.crossover,verbose=T,error.prob=.01)  
+LG.f2.madmapper.before.crossover <- replace.map(LG.f2.madmapper.before.crossover, f2.map.new1)
+summaryMap(LG.f2.madmapper.before.crossover)
+save(LG.f2.madmapper.before.crossover, file = "~/F2/output/missing_rate_0.10/LG.f2.madmapper.before.crossover.ripple2.Rdata")
 ```
 
 ### remove double crossover 
 ```{r} 
 # remove double crossover 
-LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
-
-LG.f2.madmapper.before.crossover <- LG.f2.madmapper
-save(LG.f2.madmapper.before.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
+load("~/F2/output/missing_rate_0.10/LG.f2.madmapper.before.crossover.ripple2.Rdata")
+summaryMap(LG.f2.madmapper.before.crossover) # 3586.9 
+LG.f2.madmapper <- LG.f2.madmapper.before.crossover
 
 for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genotype data
   my.chr <- get(chr,LG.f2.madmapper$geno) # return the genotype data, including data & map
@@ -452,7 +554,7 @@ for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genoty
   print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2.madmapper$geno)$data))))
 }  
 
-write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
+# write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.rm.doublecrossover.csv") 
 ```
 
 #### restimate map with double crossover removed 
@@ -564,7 +666,6 @@ plot.map(map.new.new, alternate.chrid = TRUE)
 save(map.new.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/map.new.new.Rdata")
 ```
 conclussion: removing markers with high double crossover makes the map even longer... why? 
-
 # continue refine 
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
@@ -598,12 +699,7 @@ checkAlleles(LG.f2.madmapper.after.crossover) # no apparent problem
 
 
 
-```
-
-
-
-
-
+``` 
 
 ### appendix 
 ### check double cross over 

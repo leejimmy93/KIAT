@@ -1146,7 +1146,7 @@ ggsave("~/505/output/figure/clustering_common_leaf_late_silique_92.png", width =
 # run_3, using PCA = 0 
 ```
 
-# display GWAS result 
+# display GWAS result #### this is the final result that I used for presentation 
 ```{r}
 # install.packages("qqman")
 library("qqman")
@@ -1179,6 +1179,13 @@ dev.off()
 sum(Erucic_acid$P < 0.00001)
 unique(Erucic_acid[Erucic_acid$P < 0.00001,]$CHR) # no SNPs  
 unique(Oil_content[Oil_content$P < 0.00001,]$CHR) # no SNPs  
+```
+
+### overlay current result with previous finding 
+```{r}
+
+
+
 ```
 
 # compare leaf & late silique 131 samples, how many lines are overlapped  
