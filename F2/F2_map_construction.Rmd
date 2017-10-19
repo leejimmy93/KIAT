@@ -650,12 +650,7 @@ checkAlleles(LG.f2.madmapper.after.crossover) # no apparent problem
 
 
 
-```
-
-
-
-
-
+``` 
 
 ### appendix 
 ### check double cross over 
