@@ -289,14 +289,9 @@ LG.C08.2 <- madmapper.result$V26[1914:1923] # 10
 LG.C09.2 <- madmapper.result$V26[3063:3073] # 11
 #########
 
-LG.A <- list(LG.A01, LG.A01.2, LG.A02, LG.A03, LG.A03.2, LG.A04, LG.A05, LG.A06, LG.A07, LG.A08, LG.A09, LG.A09.2, LG.A10)
-
-LG.C <- list(LG.C01, LG.C02, LG.C03, LG.C04, LG.C04.C05, LG.C05, LG.C05.2, LG.C06, LG.C07, LG.C08, LG.C08.2, LG.C09, LG.C09.2)
-length(LG.A) # 13 linkage groups 
-length(LG.C) # 13 linkage groups 
-
 LG.madmapper <- list(LG.A01, LG.A02, LG.A03, LG.A04, LG.A05, LG.A06, LG.A07, LG.A08, LG.A09, LG.A10, LG.C01, LG.C02, LG.C03, LG.C04, LG.C05, LG.C06, LG.C07, LG.C08, LG.C09) 
 length(LG.madmapper) # 19 
+save(LG.madmapper, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.madmapper.R")
 ```  
 
 # get index for the above markers in different linkage group 
