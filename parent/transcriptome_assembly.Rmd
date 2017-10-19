@@ -126,7 +126,7 @@ output:
 # 39 genes out 139 genes of Da-Ae are found to have blast hit in plant 
 # 24 (-1) genes out of 90 genes of Da-Ol-1 are found to have blast hit in plant 
 
-# 10) remove chimera RNA: chimera RNAs are composed of exons from two or more different genes and the potential to encode novel proteins. While natual chimeric transcripts exist in some cancer tissues but are very rare, and most of the cases they are resulted from mis-assembly in transcriptome assembly. So they need to be removed...   
+# 10) remove chimera RNA: chimera RNAs are composed of exons from two or more different genes and the potential to encode novel proteins. While natual chimeric transcripts exist in some cancer tissues but are very rare, and most of the cases they are resulted from mis-assembly in transcriptome assembly. So they need to be removed...    
 
 # 11) combine ref based & de-novo assembly 
 # Da-Ae 6065+2320
