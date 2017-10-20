@@ -318,3 +318,52 @@ chr1
 plot(rffull, chr1[81], bandcol="gray70", ylim=c(0,1), alternate.chrid=TRUE)
 ``` 
 
+### assign markers to different linkage groups based on their chromsome assignment 
+use this method to test if I get correct result, test it on one chromosome with the least number of markers 
+```{r}
+# get the number of markers for each chromosome 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
+dim(F2_geno_data_2) # 3443 166
+
+F2_geno_data_2$Chr <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2)) 
+F2_geno_data_2$Pos <- gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2)) 
+F2_geno_data_2$index <- seq(1: nrow(F2_geno_data_2))
+
+head(F2_geno_data_2[F2_geno_data_2$Chr=="chrA04",],1)
+tail(F2_geno_data_2[F2_geno_data_2$Chr=="chrC09",],1)
+
+sum(F2_geno_data_2$Chr=="chrA01") # 221 1-221  
+sum(F2_geno_data_2$Chr=="chrA02") # 92 222-313
+sum(F2_geno_data_2$Chr=="chrA03") # 303 314-616
+sum(F2_geno_data_2$Chr=="chrA04") # 165 617-781
+sum(F2_geno_data_2$Chr=="chrA05") # 156 782-937
+sum(F2_geno_data_2$Chr=="chrA06") # 439 938-1376
+sum(F2_geno_data_2$Chr=="chrA07") # 290 1377-1666
+sum(F2_geno_data_2$Chr=="chrA08") # 178 1667-1844
+sum(F2_geno_data_2$Chr=="chrA09") # 352 1845-2196
+sum(F2_geno_data_2$Chr=="chrA10") # 295 2197-2491
+sum(F2_geno_data_2$Chr=="chrC01") # 135 2492-2626
+sum(F2_geno_data_2$Chr=="chrC02") # 67 2627-2693
+sum(F2_geno_data_2$Chr=="chrC03") # 188 2694-2881
+sum(F2_geno_data_2$Chr=="chrC04") # 161 2882-3042
+sum(F2_geno_data_2$Chr=="chrC05") # 51 3043-3093
+sum(F2_geno_data_2$Chr=="chrC06") # 105 3094-3198
+sum(F2_geno_data_2$Chr=="chrC07") # 124 3199-3322
+sum(F2_geno_data_2$Chr=="chrC08") # 73 3323-3395
+sum(F2_geno_data_2$Chr=="chrC09") # 48 3396-3443  
+
+i = 1
+index = vector()
+for (ch in unique(F2_geno_data_2$Chr)){
+  while (F2_geno_data_2$Chr[i]==ch){
+      i = i + 1 
+  }
+  print (i-1)
+  index[ch] = i-1
+}
+
+index 
+# test on C09 
+# https://github.com/leejimmy93/KIAT/map_A01.R .... mapC09.R 
+```
+ 
