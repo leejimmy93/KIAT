@@ -7,6 +7,10 @@ Since we always see map expansion problem, even after removing double crossover 
 
 ### min LOD 4.0 & max rf 0.5 
 ```{r}
+load("~/F2/output/missing_rate_0.10/LG.madmapper.R")
+load("~/F2/output/missing_rate_0.10/twopts.LOD4_rf0.5.Rdata")
+
+twopts.f2.LOD4_rf0.5
 
 ```
 

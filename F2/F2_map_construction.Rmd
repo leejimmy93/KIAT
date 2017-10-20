@@ -269,10 +269,10 @@ save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.A
 
 #### order within each chromosome 
 ```{r} 
-# scp group.A & group.C to whitney 
-# https://github.com/leejimmy93/KIAT/blob/master/F2/map_A.R
-# https://github.com/leejimmy93/KIAT/blob/master/F2/map_C.R 
 # https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC.R 
+## also for data with different LOD and rf 
+# 
+
 ``` 
 
 ### combine A & C subgenome 
