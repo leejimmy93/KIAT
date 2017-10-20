@@ -164,4 +164,41 @@ Ae_unmapped.blastx.trinity <- read.csv("~/assembly_parent/De_novo/filtering/Ae_u
 
 ```
 
+### figure for length distribution of novel assembly
+```{r}
+Ae_ref <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/assembly/Ae_ref_plain.fa.length", header = F)
+
+Ol_ref <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/assembly/Ol_ref_plain.fa.length", header = F)
+
+Ae_denovo <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/assembly/Ae_denovo_plain.fa.length", header = F)
+
+Ol_denovo <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/assembly/Ol_denovo_plain.fa.length", header = F)
+
+ref_CDS <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/assembly/Brassica_napus_length.txt", header = F)
+
+length.distr<- rbind(length.distr.calc(Ae_ref), length.distr.calc(Ol_ref), length.distr.calc(Ae_denovo), length.distr.calc(Ol_denovo), length.distr.calc(ref_CDS))
+
+length.distr$range <- factor(length.distr$range, levels = c("<200","200-500","500-1000","1000-1500","1500-2000","2000-5000",">5000"))
+  
+# plot 
+library(ggplot2)
+p.length.distr <- ggplot(data = length.distr)
+p.length.distr <- p.length.distr + geom_bar(aes(x=as.factor(range), y=percentage, fill=class), stat = "identity")
+p.length.distr <- p.length.distr + facet_wrap(~class) 
+p.length.distr <- p.length.distr + labs(list(title = "", x = "length range", y = "percentage"))
+p.length.distr <- p.length.distr + theme(axis.text.x = element_text(angle = 90, size = 8))
+p.length.distr 
+```
+
+
+
+### appendix function 
+```{r}
+length.distr.calc <- function(length.data){
+  length.distr <- data.frame(range = c("<200","200-500","500-1000","1000-1500","1500-2000","2000-5000",">5000"), 
+                             percentage = c(round(sum(length.data$V2<200)/nrow(length.data), digits = 2), round(sum(length.data$V2>=200 & length.data$V2<500)/nrow(length.data), digits = 2), round(sum(length.data$V2>=500 & length.data$V2<1000)/nrow(length.data), digits = 2),  round(sum(length.data$V2>=1000 & length.data$V2<1500)/nrow(length.data), digits = 2), round(sum(length.data$V2>=1500 & length.data$V2<2000)/nrow(length.data), digits = 2), round(sum(length.data$V2>=2000 & length.data$V2<5000)/nrow(length.data), digits = 2), round(sum(length.data$V2>=5000)/nrow(length.data), digits = 2)),
+                          class = deparse(substitute(length.data)))
+return(length.distr)
+}
+```
 
