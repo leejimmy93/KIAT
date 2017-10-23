@@ -5,22 +5,68 @@ output: html_document
 
 Since we always see map expansion problem, even after removing double crossover and ripple. So I decided to try different threhold of min LOD and max rf 
 
+```{r}
+F2.data <- read.mapmaker(file="~/F2/data/F2_geno_for_one_map_final.txt") 
+```
+
 ### min LOD 4.0 & max rf 0.5 
 ```{r}
 load("~/F2/output/missing_rate_0.10/LG.madmapper.R")
 load("~/F2/output/missing_rate_0.10/twopts.LOD4_rf0.5.Rdata")
-
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/missing_rate_0.10/LG.f2.ord.AC.LOD4_rf0.5.Rdata")
 twopts.f2.LOD4_rf0.5
 
+# order within each LG
+# https://github.com/leejimmy93/KIAT/blob/master/F2/F2_map_construction_LOD4_rf0.5_missing_0.10.R
+
+# import order result 
+# https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC_LOD4_rf0.5.R 
+
+LG.f2_LOD4_rf0.5 <- list()
+
+for (i in seq_along(1:19)){
+  LG.f2_LOD4_rf0.5[[i]] <- make.seq(LG.f2.ord[[i]], "safe")
+}
+
+draw.map(LG.f2_LOD4_rf0.5, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2_LOD4_rf0.5, "~/F2/output/LG.f2.madmapper_LOD4_rf0.5.map")
+
+### import into Rqtl for refine & summary 
+LG.f2.madmapper_LOD4_rf0.5 <- read.cross("mm", file = "~/F2/data/F2_geno_for_one_map_final.txt", mapfile = "~/F2/output/LG.f2.madmapper_LOD4_rf0.5.map")
+
+summary(LG.f2.madmapper_LOD4_rf0.5) # too few... 
 ```
 
 ### min LOD 3.0 & max rf 0.4 
 ```{r}
+load("~/F2/output/missing_rate_0.10/twopts.LOD3_rf0.4.Rdata")
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/missing_rate_0.10/LG.f2.ord.AC.LOD3_rf0.4.Rdata")
+twopts.f2.LOD3_rf0.4
 
+# order within each LG
+# https://github.com/leejimmy93/KIAT/blob/master/F2/F2_map_construction_LOD3_rf0.4_missing_0.10.R
+
+# import order result 
+# https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC_LOD3_rf0.4.R 
+
+LG.f2_LOD3_rf0.4 <- list()
+
+for (i in seq_along(1:19)){
+  LG.f2_LOD3_rf0.4[[i]] <- make.seq(LG.f2.ord[[i]], "safe")
+}
+
+draw.map(LG.f2_LOD3_rf0.4, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
+write.map(LG.f2_LOD3_rf0.4, "~/F2/output/LG.f2.madmapper_LOD3_rf0.4.map")
+
+### import into Rqtl for refine & summary 
+LG.f2.madmapper_LOD3_rf0.4 <- read.cross("mm", file = "~/F2/data/F2_geno_for_one_map_final.txt", mapfile = "~/F2/output/LG.f2.madmapper_LOD3_rf0.4.map")
+
+summary(LG.f2.madmapper_LOD3_rf0.4) 
+summary(LG.f2)
 ```
 
 ### min LOD 4.0 and max rf 0.4 
 ```{r}
-
+# this might be too few too... so no need to test... 
 ```
 
