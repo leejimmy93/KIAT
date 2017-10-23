@@ -2,7 +2,192 @@
 title: "eQTL"
 output: html_document
 ---
+Purpose of this script is to find loci controlling expression of different genes. We will firstly focus on fatty acid related genes.  
 
-Purpose of this script is to find loci controling expression of different genes. We will firstly focus on fatty acid related genes. 
+### import data, get genes with detectable expression  
+```{r}
+read_count_F2 <- read.table("~/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1)
+dim(read_count_F2) # 101040    166
+read_count_F2[1:10, 1:10]
+
+# remove lowly expressed genes 
+read.count.small <- read_count_F2[rowSums(read_count_F2 > 10) >= 166*0.25,]
+dim(read.count.small) # 59934   131  
+colnames(read.count.small)
+save(read.count.small, file="~/F2/output/read.count.small.Rdata")
+```
+
+### voom transformation 
+```{r}
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("DESeq2")
+library("DESeq2")
+
+# define sample 
+read.count.sample <- data.frame(group=factor(colnames(read_count_F2)))
+read.count.sample$group
+
+dds.f2 <- DESeqDataSetFromMatrix(countData = round(read.count.small), colData = read.count.sample, design = ~ group) 
+vsd.f2 <- varianceStabilizingTransformation(dds.f2)
+vstMat.f2 <- assay(vsd.f2)
+colnames(vstMat.f2) <- colnames(read.count.small)
+vstMat.f2[1:10, 1:10] 
+```
+
+### scale and center
+```{r}
+dim(vstMat.f2) # 56180   166 
+vstMat.f2.centered.scaled <- scale(vstMat.f2, center = TRUE, scale = TRUE) # center to zero
+save(vstMat.f2.centered.scaled, file = "~/F2/output/vstMat.f2.centered.scaled.Rdata")
+```
+
+### get fatty acid & lipid genes 
+```{r}
+load("~/F2/output/vstMat.f2.centered.scaled.Rdata")
+vstMat.f2.centered.scaled[1:10, 1:10]
+
+# get lipid and fatty acid related genes using GO and IPR term 
+# cat Brassica_napus_IPR.withdescription.gz | grep "fatty\|lipid" > fatty_acid_related/lipid_fatty_acid_IPR
+
+# cat Brassica_napus_GO | awk '{print $2}' > GO_list 
+
+# cat GO_list | sort | uniq > GO_list_unique 
+
+# extract GO annotation from http://yeastmine.yeastgenome.org/yeastmine/bag.do save as GO_annotation.csv 
+
+# cat GO_annotation.csv | grep "fatty\|lipid" | awk '{print $1}' | sort | uniq | sed 's/"//g' > fatty_acid_lipd_GO 
+
+# cat lipid_fatty_acid_* | awk '{print $1}' | sort | uniq > lipid_fatty_acid_genes
+lipid_fatty_acid_genes <- read.table("~/Reference/B.napus/fatty_acid_related/lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
+dim(lipid_fatty_acid_genes) # 7346 
+```
+
+### load libs
+```{r}
+library(tidyverse)
+library(qtl)
+library(snowfall)
+library(ggrepel) 
+library(Biostrings)
+source("~/KIAT/function_BnRNAseq.R")
+```
+
+### format data for QTL analysis (use v1 map)
+```{r}
+# geno data 
+F2_geno_data_2_Ae_Ol_new <- read.table("~/F2/data/F2_geno_data_2_Ae_Ol_new.txt")
+dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
+
+# pheno (gene counts)
+load("~/F2/output/vstMat.f2.centered.scaled.Rdata")
+vstMat.f2.centered.scaled <- as.data.frame(vstMat.f2.centered.scaled)
+vstMat.f2.centered.scaled[1:10, 1:10]
+
+# get only fatty acid & lipid related genes 
+vstMat.f2.centered.scaled$geneID <- rownames(vstMat.f2.centered.scaled)
+vstMat.f2.centered.scaled$geneID
+lipid_fatty_acid_genes <- read.table("~/Reference/B.napus/fatty_acid_related/lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
+lipid_fatty_acid_genes$geneID <- lipid_fatty_acid_genes$V1 
+
+lipid_fatty_acid_genes.expression <- 
+  vstMat.f2.centered.scaled %>%
+    semi_join(lipid_fatty_acid_genes) 
+
+rownames(lipid_fatty_acid_genes.expression) <- lipid_fatty_acid_genes.expression$geneID
+lipid_fatty_acid_genes.expression <- 
+  lipid_fatty_acid_genes.expression %>% 
+    dplyr::select(-geneID)
+
+colnames(lipid_fatty_acid_genes.expression) <- gsub("Sample_F2", "ID", colnames(lipid_fatty_acid_genes.expression))
+dim(lipid_fatty_acid_genes.expression) # 4943 166 
+
+# combine geno & pheno for QTL analysis 
+colnames(F2_geno_data_2_Ae_Ol_new) <- gsub("X", "ID_", colnames(F2_geno_data_2_Ae_Ol_new))
+
+F2_geno_data_2_Ae_Ol_new.t <- as.data.frame(t(F2_geno_data_2_Ae_Ol_new))
+F2_geno_data_2_Ae_Ol_new.t$ID <- rownames(F2_geno_data_2_Ae_Ol_new.t)
+lipid_fatty_acid_genes.expression.t <- as.data.frame(t(lipid_fatty_acid_genes.expression)) 
+lipid_fatty_acid_genes.expression.t$ID <- rownames(lipid_fatty_acid_genes.expression.t)
+
+F2_geno_data_2_Ae_Ol_new.2 <- 
+F2_geno_data_2_Ae_Ol_new.t %>% 
+  left_join(lipid_fatty_acid_genes.expression.t) %>% 
+  dplyr::select(-ID) 
+
+dim(F2_geno_data_2_Ae_Ol_new.2) # 166 8386 
+F2_geno_data_2_Ae_Ol_new.2[1:10, 3440:3450] 
+F2_geno_data_2_Ae_Ol_new.2 <- t(F2_geno_data_2_Ae_Ol_new.2)
+write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/F2/data/QTL_analysis/F2_geno_data_2_Ae_Ol_new.2.txt")
+
+# change file format in linux 
+# cat F2_geno_data_2_Ae_Ol_new.2.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' > tmp
+# tail -8386 tmp > tmp.1
+
+write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis/marker_info.txt" )
+# cat marker_info.txt | awk '{print "*"$2}' | tail -8386 | sed 's/"//g' > marker_info_reform.txt
+# cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt
+# change header info: maker number to the right marker number & phenotype data number 
+```
+
+### load data 
+```{r}
+LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map")
+save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.fatty_acid_lipid.Rdata")
+```
+
+### re-estimate map
+```{r} 
+LG.f2
+
+LG.f2.before.crossover <- LG.f2
+
+for (chr in names(LG.f2$geno)) { # for each chromosome in cross genotype data
+  my.chr <- get(chr,LG.f2$geno) # return the genotype data, including data & map
+  print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+  if(ncol(my.chr$data) > 3) { 
+    my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+      apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+        if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+        if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+        if ( length(unique(gt))  == 3) return(NA)
+        return(gt[2])
+      })
+    })
+  }
+  LG.f2$geno <- within(LG.f2$geno,assign(chr,my.chr))
+  print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2$geno)$data))))
+}  
+
+map.new <- est.map(LG.f2,verbose=T,error.prob=.01) 
+save(map.new, file = "~/F2/output/QTL_analysis/map.new.fatty_acid_lipid.Rdata")
+
+LG.f2 <- replace.map(LG.f2, map.new)
+LG.f2.after.crossover <- LG.f2
+
+plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison 
+```    
+
+# scanone eQTL 
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
