@@ -271,8 +271,9 @@ save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/group.A
 ```{r} 
 # https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC.R 
 ## also for data with different LOD and rf 
-# 
-
+# https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC_LOD4_rf0.5.R
+# https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC_LOD3_rf0.4.R
+# https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC_LOD4_rf0.4.R
 ``` 
 
 ### combine A & C subgenome 
