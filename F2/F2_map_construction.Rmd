@@ -47,16 +47,16 @@ hist(F2_geno_data_with_missing_rate$missing_rate)
 max(F2_geno_data_with_missing_rate$missing_rate) # 0.47, the highest missing rate is 0.47 
 
 # remove markers with missing rate greater than 0.85 
-F2_geno_data_with_missing_rate_filtered <-  F2_geno_data_with_missing_rate[F2_geno_data_with_missing_rate$missing_rate < 0.10,]
-rownames(F2_geno_data_with_missing_rate_filtered)
+F2_geno_data_with_missing_rate_filtered <-  F2_geno_data_with_missing_rate[F2_geno_data_with_missing_rate$missing_rate < 0.15,]
+rownames(F2_geno_data_with_missing_rate_filtered) 
 
-dim(F2_geno_data_with_missing_rate_filtered) # 3608 167
+dim(F2_geno_data_with_missing_rate_filtered) # 3608 167 # 5797  167 
 hist(F2_geno_data_with_missing_rate_filtered$missing_rate)
 
 F2_geno_data_with_missing_rate_filtered.final <- subset(F2_geno_data_with_missing_rate_filtered, select=-missing_rate)
 rownames(F2_geno_data_with_missing_rate_filtered.final)
 
-dim(F2_geno_data_with_missing_rate_filtered.final) # 3608 166 
+dim(F2_geno_data_with_missing_rate_filtered.final) # 3608 166 # 5797  166 
 rownames(F2_geno_data_with_missing_rate_filtered.final) 
 ```
 
@@ -71,7 +71,7 @@ test <- apply(F2_geno_data_t.numeric, 2, function(x) length(unique(x[!is.na(x)])
 filter.polymorphsm <- test != 1 
 
 F2_geno_data_t.numeric.2 <- F2_geno_data_t.numeric[,filter.polymorphsm]
-dim(F2_geno_data_t.numeric.2) # 166 3606  
+dim(F2_geno_data_t.numeric.2) # 166 3606  # 166 5795 
 
 # also output save markers with same genotype across individuals
 polymorphism <- test == 1
@@ -84,14 +84,14 @@ options(warn=-1) # suppress warning message
 F2_SNP_correlation <- cor(F2_geno_data_t.numeric.2, use = "pairwise.complete.obs")
 save(F2_SNP_correlation, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_SNP_correlation.Rdata")
 options(warn=0) # unsuppress warning message
-dim(F2_SNP_correlation) # 3606 3606 
+dim(F2_SNP_correlation) # 3606 3606 #  5795 5795 
 
 # calcualte number of SNPs with correlation of 1
-nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T)) # 172 pairs of SNPs have identical genotype data 
+nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T)) # 172 # 251 pairs of SNPs have identical genotype data 
 
 # find SNPs with correlation of 1 and remove them 
 dup.cordinate <- which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
-length(dup.cordinate) # 344
+length(dup.cordinate) # 344 # 502
 dup.cordinate.df <- as.data.frame(dup.cordinate)
 sample.ID <- colnames(F2_SNP_correlation)
 
@@ -102,9 +102,9 @@ for (i in 1:nrow(dup.cordinate)){
  dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
 }
 
-length(dup.pair[,2]) # 171 
+length(dup.pair[,2]) # 171 # 251 
 rem <- unique(dup.pair[,2])
-length(rem) # 163 markers are removed due to pairwise correlation of 1 
+length(rem) # 163 markers are removed due to pairwise correlation of 1 # 239 
 
 # save data
 save(dup.pair, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/dup.pair.Rdata")
@@ -116,7 +116,7 @@ F2_geno_data_1 <- F2_geno_data_with_missing_rate_filtered.final[!(rownames(F2_ge
 # remove non polymorphism SNPs 
 F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
 
-dim(F2_geno_data_2) # 3443  166, end up with 2932 SNPs for map construction 
+dim(F2_geno_data_2) # 3443  166, end up with 2932 SNPs for map construction # 5556  166 
 
 save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs with missing data less than 0.1
 ``` 
@@ -124,7 +124,7 @@ save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_
 # format data for onemap  
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
-dim(F2_geno_data_2) # 3443 166 
+dim(F2_geno_data_2) # 3443 166  # 5556 166 
 head(F2_geno_data_2) 
 
 ########### below should be corrected
@@ -136,7 +136,7 @@ Ae_Ol$index <- paste(Ae_Ol$CHROM, Ae_Ol$POS, sep = "_")
 F2_geno_data_2$index <- rownames(F2_geno_data_2)
 F2_geno_data_2_Ae_Ol <- 
 left_join(F2_geno_data_2, Ae_Ol, by="index") %>% 
-  select(-(X:ALT)) 
+  dplyr::select(-(X:ALT)) 
 
 F2_geno_data_2_Ae_Ol <- as.matrix(F2_geno_data_2_Ae_Ol) 
 
@@ -161,13 +161,13 @@ for (i in colnames(F2_geno_data_2_Ae_Ol)[1:166]) {
 rownames(F2_geno_data_2_Ae_Ol_new) <- F2_geno_data_2_Ae_Ol[,"index"]
 F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
 ############ start working from here ############### 
-dim(F2_geno_data_2_Ae_Ol_new) # 3443 166  
-write.table(F2_geno_data_2_Ae_Ol_new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.txt")
+dim(F2_geno_data_2_Ae_Ol_new) # 3443 166  # 5556 166 
+write.table(F2_geno_data_2_Ae_Ol_new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new_5556.txt")
 # change file format in linux 
 # cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
 # tail -3443 tmp > tmp.1 
 
-write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info.txt" )
+write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info_5556.txt" )
 # cat marker_info.txt | awk '{print "*"$2}' | tail -5556 | sed 's/"//g' > marker_info_reform.txt
 
 # paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt 
@@ -196,12 +196,12 @@ While ripple doesn't help to condense map distance, I decided to increase min LO
 ```{r}
 # cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | tr " " "\t" > F2_geno_data_m.txt 
 # vim edit add ";" to the 1st line 
-# seq 166 | tr "\n" "\t" > number_line_header 
-# vim edit add ";" to number_line_header
-# cat number_line_header F2_geno_data_m.txt > mv F2_geno_data_m.txt 
+# seq 166 | tr "\n" "\t" > number_line_header (problem???)
+# vim edit add ";" to number_line_header (problem???)
+# cat number_line_header F2_geno_data_m.txt > F2_geno_data_m.txt 
 # mv F2_geno_data_m.txt F2_geno_data_m.loc 
 # wc -l F2_geno_data_m.loc 3444 
-# cat F2_geno_data_m.loc | awk '{print NF}' | sort | uniq 167 
+# cat F2_geno_data_m.loc | awk '{print NF}' | sort | uniq # 167 
 # scp to whitney 
 ```
 
