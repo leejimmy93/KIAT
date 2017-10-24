@@ -467,8 +467,6 @@ LG.f2.madmapper.before.crossover <- switch.order(LG.f2.madmapper.before.crossove
 
 # reestimate map 
 
-
-
 ############ need to reestimate map after switch order for LG9 
 f2.map.new1 <- est.map(LG.f2.madmapper.before.crossover,verbose=T,error.prob=.01)  
 LG.f2.madmapper.before.crossover <- replace.map(LG.f2.madmapper.before.crossover, f2.map.new1)
