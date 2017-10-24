@@ -167,9 +167,60 @@ LG.f2.after.crossover <- LG.f2
 
 plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
 plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison 
+save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover_fatty_acid_lipid.Rdata")
 ```    
 
-# scanone eQTL 
+### scanone eQTL (on the two FAD genes only)
+```{r}
+load("~/F2/output/QTL_analysis/LG.f2.after.crossover_fatty_acid_lipid.Rdata")
+summaryMap(LG.f2.after.crossover)
+
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation? 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) 
+LG.f2.after.crossover$pheno <- LG.f2.after.crossover$pheno[,c("BnaA08g12780D", "BnaC03g67820D")]
+
+sfInit(parallel = TRUE, cpus = 2) 
+sfExport("LG.f2.after.crossover")
+sfLibrary(qtl)
+
+system.time(
+scanone.perm.imp <- 
+  sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
+    print(trait) # print doesn't work in here 
+    tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes 40 mins to finish 
+)
+
+  #  user  system elapsed 
+  # 1.020   1.200 394.109 
+
+sfStop() 
+
+names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno) 
+
+system.time(
+scanone.imp <- 
+lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
+  print(trait)
+  scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
+}) 
+) 
+  #  user  system elapsed 
+  # 6.124   3.420   8.849 
+names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno) 
+
+# plot 
+scanone.imp.BnaA08g12780D <- scanone(LG.f2.after.crossover,pheno.col="BnaA08g12780D",method="imp") # 
+plot(scanone.imp.BnaA08g12780D,bandcol="gray90", main="BnaA08g12780D")
+abline(h=scanone.perm.imp[["BnaA08g12780D"]],lty=2) #add permuation threshold
+
+scanone.imp.BnaC03g67820D <- scanone(LG.f2.after.crossover,pheno.col="BnaC03g67820D",method="imp") # 
+plot(scanone.imp.BnaC03g67820D,bandcol="gray90", main="BnaC03g67820D")
+abline(h=scanone.perm.imp[["BnaC03g67820D"]],lty=2) #add permuation threshold
+```
+
+### eQTL on all fatty acid and lipid genes 
 ```{r}
 
 ```
