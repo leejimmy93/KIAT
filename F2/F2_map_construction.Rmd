@@ -195,10 +195,13 @@ While ripple doesn't help to condense map distance, I decided to increase min LO
 ### 1) format marker data to madmapper accepted format (on MAC)
 ```{r}
 # cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | tr " " "\t" > F2_geno_data_m.txt 
-# vim edit add ";" to the 1st line 
-# seq 166 | tr "\n" "\t" > number_line_header 
-# vim edit add ";" to number_line_header
-# cat number_line_header F2_geno_data_m.txt > mv F2_geno_data_m.txt 
+# vim edit add ";" to the 1st line
+
+######### seq 166 | tr "\n" "\t" > number_line_header 
+######### vim edit add ";" to number_line_header
+######### cat number_line_header F2_geno_data_m.txt > mv F2_geno_data_m.txt 
+# The above 3 lines I think, was not correct... 
+
 # mv F2_geno_data_m.txt F2_geno_data_m.loc 
 # wc -l F2_geno_data_m.loc 3444 
 # cat F2_geno_data_m.loc | awk '{print NF}' | sort | uniq 167 
