@@ -572,7 +572,7 @@ plot.rf(LG.f2.madmapper.after.crossover, chr = '10') # plot appears better but l
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
 
-summaryMap(LG.f2.madmapper.after.crossover) 
+summaryMap(LG.f2.madmapper.after.crossover) # 2853 cM 
 plotMap(LG.f2.madmapper.after.crossover, LG.f2.madmapper.before.crossover)
 
 totmar(LG.f2.madmapper.after.crossover) # 2013 
@@ -599,15 +599,23 @@ length(marker.drop) # 48 markers
 LG.f2.madmapper.after.crossover.drop <- drop.markers(LG.f2.madmapper.after.crossover, marker.drop)
 totmar(LG.f2.madmapper.after.crossover.drop) # 1965 
 
-LG.f2.madmapper.after.crossover.drop <- 
-                          orderMarkers(LG.f2.madmapper.after.crossover.drop, 
-	                        window = 4, use.ripple = TRUE, maxit = 4000, 
-	                        error.prob = 0.0001) # takes 20 mins 
+# LG.f2.madmapper.after.crossover.drop <- 
+#                           orderMarkers(LG.f2.madmapper.after.crossover.drop, 
+# 	                        window = 4, use.ripple = TRUE, maxit = 4000, 
+# 	                        error.prob = 0.0001) # takes 20 mins #### 
 
-map.new.new <- est.map(LG.f2.madmapper.after.crossover.drop) # takes 1 min 
+# markers with possible segregation distortion 
+gt <- geno.table(LG.f2.madmapper.after.crossover.drop)
+seg_dist <- gt[gt$P.value < 0.05/totmar(LG.f2.madmapper.after.crossover.drop),]
+seg_dist
+dim(seg_dist) # 55 8 
+
+map.new.new <- est.map(LG.f2.madmapper.after.crossover.drop, error.prob = 0.0005) # takes 1 min 
 plot.map(map.new.new, alternate.chrid = TRUE)
+plot.map(LG.f2.madmapper.after.crossover, map.new.new) 
 # even longer... bad.... 
 save(map.new.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/map.new.new.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/map.new.new.Rdata")
 ```
 conclussion: removing markers with high double crossover makes the map even longer... why? 
 # continue refine 
