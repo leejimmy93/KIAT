@@ -535,12 +535,12 @@ png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /rf_chr10.png", wi
 plot.rf(LG.f2.madmapper.before.crossover, chr = '10', main = "RF and LOD scores for chrom A10")
 dev.off()
 
-png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /rf_madmapper.png", width=8, height=8, units="in", res=300)
-plot.rf(LG.f2.madmapper.before.crossover, main = "RF and LOD scores")
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /rf_madmapper.png", width=10, height=10, units="in", res=300)
+plot.rf(LG.f2.madmapper.before.crossover, main = "")
 dev.off() 
 
 png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /rf_chr10.png", width=8, height=8, units="in", res=300)
-plot.rf(LG.f2.madmapper.after.crossover, chr = '10', main = "RF and LOD scores for chrom A10")
+plot.rf(LG.f2.madmapper.after.crossover, chr = 'A10', main = "RF and LOD scores for chrom A10")
 dev.off() 
 
 png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /map_before_crossover.png", width=8, height=8, units="in", res=300)
@@ -575,15 +575,31 @@ LG.f2.madmapper.after.crossover <- orderMarkers(LG.f2.madmapper.after.crossover,
 
 plotMap(LG.f2.madmapper.after.crossover, chr = '10') 
 plot.rf(LG.f2.madmapper.after.crossover, chr = '10') # plot appears better but length increased... doesn't seem to be a good way. 
+
+names(LG.f2.madmapper.after.crossover$geno)[1:10] <- paste("A", c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"), sep = "")
+names(LG.f2.madmapper.after.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04", "05", "06", "07", "08", "09"), sep = "") 
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /rf_chr10.png", width=10, height=10, units="in", res=300)
+plot.rf(LG.f2.madmapper.after.crossover, chr = 'A10', main = "RF and LOD scores for chrom A10")
+dev.off() 
 ```
 
 # follow Julin's suggestion, to remove markers with high double crossover (genotyping error)
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.Rdata")
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.crossover.Rdata")
+# iterate over all LGs 
+# rename to the right name 
+names(LG.f2.madmapper.before.crossover$geno)[1:10] <- paste("A", c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"), sep = "")
+names(LG.f2.madmapper.before.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04", "05", "06", "07", "08", "09"), sep = "")
+
+names(LG.f2.madmapper.after.crossover$geno)[1:10] <- paste("A", c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"), sep = "")
+names(LG.f2.madmapper.after.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04", "05", "06", "07", "08", "09"), sep = "") 
+
 
 summaryMap(LG.f2.madmapper.after.crossover) # 2853 cM 
-plotMap(LG.f2.madmapper.after.crossover, LG.f2.madmapper.before.crossover)
+plotMap(LG.f2.madmapper.before.crossover, LG.f2.madmapper.after.crossover, alternate.chrid = T)
+plotMap(LG.f2.madmapper.before.crossover, alternate.chrid = T)
 
 totmar(LG.f2.madmapper.after.crossover) # 2013 
 
@@ -697,3 +713,5 @@ for (chr in names(LG$geno)) { # for each chromosome in cross genotype data
 # 
 # save(newmap.drop.marker, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/newmap.drop.marker.Rdata")
 ``` 
+
+
