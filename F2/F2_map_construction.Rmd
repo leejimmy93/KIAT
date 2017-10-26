@@ -195,7 +195,6 @@ While ripple doesn't help to condense map distance, I decided to increase min LO
 ### 1) format marker data to madmapper accepted format (on MAC)
 ```{r}
 # cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | tr " " "\t" > F2_geno_data_m.txt 
-<<<<<<< HEAD
 # vim edit add ";" to the 1st line
 
 ######### seq 166 | tr "\n" "\t" > number_line_header 
@@ -203,12 +202,6 @@ While ripple doesn't help to condense map distance, I decided to increase min LO
 ######### cat number_line_header F2_geno_data_m.txt > mv F2_geno_data_m.txt 
 # The above 3 lines I think, was not correct... 
 
-=======
-# vim edit add ";" to the 1st line 
-# seq 166 | tr "\n" "\t" > number_line_header (problem???)
-# vim edit add ";" to number_line_header (problem???)
-# cat number_line_header F2_geno_data_m.txt > F2_geno_data_m.txt 
->>>>>>> fb0b0df55e715d8631db0d762686d06f6964b861
 # mv F2_geno_data_m.txt F2_geno_data_m.loc 
 # wc -l F2_geno_data_m.loc 3444 
 # cat F2_geno_data_m.loc | awk '{print NF}' | sort | uniq # 167 
@@ -575,6 +568,15 @@ LG.f2.madmapper.after.crossover <- orderMarkers(LG.f2.madmapper.after.crossover,
 
 plotMap(LG.f2.madmapper.after.crossover, chr = '10') 
 plot.rf(LG.f2.madmapper.after.crossover, chr = '10') # plot appears better but length increased... doesn't seem to be a good way. 
+plotMap(LG.f2.madmapper.after.crossover)
+save(LG.f2.madmapper.after.crossover, file = "~/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.Rdata")
+```
+
+### plot new rf plot 
+```{r}
+load("~/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.Rdata")
+plot.rf(LG.f2.madmapper.after.crossover) 
+summaryMap(LG.f2.madmapper.after.crossover) # 2878.2  cM 
 ```
 
 # follow Julin's suggestion, to remove markers with high double crossover (genotyping error)

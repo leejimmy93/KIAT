@@ -3,4 +3,206 @@ title: "F2_map_construction"
 output: html_document
 ---
 
+# Goal
+The goal of this analysis is to build genetic map using F2 genotyping information, F2 genotyping was done based on the SNPs we identified from its parents 
+
+# install & load package 
+```{r}
+# install.packages("onemap")
+# install.packages("tkrplot", type="source") 
+library(tcltk)
+library(tkrplot)
+library(onemap)  
+library(ggplot2)
+library(reshape) 
+library(tidyverse) 
+library("qtl") 
+library(snowfall)
+```
+
+# import & format data (MAC version)
+```{r} 
+F2_geno_data <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Final_SNP_Calls", header = T)
+head(F2_geno_data) 
+dim(F2_geno_data) # 18226   172 
+class(F2_geno_data)
+
+rownames(F2_geno_data) <- paste(F2_geno_data$CHROM, F2_geno_data$POS, sep = "_")
+F2_geno_data <- F2_geno_data[, -c(1:6)]
+dim(F2_geno_data) # 18226   166 
+colnames(F2_geno_data)
+colnames(F2_geno_data) <- gsub("([[:print:]]+)(\\.)([[:digit:]])", "\\3", colnames(F2_geno_data))
+colnames(F2_geno_data)  
+```
+
+# check missing rate & remove data with high missing rate above 0.85 
+```{r}
+F2_geno_data_with_missing_rate <- mutate(F2_geno_data, 
+       missing_rate = round(apply(F2_geno_data, 1, function(x) sum(is.na(x)))/166, 2)) 
+
+rownames(F2_geno_data_with_missing_rate) <- rownames(F2_geno_data) 
+hist(F2_geno_data_with_missing_rate$missing_rate)
+max(F2_geno_data_with_missing_rate$missing_rate) # 0.47, the highest missing rate is 0.47 
+
+# remove markers with missing rate greater than 0.85 
+F2_geno_data_with_missing_rate_filtered <-  F2_geno_data_with_missing_rate[F2_geno_data_with_missing_rate$missing_rate < 0.15,]
+rownames(F2_geno_data_with_missing_rate_filtered) 
+
+dim(F2_geno_data_with_missing_rate_filtered) # 3608 167 # 5797  167 
+hist(F2_geno_data_with_missing_rate_filtered$missing_rate)
+
+F2_geno_data_with_missing_rate_filtered.final <- subset(F2_geno_data_with_missing_rate_filtered, select=-missing_rate)
+rownames(F2_geno_data_with_missing_rate_filtered.final)
+
+dim(F2_geno_data_with_missing_rate_filtered.final) # 3608 166 # 5797  166 
+rownames(F2_geno_data_with_missing_rate_filtered.final) 
+```
+
+# calculate pairwise corrlelation and remove SNPs with corrlelation greater or equal to 0.9
+some SNPs should have exactly the same genotype across all individuals, they are redundant in terms of genetic map construction, so they should be removed. find those SNPs by doing correlation test. 
+```{r}
+F2_geno_data_t <- as.data.frame(t(F2_geno_data_with_missing_rate_filtered.final))
+F2_geno_data_t.numeric <- data.matrix(F2_geno_data_t)
+
+# delete markers with all same genotypes across individuals 
+test <- apply(F2_geno_data_t.numeric, 2, function(x) length(unique(x[!is.na(x)])))
+filter.polymorphsm <- test != 1 
+
+F2_geno_data_t.numeric.2 <- F2_geno_data_t.numeric[,filter.polymorphsm]
+dim(F2_geno_data_t.numeric.2) # 166 3606  # 166 5795 
+
+# also output save markers with same genotype across individuals
+polymorphism <- test == 1
+SNP.not.poly <- colnames(F2_geno_data_t.numeric)[polymorphism]
+length(SNP.not.poly) # two markers are not polymorphism across individuals 
+save(SNP.not.poly, file="SNP.not.poly.Rdata")
+
+# correlation test
+options(warn=-1) # suppress warning message
+F2_SNP_correlation <- cor(F2_geno_data_t.numeric.2, use = "pairwise.complete.obs")
+save(F2_SNP_correlation, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_SNP_correlation.Rdata")
+options(warn=0) # unsuppress warning message
+dim(F2_SNP_correlation) # 3606 3606 #  5795 5795 
+
+# calcualte number of SNPs with correlation of 1
+nrow(which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = T)) # 172 # 251 pairs of SNPs have identical genotype data 
+
+# find SNPs with correlation of 1 and remove them 
+dup.cordinate <- which(F2_SNP_correlation == 1 & lower.tri(F2_SNP_correlation), arr.ind = T, useNames = F)
+length(dup.cordinate) # 344 # 502
+dup.cordinate.df <- as.data.frame(dup.cordinate)
+sample.ID <- colnames(F2_SNP_correlation)
+
+# extract duplicate pair information based on their coordicate
+dup.pair <- data.frame(matrix(nrow = nrow(dup.cordinate), ncol = 2))
+for (i in 1:nrow(dup.cordinate)){
+ dup.pair[i,1] <- sample.ID[dup.cordinate[i,1]]
+ dup.pair[i,2] <- sample.ID[dup.cordinate[i,2]]
+}
+
+length(dup.pair[,2]) # 171 # 251 
+rem <- unique(dup.pair[,2])
+length(rem) # 163 markers are removed due to pairwise correlation of 1 # 239 
+
+# save data
+save(dup.pair, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/dup.pair.Rdata")
+save(rem, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/rem.Rdata") 
+
+### 
+F2_geno_data_1 <- F2_geno_data_with_missing_rate_filtered.final[!(rownames(F2_geno_data_with_missing_rate_filtered.final) %in% rem),]  
+
+# remove non polymorphism SNPs 
+F2_geno_data_2 <- F2_geno_data_1[!(rownames(F2_geno_data_1) %in% SNP.not.poly),]
+
+dim(F2_geno_data_2) # 3443  166, end up with 2932 SNPs for map construction # 5556  166 
+
+save(F2_geno_data_2, file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata") # this is non-redundant SNPs with missing data less than 0.1
+``` 
+
+# format data for onemap  
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
+dim(F2_geno_data_2) # 3443 166  # 5556 166 
+head(F2_geno_data_2) 
+
+########### below should be corrected
+# read parent data 
+Ae_Ol <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/vcf.Ae.Ol.intersect.final.csv", stringsAsFactors = F)
+
+# left join to filter Ae_Ol SNP based on F2 genotypes
+Ae_Ol$index <- paste(Ae_Ol$CHROM, Ae_Ol$POS, sep = "_")
+F2_geno_data_2$index <- rownames(F2_geno_data_2)
+F2_geno_data_2_Ae_Ol <- 
+left_join(F2_geno_data_2, Ae_Ol, by="index") %>% 
+  dplyr::select(-(X:ALT)) 
+
+F2_geno_data_2_Ae_Ol <- as.matrix(F2_geno_data_2_Ae_Ol) 
+
+# reassign genotype according to parents genotypes
+F2_geno_data_2_Ae_Ol_new <- data.frame()
+
+for (i in colnames(F2_geno_data_2_Ae_Ol)[1:166]) {
+  print(i)
+  for (j in 1:nrow(F2_geno_data_2_Ae_Ol)){
+    if (is.na(F2_geno_data_2_Ae_Ol[j,i])){
+    F2_geno_data_2_Ae_Ol_new[j,i] = "-"
+    } else if (F2_geno_data_2_Ae_Ol[j,i] == "0/1"){
+      F2_geno_data_2_Ae_Ol_new[j,i] = "H"
+    } else if (F2_geno_data_2_Ae_Ol[j,i] == F2_geno_data_2_Ae_Ol[j,"Ae.gt"]){
+      F2_geno_data_2_Ae_Ol_new[j,i] = "A"
+    } else {
+      F2_geno_data_2_Ae_Ol_new[j,i] = "B"
+    }
+  }
+}
+
+rownames(F2_geno_data_2_Ae_Ol_new) <- F2_geno_data_2_Ae_Ol[,"index"]
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
+############ start working from here ############### 
+dim(F2_geno_data_2_Ae_Ol_new) # 3443 166  # 5556 166 
+write.table(F2_geno_data_2_Ae_Ol_new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15_5556/F2_geno_data_2_Ae_Ol_new_5556.txt")
+# change file format in linux 
+# cat F2_geno_data_2_Ae_Ol_new_5556.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
+# tail -3443 tmp > tmp.1 
+
+write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info_5556.txt" )
+# cat marker_info.txt | awk '{print "*"$2}' | tail -5556 | sed 's/"//g' > marker_info_reform.txt
+
+# paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt 
+# cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt 
+# change header info: maker number to the right marker number 
+```
+
+# calculate two point rf & assign to linkage groups (on whitney) 
+```{r}
+# F2_map_construction_LOD3_rf0.5_missing_0.10.R 
+```
+
+While ripple doesn't help to condense map distance, I decided to increase min LOD and max rf to see whether this way can help reduce map distance 
+```{r}
+# on whitney # takes about 45 mins 
+# min LOD 4.0 and max rf 5.0 
+# min LOD 3.0 and max rf 4.0 
+# min LOD 4.0 and max rf 4.0
+```
+
+### use madmapper to assign markers to clusters/LGs 
+[http://cgpdb.ucdavis.edu/XLinkage/MadMapper/Genetic_Map_MadMapper_Arabidopsis.html]
+
+### running madmapper 
+### 1) format marker data to madmapper accepted format (on MAC)
+```{r}
+# cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | tr " " "\t" > F2_geno_data_m.txt 
+# vim edit add ";" to the 1st line
+
+######### seq 166 | tr "\n" "\t" > number_line_header 
+######### vim edit add ";" to number_line_header
+######### cat number_line_header F2_geno_data_m.txt > mv F2_geno_data_m.txt 
+# The above 3 lines I think, was not correct... 
+
+# mv F2_geno_data_m.txt F2_geno_data_m.loc 
+# wc -l F2_geno_data_m.loc 5557 
+# cat F2_geno_data_m.loc | awk '{print NF}' | sort | uniq # 167 
+# scp to whitney 
+```
 
