@@ -203,6 +203,7 @@ While ripple doesn't help to condense map distance, I decided to increase min LO
 # scp to whitney 
 ```
 
+<<<<<<< HEAD
 check madmapper output (export *.tree.clust file to Excel, and decide which SNP belong to which LG based on tree value) /Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15_5556/F2_geno_data_m_loc_mmout.x_tree_clust.xlsx 
 
 * get linkage group from madmapper generated tree.clust file 
@@ -235,3 +236,12 @@ save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing
 ``` 
 
 #### order within each chromosome 
+=======
+* madmapper (on whitney)
+http://cgpdb.ucdavis.edu/XLinkage/MadMapper/#Part_2
+```{r} 
+# https://github.com/leejimmy93/KIAT/blob/master/F2/madmapper_5556.sh # the output file we should check is tree.clust file 
+```
+
+
+>>>>>>> b8b64ac0aadf760bdbf7f11a1bdee803a8f5c7d8

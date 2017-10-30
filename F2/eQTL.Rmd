@@ -43,7 +43,7 @@ save(vstMat.f2.centered.scaled, file = "~/F2/output/vstMat.f2.centered.scaled.Rd
 
 ### get fatty acid & lipid genes 
 ```{r}
-load("~/F2/output/vstMat.f2.centered.scaled.Rdata")
+load("~/F2/output/vstMat.f2.centered.scaled.Rdata") 
 vstMat.f2.centered.scaled[1:10, 1:10]
 
 # get lipid and fatty acid related genes using GO and IPR term 
@@ -126,7 +126,11 @@ write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/F2/data/QTL_analysis/F2_geno_d
 
 write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis/marker_info.txt" )
 # cat marker_info.txt | awk '{print "*"$2}' | tail -8386 | sed 's/"//g' > marker_info_reform.txt
+<<<<<<< HEAD
 # paste marker_info_reform.txt tmp.1  | tr "\t" "\ " > F2_geno_for_one_map.txt 
+=======
+# paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt
+>>>>>>> b8b64ac0aadf760bdbf7f11a1bdee803a8f5c7d8
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt
 # change header info: maker number to the right marker number & phenotype data number 
 ```
@@ -178,13 +182,13 @@ summaryMap(LG.f2.after.crossover)
 
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation? 
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) 
-LG.f2.after.crossover$pheno <- LG.f2.after.crossover$pheno[,c("BnaA08g12780D", "BnaC03g67820D")]
+LG.f2.after.crossover$pheno <- LG.f2.after.crossover$pheno[,c("BnaA08g12780D", "BnaC03g67820D")] 
 
 system.time(
 scanone.perm.imp <- 
   sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
     print(trait) # print doesn't work in here 
-    tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000, n.cluster = 12, verbose = T, chr = 01)
+    tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000, n.cluster = 12, verbose = T)
     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
   }) # takes 40 mins to finish 
 ) 
@@ -206,15 +210,20 @@ lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
   #  user  system elapsed 
   # 6.124   3.420   8.849 
 names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno) 
-
 # plot 
+save(scanone.perm.imp, scanone.imp, file = "~/F2/output/QTL_analysis/eQTL_twogenes.Rdata")
+
+png("~/F2/output/QTL_analysis/figure/scanone.imp.BnaA08g12780D.png", width = 8, height = 8, units = "in", res = 300)
 scanone.imp.BnaA08g12780D <- scanone(LG.f2.after.crossover,pheno.col="BnaA08g12780D",method="imp") # 
 plot(scanone.imp.BnaA08g12780D,bandcol="gray90", main="BnaA08g12780D")
 abline(h=scanone.perm.imp[["BnaA08g12780D"]],lty=2) #add permuation threshold
+dev.off()
 
+png("~/F2/output/QTL_analysis/figure/scanone.imp.BnaC03g67820D.png", width = 8, height = 8, units = "in", res = 300)
 scanone.imp.BnaC03g67820D <- scanone(LG.f2.after.crossover,pheno.col="BnaC03g67820D",method="imp") # 
-plot(scanone.imp.BnaC03g67820D,bandcol="gray90", main="BnaC03g67820D")
+plot(scanone.imp.BnaC03g67820D,bandcol="gray90", main="BnaC03g67820D", ylim=c(0, 30))
 abline(h=scanone.perm.imp[["BnaC03g67820D"]],lty=2) #add permuation threshold
+dev.off() 
 ```
 
 ### eQTL on all fatty acid and lipid genes 
@@ -237,12 +246,12 @@ LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1)
 #     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
 #   }) # takes 40 mins to finish
 # )
-# sfStop()
+# sfStop()  #### how to do permutation for eQTL 
 
 system.time(scanone_imp_tot <- scanone(LG.f2.after.crossover, pheno.col = 1:4943, 
 	         method = "imp", use = "all.obs"))
 
-names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
+# names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
 
 system.time(
 scanone.imp <-
@@ -256,8 +265,84 @@ names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)
 save(scanone.perm.imp, scanone.imp, file = "/share/malooflab/Ruijuan/F2/QTL_analysis/output/scanone.result_fatty_acid_lipid.Rdata")
 ```
 
+### on all genes
+### combine geno & expression data 
+```{r}
+load("~/F2/output/vstMat.f2.centered.scaled.Rdata")
+F2_geno_data_2_Ae_Ol_new <- read.table("~/F2/data/F2_geno_data_2_Ae_Ol_new.txt")
+dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
+dim(vstMat.f2.centered.scaled) # 56180   166
+
+colnames(F2_geno_data_2_Ae_Ol_new) <- gsub("X", "ID_", colnames(F2_geno_data_2_Ae_Ol_new))
+F2_geno_data_2_Ae_Ol_new.t <- as.data.frame(t(F2_geno_data_2_Ae_Ol_new))
+F2_geno_data_2_Ae_Ol_new.t$ID <- rownames(F2_geno_data_2_Ae_Ol_new.t)
+
+colnames(vstMat.f2.centered.scaled) <- gsub("Sample_F2", "ID", colnames(vstMat.f2.centered.scaled))
+vstMat.f2.centered.scaled.t <- as.data.frame(t(vstMat.f2.centered.scaled))
+vstMat.f2.centered.scaled.t$ID <- rownames(vstMat.f2.centered.scaled.t)
+
+F2_geno_data_2_Ae_Ol_new.2 <- 
+F2_geno_data_2_Ae_Ol_new.t %>% 
+  left_join(vstMat.f2.centered.scaled.t) %>% 
+  dplyr::select(-ID) 
+
+dim(F2_geno_data_2_Ae_Ol_new.2) # 166 59623 
+F2_geno_data_2_Ae_Ol_new.2 <- t(F2_geno_data_2_Ae_Ol_new.2)
+write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/F2/data/QTL_analysis/F2_geno_data_2_Ae_Ol_new.2_all_expressed_genes.txt") 
+```
 
 
+```{r} 
+# change file format in linux 
+# cat F2_geno_data_2_Ae_Ol_new.2_all_expressed_genes.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' > tmp 
+# tail -59623 tmp > tmp.1
+
+write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis/marker_info_all_expressed_genes.txt" )
+# cat marker_info_all_expressed_genes.txt | awk '{print "*"$2}' | tail -59623 | sed 's/"//g' > marker_info_reform.txt
+# paste marker_info_reform.txt tmp.1  | tr "\t" "\ " > F2_geno_for_one_map.txt 
+# cat header_one_map_input F2_geno_for_one_map.txt >  F2_geno_for_one_map_final_all_expressed_gene.txt 
+# change header info: maker number to the right marker number & phenotype data number 
+```
+
+### load data 
+```{r}
+LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final_all_expressed_gene.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map")
+save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.fatty_acid_lipid.Rdata")
+```
+
+### re-estimate map
+```{r} 
+LG.f2
+
+LG.f2.before.crossover <- LG.f2
+
+for (chr in names(LG.f2$geno)) { # for each chromosome in cross genotype data
+  my.chr <- get(chr,LG.f2$geno) # return the genotype data, including data & map
+  print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+  if(ncol(my.chr$data) > 3) { 
+    my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+      apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+        if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+        if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+        if ( length(unique(gt))  == 3) return(NA)
+        return(gt[2])
+      })
+    })
+  }
+  LG.f2$geno <- within(LG.f2$geno,assign(chr,my.chr))
+  print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2$geno)$data))))
+}  
+
+map.new <- est.map(LG.f2,verbose=T,error.prob=.01) 
+save(map.new, file = "~/F2/output/QTL_analysis/map.new.fatty_acid_lipid.Rdata")
+
+LG.f2 <- replace.map(LG.f2, map.new)
+LG.f2.after.crossover <- LG.f2
+
+plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison 
+save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover_fatty_acid_lipid.Rdata")
+```     
 
 
 
