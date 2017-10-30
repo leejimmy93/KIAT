@@ -126,6 +126,7 @@ write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/F2/data/QTL_analysis/F2_geno_d
 
 write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis/marker_info.txt" )
 # cat marker_info.txt | awk '{print "*"$2}' | tail -8386 | sed 's/"//g' > marker_info_reform.txt
+# paste marker_info_reform.txt tmp.1  | tr "\t" "\ " > F2_geno_for_one_map.txt 
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt
 # change header info: maker number to the right marker number & phenotype data number 
 ```

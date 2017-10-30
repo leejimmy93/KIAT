@@ -195,9 +195,6 @@ While ripple doesn't help to condense map distance, I decided to increase min LO
 # cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | tr " " "\t" > F2_geno_data_m.txt 
 # vim edit add ";" to the 1st line
 
-######### seq 166 | tr "\n" "\t" > number_line_header 
-######### vim edit add ";" to number_line_header
-######### cat number_line_header F2_geno_data_m.txt > mv F2_geno_data_m.txt 
 # The above 3 lines I think, was not correct... 
 
 # mv F2_geno_data_m.txt F2_geno_data_m.loc 
@@ -206,3 +203,35 @@ While ripple doesn't help to condense map distance, I decided to increase min LO
 # scp to whitney 
 ```
 
+check madmapper output (export *.tree.clust file to Excel, and decide which SNP belong to which LG based on tree value) /Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15_5556/F2_geno_data_m_loc_mmout.x_tree_clust.xlsx 
+
+* get linkage group from madmapper generated tree.clust file 
+```{r}
+madmapper.result <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15_5556/F2_geno_data_m_loc_mmout.x_tree_clust.csv", header = F)
+
+LG.madmapper <- 
+lapply(c(1:19), function(index) {
+  madmapper.result[madmapper.result$V34==index,]$V26
+})
+
+LG.madmapper[[19]]
+
+length(LG.madmapper) # 19 
+save(LG.madmapper, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15_5556/LG.madmapper.R")
+```   
+
+# get index for the above markers in different linkage group 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15_5556/twopts.LOD3_rf0.5_5556.Rdata")
+twopts.f2.LOD3_rf0.5$marnames
+
+group.AC <- list()
+
+for (i in 1:length(LG.madmapper)) {
+  group.AC[[i]] <-  which(twopts.f2.LOD3_rf0.5$marnames %in% LG.madmapper[[i]])
+}
+group.AC 
+save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15_5556/group.AC.Rdata") 
+``` 
+
+#### order within each chromosome 

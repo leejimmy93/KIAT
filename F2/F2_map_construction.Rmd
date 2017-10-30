@@ -542,7 +542,7 @@ dev.off()
 
 png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /map_after_crossover.png", width=8, height=8, units="in", res=300)
 plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
-dev.off()
+dev.off() 
 
 png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /map_comparison_1.png", width=8, height=8, units="in", res=300)
 plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
