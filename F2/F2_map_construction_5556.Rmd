@@ -203,7 +203,12 @@ While ripple doesn't help to condense map distance, I decided to increase min LO
 # scp to whitney 
 ```
 
-<<<<<<< HEAD
+* madmapper (on whitney)
+http://cgpdb.ucdavis.edu/XLinkage/MadMapper/#Part_2
+```{r} 
+# https://github.com/leejimmy93/KIAT/blob/master/F2/madmapper_5556.sh # the output file we should check is tree.clust file 
+``` 
+
 check madmapper output (export *.tree.clust file to Excel, and decide which SNP belong to which LG based on tree value) /Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.15_5556/F2_geno_data_m_loc_mmout.x_tree_clust.xlsx 
 
 * get linkage group from madmapper generated tree.clust file 
@@ -236,12 +241,80 @@ save(group.AC, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing
 ``` 
 
 #### order within each chromosome 
-=======
-* madmapper (on whitney)
-http://cgpdb.ucdavis.edu/XLinkage/MadMapper/#Part_2
-```{r} 
-# https://github.com/leejimmy93/KIAT/blob/master/F2/madmapper_5556.sh # the output file we should check is tree.clust file 
+https://github.com/leejimmy93/KIAT/blob/master/F2/map_AC_LOD3_rf0.5_5556.R
+
+### load data and check map 
+```{r}
+F2.data <- read.mapmaker(file="~/F2/output/missing_rate_0.15_5556/F2_geno_for_one_map_final_5556.txt")  
+
+# two-point rf data
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/missing_rate_0.15_5556/twopts.LOD3_rf0.5_5556.Rdata")
+
+# order data 
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/missing_rate_0.15_5556/LG.f2.ord.AC.LOD3_rf0.5.Rdata")
+
+# get order 
+LG.f2 <- lapply(seq_along(LG.f2.ord), function(LG) make.seq(LG.f2.ord[[LG]], "safe"))
+draw.map(LG.f2, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)
+
+LG.f2[[13]] 
+LG.f2[[2]]
+write.map(LG.f2, "~/F2/output/missing_rate_0.15_5556/LG.f2.madmapper.map")
 ```
 
+# R/qtl package to plot LOD & rf heatmap to check marker order & assignment to LG correctness
+```{r}
+LG.f2.madmapper <- read.cross("mm", file = "~/F2/output/missing_rate_0.15_5556/F2_geno_for_one_map_final_5556.txt", mapfile = "~/F2/output/missing_rate_0.15_5556/LG.f2.madmapper.map")
 
->>>>>>> b8b64ac0aadf760bdbf7f11a1bdee803a8f5c7d8
+summary(LG.f2.madmapper)
+plotMap(LG.f2.madmapper) 
+summaryMap(LG.f2.madmapper)
+```
+
+```{r}
+LG.f2.madmapper.before.crossover <- LG.f2.madmapper
+
+for (chr in names(LG.f2.madmapper$geno)) { # for each chromosome in cross genotype data
+  my.chr <- get(chr,LG.f2.madmapper$geno) # return the genotype data, including data & map
+  print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+  if(ncol(my.chr$data) > 3) { 
+    my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+      apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+        if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+        if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+        if ( length(unique(gt))  == 3) return(NA)
+        return(gt[2])
+      })
+    })
+  }
+  LG.f2.madmapper$geno <- within(LG.f2.madmapper$geno,assign(chr,my.chr))
+  print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2.madmapper$geno)$data))))
+}  
+ 
+f2.map.new <- est.map(LG.f2.madmapper,verbose=T,error.prob=.01)  
+LG.f2.madmapper <- replace.map(LG.f2.madmapper, f2.map.new)
+LG.f2.madmapper.after.crossover <- LG.f2.madmapper
+plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
+```
+
+give up... 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

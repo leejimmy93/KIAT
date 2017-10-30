@@ -308,6 +308,8 @@ write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis
 ```{r}
 LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final_all_expressed_gene.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map")
 save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.fatty_acid_lipid.Rdata")
+important_eQTL <- LG.f2
+
 ```
 
 ### re-estimate map
