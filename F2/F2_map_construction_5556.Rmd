@@ -206,3 +206,10 @@ While ripple doesn't help to condense map distance, I decided to increase min LO
 # scp to whitney 
 ```
 
+* madmapper (on whitney)
+http://cgpdb.ucdavis.edu/XLinkage/MadMapper/#Part_2
+```{r} 
+# https://github.com/leejimmy93/KIAT/blob/master/F2/madmapper_5556.sh # the output file we should check is tree.clust file 
+```
+
+

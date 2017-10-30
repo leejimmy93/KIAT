@@ -150,8 +150,3 @@ summaryMap(new2)
 While use different LOD and rf threshold doens't help, I remember I used very stringent threhold for missing data, now use max 15% missing data instead of %10 missing data, LOD 3 and rf 5 to see whether I can get any better... 
 * now work with 5556 SNPs 
 import & format data (MAC version) --> check missing rate & remove data with high missing rate above 0.85 --> calculate pairwise corrlelation and remove SNPs with corrlelation greater or equal to 0.9 --> # format data for onemap  --> calculate two point rf & assign to linkage groups (on whitney) --> use madmapper to assign markers to clusters/LGs 
-
-
-
-
-
