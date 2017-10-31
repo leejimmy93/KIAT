@@ -1,0 +1,109 @@
+---
+title: "eQTL_new"
+output: html_document
+---
+
+Purpose of this script is to find loci controlling expression of different genes. We will firstly focus on fatty acid related genes. I will use seperate phe and gen file as input for r/qtl analysis. 
+
+### load libs
+```{r}
+library(tidyverse)
+library(qtl)
+library(snowfall)
+library(ggrepel) 
+library(Biostrings)
+source("~/KIAT/function_BnRNAseq.R")
+``` 
+
+### import data, get genes with detectable expression  
+```{r} 
+read_count_F2 <- read.table("~/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1)
+dim(read_count_F2) # 101040    166
+
+# remove lowly expressed genes 
+read.count.small <- read_count_F2[rowSums(read_count_F2 > 10) >= 166*0.25,]
+dim(read.count.small) # 59934   131  
+colnames(read.count.small)
+save(read.count.small, file="~/F2/output/read.count.small.Rdata")
+```
+
+### voom transformation 
+```{r}
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("DESeq2")
+library("DESeq2")
+
+# define sample 
+read.count.sample <- data.frame(group=factor(colnames(read_count_F2)))
+
+dds.f2 <- DESeqDataSetFromMatrix(countData = round(read.count.small), colData = read.count.sample, design = ~ group) 
+vsd.f2 <- varianceStabilizingTransformation(dds.f2)
+vstMat.f2 <- assay(vsd.f2)
+colnames(vstMat.f2) <- colnames(read.count.small)
+```
+
+### scale and center
+```{r}
+dim(vstMat.f2) # 56180   166 
+vstMat.f2.centered.scaled <- scale(vstMat.f2, center = TRUE, scale = TRUE) # center to zero
+save(vstMat.f2.centered.scaled, file = "~/F2/output/vstMat.f2.centered.scaled.Rdata")
+```
+
+### get fatty acid & lipid genes 
+```{r}
+load("~/F2/output/vstMat.f2.centered.scaled.Rdata") 
+vstMat.f2.centered.scaled[1:10, 1:10]
+
+# get lipid and fatty acid related genes using GO and IPR term 
+# cat Brassica_napus_IPR.withdescription.gz | grep "fatty\|lipid" > fatty_acid_related/lipid_fatty_acid_IPR
+
+# cat Brassica_napus_GO | awk '{print $2}' > GO_list 
+
+# cat GO_list | sort | uniq > GO_list_unique 
+
+# extract GO annotation from http://yeastmine.yeastgenome.org/yeastmine/bag.do save as GO_annotation.csv 
+
+# cat GO_annotation.csv | grep "fatty\|lipid" | awk '{print $1}' | sort | uniq | sed 's/"//g' > fatty_acid_lipd_GO 
+
+# cat lipid_fatty_acid_* | awk '{print $1}' | sort | uniq > lipid_fatty_acid_genes
+lipid_fatty_acid_genes <- read.table("~/Reference/B.napus/fatty_acid_related/lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
+dim(lipid_fatty_acid_genes) # 7346 
+```
+
+### revise phe file format for QTL analysis (phe format)
+```{r}
+load("~/F2/output/vstMat.f2.centered.scaled.Rdata") 
+
+# format all expressed genes as phenotype data for eQTL analysis 
+F2_all_expressed_genes <- vstMat.f2.centered.scaled
+colnames(F2_all_expressed_genes) <- gsub("Sample_F2_", "", colnames(F2_all_expressed_genes))
+dim(F2_all_expressed_genes) #  56180   166 
+F2_all_expressed_genes %>% head()
+sort(as.numeric(colnames(F2_all_expressed_genes))) 
+
+write.csv(F2_all_expressed_genes, file = "~/F2/output/QTL_analysis/F2_all_expressed_genes.csv")
+
+# format fatty acid gene data as phenotype data for eQTL analysis 
+vstMat.f2.centered.scaled <- as.data.frame(vstMat.f2.centered.scaled)
+
+# get only fatty acid & lipid related genes 
+vstMat.f2.centered.scaled$geneID <- rownames(vstMat.f2.centered.scaled)
+lipid_fatty_acid_genes <- read.table("~/Reference/B.napus/fatty_acid_related/lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
+lipid_fatty_acid_genes$geneID <- lipid_fatty_acid_genes$V1 
+
+lipid_fatty_acid_genes.expression <- 
+  vstMat.f2.centered.scaled %>%
+    semi_join(lipid_fatty_acid_genes) 
+
+rownames(lipid_fatty_acid_genes.expression) <- lipid_fatty_acid_genes.expression$geneID
+lipid_fatty_acid_genes.expression <- 
+  lipid_fatty_acid_genes.expression %>% 
+    dplyr::select(-geneID)
+
+colnames(lipid_fatty_acid_genes.expression) <- gsub("Sample_F2_", "", colnames(lipid_fatty_acid_genes.expression))
+dim(lipid_fatty_acid_genes.expression) # 4943 166  
+
+lipid_fatty_acid_genes.expression %>% head() 
+```
+
+

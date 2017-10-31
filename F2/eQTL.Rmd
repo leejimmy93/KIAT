@@ -4,11 +4,20 @@ output: html_document
 ---
 Purpose of this script is to find loci controlling expression of different genes. We will firstly focus on fatty acid related genes.  
 
-### import data, get genes with detectable expression  
+### load libs
 ```{r}
+library(tidyverse)
+library(qtl)
+library(snowfall)
+library(ggrepel) 
+library(Biostrings)
+source("~/KIAT/function_BnRNAseq.R")
+```
+
+### import data, get genes with detectable expression  
+```{r} 
 read_count_F2 <- read.table("~/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1)
 dim(read_count_F2) # 101040    166
-read_count_F2[1:10, 1:10]
 
 # remove lowly expressed genes 
 read.count.small <- read_count_F2[rowSums(read_count_F2 > 10) >= 166*0.25,]
@@ -25,13 +34,11 @@ library("DESeq2")
 
 # define sample 
 read.count.sample <- data.frame(group=factor(colnames(read_count_F2)))
-read.count.sample$group
 
 dds.f2 <- DESeqDataSetFromMatrix(countData = round(read.count.small), colData = read.count.sample, design = ~ group) 
 vsd.f2 <- varianceStabilizingTransformation(dds.f2)
 vstMat.f2 <- assay(vsd.f2)
 colnames(vstMat.f2) <- colnames(read.count.small)
-vstMat.f2[1:10, 1:10] 
 ```
 
 ### scale and center
@@ -62,23 +69,10 @@ lipid_fatty_acid_genes <- read.table("~/Reference/B.napus/fatty_acid_related/lip
 dim(lipid_fatty_acid_genes) # 7346 
 ```
 
-### load libs
-```{r}
-library(tidyverse)
-library(qtl)
-library(snowfall)
-library(ggrepel) 
-library(Biostrings)
-source("~/KIAT/function_BnRNAseq.R")
-```
 
-### format data for QTL analysis (use v1 map)
-```{r}
-# geno data 
-F2_geno_data_2_Ae_Ol_new <- read.table("~/F2/data/F2_geno_data_2_Ae_Ol_new.txt")
-dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
-F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
 
+### format pheno data for QTL analysis 
+```{r}
 # pheno (gene counts)
 load("~/F2/output/vstMat.f2.centered.scaled.Rdata")
 vstMat.f2.centered.scaled <- as.data.frame(vstMat.f2.centered.scaled)
@@ -122,20 +116,17 @@ write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/F2/data/QTL_analysis/F2_geno_d
 
 # change file format in linux 
 # cat F2_geno_data_2_Ae_Ol_new.2.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' > tmp
-# tail -8386 tmp > tmp.1
+# tail -8386 tmp > tmp.1 
 
 write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis/marker_info.txt" )
 # cat marker_info.txt | awk '{print "*"$2}' | tail -8386 | sed 's/"//g' > marker_info_reform.txt
-<<<<<<< HEAD
 # paste marker_info_reform.txt tmp.1  | tr "\t" "\ " > F2_geno_for_one_map.txt 
-=======
 # paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt
->>>>>>> b8b64ac0aadf760bdbf7f11a1bdee803a8f5c7d8
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt
 # change header info: maker number to the right marker number & phenotype data number 
 ```
 
-### load data 
+### load data (gen file & phe file)
 ```{r}
 LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map")
 save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.fatty_acid_lipid.Rdata")
