@@ -10,7 +10,7 @@ The goal of this analysis is to build genetic map using F2 genotyping informatio
 
 ### install & load package 
 ```{r}
-# install.packages("onemap")
+# install.packages("onemap") 
 # install.packages("tkrplot", type="source") 
 library(tcltk)
 library(tkrplot)
@@ -513,7 +513,9 @@ load("~/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.final.Rdata"
 summaryMap(LG.f2.madmapper.after.crossover) # 2884 cM 
 
 names(LG.f2.madmapper.after.crossover$geno)[1:10] <- paste("A", c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"), sep = "")
-names(LG.f2.madmapper.after.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04", "05", "06", "07", "08", "09"), sep = "") 
+names(LG.f2.madmapper.after.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04", "05", "06", "07", "08", "09"), sep = "")  
+
+write.cross(LG.f2.madmapper.after.crossover, format = "csvsr", filestem = "~/F2/output/missing_rate_0.10/LG.f2.madmapper.final") 
 ```
 
 ### graphing for report: check rf graph for map 
