@@ -71,8 +71,7 @@ LG.f2 <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/dat
 
 ### re-estimate map
 ```{r}
-LG.f2
-
+LG.f2 <- LG.f2.before.crossover
 LG.f2.before.crossover <- LG.f2
 
 for (chr in names(LG.f2$geno)) { # for each chromosome in cross genotype data
@@ -93,15 +92,28 @@ for (chr in names(LG.f2$geno)) { # for each chromosome in cross genotype data
 }  
 
 map.new <- est.map(LG.f2,verbose=T,error.prob=.01) 
-save(map.new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/map.new.Rdata")
 
 LG.f2 <- replace.map(LG.f2, map.new)
 LG.f2.after.crossover <- LG.f2
 
-plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
-plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison 
+plot.map(LG.f2.after.crossover, alternate.chrid = T) # after removing double crossover 
 save(LG.f2.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/LG.f2.after.crossover.Rdata")
 ```   
+
+# deal with LG10 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/LG.f2.after.crossover.Rdata")
+summaryMap(LG.f2.after.crossover) # 2853. 2
+
+set.seed(16)
+LG.f2.after.crossover <- orderMarkers(LG.f2.after.crossover, chr = c(10), 
+	                        window = 5, use.ripple = TRUE, maxit = 4000, 
+	                        error.prob = 0.0001, verbose = T) 
+
+plotMap(LG.f2.after.crossover, chr = '10')
+summaryMap(LG.f2.after.crossover) # 2884.2 cM 
+save(LG.f2.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/LG.f2.after.crossover.final.Rdata") 
+```
 
 ### follow Julin's CSHL code for QTL mapping 
 ```{r}
