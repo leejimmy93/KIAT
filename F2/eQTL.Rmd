@@ -4,18 +4,8 @@ output: html_document
 ---
 Purpose of this script is to find loci controlling expression of different genes. We will firstly focus on fatty acid related genes.  
 
-### load libs
-```{r}
-library(tidyverse)
-library(qtl)
-library(snowfall)
-library(ggrepel) 
-library(Biostrings)
-source("~/KIAT/function_BnRNAseq.R")
-```
-
 ### import data, get genes with detectable expression  
-```{r} 
+```{r}
 read_count_F2 <- read.table("~/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1)
 dim(read_count_F2) # 101040    166
 
@@ -69,10 +59,23 @@ lipid_fatty_acid_genes <- read.table("~/Reference/B.napus/fatty_acid_related/lip
 dim(lipid_fatty_acid_genes) # 7346 
 ```
 
-
-
-### format pheno data for QTL analysis 
+### load libs
 ```{r}
+library(tidyverse)
+library(qtl)
+library(snowfall)
+library(ggrepel) 
+library(Biostrings)
+source("~/KIAT/function_BnRNAseq.R")
+```
+
+### format data for QTL analysis (use v1 map)
+```{r}
+# geno data 
+F2_geno_data_2_Ae_Ol_new <- read.table("~/F2/data/F2_geno_data_2_Ae_Ol_new.txt")
+dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
+
 # pheno (gene counts)
 load("~/F2/output/vstMat.f2.centered.scaled.Rdata")
 vstMat.f2.centered.scaled <- as.data.frame(vstMat.f2.centered.scaled)
@@ -116,7 +119,7 @@ write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/F2/data/QTL_analysis/F2_geno_d
 
 # change file format in linux 
 # cat F2_geno_data_2_Ae_Ol_new.2.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' > tmp
-# tail -8386 tmp > tmp.1 
+# tail -8386 tmp > tmp.1
 
 write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis/marker_info.txt" )
 # cat marker_info.txt | awk '{print "*"$2}' | tail -8386 | sed 's/"//g' > marker_info_reform.txt
@@ -163,8 +166,22 @@ LG.f2.after.crossover <- LG.f2
 
 plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
 plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison 
-save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover_fatty_acid_lipid.Rdata")
 ```    
+
+# deal with LG10 
+```{r}
+load("~/F2/output/QTL_analysis/LG.f2.after.crossover_fatty_acid_lipid.Rdata")
+summaryMap(LG.f2.after.crossover) # 2853. 2
+
+set.seed(16)
+LG.f2.after.crossover <- orderMarkers(LG.f2.after.crossover, chr = c(10), 
+	                        window = 5, use.ripple = TRUE, maxit = 4000, 
+	                        error.prob = 0.0001, verbose = T) 
+
+plotMap(LG.f2.after.crossover, chr = '10')
+summaryMap(LG.f2.after.crossover)
+save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover_fatty_acid_lipid.Rdata")
+```
 
 ### scanone eQTL (on the two FAD genes only)
 ```{r}

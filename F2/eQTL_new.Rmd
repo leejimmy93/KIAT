@@ -98,7 +98,7 @@ lipid_fatty_acid_genes.expression <-
 rownames(lipid_fatty_acid_genes.expression) <- lipid_fatty_acid_genes.expression$geneID
 lipid_fatty_acid_genes.expression <- 
   lipid_fatty_acid_genes.expression %>% 
-    dplyr::select(-geneID)
+    dplyr::select(-geneID) 
 
 colnames(lipid_fatty_acid_genes.expression) <- gsub("Sample_F2_", "", colnames(lipid_fatty_acid_genes.expression))
 dim(lipid_fatty_acid_genes.expression) # 4943 166  
