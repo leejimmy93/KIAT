@@ -236,41 +236,12 @@ dev.off()
 
 ### eQTL on all fatty acid and lipid genes 
 ```{r}
-library(qtl)
-load("~/F2/output/QTL_analysis/LG.f2.after.crossover_fatty_acid_lipid.Rdata")
+# https://github.com/leejimmy93/KIAT/blob/master/F2/scanone_fatty_acid_lipid.R
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/QTL_analysis/scanone.imp_fatty_acid_lipid.Rdata")
+scanone.imp_fatty_acid_lipid <- scanone.imp
+scanone.imp_fatty_acid_lipid
 
-LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation?
-LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1)
-
-# sfInit(parallel = TRUE, cpus = 16)
-# sfExport("LG.f2.after.crossover")
-# sfLibrary(qtl)
-
-# system.time(
-# scanone.perm.imp <-
-#   sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
-#     print(trait) # print doesn't work in here
-#     tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000)
-#     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
-#   }) # takes 40 mins to finish
-# )
-# sfStop()  #### how to do permutation for eQTL 
-
-system.time(scanone_imp_tot <- scanone(LG.f2.after.crossover, pheno.col = 1:4943, 
-	         method = "imp", use = "all.obs"))
-
-# names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
-
-system.time(
-scanone.imp <-
-lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
-  print(trait)
-  scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
-})
-)
-names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)
-
-save(scanone.perm.imp, scanone.imp, file = "/share/malooflab/Ruijuan/F2/QTL_analysis/output/scanone.result_fatty_acid_lipid.Rdata")
+# permutation... just on some genes? 
 ```
 
 ### on all genes
@@ -299,7 +270,6 @@ F2_geno_data_2_Ae_Ol_new.2 <- t(F2_geno_data_2_Ae_Ol_new.2)
 write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/F2/data/QTL_analysis/F2_geno_data_2_Ae_Ol_new.2_all_expressed_genes.txt") 
 ```
 
-
 ```{r} 
 # change file format in linux 
 # cat F2_geno_data_2_Ae_Ol_new.2_all_expressed_genes.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' > tmp 
@@ -314,10 +284,13 @@ write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis
 
 ### load data 
 ```{r}
-LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final_all_expressed_gene.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map")
-save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.fatty_acid_lipid.Rdata")
-important_eQTL <- LG.f2
-
+LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final_all_expressed_gene.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map") ### takes one day to read in this data... 
+save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.all_expressed_genes.Rdata")
+important_eQTL <- LG.f2 
+important_eQTL
+LG.f2
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/QTL_analysis/LG.f2.fatty_acid_lipid.Rdata")
+LG.f2$pheno %>% dim()
 ```
 
 ### re-estimate map
