@@ -126,18 +126,15 @@ write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/F2/data/QTL_analysis/F2_geno_d
 
 write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis/marker_info.txt" )
 # cat marker_info.txt | awk '{print "*"$2}' | tail -8386 | sed 's/"//g' > marker_info_reform.txt
-<<<<<<< HEAD
 # paste marker_info_reform.txt tmp.1  | tr "\t" "\ " > F2_geno_for_one_map.txt 
-=======
 # paste marker_info_reform.txt tmp.1 | awk '{print $1 " " $2}' > F2_geno_for_one_map.txt
->>>>>>> b8b64ac0aadf760bdbf7f11a1bdee803a8f5c7d8
 # cat header_one_map_input F2_geno_for_one_map.txt > F2_geno_for_one_map_final.txt
 # change header info: maker number to the right marker number & phenotype data number 
 ```
 
 ### load data 
 ```{r}
-LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map")
+LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map") 
 save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.fatty_acid_lipid.Rdata")
 ```
 

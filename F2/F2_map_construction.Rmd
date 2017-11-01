@@ -274,7 +274,7 @@ summary(LG.f2.madmapper) # 2013
 plotMap(LG.f2.madmapper) 
 totmar(LG.f2.madmapper)  
 png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /map_before_crossover.png", width=8, height=8, units="in", res=300)
-plot.rf(LG.f2.madmapper, alternate.chrid = T) # the old genetic map
+plot.rf(LG.f2.madmapper, alternate.chrid = T) # the old genetic map 
 dev.off()
 
 # write.csv(pull.geno(LG.f2.madmapper),file="~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.before.doublecrossover.csv") 
