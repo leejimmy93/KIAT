@@ -5,11 +5,13 @@ library("qtl")
 library("tidyverse")
 library("snow")
 library("bigmemory")
+source("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/function_BnRNAseq.R")
 
 # 1) read in data
 load("~/F2/output/vstMat.f2.centered.scaled.Rdata")
-
-
+vstMat.f2.centered.scaled.t <- as.data.frame(t(vstMat.f2.centered.scaled))
+system.time(cor.results <- chunked.cor(vstMat.f2.centered.scaled.t))
+save(cor.results, file="~/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/eQTL/cor.results.Rdata")
 
 # 2) use correlation test to remove genes with pairwise correlation equal to or greater than 0.9 
 
