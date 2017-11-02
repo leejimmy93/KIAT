@@ -7,7 +7,8 @@ library(ShortRead);library(goseq);library(GO.db);library("annotate")
 # for ggplot heatmap
 library(WGCNA);library(ggplot2);library(reshape2);library(scales); library (plyr)
 
-Bn_cdna<-readDNAStringSet("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Brassica_napus.annotation_v5.cds_modified.fa")
+# (MAC version )Bn_cdna<-readDNAStringSet("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Brassica_napus.annotation_v5.cds_modified.fa")
+Bn_cdna<-readDNAStringSet("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds_modified.fa")
 head(Bn_cdna)
 bias<-nchar(Bn_cdna)
 #names(bias)<-substr(names(Br_cdna),1,9)
