@@ -1,0 +1,133 @@
+---
+title: "matrix_eQTL_analysis"
+author: "Ruijuan Li"
+date: "11/2/2017"
+output: html_document
+---
+
+Since MatrixEQTL was reported to run the analysis in very short time w/o losing accuracy, I decided to give it a shot. 
+
+### load lib
+```{r}
+library("MatrixEQTL") 
+library(tidyverse)
+library(DESeq2)
+```
+
+### preprocess expression data 
+```{r}
+read_count_F2 <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1)
+dim(read_count_F2) # 101040    166
+
+# remove lowly expressed genes 
+read.count.small <- read_count_F2[rowSums(read_count_F2 > 10) >= 166*0.25,]
+dim(read.count.small) # 59934   131  
+colnames(read.count.small)
+
+# voom transformation 
+read.count.sample <- data.frame(group=factor(colnames(read_count_F2)))
+
+dds.f2 <- DESeqDataSetFromMatrix(countData = round(read.count.small), colData = read.count.sample, design = ~ group) 
+vsd.f2 <- varianceStabilizingTransformation(dds.f2)
+vstMat.f2 <- assay(vsd.f2)
+
+colnames(vstMat.f2) <- colnames(read.count.small)
+
+# scale and center 
+dim(vstMat.f2) # 56180   166 
+vstMat.f2.centered.scaled <- scale(vstMat.f2, center = TRUE, scale = TRUE) # center to zero
+save(vstMat.f2.centered.scaled, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/vstMat.f2.centered.scaled.Rdata")
+```
+
+### preprocess SNP data (numeric...)
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
+write.table(F2_geno_data_2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.txt", sep = "\t")
+# cat F2_geno_data_2.txt | sed 's/"//g' | sed 's/0\/0/0/g' | sed 's/0\/1/1/g' | sed 's/1\/1/2/g' > F2_geno_data_for_eQTL.tx
+# manually add snpid to the begining of first row. 
+```
+
+# make other two input files
+```{r}
+snpspos_F2 <- data.frame(snpid = snp_value$V1[2:3443],
+              chr = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", snp_value$V1[2:3443]),
+              pos = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", snp_value$V1[2:3443]))
+
+gff.mRNA <- read.table("~/Desktop/Brassica_project/reference/gff.mRNA")
+gff.mRNA.sub <- gff.mRNA[gff.mRNA$V4 %in% rownames(vstMat.f2.centered.scaled),] 
+dim(gff.mRNA.sub) # 56180     4 
+
+genepos_F2 <- data.frame(geneid = gff.mRNA.sub$V4,
+                         chr = gff.mRNA.sub$V1,
+                         left = gff.mRNA.sub$V2,
+                         right = gff.mRNA.sub$V3)
+genepos_F2 %>% head()
+
+### load geno & pheno data 
+# geno data 
+SNP_file_name_F2 <- "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/test.txt"
+snps_F2 <- SlicedData$new()
+snps_F2$fileDelimiter = "\t"      # the TAB character
+snps_F2$fileOmitCharacters = "NA" # denote missing values;
+snps_F2$fileSkipRows = 1          # one row of column labels
+snps_F2$fileSkipColumns = 1       # one column of row labels
+snps_F2$fileSliceSize = 2000      # read file in slices of 2,000 rows
+snps_F2$LoadFile(SNP_file_name_F2)
+snps_F2
+
+# gene data 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/vstMat.f2.centered.scaled.Rdata")
+colnames(vstMat.f2.centered.scaled) <- gsub("Sample_F2_", "", colnames(vstMat.f2.centered.scaled))
+genes_F2 <- SlicedData$new()
+genes_F2$CreateFromMatrix(as.matrix(vstMat.f2.centered.scaled))
+genes_F2
+
+# in the same order, geno & pheno(expression) data 
+all(colnames(genes_F2) == colnames(snps_F2)) # True 
+```
+
+### analysis 
+```{r}
+useModel = modelLINEAR
+
+output_file_name_cis = tempfile()
+output_file_name_tra = tempfile()
+
+# threshold 
+pvOutputThreshold_cis = 2e-2
+pvOutputThreshold_tra = 1e-2
+errorCovariance = numeric()
+cisDist = 1e6
+
+me = Matrix_eQTL_main(
+snps = snps_F2, 
+gene = genes_F2, 
+output_file_name     = output_file_name_tra,
+pvOutputThreshold     = pvOutputThreshold_tra,
+useModel = useModel, 
+errorCovariance = errorCovariance, 
+verbose = TRUE, 
+output_file_name.cis = output_file_name_cis,
+pvOutputThreshold.cis = pvOutputThreshold_cis,
+snpspos = snpspos_F2, 
+genepos = genepos_F2,
+cisDist = cisDist,
+pvalue.hist = "qqplot",
+min.pv.by.genesnp = FALSE,
+noFDRsaveMemory = FALSE)
+
+unlink(output_file_name_tra)
+unlink(output_file_name_cis)
+
+## Results:
+
+cat('Analysis done in: ', me$time.in.sec, ' seconds', '\n');
+cat('Detected local eQTLs:', '\n')
+show(me$cis$eqtls)
+cat('Detected distant eQTLs:', '\n')
+show(me$trans$eqtls)
+
+## Plot the Q-Q plot of local and distant p-values 
+plot(me) 
+```
+
