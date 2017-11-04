@@ -49,9 +49,9 @@ write.table(F2_geno_data_2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/o
 
 # make other two input files
 ```{r}
-snpspos_F2 <- data.frame(snpid = snp_value$V1[2:3443],
-              chr = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", snp_value$V1[2:3443]),
-              pos = gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", snp_value$V1[2:3443]))
+snpspos_F2 <- data.frame(snpid = as.character(snp_value$V1[2:3443]),
+  chr = as.character(gsub("([[:print:]]+)(_)([[:print:]]+)", "\\1", snp_value$V1[2:3443])),
+  pos = as.integer(gsub("([[:print:]]+)(_)([[:print:]]+)", "\\3", snp_value$V1[2:3443])))
 
 gff.mRNA <- read.table("~/Desktop/Brassica_project/reference/gff.mRNA")
 gff.mRNA.sub <- gff.mRNA[gff.mRNA$V4 %in% rownames(vstMat.f2.centered.scaled),] 
@@ -65,7 +65,7 @@ genepos_F2 %>% head()
 
 ### load geno & pheno data 
 # geno data 
-SNP_file_name_F2 <- "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/test.txt"
+SNP_file_name_F2 <- "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_for_eQTL.txt"
 snps_F2 <- SlicedData$new()
 snps_F2$fileDelimiter = "\t"      # the TAB character
 snps_F2$fileOmitCharacters = "NA" # denote missing values;
@@ -129,5 +129,7 @@ show(me$trans$eqtls)
 
 ## Plot the Q-Q plot of local and distant p-values 
 plot(me) 
+save(me, file = "~/Desktop/eqtl.Rdata") 
 ```
+
 
