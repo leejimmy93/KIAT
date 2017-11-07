@@ -117,15 +117,22 @@ save(LG.f2.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/d
 
 ### follow Julin's CSHL code for QTL mapping 
 ```{r}
-load("~/F2/data/QTL_analysis/LG.f2.after.crossover.Rdata")
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/missing_rate_0.10/LG.f2.after.crossover.final.Rdata")
 summary(LG.f2.after.crossover)
 # take a look at the geno and pheno data as well as the rf plot (rf plot shows further refinement is required)
-plot(LG.f2.after.crossover)
-plot.rf(LG.f2.after.crossover)
+plot.map(LG.f2.after.crossover)
+# plot.rf(LG.f2.after.crossover)
+summaryMap(LG.f2.after.crossover) # 2884 
 
 # look for possible genotyping errors
 # LG.f2.after.crossover <- calc.errorlod(LG.f2.after.crossover, error.prob=0.01) # takes too long time, leave for later... 
 # top.errorlod(LG.f2.after.crossover)
+
+# get new phenotype, difference between flower time and bolting time, that is the time to take flower after bolting
+LG.f2.after.crossover$pheno[,41]
+LG.f2.after.crossover$pheno[,42]
+
+
 
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation? 
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability? 
@@ -141,7 +148,7 @@ sfLibrary(qtl)
 scanone.perm.imp <- 
   sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
     print(trait) # print doesn't work in here 
-    tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000)
+    tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000, n.cluster = 16)
     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
   }) # takes 40 mins to finish 
 
@@ -374,12 +381,14 @@ names(im.qtl.result) <- names(scanone.imp)
 ### 2D scan
 The above methods only evaluate the evidence for a QTL one location a time.  It is possible to instead scan two locations at once. This can be particularly advantageous in identifying QTL if there is epistasis.
 ```{r}
-load("./F2/output/QTL_analysis/cim.Rdata")
-load("./F2/output/QTL_analysis/scanone.Rdata")
-load("~/F2/output/QTL_analysis/LG.f2.after.crossover.Rdata")
+# running scantwo analysis and permutation seprately
+# 1) scantwo analysis on cabernet 
+# /share/malooflab/Ruijuan/KIAT_cabernet/F2/scantwo.R, took several days to finish
 
-
-
+# scp result to whitney
+load("~/F2/output/QTL_analysis/scantwo/scantwo.imp.Rdata")
+plot(scantwo.imp[[1]], chr=2) 
+scantwo.imp 
 
 ```
 
