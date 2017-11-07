@@ -317,16 +317,27 @@ for (chr in names(LG.f2$geno)) { # for each chromosome in cross genotype data
 }  
 
 map.new <- est.map(LG.f2,verbose=T,error.prob=.01) 
-save(map.new, file = "~/F2/output/QTL_analysis/map.new.fatty_acid_lipid.Rdata")
 
 LG.f2 <- replace.map(LG.f2, map.new)
 LG.f2.after.crossover <- LG.f2
 
 plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
-plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison 
-save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover_fatty_acid_lipid.Rdata")
+summaryMap(LG.f2.after.crossover) # 2853 
+
+# fix LG10 problem using ripple 
+set.seed(16)
+LG.f2.after.crossover <- orderMarkers(LG.f2.after.crossover, chr = c(10), 
+	                        window = 5, use.ripple = TRUE, maxit = 4000, 
+	                        error.prob = 0.0001, verbose = T) 
+
+plotMap(LG.f2.after.crossover, chr = '10')
+summaryMap(LG.f2.after.crossover) # 2884
+save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover_all_expressed_genes.Rdata") 
 ```     
 
+### eQTL analysis on cabernet 
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed_genes.R
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed_genes.slurm 
 
 
 
