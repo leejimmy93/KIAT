@@ -129,7 +129,7 @@ show(me$trans$eqtls)
 
 ## Plot the Q-Q plot of local and distant p-values 
 plot(me) 
-save(me, file = "~/Desktop/eqtl.Rdata") 
+save(me, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/eqtl_matrix_eQTL.Rdata") 
 ```
 
 
