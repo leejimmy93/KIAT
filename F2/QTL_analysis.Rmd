@@ -128,11 +128,15 @@ summaryMap(LG.f2.after.crossover) # 2884
 # LG.f2.after.crossover <- calc.errorlod(LG.f2.after.crossover, error.prob=0.01) # takes too long time, leave for later... 
 # top.errorlod(LG.f2.after.crossover)
 
-# get new phenotype, difference between flower time and bolting time, that is the time to take flower after bolting
-LG.f2.after.crossover$pheno[,41]
-LG.f2.after.crossover$pheno[,42]
+# get new phenotype, difference between flower time and bolting time, that is the time to have flower after bolting
+LG.f2.after.crossover$pheno$bolting_to_flowering <- LG.f2.after.crossover$pheno$days_to_flower -  LG.f2.after.crossover$pheno$days_to_bolt
+# save this new data 
+save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
 
-
+# run QTL analysis 
+# rename the map to their real chromosome name 
+names(LG.f2.after.crossover$geno)[1:10] <- paste("A", c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"), sep = "")
+names(LG.f2.after.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04", "05", "06", "07", "08", "09"), sep = "") 
 
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation? 
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability? 
@@ -145,16 +149,18 @@ sfInit(parallel = TRUE, cpus = parallel::detectCores())
 sfExport("LG.f2.after.crossover")
 sfLibrary(qtl)
 
+system.time(
 scanone.perm.imp <- 
   sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
     print(trait) # print doesn't work in here 
     tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000, n.cluster = 16)
     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
   }) # takes 40 mins to finish 
-
+)
 sfStop() 
 
 names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
+save(scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.perm.imp.43traits")
 
 #note method "em" = interval mapping; "mr" = marker regression
 #here we use method "imp" for multiple imputation.
@@ -169,6 +175,7 @@ abline(h=scanone.perm.imp[["Erucic_acid"]],lty=2) #add permuation threshold
 scanone.imp.Oleic <- scanone(LG.f2.after.crossover,pheno.col=8,method="imp") # 
 plot(scanone.imp.Oleic,bandcol="gray90", main="Oleic_acid")
 abline(h=scanone.perm.imp[["Oleic_acid"]],lty=2) #add permuation threshold
+
 ```
 
 ### run one dimeonsional mapping for all traits at once 
