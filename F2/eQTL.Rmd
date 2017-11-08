@@ -336,8 +336,20 @@ save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossov
 ```     
 
 ### eQTL analysis on cabernet 
-https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed_genes.R
-https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed_genes.slurm 
+1) running eQTL takes a long time, so I split the 50,000 genes into 10 subset, and run scanone on subset in parallel. 
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed_genes_1.R ... https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed_genes_10.R
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed_genes_1_10.slurm 
+
+2) For permutation, since it takes too long time to run permutation on all genes, so I sampled 100 genes and ran 1000 times permutation on these genes so that median can be taken as the threshold for eQTL analysis 
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed_genes_perm.R 
+
+3) transfer to whitney for analysis 
+
+### eQTL result analysis 
+```{r}
+
+```
+
 
 
 
