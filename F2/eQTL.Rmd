@@ -347,9 +347,89 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed
 
 ### eQTL result analysis 
 ```{r}
-
+# firstly check the two FAD genes 
+# load data (scanone result)
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/data/eQTL_analysis/"
+files <- list.files(path=path)
+setwd(path)
+eQTL_result <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+save(eQTL_result, file = "~/F2/data/eQTL_analysis/eQTL_result.Rdata")
+# for the result, 1st 10 are eQTL analysis result, 11 is the permuation result for 100 sampled genes.
 ```
 
+# determine cis- and trans- eQTL 
+```{r}
+load("~/F2/data/eQTL_analysis/eQTL_result.Rdata")
+
+# get threshold 
+lod.thres <- median(unlist(eQTL_result[[11]])) # 95% percentile as the threshold 
+lod.thres # [1] 4.159691 
+
+plot(eQTL_result[[3]]$BnaA08g12780D,bandcol="gray90", main="BnaA08g12780D") # looks good 
+
+# get all eQTL based on this threshold 
+system.time(
+tmp <- 
+lapply(names(eQTL_result[1:10]), function(subset) {
+  print(subset)
+  lapply(names(eQTL_result[[subset]]), function(gene) {
+    tmp1 <- eQTL_result[[subset]][[gene]][eQTL_result[[subset]][[gene]]$lod > lod.thres,]
+    if (nrow(tmp1) > 0){
+    tmp1$gene_ID <- gene
+    tmp1$snp_ID <- rownames(tmp1)
+    tmp1
+  }
+})
+})
+) # 20 sec  
+
+test <- do.call("rbind", tmp) 
+test2 <- do.call("rbind", test)
+
+# extract only SNP info 
+cis_trans_result <- test2[grepl("^chr", test2$snp_ID),]
+dim(cis_trans_result) # 728717      5 
+cis_trans_result %>% head()
+
+unique(cis_trans_result$snp_ID) %>% length # 2013 
+unique(cis_trans_result$gene_ID) %>% length() # 21823 
+
+# get genome range
+library(IRanges)
+library(GenomicRanges)
+library(GenomicFeatures)
+library("rtracklayer")
+
+### get gff file with gene chrom & pos info, gff3 file must be sorted 
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+head(gff.mRNA) 
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "gene_ID") 
+gff.mRNA %>% head()
+
+# merge two files
+cis_trans_result_2 <- 
+cis_trans_result %>% 
+  left_join(gff.mRNA, by = "gene_ID") %>% 
+  mutate(gene_chrom = CHROM, gene_start = start, gene_end = end) %>% 
+  dplyr::select(-(CHROM:end)) %>% 
+  separate(snp_ID, into = c("snp_chrom", "snp_pos"), sep = "_", remove = F) %>% 
+  mutate(LG = chr, gentic_pos = pos) %>% 
+  dplyr::select(-(chr:pos))
+
+# get snp & chrom ID & pos, as well as gene  
+cis_trans_result_2 %>% head()
+
+# determine cis- and trans- eQTL 
+# e-traits (genes) which are not on the same chrom as SNPs are trans- 
+cis_trans_result_2$cis_trans <- ifelse(cis_trans_result_2$gene_chrom == cis_trans_result_2$snp_chrom, "cis", "trans")
+sum(cis_trans_result_2$cis_trans == "cis")
+sum(cis_trans_result_2$cis_trans == "trans")
+dim(cis_trans_result_2) # 728717     11 
+
+cis_trans_result_final <- cis_trans_result_2 
+save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_final.Rdata")
+```
 
 
 
