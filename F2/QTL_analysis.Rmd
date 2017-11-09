@@ -130,13 +130,13 @@ summaryMap(LG.f2.after.crossover) # 2884
 
 # get new phenotype, difference between flower time and bolting time, that is the time to have flower after bolting
 LG.f2.after.crossover$pheno$bolting_to_flowering <- LG.f2.after.crossover$pheno$days_to_flower -  LG.f2.after.crossover$pheno$days_to_bolt
-# save this new data 
-save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
 
 # run QTL analysis 
 # rename the map to their real chromosome name 
 names(LG.f2.after.crossover$geno)[1:10] <- paste("A", c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"), sep = "")
 names(LG.f2.after.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04", "05", "06", "07", "08", "09"), sep = "") 
+# save this new data 
+save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata") 
 
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation? 
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability? 
@@ -175,17 +175,22 @@ abline(h=scanone.perm.imp[["Erucic_acid"]],lty=2) #add permuation threshold
 scanone.imp.Oleic <- scanone(LG.f2.after.crossover,pheno.col=8,method="imp") # 
 plot(scanone.imp.Oleic,bandcol="gray90", main="Oleic_acid")
 abline(h=scanone.perm.imp[["Oleic_acid"]],lty=2) #add permuation threshold
-
 ```
 
 ### run one dimeonsional mapping for all traits at once 
 ```{r}
+load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
+summaryMap(LG.f2.after.crossover)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation? 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability?  
+
+system.time(
 scanone.imp <- 
 lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
   print(trait)
   scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
 }) 
-
+)
 names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)
 
 png("~/F2/output/QTL_analysis/figure/QTL_one_dim.png", width=25, height=15, units="in", res=300)
@@ -197,6 +202,8 @@ for (i in names(scanone.imp)){
 }
 
 dev.off()  
+
+save(scanone.imp, file = "~/F2/output/QTL_analysis/scanone.imp.43traits")
 ```
 
 ### cim mapping (composite interval mapping)
@@ -210,11 +217,6 @@ lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
 }) 
 # here we use the interval mapping method "em" as this is how cim was originaly implmented.the n.marcovar= argument defines the maximum number of marker covariates to use.
 names(cim.qtl) <- colnames(LG.f2.after.crossover$pheno)
-
-cim.perm <- cim(LG.f2.after.crossover,n.marcovar=5,method="em",n.perm=1000) #takes almost an hour 
-save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.Rdata")
-summary(cim.perm)
-cim.perm95 <- summary(cim.perm)[1] 
 
 sfInit(parallel = TRUE, cpus = parallel::detectCores()) 
 sfExport("LG.f2.after.crossover")
@@ -247,8 +249,8 @@ for (i in names(cim.qtl)){
 dev.off()  
 # more QTL found for cim method 
 
-save(cim.qtl, cim.perm, file = "~/F2/output/QTL_analysis/cim.Rdata")
-save(scanone.imp, scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.Rdata")
+save(cim.qtl, file = "~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
+save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.43traits.Rdata")
 ```
 
 ### output result from scanone & cim, QTL result visulization
