@@ -392,12 +392,28 @@ The above methods only evaluate the evidence for a QTL one location a time.  It 
 ```{r}
 # running scantwo analysis and permutation seprately
 # 1) scantwo analysis on cabernet 
-# /share/malooflab/Ruijuan/KIAT_cabernet/F2/scantwo.R, took several days to finish
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scantwo_v2.R 
+
+# scantwo permutation 100 times for 43 traits, split traits file so that each file has 2 traits, in total 20 files, and each run is only 10 permutation, combine permutation result after finish running. 
 
 # scp result to whitney
-load("~/F2/output/QTL_analysis/scantwo/scantwo.imp.Rdata")
+# QTL result 
+load("~/F2/output/scantwo/scantwo.imp.v2.Rdata")
 plot(scantwo.imp[[1]], chr=2) 
-scantwo.imp 
+scantwo.imp.42traits <- scantwo.imp 
+
+load("~/F2/output/scantwo/scantwo.imp.v2.bolting_to_flowering.Rdata")
+plot(scantwo.imp, chr = 3) 
+
+# permutation result for Erucic acid and Oleic acid 
+# load data 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Erucic_Oleic"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_Erucic_Oleic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+summary(scantwo_perm_Erucic_Oleic[[1]][[1]])
+summary(c(scantwo_perm_Erucic_Oleic[[1]][[1]], scantwo_perm_Erucic_Oleic[[2]][[1]], scantwo_perm_Erucic_Oleic[[3]][[1]], scantwo_perm_Erucic_Oleic[[4]][[1]]))
 
 ```
 
