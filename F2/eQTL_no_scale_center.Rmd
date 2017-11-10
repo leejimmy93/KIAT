@@ -1,0 +1,64 @@
+---
+title: "eQTL_no_scale_center"
+output: html_document
+---
+
+The reason I want to do this analysis is because I found many many eQTL, which I am not sure whether because I used scale and centered expression data from genes. So this data are for genes with just voom transformed data 
+
+# load data 
+### load libs
+```{r}
+library(tidyverse)
+library(qtl)
+library(snowfall)
+library(Biostrings)
+source("~/KIAT/function_BnRNAseq.R")
+```
+
+### format data for QTL analysis (use v1 map)
+```{r}
+load("~/F2/output/vstMat.f2.Rdata")
+F2_geno_data_2_Ae_Ol_new <- read.table("~/F2/data/F2_geno_data_2_Ae_Ol_new.txt")
+dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
+dim(vstMat.f2) # 56180   166
+
+colnames(F2_geno_data_2_Ae_Ol_new) <- gsub("X", "ID_", colnames(F2_geno_data_2_Ae_Ol_new))
+F2_geno_data_2_Ae_Ol_new.t <- as.data.frame(t(F2_geno_data_2_Ae_Ol_new))
+F2_geno_data_2_Ae_Ol_new.t$ID <- rownames(F2_geno_data_2_Ae_Ol_new.t)
+
+colnames(vstMat.f2) <- gsub("Sample_F2", "ID", colnames(vstMat.f2))
+vstMat.f2.t <- as.data.frame(t(vstMat.f2))
+vstMat.f2.t$ID <- rownames(vstMat.f2.t)
+
+F2_geno_data_2_Ae_Ol_new.2 <- 
+F2_geno_data_2_Ae_Ol_new.t %>% 
+  left_join(vstMat.f2.t) %>% 
+  dplyr::select(-ID) 
+
+dim(F2_geno_data_2_Ae_Ol_new.2) # 166 59623 
+F2_geno_data_2_Ae_Ol_new.2 <- t(F2_geno_data_2_Ae_Ol_new.2)
+write.table(F2_geno_data_2_Ae_Ol_new.2, file = "~/F2/data/QTL_analysis/F2_geno_data_2_Ae_Ol_new.2_all_expressed_genes_no_scale_center.txt") 
+```
+
+```{r} 
+# change file format in linux 
+# cat F2_geno_data_2_Ae_Ol_new.2_all_expressed_genes.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' > tmp 
+# tail -59623 tmp > tmp.1 
+
+write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis/marker_info_all_expressed_genes.txt" )
+# cat marker_info_all_expressed_genes.txt | awk '{print "*"$2}' | tail -59623 | sed 's/"//g' > marker_info_reform.txt
+# paste marker_info_reform.txt tmp.1  | tr "\t" "\ " > F2_geno_for_one_map.txt 
+# cat header_one_map_input F2_geno_for_one_map.txt >  F2_geno_for_one_map_final_all_expressed_gene.txt 
+# change header info: maker number to the right marker number & phenotype data number 
+```
+
+### load data 
+```{r}
+LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final_all_expressed_gene_no_scale_center.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map") ### takes one day to read in this data... 
+
+save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.all_expressed_genes.Rdata")
+important_eQTL <- LG.f2 
+important_eQTL
+LG.f2
+LG.f2$pheno %>% dim()
+```
