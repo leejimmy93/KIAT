@@ -1,0 +1,18 @@
+---
+title: "overlay_sig_loci_Erucic_Oleic"
+output: html_document
+---
+
+Purpose of this script is to 
+1) visualize how fatty acid biosynthesis and metabolic related genes overlay with the significant SNPs that I identified from QTL and GWAS analysis. 
+2) visualize how previous identified loci overlay with the significant SNPs and loci that I identified from GWAS and QTL analysis. 
+
+### import GWAS and QTL analysis CIM result 
+```{r}
+
+
+
+```
+
+# import 
+
