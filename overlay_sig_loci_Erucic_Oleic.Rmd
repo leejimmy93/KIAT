@@ -9,10 +9,46 @@ Purpose of this script is to
 
 ### import GWAS and QTL analysis CIM result 
 ```{r}
+# QTL result 
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
+load("~/F2/output/QTL_analysis/cim.perm.43traits.Rdata")
+cim.qtl.sig.Erucic <- cim.qtl$Erucic_acid[cim.qtl$Erucic_acid$lod > cim.perm$Erucic_acid,]
+cim.qtl.sig.Oleic <- cim.qtl$Oleic_acid[cim.qtl$Oleic_acid$lod > cim.perm$Oleic_acid,]
 
+# GWAS result 
+Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
+Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Oleic_acid.GWAS.Results.csv", header = T) 
 
+Erucic_Oleic <- rbind(Erucic_acid, Oleic_acid)
+
+SNP.Erucic.Oleic <- data.frame(CHROM = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", Erucic_Oleic[Erucic_Oleic$P.value < 0.00001,]$SNP), 
+                         POS = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\4", Erucic_Oleic[Erucic_Oleic$P.value < 0.00001,]$SNP)) 
+
+SNP.Erucic.Oleic$CHROM <- paste("chr", SNP.Erucic.Oleic$CHROM, sep = "")
+SNP.Erucic.Oleic$POS <- as.numeric(as.character(SNP.Erucic.Oleic$POS))
+
+SNP.Erucic.Oleic.unique <- unique(SNP.Erucic.Oleic)
+dim(SNP.Erucic.Oleic.unique) # 235 2 
 ```
 
-# import 
+### combine and display Erucic and Oleic acid GWAS and QTL analysis result 
+```{r}
+SNP.Erucic.Oleic 
+```
+
+# import fatty acid genes info (based on GO and IPR info)
+```{r}
+lipid_fatty_acid_genes <- read.table("~/Reference/B.napus/fatty_acid_related/lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
+lipid_fatty_acid_genes %>% dim()  # 7346 
+
+View(lipid_fatty_acid_genes) 
+```
+
+```{r}
+install.packages("ggbio")
+library(ggbio)
+data(hg19IdeogramCyto, package = "biovizBase")
+head(hg19IdeogramCyto)
+```
 

@@ -8,7 +8,7 @@ output:
 --- 
 
 ### data description 
-```{r}
+```{r} 
 # RNA seq data from late silique, batch C: 47 lines; batch D: 41 lines, batch E: 43 lines
 # 505 collection in total has 130 lines, two lines are duplicated in batch D & batch E 
 ```
