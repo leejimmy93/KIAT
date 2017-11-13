@@ -119,7 +119,7 @@ autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(colo
 
 # sessioninfo
 ```{r}
-sessionInfo() 
+# sessionInfo() 
 # R version 3.2.4 (2016-03-10)
 # Platform: x86_64-apple-darwin13.4.0 (64-bit)
 # Running under: OS X 10.12.6 (unknown)
@@ -128,18 +128,37 @@ sessionInfo()
 # [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 # 
 # attached base packages:
-# [1] stats     graphics  grDevices utils     datasets  methods   base     
+# [1] stats4    parallel  stats     graphics  grDevices utils     datasets  methods   base     
+# 
+# other attached packages:
+#  [1] dplyr_0.7.4             purrr_0.2.4             readr_1.1.1            
+#  [4] tidyr_0.7.2             tibble_1.3.4            ggplot2_2.2.1          
+#  [7] tidyverse_1.1.1         devtools_1.13.4         rtracklayer_1.30.4     
+# [10] GenomicFeatures_1.22.13 AnnotationDbi_1.32.3    Biobase_2.30.0         
+# [13] GenomicRanges_1.22.4    GenomeInfoDb_1.6.3      IRanges_2.4.8          
+# [16] S4Vectors_0.8.11        BiocGenerics_0.16.1    
 # 
 # loaded via a namespace (and not attached):
-#  [1] Rcpp_0.12.13     cellranger_1.1.0 plyr_1.8.4       bindr_0.1        forcats_0.2.0   
-#  [6] tools_3.2.4      jsonlite_1.5     lubridate_1.7.1  tibble_1.3.4     nlme_3.1-131    
-# [11] gtable_0.2.0     lattice_0.20-35  pkgconfig_2.0.1  rlang_0.1.4      psych_1.7.8     
-# [16] rstudioapi_0.7   parallel_3.2.4   haven_1.1.0      bindrcpp_0.2     knitr_1.17      
-# [21] xml2_1.1.1       dplyr_0.7.4      stringr_1.2.0    httr_1.3.1       hms_0.3         
-# [26] grid_3.2.4       glue_1.2.0       R6_2.2.2         readxl_1.0.0     foreign_0.8-69  
-# [31] tidyr_0.7.2      ggplot2_2.2.1    reshape2_1.4.2   purrr_0.2.4      readr_1.1.1     
-# [36] modelr_0.1.1     magrittr_1.5     scales_0.5.0     rvest_0.3.2      assertthat_0.2.0
-# [41] mnormt_1.5-5     tidyverse_1.2.0  colorspace_1.3-2 stringi_1.1.5    lazyeval_0.2.1  
-# [46] munsell_0.4.3    broom_0.4.2      crayon_1.3.4  
+#  [1] httr_1.3.1                 bit64_0.9-7                jsonlite_1.5              
+#  [4] modelr_0.1.1               assertthat_0.2.0           blob_1.1.0                
+#  [7] cellranger_1.1.0           Rsamtools_1.22.0           RSQLite_2.0               
+# [10] lattice_0.20-35            glue_1.2.0                 digest_0.6.12             
+# [13] XVector_0.10.0             rvest_0.3.2                colorspace_1.3-2          
+# [16] plyr_1.8.4                 psych_1.7.8                XML_3.98-1.9              
+# [19] pkgconfig_2.0.1            broom_0.4.2                biomaRt_2.26.1            
+# [22] haven_1.1.0                zlibbioc_1.16.0            scales_0.5.0              
+# [25] BiocParallel_1.4.3         withr_2.1.0                SummarizedExperiment_1.0.2
+# [28] lazyeval_0.2.1             mnormt_1.5-5               magrittr_1.5              
+# [31] crayon_1.3.4               readxl_1.0.0               memoise_1.1.0             
+# [34] nlme_3.1-131               forcats_0.2.0              xml2_1.1.1                
+# [37] foreign_0.8-69             tools_3.2.4                hms_0.3                   
+# [40] stringr_1.2.0              munsell_0.4.3              lambda.r_1.2              
+# [43] bindrcpp_0.2               Biostrings_2.38.4          rlang_0.1.4               
+# [46] futile.logger_1.4.3        grid_3.2.4                 RCurl_1.95-4.8            
+# [49] rstudioapi_0.7             bitops_1.0-6               gtable_0.2.0              
+# [52] curl_3.0                   DBI_0.7                    reshape2_1.4.2            
+# [55] R6_2.2.2                   GenomicAlignments_1.6.3    lubridate_1.7.1           
+# [58] knitr_1.17                 bit_1.1-12                 bindr_0.1                 
+# [61] futile.options_1.0.0       stringi_1.1.5              Rcpp_0.12.13  
 ```
 
