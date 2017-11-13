@@ -14,6 +14,9 @@ library(IRanges)
 library(GenomicRanges)
 library(GenomicFeatures)
 library("rtracklayer")
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("ggbio")
+library(ggbio)
 ```
 
 ### import GWAS and QTL analysis CIM result 
@@ -48,17 +51,8 @@ dim(SNP.Erucic.Oleic.unique) # 235 2
 SNP.Erucic.Oleic 
 ```
 
-# import fatty acid genes info (based on GO and IPR info)
-```{r}
-lipid_fatty_acid_genes <- read.table("lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
-lipid_fatty_acid_genes %>% dim()  # 7346 
-```
-
 ### demo of simple example on how to use ggbio to draw plot of genomic data 
 ```{r}
-source("https://bioconductor.org/biocLite.R")
-biocLite("ggbio")
-library(ggbio)
 data(hg19IdeogramCyto, package = "biovizBase")
 head(hg19IdeogramCyto)
 getOption("biovizBase")$cytobandColor
@@ -72,8 +66,42 @@ gffRangeData <- import.gff("~/Desktop/Brassica_project/IGV_file/Brassica_napus.a
 gffRangeData
 gff<-as(gffRangeData, "GRanges")
 test <- head(gff, 50000)
-autoplot(test, layout = "karyogram", aes(color = type))  
+autoplot(test, layout = "karyogram", aes(color = strand))  
 ``` 
 
+### draw similar plot for the overlay with sinificant loci and fatty acid genes 
+```{r}
+# import Grange data of B.napus 
+gff.mRNA <- read.table("~/Desktop/Brassica_project/IGV_file/gff.mRNA")
+gff.mRNA
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
 
+# import fatty acid genes info (based on GO and IPR info)
+lipid_fatty_acid_genes <- read.table("lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
+lipid_fatty_acid_genes %>% dim()  # 7346 
+colnames(lipid_fatty_acid_genes) <- "name"
+
+lipid_fatty_acid_genes.2 <- 
+gff.mRNA %>% 
+  inner_join(lipid_fatty_acid_genes, by = "name") %>% 
+  mutate(name = "lipid_fatty_acid_genes")
+
+lipid_fatty_acid_genes.2 %>% dim() # 7346    4 
+
+SNP.Erucic.Oleic.2 <-  
+SNP.Erucic.Oleic.unique %>% 
+  mutate(start = POS, end = POS, name = "SNP") %>% 
+  dplyr::select(-POS)
+
+lipid_fatty_acid_genes.Erucic_Oleic <- 
+rbind(lipid_fatty_acid_genes.2, SNP.Erucic.Oleic.2)
+
+gff.lipid_fatty_acid_genes.Erucic_Oleic <- GRanges(seqnames = Rle(lipid_fatty_acid_genes.Erucic_Oleic$CHROM),ranges = IRanges(start = lipid_fatty_acid_genes.Erucic_Oleic$start, end = lipid_fatty_acid_genes.Erucic_Oleic$end), names = lipid_fatty_acid_genes.Erucic_Oleic$name)
+ 
+gff.lipid_fatty_acid_genes
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names))
+# this plot shows that if just looking at all lipid and fatty acid genes, there are so many that not meaningful to check the result 
+
+
+```
 
