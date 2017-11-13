@@ -7,18 +7,29 @@ Purpose of this script is to
 1) visualize how fatty acid biosynthesis and metabolic related genes overlay with the significant SNPs that I identified from QTL and GWAS analysis. 
 2) visualize how previous identified loci overlay with the significant SNPs and loci that I identified from GWAS and QTL analysis. 
 
+### import lib
+```{r}
+library(tidyverse)
+library(IRanges)
+library(GenomicRanges)
+library(GenomicFeatures)
+library("rtracklayer")
+```
+
 ### import GWAS and QTL analysis CIM result 
 ```{r}
+setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/overlay/")
+
 # QTL result 
-load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
-load("~/F2/output/QTL_analysis/cim.perm.43traits.Rdata")
+load("cim.qtl.43traits.Rdata")
+load("cim.perm.43traits.Rdata")
 cim.qtl.sig.Erucic <- cim.qtl$Erucic_acid[cim.qtl$Erucic_acid$lod > cim.perm$Erucic_acid,]
 cim.qtl.sig.Oleic <- cim.qtl$Oleic_acid[cim.qtl$Oleic_acid$lod > cim.perm$Oleic_acid,]
 
 # GWAS result 
-Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+Erucic_acid <- read.csv("GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
-Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Oleic_acid.GWAS.Results.csv", header = T) 
+Oleic_acid <- read.csv("GAPIT..Oleic_acid.GWAS.Results.csv", header = T) 
 
 Erucic_Oleic <- rbind(Erucic_acid, Oleic_acid)
 
@@ -39,16 +50,30 @@ SNP.Erucic.Oleic
 
 # import fatty acid genes info (based on GO and IPR info)
 ```{r}
-lipid_fatty_acid_genes <- read.table("~/Reference/B.napus/fatty_acid_related/lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
+lipid_fatty_acid_genes <- read.table("lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
 lipid_fatty_acid_genes %>% dim()  # 7346 
-
-View(lipid_fatty_acid_genes) 
 ```
 
+### demo of simple example on how to use ggbio to draw plot of genomic data 
 ```{r}
-install.packages("ggbio")
+source("https://bioconductor.org/biocLite.R")
+biocLite("ggbio")
 library(ggbio)
 data(hg19IdeogramCyto, package = "biovizBase")
 head(hg19IdeogramCyto)
-```
+getOption("biovizBase")$cytobandColor
+autoplot(hg19IdeogramCyto, layout = "karyogram", cytoband = TRUE)
+
+library(GenomicRanges)
+hg19 <- keepSeqlevels(hg19IdeogramCyto, paste0("chr", c(1:22, "X", "Y")))
+head(hg19)
+autoplot(hg19, layout = "karyogram", cytoband = TRUE) 
+gffRangeData <- import.gff("~/Desktop/Brassica_project/IGV_file/Brassica_napus.annotation_v5.gff3")
+gffRangeData
+gff<-as(gffRangeData, "GRanges")
+test <- head(gff, 50000)
+autoplot(test, layout = "karyogram", aes(color = type))  
+``` 
+
+
 
