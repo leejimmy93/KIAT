@@ -46,7 +46,8 @@ View(lipid_fatty_acid_genes)
 ```
 
 ```{r}
-install.packages("ggbio")
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("ggbio")
 library(ggbio)
 data(hg19IdeogramCyto, package = "biovizBase")
 head(hg19IdeogramCyto)

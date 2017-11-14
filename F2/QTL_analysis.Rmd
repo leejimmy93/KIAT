@@ -7,8 +7,7 @@ output:
     keep_md: yes
 ---
 
-Goal of this project: to map QTL using the genetic map that I constructed from F2 mapping population created from Da-Ae & Da-Ol-1 
-
+Goal of this project: to map QTL using the genetic map that I constructed from F2 mapping population created from Da-Ae & Da-Ol-1  
 ```{r}
 library(tidyverse)
 library(qtl)
@@ -207,8 +206,7 @@ save(scanone.imp, file = "~/F2/output/QTL_analysis/scanone.imp.43traits")
 ```
 
 ### cim mapping (composite interval mapping)
-a more sophisticated model is to use the most significant markers as covariates during a 1D scan.  This is known as composite interval mapping (CIM) and is implmented using the function cim 
-
+a more sophisticated model is to use the most significant markers as covariates during a 1D scan.  This is known as composite interval mapping (CIM) and is implmented using the function cim  
 ```{r}
 cim.qtl <- 
 lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
@@ -383,8 +381,7 @@ lapply(names(scanone.imp), function(trait) {
 })
 
 names(cim.qtl.result) <- names(cim.qtl)
-names(im.qtl.result) <- names(scanone.imp)
-
+names(im.qtl.result) <- names(scanone.imp) 
 ``` 
 
 ### 2D scan
@@ -399,7 +396,7 @@ The above methods only evaluate the evidence for a QTL one location a time.  It 
 # scp result to whitney
 # QTL result 
 load("~/F2/output/scantwo/scantwo.imp.v2.Rdata")
-plot(scantwo.imp[[1]], chr=2) 
+plot(scantwo.imp[[1]], chr=3) 
 scantwo.imp.42traits <- scantwo.imp 
 
 load("~/F2/output/scantwo/scantwo.imp.v2.bolting_to_flowering.Rdata")
