@@ -7,18 +7,32 @@ Purpose of this script is to
 1) visualize how fatty acid biosynthesis and metabolic related genes overlay with the significant SNPs that I identified from QTL and GWAS analysis. 
 2) visualize how previous identified loci overlay with the significant SNPs and loci that I identified from GWAS and QTL analysis. 
 
+### import lib
+```{r}
+library(tidyverse)
+library(IRanges)
+library(GenomicRanges)
+library(GenomicFeatures)
+library("rtracklayer")
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("ggbio")
+library(ggbio) 
+```
+
 ### import GWAS and QTL analysis CIM result 
 ```{r}
+setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/overlay/")
+
 # QTL result 
-load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
-load("~/F2/output/QTL_analysis/cim.perm.43traits.Rdata")
+load("cim.qtl.43traits.Rdata")
+load("cim.perm.43traits.Rdata")
 cim.qtl.sig.Erucic <- cim.qtl$Erucic_acid[cim.qtl$Erucic_acid$lod > cim.perm$Erucic_acid,]
 cim.qtl.sig.Oleic <- cim.qtl$Oleic_acid[cim.qtl$Oleic_acid$lod > cim.perm$Oleic_acid,]
 
 # GWAS result 
-Erucic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+Erucic_acid <- read.csv("GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
-Oleic_acid <- read.csv("~/505/output/myGAPIT/late_silique_131_sample/filter_by_het/GAPIT..Oleic_acid.GWAS.Results.csv", header = T) 
+Oleic_acid <- read.csv("GAPIT..Oleic_acid.GWAS.Results.csv", header = T) 
 
 Erucic_Oleic <- rbind(Erucic_acid, Oleic_acid)
 
@@ -37,19 +51,122 @@ dim(SNP.Erucic.Oleic.unique) # 235 2
 SNP.Erucic.Oleic 
 ```
 
-# import fatty acid genes info (based on GO and IPR info)
+### demo of simple example on how to use ggbio to draw plot of genomic data 
 ```{r}
-lipid_fatty_acid_genes <- read.table("~/Reference/B.napus/fatty_acid_related/lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
-lipid_fatty_acid_genes %>% dim()  # 7346 
+data(hg19IdeogramCyto, package = "biovizBase")
+head(hg19IdeogramCyto)
+getOption("biovizBase")$cytobandColor
+autoplot(hg19IdeogramCyto, layout = "karyogram", cytoband = TRUE)
 
-View(lipid_fatty_acid_genes) 
+library(GenomicRanges)
+hg19 <- keepSeqlevels(hg19IdeogramCyto, paste0("chr", c(1:22, "X", "Y")))
+head(hg19)
+autoplot(hg19, layout = "karyogram", cytoband = TRUE) 
+gffRangeData <- import.gff("~/Desktop/Brassica_project/IGV_file/Brassica_napus.annotation_v5.gff3")
+gffRangeData
+gff<-as(gffRangeData, "GRanges")
+test <- head(gff, 50000)
+autoplot(test, layout = "karyogram", aes(color = strand))  
+``` 
+
+### draw similar plot for the overlay with sinificant loci and fatty acid genes 
+```{r}
+# import Grange data of B.napus 
+gff.mRNA <- read.table("~/Desktop/Brassica_project/IGV_file/gff.mRNA")
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+
+# import fatty acid genes info (based on GO and IPR info)
+lipid_fatty_acid_genes <- read.table("lipid_fatty_acid_genes", header = F, stringsAsFactors = FALSE)
+lipid_fatty_acid_genes %>% dim()  # 7346 
+colnames(lipid_fatty_acid_genes) <- "name"
+
+lipid_fatty_acid_genes.2 <- 
+gff.mRNA %>% 
+  inner_join(lipid_fatty_acid_genes, by = "name") %>% 
+  mutate(name = "lipid_fatty_acid_genes")
+
+lipid_fatty_acid_genes.2 %>% dim() # 7346    4 
+
+SNP.Erucic.Oleic.2 <-  
+SNP.Erucic.Oleic.unique %>% 
+  mutate(start = POS, end = POS, name = "SNP") %>% 
+  dplyr::select(-POS)
+
+lipid_fatty_acid_genes.Erucic_Oleic <- 
+rbind(lipid_fatty_acid_genes.2, SNP.Erucic.Oleic.2)
+
+gff.lipid_fatty_acid_genes.Erucic_Oleic <- GRanges(seqnames = Rle(lipid_fatty_acid_genes.Erucic_Oleic$CHROM),ranges = IRanges(start = lipid_fatty_acid_genes.Erucic_Oleic$start, end = lipid_fatty_acid_genes.Erucic_Oleic$end), names = lipid_fatty_acid_genes.Erucic_Oleic$name)
+ 
+gff.lipid_fatty_acid_genes
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names))
+# this plot shows that if just looking at all lipid and fatty acid genes, there are so many that not meaningful to check the result 
+
+###### now just focus on fatty acid biosynthesis pathways genes (GO:0006633)
+# fatty_acid_gene_index <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_biosynthesis_genes_ID.txt", header = F)
+# head(fatty_acid_gene_index)
+# nrow(fatty_acid_gene_index) # 248 
+# rownames(fatty_acid_gene_index) <- fatty_acid_gene_index$V1
+# 
+# # extract only fatty acid genes from dataset 
+# fatty.acid.genes <- (merge(parent.read.count.one.small, fatty_acid_gene_index, by="row.names"))[,1:28]
+# head(fatty.acid.genes)
+# rownames(fatty.acid.genes) <- fatty.acid.genes$Row.names
+# fatty.acid.genes <- fatty.acid.genes[,-1]
+# dim(fatty.acid.genes) # 207 27
+# fatty.acid.genes$total <- rowSums(fatty.acid.genes)
+# dim(fatty.acid.genes)
 ```
 
+# sessioninfo
 ```{r}
+<<<<<<< HEAD
 # source("https://bioconductor.org/biocLite.R")
 # biocLite("ggbio")
 library(ggbio)
 data(hg19IdeogramCyto, package = "biovizBase")
 head(hg19IdeogramCyto)
+=======
+# sessionInfo() 
+# R version 3.2.4 (2016-03-10)
+# Platform: x86_64-apple-darwin13.4.0 (64-bit)
+# Running under: OS X 10.12.6 (unknown)
+# 
+# locale:
+# [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+# 
+# attached base packages:
+# [1] stats4    parallel  stats     graphics  grDevices utils     datasets  methods   base     
+# 
+# other attached packages:
+#  [1] dplyr_0.7.4             purrr_0.2.4             readr_1.1.1            
+#  [4] tidyr_0.7.2             tibble_1.3.4            ggplot2_2.2.1          
+#  [7] tidyverse_1.1.1         devtools_1.13.4         rtracklayer_1.30.4     
+# [10] GenomicFeatures_1.22.13 AnnotationDbi_1.32.3    Biobase_2.30.0         
+# [13] GenomicRanges_1.22.4    GenomeInfoDb_1.6.3      IRanges_2.4.8          
+# [16] S4Vectors_0.8.11        BiocGenerics_0.16.1    
+# 
+# loaded via a namespace (and not attached):
+#  [1] httr_1.3.1                 bit64_0.9-7                jsonlite_1.5              
+#  [4] modelr_0.1.1               assertthat_0.2.0           blob_1.1.0                
+#  [7] cellranger_1.1.0           Rsamtools_1.22.0           RSQLite_2.0               
+# [10] lattice_0.20-35            glue_1.2.0                 digest_0.6.12             
+# [13] XVector_0.10.0             rvest_0.3.2                colorspace_1.3-2          
+# [16] plyr_1.8.4                 psych_1.7.8                XML_3.98-1.9              
+# [19] pkgconfig_2.0.1            broom_0.4.2                biomaRt_2.26.1            
+# [22] haven_1.1.0                zlibbioc_1.16.0            scales_0.5.0              
+# [25] BiocParallel_1.4.3         withr_2.1.0                SummarizedExperiment_1.0.2
+# [28] lazyeval_0.2.1             mnormt_1.5-5               magrittr_1.5              
+# [31] crayon_1.3.4               readxl_1.0.0               memoise_1.1.0             
+# [34] nlme_3.1-131               forcats_0.2.0              xml2_1.1.1                
+# [37] foreign_0.8-69             tools_3.2.4                hms_0.3                   
+# [40] stringr_1.2.0              munsell_0.4.3              lambda.r_1.2              
+# [43] bindrcpp_0.2               Biostrings_2.38.4          rlang_0.1.4               
+# [46] futile.logger_1.4.3        grid_3.2.4                 RCurl_1.95-4.8            
+# [49] rstudioapi_0.7             bitops_1.0-6               gtable_0.2.0              
+# [52] curl_3.0                   DBI_0.7                    reshape2_1.4.2            
+# [55] R6_2.2.2                   GenomicAlignments_1.6.3    lubridate_1.7.1           
+# [58] knitr_1.17                 bit_1.1-12                 bindr_0.1                 
+# [61] futile.options_1.0.0       stringi_1.1.5              Rcpp_0.12.13  
+>>>>>>> 6ac86ad39b5c2b820d2cc4d473ac40c4b8b8c673
 ```
 
