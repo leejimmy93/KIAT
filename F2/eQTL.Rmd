@@ -328,7 +328,6 @@ summaryMap(LG.f2.after.crossover) # 2853
 # fix LG10 problem using ripple 
 set.seed(16)
 LG.f2.after.crossover <- orderMarkers(LG.f2.after.crossover, chr = c(10), 
-	                        window = 5, use.ripple = TRUE, maxit = 4000, 
 	                        error.prob = 0.0001, verbose = T) 
 
 plotMap(LG.f2.after.crossover, chr = '10')
@@ -367,6 +366,14 @@ lod.thres <- median(unlist(eQTL_result[[11]])) # 95% percentile as the threshold
 lod.thres # [1] 4.159691 
 
 plot(eQTL_result[[3]]$BnaA08g12780D,bandcol="gray90", main="BnaA08g12780D") # looks good 
+plot(eQTL_result[[9]]$BnaA08g11140D,bandcol="gray90", main="BnaA08g11140D") # looks good
+plot(eQTL_result[[9]]$BnaA08g11130D,bandcol="gray90", main="BnaA08g11130D") # looks good
+abline(h=lod.thres,lty=2) 
+
+plot(eQTL_result[[7]]$BnaC03g65980D,bandcol="gray90", main="BnaC03g65980D") # looks good
+abline(h=lod.thres,lty=2) 
+
+"BnaA08g11140D" %in% eQTL_result[[2]] 
 
 # get all eQTL based on this threshold 
 system.time(

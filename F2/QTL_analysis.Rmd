@@ -257,7 +257,7 @@ load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits")
 load("~/F2/output/QTL_analysis/scanone.imp.43traits")
 load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
 load("~/F2/output/QTL_analysis/cim.perm.43traits.Rdata")
-# load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
+load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
 
 plot(cim.qtl[[1]], chr="C09")  
 colnames(LG.f2.after.crossover$pheno)
@@ -382,133 +382,6 @@ lapply(names(scanone.imp), function(trait) {
 
 names(cim.qtl.result) <- names(cim.qtl)
 names(im.qtl.result) <- names(scanone.imp) 
-``` 
-
-### 2D scan
-The above methods only evaluate the evidence for a QTL one location a time.  It is possible to instead scan two locations at once. This can be particularly advantageous in identifying QTL if there is epistasis.
-```{r}
-# running scantwo analysis and permutation seprately
-# 1) scantwo analysis on cabernet 
-# https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scantwo_v2.R 
-
-# scantwo permutation 100 times for 43 traits, split traits file so that each file has 2 traits, in total 20 files, and each run is only 10 permutation, combine permutation result after finish running. 
-
-# scp result to whitney
-# QTL result 
-load("~/F2/output/scantwo/scantwo.imp.v2.Rdata")
-plot(scantwo.imp[[1]], chr=3) 
-scantwo.imp.42traits <- scantwo.imp 
-
-load("~/F2/output/scantwo/scantwo.imp.v2.bolting_to_flowering.Rdata")
-plot(scantwo.imp, chr = 3) 
-
-# permutation result for Erucic acid and Oleic acid 
-# load data 
-path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Erucic_Oleic"
-files <- list.files(path=path)
-setwd(path)
-scantwo_perm_Erucic_Oleic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
-
-# Oleic acid permutation data
-scantwo_perm_Erucic_Oleic.t <- transpose(scantwo_perm_Erucic_Oleic) 
-scantwo_perm_Oleic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[1]])
-scantwo_perm_Erucic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[2]])
-
-#there are many different models being considered in the 2D models.  
-#The LOD scores reflect the following comparisons
-#columns:
-  #full 2 QTL w/ interaction vs. null model
-  #fv1 2 QTL w/ interaction vs 1 QTL
-  #int 2 QTL w/interaction vs 2 QTL additive. (test for interaction)
-  #add 2 QTL additive vs null model
-  #av1 2 QTL additive vs 1 QTL (test for 2nd QTL if additive)
-  #one 1 QTL model vs null
-
-summary(clean(scantwo.imp.42traits[["Erucic_acid"]]),perm = scantwo_perm_Erucic, pvalues=T) %>% 
-  head()
-
-plot(scantwo.imp.42traits[["Oleic_acid"]], upper = "int", lower = "av1", main = "Oleic_acid_int_av1")
-
-summary(scantwo.imp.42traits[["Oleic_acid"]], thresholds = c(12.3, 9.45, 7.95, 7.37, 4.98)) # signal for interaction of the two spots
-
-summary(scantwo.imp.42traits[["Erucic_acid"]], thresholds = c(10.28, 8.08, 6.99, 7.30, 4.33)) # signal for just additive 
-
-# review previous result 
-### load scanone/cim/scantwo result 
-summary(scantwo.imp.42traits[["Erucic_acid"]],perm=scantwo_perm_Erucic,alpha=.05,pval=T)
-
-#create an object to hold QTL of interest
-qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(72.3, 34.9)) # Ruijuan: QTL with interactions
-### Ruijuan: position from additive model if no interaction identified 
-
-qtlm.Erucic
-
-#make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
-qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1 + Q2 ,get.ests=T)
-### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
-
-#examine our model
-summary(qtl.fit.Erucic) # not supported...???
-
-# test on Oleic acid 
-summary(scantwo.imp.42traits[["Oleic_acid"]],perm=scantwo_perm_Oleic,alpha=.05,pval=T)
-qtlm.Oleic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(72.3, 29.2))  
-qtlm.Oleic
-qtl.fit.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Oleic,formula = y ~ Q1 + Q2 ,get.ests=T)
-summary(qtl.fit.Oleic) # not supported either???
-
-#are all of the QTL well supported?  If not, make simpler model using the dropfromqtl() function ... omit some code... 
-
-#we can now ask if all qtls are at their most likely positions
-#this also provides a nice map
-qtl.refine.Erucic <- refineqtl(LG.f2.after.crossover,
-                        qtl=qtlm.Erucic,
-                        formula= y ~ Q1 + Q2)
-#you can see from the LOD scores that the new model is not much better than the old model.  Nevertheless we can keep this as our new model
-
-#positions can be plotted on the map
-plot(qtl.refine.Erucic)
-#or showing lod scores
-plotLodProfile(qtl.refine.Erucic)
-
-#we can test for interactions specifically among these loci
-addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic) # no evidence for interactions
-
-#we can scan the genome for additional QTL to add to this model
-qtl.add.Erucic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
-summary(qtl.add.Erucic)
-plot(qtl.add.Erucic) # Ruijuan: scanone threshold 2.61 
-#EXERCISE 10
-#Do you think any of these should be added?  If so why? (Hint: review the scanone permuation threshold).
-
-#Excercise 11
-#If you think new QTL should be added, do so, using addtoqtl()
-qtlm2 <- addtoqtl(data.qtl,qtl.refine,chr=c("1","5"),
-                         pos=c(5,100))
-summary(qtlm2)
-
-#refine the positions of our new model
-qtl.refine2 <- refineqtl(data.qtl,qtl=qtlm2,
-                         formula = y ~ Q1 + Q2 + Q3 + Q4 + Q5 + Q6)
-
-#now look at a summary of the new model
-summary(qtl.refine2)
-plot(qtl.refine2)
-plotLodProfile(qtl.refine2)
-
-#at this point we will do a final fit and summary of that fit
-#(although you could repeat looking for interactions)
-qtl.fit2 <- fitqtl(data.qtl,qtl=qtl.refine2,get.ests=T)
-summary(qtl.fit2) # 48% phenotypic variance explained ??? 
-## Ruijuan added below 
-summary(qtl.fit) # 46% phenotypic variance explained ??? 
-
-#EXERCISE 12: are all of the QTL supported? # Ruijuan: YES 
-#is more phenotypic variance explained than in the first model? # Ruijuan: 
-
-#EXERCISE 13: What is the QTL with the largest effect?  Do all QTL act in the same direction?
-# Ruijuan: 1@114.0 is the QTL with the largest effect. no, 1@114.0 act in a different direction. 
-
 ``` 
 
 ### find significant SNPs for certain trait and design primers 
