@@ -15,7 +15,7 @@ scanone and cim only evaluate the evidence for a QTL one location a time.  It is
 
 # scp result to whitney
 # QTL result 
-load("~/F2/output/scantwo/scantwo.imp.v2.Rdata")
+load("~/F2/output/scantwo/scantwo.imp.Rdata")
 plot(scantwo.imp[[2]], chr=3) 
 scantwo.imp.42traits <- scantwo.imp 
 
@@ -39,9 +39,11 @@ summary(scantwo_perm_Oleic)
 summary(clean(scantwo.imp.42traits[["Erucic_acid"]]),perm = scantwo_perm_Erucic, pvalues=T) %>% 
   head()
 
-plot(scantwo.imp.42traits[["Oleic_acid"]], upper = "int", lower = "av1", main = "Oleic_acid_int_av1")
+plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_int_full")
+plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_int_fv1", lower = "fv1") 
+plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_add_fv1", upper = "add", lower = "fv1") 
 
-summary(scantwo.imp.42traits[["Oleic_acid"]], thresholds = c(12.3, 9.45, 7.95, 7.37, 4.98)) # signal for interaction of the two spots
+# summary(scantwo.imp.42traits[["Oleic_acid"]], thresholds = c(12.3, 9.45, 7.95, 7.37, 4.98)) # signal for interaction of the two spots
 
 summary(scantwo.imp.42traits[["Erucic_acid"]], thresholds = c(10.28, 8.08, 6.99, 7.30, 4.33)) # signal for just additive 
 
@@ -51,25 +53,24 @@ load("~/F2/output/QTL_analysis/scanone.imp.43traits")
 load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
 summary(scanone.imp[["Erucic_acid"]])
 summary(cim.qtl[["Erucic_acid"]])
-summary(scantwo.imp.42traits[["Erucic_acid"]],perm=scantwo_perm_Erucic,alpha=.05,pval=T)
+summary(scantwo.imp.42traits[["Erucic_acid"]],perm=scantwo_perm_Erucic,alpha=c(.05, .05, .05, .05, .05),pval=T) 
 
 #create an object to hold QTL of interest
-load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
-names(LG.f2.after.crossover$geno) <- 1:19
-LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.Rdata")
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+# LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 
-qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c(8, 13),pos=c(73, 30)) # Ruijuan: QTL with interactions
+qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c(8, 13),pos=c(73, 30), what = "prob") # Ruijuan: QTL with interactions
 ### Ruijuan: position from additive model if no interaction identified 
 
-qtlm.Erucic
+qtlm.Erucic # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno(). 
 
 #make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
-qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1 + Q2 ,get.ests=T)
+qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1 + Q2, get.ests=T, method = "hk")
 ### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
 
 #examine our model
-summary(qtl.fit.Erucic) # not supported...???
+summary(qtl.fit.Erucic) # not supported...??? 
 
 # test on Oleic acid 
 summary(scantwo.imp.42traits[["Oleic_acid"]],perm=scantwo_perm_Oleic,alpha=.05,pval=T)
@@ -131,3 +132,13 @@ summary(qtl.fit) # 46% phenotypic variance explained ???
 # Ruijuan: 1@114.0 is the QTL with the largest effect. no, 1@114.0 act in a different direction. 
 
 ```  
+
+# test on other traits, 
+```{r}
+summary(scantwo.imp.42traits[["days_to_bolt"]], thresholds = c(2.3, 5.45, 6.95, 4.37, 2.98)) # signal for interaction of the two spots
+qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c(10, 16),pos=c(176, 83))
+qtlm.Erucic # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno().
+qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1, get.ests=T)
+summary(qtl.fit.Erucic) # not supported...???   
+```
+
