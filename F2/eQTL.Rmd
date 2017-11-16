@@ -367,10 +367,9 @@ lod.thres # [1] 4.159691
 
 plot(eQTL_result[[3]]$BnaA08g12780D,bandcol="gray90", main="BnaA08g12780D") # looks good 
 plot(eQTL_result[[9]]$BnaA08g11140D,bandcol="gray90", main="BnaA08g11140D") # looks good
-plot(eQTL_result[[9]]$BnaA08g11130D,bandcol="gray90", main="BnaA08g11130D") # looks good
+plot(eQTL_result[[9]]$BnaA08g11130D,bandcol="gray90", main="BnaA08g11130D") # as expected 
 abline(h=lod.thres,lty=2) 
-
-plot(eQTL_result[[7]]$BnaC03g65980D,bandcol="gray90", main="BnaC03g65980D") # looks good
+plot(eQTL_result[[7]]$BnaC03g65980D,bandcol="gray90", main="BnaC03g65980D") # as expected
 abline(h=lod.thres,lty=2) 
 
 "BnaA08g11140D" %in% eQTL_result[[2]] 
@@ -391,8 +390,20 @@ lapply(names(eQTL_result[1:10]), function(subset) {
 })
 ) # 20 sec  
 
-test <- do.call("rbind", tmp) 
+# test <- do.call("rbind", tmp) 
+# test2 <- do.call("rbind", test)
+
+####### re do # both the above two line code the code below work, but why the above works
+test <- list()
+for (subset in seq_along(tmp)){
+  test[[subset]] <- do.call("rbind", tmp[[subset]])
+}
+
+test[[10]] %>% dim()
+
 test2 <- do.call("rbind", test)
+dim(test2) 
+############# 
 
 # extract only SNP info 
 cis_trans_result <- test2[grepl("^chr", test2$snp_ID),]
@@ -428,21 +439,92 @@ cis_trans_result %>%
 # get snp & chrom ID & pos, as well as gene  
 cis_trans_result_2 %>% head()
 
-# determine cis- and trans- eQTL 
+# determine cis- and trans- eQTL only on chromosome 
 # e-traits (genes) which are not on the same chrom as SNPs are trans- 
-cis_trans_result_2$cis_trans <- ifelse(cis_trans_result_2$gene_chrom == cis_trans_result_2$snp_chrom, "cis", "trans")
-sum(cis_trans_result_2$cis_trans == "cis") # 492708 
+cis_trans_result_2$cis_trans <- ifelse(cis_trans_result_2$gene_chrom == cis_trans_result_2$snp_chrom, "cis_candidate", "trans")
+sum(cis_trans_result_2$cis_trans == "cis_candidate") # 492708 
 sum(cis_trans_result_2$cis_trans == "trans") # 236009 
 dim(cis_trans_result_2) # 728717     11 
 
-cis_trans_result_final <- cis_trans_result_2 
-save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_final.Rdata")
+save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_2.Rdata")
 
-length(unique(cis_trans_result_2[cis_trans_result_2$cis_trans == "cis",]$gene_ID)) # 11118 
-
+length(unique(cis_trans_result_2[cis_trans_result_2$cis_trans == "cis_candidate",]$gene_ID)) # 11118 
 length(unique(cis_trans_result_2[cis_trans_result_2$cis_trans == "trans",]$gene_ID)) # 13295   
+length(unique(cis_trans_result_2$gene_ID)) # 21823 
 
-length(unique(cis_trans_result_2$gene_ID))
+# use bayesint to find interval estimate of each gene --> for cis-eQTL 
+# for each cis-candidate gene --> if there are markers go above the threshold --> check to see if there are markers on the same chromsome as the gene --> if yes, do bayesint on the QTL result of that gene --> and extract the marker result rownames --> use the min as the start of the sig loci, and max as the end of the sig loci --> 
+cis_candidate <- unique(cis_trans_result_2[cis_trans_result_2$cis_trans == "cis_candidate",]$gene_ID)
+length(cis_candidate) # 11118 
+
+cis_candidate %>% head()
+sum(cis_candidate %in% names(eQTL_result[[1]]), 
+    cis_candidate %in% names(eQTL_result[[2]]),
+    cis_candidate %in% names(eQTL_result[[3]]),
+    cis_candidate %in% names(eQTL_result[[4]]),
+    cis_candidate %in% names(eQTL_result[[5]]),
+    cis_candidate %in% names(eQTL_result[[6]]),
+    cis_candidate %in% names(eQTL_result[[7]]),
+    cis_candidate %in% names(eQTL_result[[8]]),
+    cis_candidate %in% names(eQTL_result[[9]]),
+    cis_candidate %in% names(eQTL_result[[10]])) # 11118, correct 
+
+system.time(
+tmp.2 <- 
+lapply(names(eQTL_result[1:10]), function(subset) {
+  print(subset)
+  lapply(names(eQTL_result[[subset]])[names(eQTL_result[[subset]]) %in% cis_candidate], function(gene) {
+    sub = gsub("(Bna)(A|C)(01|02|03|04|05|06|07|08|09|10)([[:print:]]+)", "\\2", gene) 
+    chrom = gsub("(Bna)(A|C)(01|02|03|04|05|06|07|08|09|10)([[:print:]]+)", "\\3", gene)
+    chrom <- ifelse(sub == "A", as.numeric(as.character(chrom)), 10 + as.numeric(as.character(chrom)))
+    tmp1 <- bayesint(eQTL_result[[subset]][[gene]], chr = chrom, expandtomarkers = T)
+    tmp1 <- tmp1[grepl("^chr", rownames(tmp1)),] 
+    tmp1$gene_ID <- gene
+    tmp1$pos_2 <- gsub("([[:print:]]+)(_)([[:print:]])", "\\3", rownames(tmp1))
+    tmp1$loci_start <- min(tmp1$pos_2)
+    tmp1$loci_end <- max(tmp1$pos_2)
+    tmp1[1,c("gene_ID", "loci_start", "loci_end")] # the last item is the one that was returned
+    })
+}
+)
+) # 20 sec  
+
+# combine result 
+test3 <- list()
+for (subset in seq_along(tmp.2)){
+  test3[[subset]] <- do.call("rbind", tmp.2[[subset]]) 
+}
+
+test4 <- do.call("rbind", test3)
+dim(test4) # 1118 3 
+
+test4 %>% head()
+
+cis_candidate_2 <- cis_trans_result_2[cis_trans_result_2$cis_trans == "cis_candidate",]
+dim(cis_candidate_2) # 492708     11 
+cis_candidate_2 %>% head()
+
+cis_candidate_3 <- 
+cis_candidate_2 %>% 
+  left_join(test4, by = "gene_ID")
+
+cis_candidate_3 %>% head()
+dim(cis_candidate_3) # 492708     13 
+
+sum(cis_candidate_3$gene_start < cis_candidate_3$gene_end) # 492708
+sum(cis_candidate_3$loci_start < cis_candidate_3$loci_end) # 492708
+
+# use loci and gene start/end position to find cis-eQTL 
+cis_candidate_4 <- 
+cis_candidate_3 %>% 
+  filter((gene_start < loci_start && gene_end > loci_start) || 
+         (gene_start > loci_start && gene_end < loci_end) || 
+         (gene_start < loci_end && gene_end > loci_end)) 
+
+dim(cis_candidate_4)  
+
+
+
 ``` 
 
 

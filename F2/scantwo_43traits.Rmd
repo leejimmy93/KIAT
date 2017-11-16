@@ -15,7 +15,7 @@ scanone and cim only evaluate the evidence for a QTL one location a time.  It is
 
 # scp result to whitney
 # QTL result 
-load("~/F2/output/scantwo/scantwo.imp.Rdata")
+load("~/F2/output/scantwo/scantwo.imp.Erucic_Oleic.Rdata")
 plot(scantwo.imp[[2]], chr=3) 
 scantwo.imp.42traits <- scantwo.imp 
 
@@ -36,8 +36,7 @@ scantwo_perm_Erucic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[2]])
 summary(scantwo_perm_Erucic)
 summary(scantwo_perm_Oleic)
 
-summary(clean(scantwo.imp.42traits[["Erucic_acid"]]),perm = scantwo_perm_Erucic, pvalues=T) %>% 
-  head()
+# summary(clean(scantwo.imp.42traits[["Erucic_acid"]]),perm = scantwo_perm_Erucic, pvalues=T) %>% head()
 
 plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_int_full")
 plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_int_fv1", lower = "fv1") 
@@ -57,16 +56,17 @@ summary(scantwo.imp.42traits[["Erucic_acid"]],perm=scantwo_perm_Erucic,alpha=c(.
 
 #create an object to hold QTL of interest
 load("~/F2/output/scantwo/LG.f2.after.crossover.final.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Erucic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
-# LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 
-qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c(8, 13),pos=c(73, 30), what = "prob") # Ruijuan: QTL with interactions
+qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c(8, 13),pos=c(73, 30)) # Ruijuan: QTL with interactions
 ### Ruijuan: position from additive model if no interaction identified 
 
 qtlm.Erucic # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno(). 
 
 #make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
-qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1 + Q2, get.ests=T, method = "hk")
+qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1 + Q2, get.ests=T)
 ### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
 
 #examine our model
@@ -76,7 +76,7 @@ summary(qtl.fit.Erucic) # not supported...???
 summary(scantwo.imp.42traits[["Oleic_acid"]],perm=scantwo_perm_Oleic,alpha=.05,pval=T)
 qtlm.Oleic <- makeqtl(LG.f2.after.crossover,chr=c(8, 13),pos=c(72.3, 29.2))  
 qtlm.Oleic
-qtl.fit.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Oleic,formula = y ~ Q1 + Q2 ,get.ests=T)
+qtl.fit.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Oleic,formula = y ~ Q1 + Q2 ,get.ests=T) 
 summary(qtl.fit.Oleic) # not supported either???
 
 #are all of the QTL well supported?  If not, make simpler model using the dropfromqtl() function ... omit some code... 
@@ -133,12 +133,36 @@ summary(qtl.fit) # 46% phenotypic variance explained ???
 
 ```  
 
-# test on other traits, 
+# test on other traits
 ```{r}
 summary(scantwo.imp.42traits[["days_to_bolt"]], thresholds = c(2.3, 5.45, 6.95, 4.37, 2.98)) # signal for interaction of the two spots
 qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c(10, 16),pos=c(176, 83))
 qtlm.Erucic # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno().
 qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1, get.ests=T)
 summary(qtl.fit.Erucic) # not supported...???   
+```
+
+# marker effect 
+```{r}
+LG.f2.after.crossover$pheno[,1] <- LG.f2.after.crossover$pheno$Erucic_acid
+LG.f2.after.crossover$pheno
+
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover, step=1) 
+
+qtl <- makeqtl(LG.f2.after.crossover, chr=8, pos=72.3, what="prob") 
+out.fitqtl <- fitqtl(LG.f2.after.crossover, qtl=qtl, method="hk") 
+summary(out.fitqtl)  
+
+data(fake.f2) 
+fake.f2 <- calc.genoprob(fake.f2, step=1) 
+out <- scanone(fake.f2, method="hk") 
+max(out) 
+
+qtl <- makeqtl(fake.f2, chr=13, pos=28, what="prob") 
+out.fitqtl <- fitqtl(fake.f2, qtl=qtl, method="hk") 
+summary(out.fitqtl) 
+
+fake.f2$pheno %>% head() 
+
 ```
 
