@@ -169,7 +169,7 @@ plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
 plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison 
 ```    
 
-# deal with LG10 
+### deal with LG10 
 ```{r}
 load("~/F2/output/QTL_analysis/LG.f2.after.crossover_fatty_acid_lipid.Rdata")
 summaryMap(LG.f2.after.crossover) # 2853. 2
@@ -357,7 +357,7 @@ save(eQTL_result, file = "~/F2/data/eQTL_analysis/eQTL_result.Rdata")
 # for the result, 1st 10 are eQTL analysis result, 11 is the permuation result for 100 sampled genes.
 ```
 
-# determine cis- and trans- eQTL 
+### determine cis- and trans- eQTL 
 ```{r}
 load("~/F2/data/eQTL_analysis/eQTL_result.Rdata")
 
@@ -446,8 +446,6 @@ sum(cis_trans_result_2$cis_trans == "cis_candidate") # 492708
 sum(cis_trans_result_2$cis_trans == "trans") # 236009 
 dim(cis_trans_result_2) # 728717     11 
 
-save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_2.Rdata")
-
 length(unique(cis_trans_result_2[cis_trans_result_2$cis_trans == "cis_candidate",]$gene_ID)) # 11118 
 length(unique(cis_trans_result_2[cis_trans_result_2$cis_trans == "trans",]$gene_ID)) # 13295   
 length(unique(cis_trans_result_2$gene_ID)) # 21823 
@@ -481,8 +479,9 @@ lapply(names(eQTL_result[1:10]), function(subset) {
     tmp1 <- tmp1[grepl("^chr", rownames(tmp1)),] 
     tmp1$gene_ID <- gene
     tmp1$pos_2 <- gsub("([[:print:]]+)(_)([[:print:]])", "\\3", rownames(tmp1))
-    tmp1$loci_start <- min(tmp1$pos_2)
-    tmp1$loci_end <- max(tmp1$pos_2)
+    tmp1$loci_start <- min(as.numeric(tmp1$pos_2))
+    tmp1$loci_end <- max(as.numeric(tmp1$pos_2))
+    # tmp1$snp_ID <- rownames(tmp1)
     tmp1[1,c("gene_ID", "loci_start", "loci_end")] # the last item is the one that was returned
     })
 }
@@ -498,7 +497,7 @@ for (subset in seq_along(tmp.2)){
 test4 <- do.call("rbind", test3)
 dim(test4) # 1118 3 
 
-test4 %>% head()
+test4 %>% head() 
 
 cis_candidate_2 <- cis_trans_result_2[cis_trans_result_2$cis_trans == "cis_candidate",]
 dim(cis_candidate_2) # 492708     11 
@@ -512,7 +511,9 @@ cis_candidate_3 %>% head()
 dim(cis_candidate_3) # 492708     13 
 
 sum(cis_candidate_3$gene_start < cis_candidate_3$gene_end) # 492708
-sum(cis_candidate_3$loci_start < cis_candidate_3$loci_end) # 492708
+sum(cis_candidate_3$loci_start < cis_candidate_3$loci_end) # 490133
+cis_candidate_3$gene_start %>% class()
+cis_candidate_3$loci_start %>% class() 
 
 # use loci and gene start/end position to find cis-eQTL 
 cis_candidate_4 <- 
@@ -521,11 +522,40 @@ cis_candidate_3 %>%
          (gene_start > loci_start && gene_end < loci_end) || 
          (gene_start < loci_end && gene_end > loci_end)) 
 
-dim(cis_candidate_4)  
+dim(cis_candidate_4)    
 
-
-
+# get the final set of cis- and trans- eQTL, no change after refning, so just keep the original data, but change cis-candidate to cis
+cis_trans_result_2$cis_trans <- ifelse(cis_trans_result_2$cis_trans == "cis_candidate", "cis", "trans") 
+cis_trans_result_final <- cis_trans_result_2 
+View(cis_candidate_4)
+save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_final.Rdata")
 ``` 
+
+# make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position 
+```{r}
+load("~/F2/output/eQTL/cis_trans_result_final.Rdata")
+dim(cis_trans_result_final) # 728717     11 
+cis_trans_result_final %>% head() 
+View(cis_trans_result_final)
+
+cis_trans_result_final %>% 
+  filter(gene_chrom == "chrA06" && snp_chrom =="chrA06") %>% 
+  ggplot() + 
+  geom_point(mapping = aes(x = snp_pos, y = gene_start)) + 
+  facet_grid(~snp_chrom)
+
+colnames(cis_trans_result_final)
+
+cis_trans_result_final %>% 
+  filter(gene_chrom == "chrA06") %>% 
+  dplyr::select(snp_chrom) %>% 
+  unique()
+  
+cis_trans_result_final %>% dim()
+geom_
+
+
+```
 
 
 
