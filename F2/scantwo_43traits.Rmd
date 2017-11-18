@@ -24,7 +24,20 @@ names(scantwo.imp.43traits)[[43]] <- "bolting_to_flowering"
 
 length(scantwo.imp.43traits) # 43 
 
-######## start from here tonight... 
+# also load scanone & CIM result 
+load("~/F2/output/QTL_analysis/scanone.imp.43traits")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata") 
+
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.Rdata")
+names(LG.f2.after.crossover$geno)[1:10] <- paste("A", c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10"), sep = "")
+names(LG.f2.after.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04", "05", "06", "07", "08", "09"), sep = "") 
+save(LG.f2.after.crossover, file = "~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+```
+
+### Erucic acid & Oleic acid 
+```{r}
+######## start from here tonight...
+# Erucic acid 
 # permutation result for Erucic acid and Oleic acid import 
 # load data 
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Erucic_Oleic"
@@ -34,37 +47,38 @@ scantwo_perm_Erucic_Oleic <- sapply(files, function(x) mget(load(x)), simplify =
 
 # permutation data check 
 scantwo_perm_Erucic_Oleic.t <- transpose(scantwo_perm_Erucic_Oleic) 
-scantwo_perm_Oleic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[1]])
 scantwo_perm_Erucic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[2]])
 summary(scantwo_perm_Erucic)
-summary(scantwo_perm_Oleic)
 
-# summary(clean(scantwo.imp.42traits[["Erucic_acid"]]),perm = scantwo_perm_Erucic, pvalues=T) %>% head()
-
+png("~/F2/output/scantwo/figure/Erucic_scantwo_int_full.png", width=12, height=10, units="in", res=300)
 plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_int_full")
-plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_int_fv1", lower = "fv1") 
-plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_add_fv1", upper = "add", lower = "fv1") 
+dev.off()
 
-# summary(scantwo.imp.42traits[["Oleic_acid"]], thresholds = c(12.3, 9.45, 7.95, 7.37, 4.98)) # signal for interaction of the two spots
+png("~/F2/output/scantwo/figure/Erucic_scantwo_int_fv1.png", width=12, height=10, units="in", res=300)
+plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_int_fv1", lower = "fv1") 
+dev.off()
+
+png("~/F2/output/scantwo/figure/Erucic_scantwo_add_fv1.png", width=12, height=10, units="in", res=300)
+plot(scantwo.imp.42traits[["Erucic_acid"]], main = "Erucic_acid_add_fv1", upper = "add", lower = "fv1") 
+dev.off()
 
 summary(scantwo.imp.42traits[["Erucic_acid"]], thresholds = c(10.28, 8.08, 6.99, 7.30, 4.33)) # signal for just additive 
 
 # review previous result 
 ### load scanone/cim/scantwo result
-load("~/F2/output/QTL_analysis/scanone.imp.43traits")
-load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
 summary(scanone.imp[["Erucic_acid"]])
-summary(cim.qtl[["Erucic_acid"]])
+summary(cim.qtl[["Erucic_acid"]]) 
 summary(scantwo.imp.42traits[["Erucic_acid"]],perm=scantwo_perm_Erucic,alpha=c(.05, .05, .05, .05, .05),pval=T) 
 
+# load LG 
 #create an object to hold QTL of interest
-load("~/F2/output/scantwo/LG.f2.after.crossover.final.Rdata")
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
 LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Erucic_acid)
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
 
-qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c(8, 13),pos=c(73, 30)) # Ruijuan: QTL with interactions
-### Ruijuan: position from additive model if no interaction identified 
+qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 30)) # Ruijuan: QTL with interactions
+### position from additive model if no interaction identified 
 
 qtlm.Erucic # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno(). 
 
@@ -75,15 +89,6 @@ qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y
 #examine our model
 summary(qtl.fit.Erucic) # not supported...??? 
 
-# test on Oleic acid 
-summary(scantwo.imp.42traits[["Oleic_acid"]],perm=scantwo_perm_Oleic,alpha=.05,pval=T)
-qtlm.Oleic <- makeqtl(LG.f2.after.crossover,chr=c(8, 13),pos=c(72.3, 29.2))  
-qtlm.Oleic
-qtl.fit.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Oleic,formula = y ~ Q1 + Q2 ,get.ests=T) 
-summary(qtl.fit.Oleic) # not supported either???
-
-#are all of the QTL well supported?  If not, make simpler model using the dropfromqtl() function ... omit some code... 
-
 #we can now ask if all qtls are at their most likely positions
 #this also provides a nice map
 qtl.refine.Erucic <- refineqtl(LG.f2.after.crossover,
@@ -91,13 +96,50 @@ qtl.refine.Erucic <- refineqtl(LG.f2.after.crossover,
                         formula= y ~ Q1 + Q2)
 #you can see from the LOD scores that the new model is not much better than the old model.  Nevertheless we can keep this as our new model
 
+png("~/F2/output/scantwo/figure/Erucic_scantwo_result.png", width=20, height=10, units="in", res=300)
+par(mfrow=c(1,2)) 
 #positions can be plotted on the map
 plot(qtl.refine.Erucic)
 #or showing lod scores
-plotLodProfile(qtl.refine.Erucic)
+plotLodProfile(qtl.refine.Erucic) 
+dev.off()
 
 #we can test for interactions specifically among these loci
-addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic) # no evidence for interactions
+qtl.add.Erucic <- addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic) # no evidence for interactions
+summary(qtl.add.Erucic)
+
+qtl.add.Erucic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
+summary(qtl.add.Erucic)
+
+qtlm2.Erucic <- addtoqtl(LG.f2.after.crossover,qtl.refine.Erucic,chr=c("A08"),
+                         pos=c(91.0))
+
+summary(qtlm2.Erucic)
+
+#refine the positions of our new model
+qtl.refine2.Erucic <- refineqtl(LG.f2.after.crossover,qtl=qtlm2.Erucic,
+                         formula = y ~ Q1 + Q2 + Q3)
+
+summary(qtl.refine2.Erucic)
+qtl.fit2.Erucic <- fitqtl(LG.f2.after.crossover,qtl=qtl.refine2.Erucic,get.ests=T)
+summary(qtl.fit2.Erucic)
+######## add interaction.... 
+
+
+
+### Oleic acid 
+scantwo_perm_Oleic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[1]])
+
+# test on Oleic acid 
+summary(scantwo.imp.42traits[["Oleic_acid"]],perm=scantwo_perm_Oleic,alpha=.05,pval=T)
+qtlm.Oleic <- makeqtl(LG.f2.after.crossover,chr=c(8, 13),pos=c(72.3, 29.2))  
+qtlm.Oleic
+qtl.fit.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Oleic,formula = y ~ Q1 + Q2 ,get.ests=T) 
+summary(qtl.fit.Oleic) # not supported either???
+# summary(scantwo.imp.42traits[["Oleic_acid"]], thresholds = c(12.3, 9.45, 7.95, 7.37, 4.98)) # signal for interaction of the two spots
+
+#are all of the QTL well supported?  If not, make simpler model using the dropfromqtl() function 
+
 
 #we can scan the genome for additional QTL to add to this model
 qtl.add.Erucic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
@@ -135,6 +177,8 @@ summary(qtl.fit) # 46% phenotypic variance explained ???
 # Ruijuan: 1@114.0 is the QTL with the largest effect. no, 1@114.0 act in a different direction. 
 
 ```  
+
+
 
 # test on other traits
 ```{r}
