@@ -5,6 +5,8 @@ output: html_document
 
 ### 2D scan
 scanone and cim only evaluate the evidence for a QTL one location a time.  It is possible to instead scan two locations at once. This can be particularly advantageous in identifying QTL if there is epistasis. 
+
+### load data 
 ```{r}
 # running scantwo analysis and permutation seprately
 # 1) scantwo analysis on cabernet 
@@ -15,7 +17,7 @@ scanone and cim only evaluate the evidence for a QTL one location a time.  It is
 
 # scp result to whitney
 # QTL result 
-load("~/F2/output/scantwo/scantwo.imp.v2.Rdata")
+load("~/F2/output/scantwo/scantwo.imp.v2.Rdata") 
 scantwo.imp.42traits <- scantwo.imp 
 load("~/F2/output/scantwo/scantwo.imp.v2.bolting_to_flowering.Rdata")
 
@@ -68,7 +70,7 @@ summary(scantwo.imp.42traits[["Erucic_acid"]], thresholds = c(10.28, 8.08, 6.99,
 ### load scanone/cim/scantwo result
 summary(scanone.imp[["Erucic_acid"]])
 summary(cim.qtl[["Erucic_acid"]]) 
-summary(scantwo.imp.42traits[["Erucic_acid"]],perm=scantwo_perm_Erucic,alpha=c(.05, .05, .05, .05, .05),pval=T) 
+summary(scantwo.imp.42traits[["Erucic_acid"]],perm=scantwo_perm_Erucic,alpha=.05,pval=T)
 
 # load LG 
 #create an object to hold QTL of interest
@@ -96,6 +98,25 @@ qtl.refine.Erucic <- refineqtl(LG.f2.after.crossover,
                         formula= y ~ Q1 + Q2)
 #you can see from the LOD scores that the new model is not much better than the old model.  Nevertheless we can keep this as our new model
 
+#we can test for interactions specifically among these loci
+addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
+qtl.add.Erucic <- addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic) # evidence for interactions
+summary(qtl.add.Erucic)
+
+# scan the genome for additional QTL to add to this model 
+qtl.add.Erucic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
+summary(qtl.add.Erucic) # no additional QTL 
+
+# so the final model 
+qtl.fit2.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1 * Q2, get.ests=T)
+summary(qtl.fit2.Erucic) 
+
+# refine position
+qtl.refine2.Erucic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Erucic,
+                        formula= y ~ Q1 * Q2)
+
+# plot out 
 png("~/F2/output/scantwo/figure/Erucic_scantwo_result.png", width=20, height=10, units="in", res=300)
 par(mfrow=c(1,2)) 
 #positions can be plotted on the map
@@ -103,113 +124,66 @@ plot(qtl.refine.Erucic)
 #or showing lod scores
 plotLodProfile(qtl.refine.Erucic) 
 dev.off()
+save(qtl.fit2.Erucic, file = "~/F2/output/scantwo/qtl.fit2.Erucic.Rdata")
 
-#we can test for interactions specifically among these loci
-qtl.add.Erucic <- addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic) # no evidence for interactions
-summary(qtl.add.Erucic)
+# summary: two loci A08@72.9 and C03@30.0 with interaction 
 
-qtl.add.Erucic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
-summary(qtl.add.Erucic)
-
-qtlm2.Erucic <- addtoqtl(LG.f2.after.crossover,qtl.refine.Erucic,chr=c("A08"),
-                         pos=c(91.0))
-
-summary(qtlm2.Erucic)
-
-#refine the positions of our new model
-qtl.refine2.Erucic <- refineqtl(LG.f2.after.crossover,qtl=qtlm2.Erucic,
-                         formula = y ~ Q1 + Q2 + Q3)
-
-summary(qtl.refine2.Erucic)
-qtl.fit2.Erucic <- fitqtl(LG.f2.after.crossover,qtl=qtl.refine2.Erucic,get.ests=T)
-summary(qtl.fit2.Erucic)
-######## add interaction.... 
-
-
-
-### Oleic acid 
+################ Oleic acid ######################  
+# permutation result 
 scantwo_perm_Oleic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[1]])
+summary(scantwo_perm_Oleic)
 
-# test on Oleic acid 
+# plot 
+png("~/F2/output/scantwo/figure/Oleic_scantwo_int_full.png", width=12, height=10, units="in", res=300)
+plot(scantwo.imp.42traits[["Oleic_acid"]], main = "Oleic_acid_int_full")
+dev.off()
+
+png("~/F2/output/scantwo/figure/Oleic_scantwo_int_fv1.png", width=12, height=10, units="in", res=300)
+plot(scantwo.imp.42traits[["Oleic_acid"]], main = "Oleic_acid_int_fv1", lower = "fv1") 
+dev.off()
+
+png("~/F2/output/scantwo/figure/Oleic_scantwo_add_fv1.png", width=12, height=10, units="in", res=300)
+plot(scantwo.imp.42traits[["Oleic_acid"]], main = "Oleic_acid_add_fv1", upper = "add", lower = "fv1") 
+dev.off() 
+
+# look for siginificant loci 
+summary(scantwo.imp.42traits[["Oleic_acid"]], thresholds = c(12.3, 9.45, 7.95, 7.37, 4.98)) 
 summary(scantwo.imp.42traits[["Oleic_acid"]],perm=scantwo_perm_Oleic,alpha=.05,pval=T)
-qtlm.Oleic <- makeqtl(LG.f2.after.crossover,chr=c(8, 13),pos=c(72.3, 29.2))  
+
+# load map and make Oleic acid as the only phenotype 
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Oleic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+# object hold QTL of interest 
+qtlm.Oleic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 31))  
 qtlm.Oleic
-qtl.fit.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Oleic,formula = y ~ Q1 + Q2 ,get.ests=T) 
-summary(qtl.fit.Oleic) # not supported either???
-# summary(scantwo.imp.42traits[["Oleic_acid"]], thresholds = c(12.3, 9.45, 7.95, 7.37, 4.98)) # signal for interaction of the two spots
+qtl.fit.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Oleic,formula = y ~ Q1 * Q2 ,get.ests=T) 
+summary(qtl.fit.Oleic) 
 
-#are all of the QTL well supported?  If not, make simpler model using the dropfromqtl() function 
+# refine position
+qtl.refine.Oleic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Oleic,
+                        formula= y ~ Q1 * Q2)
 
+# scan the genome for additional QTL 
+qtl.add.Oleic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Oleic)
+summary(qtl.add.Oleic) # no additional loci 
 
-#we can scan the genome for additional QTL to add to this model
-qtl.add.Erucic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
-summary(qtl.add.Erucic)
-plot(qtl.add.Erucic) # Ruijuan: scanone threshold 2.61 
-#EXERCISE 10
-#Do you think any of these should be added?  If so why? (Hint: review the scanone permuation threshold).
-
-#Excercise 11
-#If you think new QTL should be added, do so, using addtoqtl()
-qtlm2 <- addtoqtl(data.qtl,qtl.refine,chr=c("1","5"),
-                         pos=c(5,100))
-summary(qtlm2)
-
-#refine the positions of our new model
-qtl.refine2 <- refineqtl(data.qtl,qtl=qtlm2,
-                         formula = y ~ Q1 + Q2 + Q3 + Q4 + Q5 + Q6)
-
-#now look at a summary of the new model
-summary(qtl.refine2)
-plot(qtl.refine2)
-plotLodProfile(qtl.refine2)
-
-#at this point we will do a final fit and summary of that fit
-#(although you could repeat looking for interactions)
-qtl.fit2 <- fitqtl(data.qtl,qtl=qtl.refine2,get.ests=T)
-summary(qtl.fit2) # 48% phenotypic variance explained ??? 
-## Ruijuan added below 
-summary(qtl.fit) # 46% phenotypic variance explained ??? 
-
-#EXERCISE 12: are all of the QTL supported? # Ruijuan: YES 
-#is more phenotypic variance explained than in the first model? # Ruijuan: 
-
-#EXERCISE 13: What is the QTL with the largest effect?  Do all QTL act in the same direction?
-# Ruijuan: 1@114.0 is the QTL with the largest effect. no, 1@114.0 act in a different direction. 
-
+# plot result 
+png("~/F2/output/scantwo/figure/Oleic_scantwo_result.png", width=20, height=10, units="in", res=300)
+par(mfrow=c(1,2)) 
+plot(qtl.refine.Oleic)
+plotLodProfile(qtl.refine.Oleic) 
+dev.off() 
+save(qtl.fit.Oleic, file = "~/F2/output/scantwo/qtl.fit.Oleic.Rdata")
+# summary: A08@72.3 and C03@31.0 with interaction  
 ```  
 
+### 
 
 
-# test on other traits
-```{r}
-summary(scantwo.imp.42traits[["days_to_bolt"]], thresholds = c(2.3, 5.45, 6.95, 4.37, 2.98)) # signal for interaction of the two spots
-qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c(10, 16),pos=c(176, 83))
-qtlm.Erucic # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno().
-qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1, get.ests=T)
-summary(qtl.fit.Erucic) # not supported...???   
-```
 
-# marker effect 
-```{r}
-LG.f2.after.crossover$pheno[,1] <- LG.f2.after.crossover$pheno$Erucic_acid
-LG.f2.after.crossover$pheno
 
-LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover, step=1) 
-
-qtl <- makeqtl(LG.f2.after.crossover, chr=8, pos=72.3, what="prob") 
-out.fitqtl <- fitqtl(LG.f2.after.crossover, qtl=qtl, method="hk") 
-summary(out.fitqtl)  
-
-data(fake.f2) 
-fake.f2 <- calc.genoprob(fake.f2, step=1) 
-out <- scanone(fake.f2, method="hk") 
-max(out) 
-
-qtl <- makeqtl(fake.f2, chr=13, pos=28, what="prob") 
-out.fitqtl <- fitqtl(fake.f2, qtl=qtl, method="hk") 
-summary(out.fitqtl) 
-
-fake.f2$pheno %>% head() 
-
-```
 
