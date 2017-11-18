@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ### 2D scan
-scanone and cim only evaluate the evidence for a QTL one location a time.  It is possible to instead scan two locations at once. This can be particularly advantageous in identifying QTL if there is epistasis.
+scanone and cim only evaluate the evidence for a QTL one location a time.  It is possible to instead scan two locations at once. This can be particularly advantageous in identifying QTL if there is epistasis. 
 ```{r}
 # running scantwo analysis and permutation seprately
 # 1) scantwo analysis on cabernet 
@@ -15,13 +15,16 @@ scanone and cim only evaluate the evidence for a QTL one location a time.  It is
 
 # scp result to whitney
 # QTL result 
-load("~/F2/output/scantwo/scantwo.imp.Erucic_Oleic.Rdata")
-plot(scantwo.imp[[2]], chr=3) 
+load("~/F2/output/scantwo/scantwo.imp.v2.Rdata")
 scantwo.imp.42traits <- scantwo.imp 
-
 load("~/F2/output/scantwo/scantwo.imp.v2.bolting_to_flowering.Rdata")
-plot(scantwo.imp, chr = 3) 
 
+scantwo.imp.43traits <- c(scantwo.imp.42traits, list(scantwo.imp))
+names(scantwo.imp.43traits)[[43]] <- "bolting_to_flowering"
+
+length(scantwo.imp.43traits) # 43 
+
+######## start from here tonight... 
 # permutation result for Erucic acid and Oleic acid import 
 # load data 
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Erucic_Oleic"
