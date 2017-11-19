@@ -181,8 +181,106 @@ save(qtl.fit.Oleic, file = "~/F2/output/scantwo/qtl.fit.Oleic.Rdata")
 # summary: A08@72.3 and C03@31.0 with interaction  
 ```  
 
-### 
+### Palmitoliec_aicd & Heptadecanoic_acid  
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Palmitoliec_Heptadecanoic/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_Palmitoliec_Heptadecanoic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
 
+# permutation data check 
+summary(do.call(c, scantwo_perm_Palmitoliec_Heptadecanoic)[,1])
+# Palmitoliec_aicd (160 permutations)
+#      full  fv1  int  add  av1  one
+# 5%  100.0 98.8 93.2 91.7 90.6 5.11
+# 10%  99.5 98.2 92.0 91.4 90.3 4.64 
+
+summary(scantwo.imp.42traits[["Palmitoliec_acid"]], thresholds = c(100.0, 98.8, 93.2, 91.7, 90.6)) # signal for just additive 
+
+# summary: no QTL 
+
+################ Heptadecanoic acid ######################  
+summary(do.call(c, scantwo_perm_Palmitoliec_Heptadecanoic)[,2])
+# Heptadecanoic_acid (160 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  38.3 36.7 29.7 23.9 22.2 5.21
+# 10% 36.2 34.1 27.4 21.4 20.1 4.53
+
+summary(scantwo.imp.42traits[["Heptadecanoic_acid"]], thresholds = c(38.3, 36.7, 29.7, 23.9, 22.2)) # signal for just additive 
+```
+
+### cis_11_Eicosenoic_acid & Linolenic_acid 
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/cis_11_Eicosenoic_Linolenic/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_cis_11_Eicosenoic_Linolenic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+# permutation data check 
+summary(do.call(c, scantwo_perm_cis_11_Eicosenoic_Linolenic)[,1])
+# cis_11_Eicosenoic_acid (160 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  67.1 65.9 48.2 31.8 30.4 4.91
+# 10% 52.9 51.9 42.6 28.7 27.6 4.20
+
+summary(scantwo.imp.42traits[["cis_11_Eicosenoic_acid"]], thresholds = c(67.1, 65.9, 48.2, 31.8, 30.4)) # signal for just additive 
+
+# summary: no QTL 
+
+################ Linolenic acid ######################  
+scantwo_perm_Linolenic <- do.call(c, scantwo_perm_cis_11_Eicosenoic_Linolenic)[,2]
+summary(scantwo_perm_Linolenic)
+# Linolenic_acid (160 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  13.3 10.9 9.00 8.36 5.96 3.96
+# 10% 12.5 10.4 8.43 7.53 5.57 3.84
+
+summary(scantwo.imp.42traits[["Linolenic_acid"]],perm=scantwo_perm_Linolenic,alpha=.05,pval=T)
+
+# load map and make Oleic acid as the only phenotype 
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linolenic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+# object hold QTL of interest 
+qtlm.Linolenic <- makeqtl(LG.f2.after.crossover,chr=c("A01", "C03", "A08", "C03"),pos=c(86, 39, 73, 36))  
+qtlm.Linolenic
+qtl.fit.Linolenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formula = y ~ Q1 + Q2 + Q3 + Q4 + Q3:Q4 ,get.ests=T) 
+summary(qtl.fit.Linolenic) 
+
+# drop one marker 
+qtlm.Linolenic <- dropfromqtl(qtlm.Linolenic,qtl.name="Q2")
+qtlm.Linolenic
+qtl.fit.Linolenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formula = y ~ Q1 + Q2 + Q3 + Q2:Q3) 
+summary(qtl.fit.Linolenic)
+
+# drop again 
+qtlm.Linolenic <- dropfromqtl(qtlm.Linolenic,qtl.name="Q1")
+qtlm.Linolenic
+qtl.fit.Linolenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formula = y ~ Q1 * Q2, get.ests = T) 
+summary(qtl.fit.Linolenic)
+
+# refine position 
+qtl.refine.Linolenic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Linolenic,
+                        formula= y ~ Q1 * Q2)
+
+# scan the genome for additional QTL 
+qtl.add.Linolenic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Linolenic)
+summary(qtl.add.Linolenic) # no additional loci
+
+# plot result 
+png("~/F2/output/scantwo/figure/Linolenic_scantwo_result.png", width=20, height=8, units="in", res=300)
+par(mfrow=c(1,2)) 
+plot(qtl.refine.Linolenic)
+plotLodProfile(qtl.refine.Linolenic) 
+dev.off() 
+save(qtl.fit.Linolenic, file = "~/F2/output/scantwo/qtl.fit.Linolenic.Rdata")
+# summary: A08@72.3 and C03@31.0 with interaction 
+```
+
+#### only work on traits with significant loci 
 
 
 
