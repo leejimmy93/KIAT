@@ -226,6 +226,7 @@ summary(do.call(c, scantwo_perm_cis_11_Eicosenoic_Linolenic)[,1])
 summary(scantwo.imp.42traits[["cis_11_Eicosenoic_acid"]], thresholds = c(67.1, 65.9, 48.2, 31.8, 30.4)) # signal for just additive 
 
 # summary: no QTL 
+### problematic dataset? 
 
 ################ Linolenic acid ######################  
 scantwo_perm_Linolenic <- do.call(c, scantwo_perm_cis_11_Eicosenoic_Linolenic)[,2]
@@ -333,39 +334,188 @@ qtl.refine.Stearic <- refineqtl(LG.f2.after.crossover,
                         formula= y ~ Q1 + Q2)
 
 # test for interaction 
-addint(LG.f2.after.crossover,qtl=qtl.refine.Stearic)
-
-# add interaction to the model 
-qtl.fit.Stearic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Stearic,formula = y ~ Q1 * Q2 ,get.ests=T) 
-summary(qtl.fit.Stearic) 
-
-# refine position
-qtl.refine.Stearic <- refineqtl(LG.f2.after.crossover,
-                        qtl=qtlm.Stearic,
-                        formula= y ~ Q1 * Q2) 
+addint(LG.f2.after.crossover,qtl=qtl.refine.Stearic) # no interaction 
 
 # test for additional loci 
 qtl.add.Stearic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Stearic)
-summary(qtl.add.Stearic)
+summary(qtl.add.Stearic) # chrC02_25271659 C02  59.1 6.016 
 
-
-########### 
-qtlm2.Stearic <- addtoqtl(data.qtl,qtl.refine,chr=c("1","5"),
-                         pos=c(5,100))
+qtlm2.Stearic <- addtoqtl(LG.f2.after.crossover,qtl.refine.Stearic,chr="C02", pos=59.1)
+summary(qtlm2.Stearic)
 
 # scan the genome for additional QTL 
-qtl.add.Stearic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Stearic)
-summary(qtl.add.Oleic) # no additional loci  
-```
+qtl.refine2.Stearic <- refineqtl(LG.f2.after.crossover,qtl=qtlm2.Stearic,
+                              formula = y ~ Q1 + Q2 + Q3)
 
+summary(qtl.refine2.Stearic) # no additional loci  
+
+qtl.fit2.Stearic <- fitqtl(LG.f2.after.crossover,qtl=qtl.refine2.Stearic,get.ests=T)
+summary(qtl.fit2.Stearic) 
+
+# plot result 
+png("~/F2/output/scantwo/figure/Stearic_scantwo_result.png", width=20, height=10, units="in", res=300)
+par(mfrow=c(1,2)) 
+plot(qtl.refine2.Stearic)
+plotLodProfile(qtl.refine2.Stearic) 
+dev.off() 
+save(qtl.fit2.Stearic, file = "~/F2/output/scantwo/qtl.fit2.Stearic.Rdata")
+# summary: A08@72.3 and C03@31.0 with interaction  
 
 ### Vaccenic_acid
+scantwo_perm_vaccenic <- do.call(c, scantwo_perm_Stearic_vaccenic)[,2]
+summary(scantwo_perm_vaccenic)
+# vaccenic_acid (112 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  29.7 28.2 25.6 25.3 24.1 4.32
+# 10% 29.5 27.9 25.1 24.7 23.5 3.65
+
+summary(scantwo.imp.42traits[["vaccenic_acid"]],perm=scantwo_perm_vaccenic,alpha=.05,pval=T)
+
+# load map and make Oleic acid as the only phenotype 
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$vaccenic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+# object hold QTL of interest 
+qtlm.vaccenic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "A08"),pos=c(70, 73))  
+qtlm.vaccenic
+qtl.fit.vaccenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.vaccenic,formula = y ~ Q1 * Q2 ,get.ests=T) # wierd, cannot add interaction 
+# Error in solve.default(t(Z) %*% Z, t(Z) %*% X) : 
+#   system is computationally singular: reciprocal condition number = 4.20223e-18
+summary(qtl.fit.vaccenic) 
+
+# refine position
+qtl.refine.vaccenic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.vaccenic,
+                        formula= y ~ Q1 + Q2) 
+
+# test for interaction 
+addint(LG.f2.after.crossover,qtl=qtl.refine.vaccenic) # 
+
+# test for additional loci 
+qtl.add.vaccenic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.vaccenic)
+summary(qtl.add.vaccenic) 
+
+# I guess this is the same loci ... leave it as it is now... 
+```
 
 ### Linoleic_acid
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Linoleic_Arachidic/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_Linoleic_Arachidic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_Linoleic <- do.call(c, scantwo_perm_Linoleic_Arachidic)[,1]
+summary(scantwo_perm_Linoleic)
+# Linoleic_acid (144 permutations)
+#     full  fv1   int  add  av1  one
+# 5%  14.6 13.1 10.20 10.4 8.91 4.02
+# 10% 13.9 12.4  9.52  9.6 8.23 3.67
+
+summary(scantwo.imp.42traits[["Linoleic_acid"]],perm=scantwo_perm_Linoleic,alpha=.05,pval=T)
+# There were no pairs of loci meeting the criteria.   
 
 ### Arachidic_acid
+scantwo_perm_Arachidic <- do.call(c, scantwo_perm_Linoleic_Arachidic)[,2]
+summary(scantwo_perm_Arachidic)
+# Arachidic_acid (144 permutations)
+#     full   fv1  int  add  av1  one
+# 5%  11.8 10.03 8.10 8.05 6.58 3.91
+# 10% 11.5  9.75 7.77 7.75 6.33 3.62
+
+summary(scantwo.imp.42traits[["Arachidic_acid"]],perm=scantwo_perm_Arachidic,alpha=.05,pval=T)
+
+# load map and make Oleic acid as the only phenotype 
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Arachidic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+# object hold QTL of interest 
+qtlm.Arachidic <- makeqtl(LG.f2.after.crossover,chr=c("A03", "A03"),pos=c(116, 118))  
+qtlm.Arachidic
+qtl.fit.Arachidic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Arachidic,formula = y ~ Q1 + Q2 ,get.ests=T) 
+summary(qtl.fit.Arachidic) 
+
+# refine position
+qtl.refine.Arachidic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Arachidic,
+                        formula= y ~ Q1 + Q2)
+
+# test for interaction 
+addint(LG.f2.after.crossover,qtl=qtl.refine.Arachidic) # no interaction 
+
+# test for additional loci 
+qtl.add.Arachidic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Arachidic)
+summary(qtl.add.Arachidic) # chrA08_2980704  A08  94.4 7.327 
+
+qtlm2.Arachidic <- addtoqtl(LG.f2.after.crossover,qtl.refine.Arachidic,chr="A08", pos=94.4)
+summary(qtlm2.Arachidic) 
+
+# scan the genome for additional QTL 
+qtl.refine2.Arachidic <- refineqtl(LG.f2.after.crossover,qtl=qtlm2.Arachidic,
+                              formula = y ~ Q1 + Q2 + Q3)
+
+addint(LG.f2.after.crossover,qtl=qtl.refine2.Arachidic) # no interaction 
+summary(qtl.refine2.Arachidic) # no additional loci  
+
+qtl.fit2.Arachidic <- fitqtl(LG.f2.after.crossover,qtl=qtl.refine2.Arachidic,get.ests=T)
+summary(qtl.fit2.Arachidic) 
+
+# plot result 
+png("~/F2/output/scantwo/figure/Arachidic_scantwo_result.png", width=20, height=10, units="in", res=300)
+par(mfrow=c(1,2)) 
+plot(qtl.refine2.Arachidic)
+plotLodProfile(qtl.refine2.Arachidic) 
+dev.off() 
+save(qtl.fit2.Arachidic, file = "~/F2/output/scantwo/qtl.fit2.Arachidic.Rdata")
+```
 
 ### Behenic_acid
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Behenic_Weight_of_survey/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_Behenic_Weight_of_survey <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_Behenic <- do.call(c, scantwo_perm_Behenic_Weight_of_survey)[,1]
+summary(scantwo_perm_Behenic)
+# Behenic_acid (160 permutations)
+#     full fv1 int add av1  one
+# 5%   132 131 127 127 126 6.08
+# 10%  132 131 127 127 126 5.17
+
+summary(scantwo.imp.42traits[["Behenic_acid"]],perm=scantwo_perm_Behenic,alpha=.05,pval=T)
+
+# load map and make Oleic acid as the only phenotype 
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Behenic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+# object hold QTL of interest 
+qtlm.Behenic <- makeqtl(LG.f2.after.crossover,chr=c("A03", "A03"),pos=c(59, 60))  
+qtlm.Behenic
+qtl.fit.Behenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Behenic,formula = y ~ Q1 + Q2 ,get.ests=T) 
+summary(qtl.fit.Behenic) 
+# two nearby loci with contrasting effect 
+
+# refine position
+qtl.refine.Behenic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Behenic,
+                        formula= y ~ Q1 + Q2)
+
+# test for interaction 
+addint(LG.f2.after.crossover,qtl=qtl.refine.Behenic) # no interaction 
+
+# test for additional loci 
+qtl.add.Behenic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Behenic)
+summary(qtl.add.Behenic) # chrA08_2980704  A08  94.4 7.327 
+
+###### problematic dataset???  
+```
 
 ### Weight_of_one_thousand_seeds
 
