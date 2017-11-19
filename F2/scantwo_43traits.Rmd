@@ -281,7 +281,105 @@ save(qtl.fit.Linolenic, file = "~/F2/output/scantwo/qtl.fit.Linolenic.Rdata")
 ```
 
 #### only work on traits with significant loci 
+### Palmnitic_acid 
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Myristic_Palmitic/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_Myristic_Palmitic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
 
+scantwo_perm_Palmitic <- do.call(c, scantwo_perm_Myristic_Palmitic)[,2]
+summary(scantwo_perm_Palmitic)
+# Palmitic_acid (128 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  13.9 11.5 9.48 9.31 7.35 4.13
+# 10% 13.0 11.3 9.07 8.75 6.85 3.86
+
+summary(scantwo.imp.42traits[["Palmitic_acid"]],perm=scantwo_perm_Palmitic,alpha=.05,pval=T)
+# no two loci 
+```
+
+### Stearic_acid
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Stearic_vaccenic/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_Stearic_vaccenic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_Stearic <- do.call(c, scantwo_perm_Stearic_vaccenic)[,1]
+summary(scantwo_perm_Stearic)
+# Stearic_acid (112 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  11.4 9.32 7.39 7.74 5.38 4.11
+# 10% 10.8 8.75 7.05 7.21 5.13 3.86
+
+summary(scantwo.imp.42traits[["Stearic_acid"]],perm=scantwo_perm_Stearic,alpha=.05,pval=T)
+
+# load map and make Oleic acid as the only phenotype 
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Stearic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+# object hold QTL of interest 
+qtlm.Stearic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(71, 29))  
+qtlm.Stearic
+qtl.fit.Stearic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Stearic,formula = y ~ Q1 + Q2 ,get.ests=T) 
+summary(qtl.fit.Stearic) 
+
+# refine position
+qtl.refine.Stearic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Stearic,
+                        formula= y ~ Q1 + Q2)
+
+# test for interaction 
+addint(LG.f2.after.crossover,qtl=qtl.refine.Stearic)
+
+# add interaction to the model 
+qtl.fit.Stearic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Stearic,formula = y ~ Q1 * Q2 ,get.ests=T) 
+summary(qtl.fit.Stearic) 
+
+# refine position
+qtl.refine.Stearic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Stearic,
+                        formula= y ~ Q1 * Q2) 
+
+# test for additional loci 
+qtl.add.Stearic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Stearic)
+summary(qtl.add.Stearic)
+
+
+########### 
+qtlm2.Stearic <- addtoqtl(data.qtl,qtl.refine,chr=c("1","5"),
+                         pos=c(5,100))
+
+# scan the genome for additional QTL 
+qtl.add.Stearic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Stearic)
+summary(qtl.add.Oleic) # no additional loci  
+```
+
+
+### Vaccenic_acid
+
+### Linoleic_acid
+
+### Arachidic_acid
+
+### Behenic_acid
+
+### Weight_of_one_thousand_seeds
+
+### leaf_number_2016_03_21
+
+### plant_height_2016_05_13
+
+### plant_width_2016_02_17
+
+### root_weight_2016_05_13
+
+### days_to_flower
+
+### days_to_bolt
 
 
 
