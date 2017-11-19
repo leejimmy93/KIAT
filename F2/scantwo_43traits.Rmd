@@ -518,18 +518,190 @@ summary(qtl.add.Behenic) # chrA08_2980704  A08  94.4 7.327
 ```
 
 ### Weight_of_one_thousand_seeds
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Weight_of_one_thousand_seeds_Number_of_survey_seeds/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_Weight_of_one_thousand_seeds_Number_of_survey_seeds <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_Weight_of_one_thousand_seeds <- do.call(c, scantwo_perm_Weight_of_one_thousand_seeds_Number_of_survey_seeds)[,1]
+summary(scantwo_perm_Weight_of_one_thousand_seeds)
+# Weight_of_one_thousand_seeds (128 permutations)
+#      full  fv1  int  add  av1  one
+# 5%  10.05 8.15 7.07 7.02 4.49 3.75
+# 10%  9.87 7.77 6.56 6.65 4.14 3.61
+
+summary(scantwo.imp.42traits[["Weight_of_one_thousand_seeds"]],perm=scantwo_perm_Weight_of_one_thousand_seeds,alpha=.05,pval=T) 
+```
 
 ### leaf_number_2016_03_21
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/leaf_number_2016_03_21_plant_height_2016_05_13/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_leaf_number_2016_03_21_plant_height_2016_05_13 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_leaf_number_2016_03_21 <- do.call(c, scantwo_perm_leaf_number_2016_03_21_plant_height_2016_05_13)[,1]
+summary(scantwo_perm_leaf_number_2016_03_21)
+# leaf_number_2016_03_21 (128 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  10.5 8.55 7.43 7.67 5.05 4.15
+# 10% 10.2 8.26 6.89 7.26 4.58 3.85
+
+summary(scantwo.imp.42traits[["leaf_number_2016_03_21"]],perm=scantwo_perm_leaf_number_2016_03_21,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria. 
 
 ### plant_height_2016_05_13
+scantwo_perm_plant_height_2016_05_13 <- do.call(c, scantwo_perm_leaf_number_2016_03_21_plant_height_2016_05_13)[,2]
+summary(scantwo_perm_plant_height_2016_05_13)
+# plant_height_2016_05_13 (128 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  11.0 8.47 7.07 7.52 4.59 3.95
+# 10% 10.3 8.06 6.66 6.96 4.35 3.70
+
+summary(scantwo.imp.42traits[["plant_height_2016_05_13"]],perm=scantwo_perm_plant_height_2016_05_13,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria. 
+```
 
 ### plant_width_2016_02_17
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/plant_width_2016_01_20_plant_width_2016_02_17/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_plant_width_2016_01_20_plant_width_2016_02_17 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_plant_width_2016_02_17 <- do.call(c, scantwo_perm_plant_width_2016_01_20_plant_width_2016_02_17)[,2]
+summary(scantwo_perm_plant_width_2016_02_17)
+# plant_width_2016_02_17 (128 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  11.6 9.16 7.48 8.09 5.74 4.43
+# 10% 11.0 8.91 7.11 7.27 5.49 3.86
+
+summary(scantwo.imp.42traits[["plant_width_2016_02_17"]],perm=scantwo_perm_plant_width_2016_02_17,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+```
 
 ### root_weight_2016_05_13
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/plant_height_2016_03_16_root_weight_2016_05_13/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_plant_height_2016_03_16_root_weight_2016_05_13 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_root_weight_2016_05_13 <- do.call(c, scantwo_perm_plant_height_2016_03_16_root_weight_2016_05_13)[,2]
+summary(scantwo_perm_root_weight_2016_05_13)
+# root_weight_2016_05_13 (96 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  13.1 11.5 9.49 8.83 6.69 3.81
+# 10% 12.8 11.1 8.97 7.81 6.30 3.66
+
+summary(scantwo.imp.42traits[["root_weight_2016_05_13"]],perm=scantwo_perm_root_weight_2016_05_13,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+```
 
 ### days_to_flower
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/days_to_flower_days_to_bolt_bolting_to_flowering/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_days_to_flower_days_to_bolt_bolting_to_flowering <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_days_to_flower <- do.call(c, scantwo_perm_days_to_flower_days_to_bolt_bolting_to_flowering)[,1]
+summary(scantwo_perm_days_to_flower)
+# days_to_flower (160 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  10.3 8.13 7.11 7.31 4.11 4.04
+# 10%  9.9 7.81 6.43 6.69 3.72 3.78
+
+summary(scantwo.imp.42traits[["days_to_flower"]],perm=scantwo_perm_days_to_flower,alpha=.05,pval=T)  
+
+# load map and make Oleic acid as the only phenotype 
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$days_to_flower)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+# object hold QTL of interest 
+qtlm.days_to_flower <- makeqtl(LG.f2.after.crossover,chr=c("A10", "C06"),pos=c(184, 81))  
+qtlm.days_to_flower
+qtl.fit.days_to_flower <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.days_to_flower,formula = y ~ Q1 + Q2 ,get.ests=T) 
+summary(qtl.fit.days_to_flower) 
+
+# refine position
+qtl.refine.days_to_flower <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.days_to_flower,
+                        formula= y ~ Q1 + Q2)
+
+# test for interaction 
+addint(LG.f2.after.crossover,qtl=qtl.refine.days_to_flower) # no interaction 
+
+# test for additional loci 
+qtl.add.days_to_flower <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.days_to_flower)
+summary(qtl.add.days_to_flower) # no additional loci 
+
+# plot result 
+png("~/F2/output/scantwo/figure/days_to_flower_scantwo_result.png", width=20, height=10, units="in", res=300)
+par(mfrow=c(1,2)) 
+plot(qtl.refine.days_to_flower)
+plotLodProfile(qtl.refine.days_to_flower) 
+dev.off() 
+save(qtl.fit.days_to_flower, file = "~/F2/output/scantwo/qtl.fit.days_to_flower.Rdata")
 
 ### days_to_bolt
+scantwo_perm_days_to_bolt <- do.call(c, scantwo_perm_days_to_flower_days_to_bolt_bolting_to_flowering)[,2]
+summary(scantwo_perm_days_to_bolt)
+# days_to_bolt (160 permutations)
+#      full  fv1  int  add  av1  one
+# 5%  10.17 7.76 6.72 7.18 4.04 3.87
+# 10%  9.67 7.54 6.29 6.64 3.76 3.77
 
+summary(scantwo.imp.42traits[["days_to_bolt"]],perm=scantwo_perm_days_to_bolt,alpha=.05,pval=T)  
 
+# load map and make Oleic acid as the only phenotype 
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$days_to_bolt)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+# object hold QTL of interest 
+qtlm.days_to_bolt <- makeqtl(LG.f2.after.crossover,chr=c("A10", "C06"),pos=c(176, 83))  
+qtlm.days_to_bolt
+qtl.fit.days_to_bolt <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.days_to_bolt,formula = y ~ Q1 + Q2 ,get.ests=T) 
+summary(qtl.fit.days_to_bolt) 
+
+# refine position
+qtl.refine.days_to_bolt <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.days_to_bolt,
+                        formula= y ~ Q1 + Q2)
+
+# test for interaction 
+addint(LG.f2.after.crossover,qtl=qtl.refine.days_to_bolt) # no interaction 
+
+# test for additional loci 
+qtl.add.days_to_bolt <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.days_to_bolt)
+summary(qtl.add.days_to_bolt) # # cA05.loc116     A05 116.0 4.332   
+
+qtlm2.days_to_bolt <- addtoqtl(LG.f2.after.crossover,qtl.refine.days_to_bolt,chr="A05", pos=116.0)
+summary(qtlm2.days_to_bolt) 
+
+# scan the genome for additional QTL 
+qtl.refine2.days_to_bolt <- refineqtl(LG.f2.after.crossover,qtl=qtlm2.days_to_bolt,
+                              formula = y ~ Q1 + Q2 + Q3)
+
+addint(LG.f2.after.crossover,qtl=qtl.refine2.days_to_bolt) # no interaction 
+summary(qtl.refine2.days_to_bolt) # no additional loci  
+
+qtl.fit2.days_to_bolt <- fitqtl(LG.f2.after.crossover,qtl=qtl.refine2.days_to_bolt,get.ests=T)
+summary(qtl.fit2.days_to_bolt) 
+
+addint(LG.f2.after.crossover,qtl=qtl.refine2.days_to_bolt) # no interaction 
+
+# plot result 
+png("~/F2/output/scantwo/figure/days_to_bolt_scantwo_result.png", width=20, height=10, units="in", res=300)
+par(mfrow=c(1,2)) 
+plot(qtl.refine2.days_to_bolt)
+plotLodProfile(qtl.refine2.days_to_bolt) 
+dev.off() 
+save(qtl.fit2.days_to_bolt, file = "~/F2/output/scantwo/qtl.fit2.days_to_bolt.Rdata") 
+```
 
