@@ -97,24 +97,99 @@ rbind(lipid_fatty_acid_genes.2, SNP.Erucic.Oleic.2)
 
 gff.lipid_fatty_acid_genes.Erucic_Oleic <- GRanges(seqnames = Rle(lipid_fatty_acid_genes.Erucic_Oleic$CHROM),ranges = IRanges(start = lipid_fatty_acid_genes.Erucic_Oleic$start, end = lipid_fatty_acid_genes.Erucic_Oleic$end), names = lipid_fatty_acid_genes.Erucic_Oleic$name)
  
-gff.lipid_fatty_acid_genes
 autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names))
 # this plot shows that if just looking at all lipid and fatty acid genes, there are so many that not meaningful to check the result 
 
-###### now just focus on fatty acid biosynthesis pathways genes (GO:0006633)
-# fatty_acid_gene_index <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_biosynthesis_genes_ID.txt", header = F)
-# head(fatty_acid_gene_index)
-# nrow(fatty_acid_gene_index) # 248 
-# rownames(fatty_acid_gene_index) <- fatty_acid_gene_index$V1
-# 
-# # extract only fatty acid genes from dataset 
-# fatty.acid.genes <- (merge(parent.read.count.one.small, fatty_acid_gene_index, by="row.names"))[,1:28]
-# head(fatty.acid.genes)
-# rownames(fatty.acid.genes) <- fatty.acid.genes$Row.names
-# fatty.acid.genes <- fatty.acid.genes[,-1]
-# dim(fatty.acid.genes) # 207 27
-# fatty.acid.genes$total <- rowSums(fatty.acid.genes)
-# dim(fatty.acid.genes)
+### only focus on several lipid and fatty acid related GO terms
+# fatty acid beta-oxidation
+# lipid transporter activity
+# fatty acid biosynthetic process
+# fatty acid metabolic process
+# lipid metabolic process
+# lipid catabolic process
+# acetyl-CoA carboxylase complex
+# lipid transport
+# lipid biosynthetic process
+# fatty-acyl-CoA biosynthetic process
+# lipid binding
+
+lipid_fatty_acid_GO <- read.table("~/Desktop/Brassica_project/reference/fatty_acid_lipd_GO_11_12_2017", sep = "\"", stringsAsFactors = F)
+lipid_fatty_acid_GO <- 
+  lipid_fatty_acid_GO %>% 
+  dplyr::select(c(V2, V10)) %>% 
+  mutate(GO = V2) 
+
+head(lipid_fatty_acid_GO)
+
+napus_GO <- read.table("~/Desktop/Brassica_project/reference/Brassica_napus_GO", stringsAsFactors = F)
+
+napus_GO <- 
+  napus_GO %>% 
+  mutate(GO = V2)
+
+head(napus_GO)
+
+lipid_fatty_acid_genes <- 
+lipid_fatty_acid_GO %>% 
+  left_join(napus_GO, by = "GO") %>% 
+  mutate(GOterm = V10, name=V1) %>% 
+  dplyr::select(c(GOterm, name, GO)) 
+
+dim(lipid_fatty_acid_genes) # 1298
+head(lipid_fatty_acid_genes)
+```
+
+# plot out the new lipid fatty acid gene list 
+```{r}
+lipid_fatty_acid_genes.2 <- 
+gff.mRNA %>% 
+  inner_join(lipid_fatty_acid_genes, by = "name") %>% 
+  mutate(name = GOterm) %>% 
+  dplyr::select(c(CHROM:name))
+
+lipid_fatty_acid_genes.2 %>% dim() # 7346    4 
+head(lipid_fatty_acid_genes.2)
+
+lipid_fatty_acid_genes.Erucic_Oleic <- 
+rbind(lipid_fatty_acid_genes.2, SNP.Erucic.Oleic.2)
+
+gff.lipid_fatty_acid_genes.Erucic_Oleic <- GRanges(seqnames = Rle(lipid_fatty_acid_genes.Erucic_Oleic$CHROM),ranges = IRanges(start = lipid_fatty_acid_genes.Erucic_Oleic$start, end = lipid_fatty_acid_genes.Erucic_Oleic$end), names = lipid_fatty_acid_genes.Erucic_Oleic$name)
+ 
+#  [1] "lipid metabolic process"             "lipid biosynthetic process"         
+#  [3] "fatty acid biosynthetic process"     "lipid catabolic process"            
+#  [5] "fatty acid metabolic process"        "fatty acid beta-oxidation"          
+#  [7] "lipid transport"                     "lipid binding"                      
+#  [9] "fatty-acyl-CoA biosynthetic process" "acetyl-CoA carboxylase complex"     
+# [11] "lipid transporter activity"          "SNP"   
+gff.lipid_fatty_acid_genes.Erucic_Oleic
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names)) 
+
+gff.lipid_fatty_acid_genes.Erucic_Oleic
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "SNP")) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid metabolic process")) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty acid biosynthetic process"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid catabolic process"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty acid metabolic process"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty acid beta-oxidation"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid transport"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid binding"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty-acyl-CoA biosynthetic process"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "acetyl-CoA carboxylase complex"), alpha = 0.1)
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty-acyl-CoA biosynthetic process"), alpha = 0.1)
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "acetyl-CoA carboxylase complex"), alpha = 0.1)
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid transporter activity"), alpha = 0.1) 
 ```
 
 # sessioninfo
