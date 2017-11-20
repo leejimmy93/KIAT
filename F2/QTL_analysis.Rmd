@@ -268,10 +268,12 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to
                        data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_bolt")),
          chrs = c("A10", "C06"), 
          # lod = c(cim.perm[["days_to_bolt"]]),
-         rug = TRUE)
+         rug = TRUE, 
+         title = "flower bolting related")
 
 flower_cim$plot
 ggsave(flower_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /flower_cim.png", width = 7, height = 4)
+ggsave(flower_cim$plot, filename = "~/F2/output/QTL_analysis/figure/flower_cim.png", width = 7, height = 4) 
 
 # oil related  
 oil_cim <- 
@@ -285,9 +287,11 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic
                        data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid")),
          chrs = c("A08", "C03"), 
          # lod = cim.perm[[1]], 
-         rug = TRUE)
+         title = "Fatty acid traits",
+         rug = TRUE) 
 
-ggsave(oil_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /oil_cim.png", width = 8, height = 5)
+# ggsave(oil_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /oil_cim.png", width = 8, height = 5) 
+ggsave(oil_cim$plot, filename = "~/F2/output/QTL_analysis/figure/oil_cim.png", width = 8, height = 5)
 
 # growth related  
 growth_cim <- 
@@ -296,9 +300,12 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["root_weight_2016_05_13"]], method = 
                        data.frame(cim.qtl[["leaf_number_2016_03_21"]], method = "leaf_number_2016_03_21")),
          chrs = c("A10"), 
          # lod = cim.perm[[1]], 
-         rug = TRUE)
+         rug = TRUE,
+         title = "growth_related")
 
-ggsave(growth_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /growth_cim.png", width = 7, height = 4) 
+ggsave(growth_cim$plot, filename = "~/F2/output/QTL_analysis/figure/growth_related_cim.png", width = 8, height = 5)
+
+# ggsave(growth_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /growth_cim.png", width = 7, height = 4) 
 
 # compare between different models 
 # flower 
@@ -335,6 +342,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "cim"),
          rug = TRUE) 
 
 ggsave(Erucic_cim_scanone$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /Erucic_cim_scanone.png", width = 7, height = 4)    
+
 
 qtl_plot(input = rbind(data.frame(cim.qtl[["vaccenic_acid"]], method = "cim"), 
                        data.frame(scanone.imp[["vaccenic_acid"]], method = "scanone")),
@@ -382,6 +390,8 @@ lapply(names(scanone.imp), function(trait) {
 
 names(cim.qtl.result) <- names(cim.qtl)
 names(im.qtl.result) <- names(scanone.imp) 
+unlist(cim.qtl.result)
+unlist(im.qtl.result) 
 ``` 
 
 ### find significant SNPs for certain trait and design primers 

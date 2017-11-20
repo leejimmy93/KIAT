@@ -89,7 +89,7 @@ qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y
 ### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
 
 #examine our model
-summary(qtl.fit.Erucic) # not supported...??? 
+summary(qtl.fit.Erucic) 
 
 #we can now ask if all qtls are at their most likely positions
 #this also provides a nice map
@@ -107,24 +107,25 @@ summary(qtl.add.Erucic)
 qtl.add.Erucic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
 summary(qtl.add.Erucic) # no additional QTL 
 
-# so the final model 
-qtl.fit2.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1 * Q2, get.ests=T)
-summary(qtl.fit2.Erucic) 
-
 # refine position
 qtl.refine2.Erucic <- refineqtl(LG.f2.after.crossover,
                         qtl=qtlm.Erucic,
-                        formula= y ~ Q1 * Q2)
+                        formula= y ~ Q1 * Q2) 
+
+qtl.refine2.Erucic
+# final
+qtl.fit.final.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine2.Erucic, get.ests=T, formula = y ~ Q1 * Q2)
+summary(qtl.fit.final.Erucic)  
 
 # plot out 
 png("~/F2/output/scantwo/figure/Erucic_scantwo_result.png", width=20, height=10, units="in", res=300)
 par(mfrow=c(1,2)) 
 #positions can be plotted on the map
-plot(qtl.refine.Erucic)
+plot(qtl.refine2.Erucic)
 #or showing lod scores
 plotLodProfile(qtl.refine.Erucic) 
 dev.off()
-save(qtl.fit2.Erucic, file = "~/F2/output/scantwo/qtl.fit2.Erucic.Rdata")
+save(qtl.fit.final.Erucic, file = "~/F2/output/scantwo/qtl.fit.final.Erucic.Rdata") 
 
 # summary: two loci A08@72.9 and C03@30.0 with interaction 
 
@@ -171,13 +172,16 @@ qtl.refine.Oleic <- refineqtl(LG.f2.after.crossover,
 qtl.add.Oleic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Oleic)
 summary(qtl.add.Oleic) # no additional loci 
 
+qtl.fit.final.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine.Oleic,formula = y ~ Q1 * Q2 ,get.ests=T) 
+summary(qtl.fit.final.Oleic)
+
 # plot result 
 png("~/F2/output/scantwo/figure/Oleic_scantwo_result.png", width=20, height=10, units="in", res=300)
 par(mfrow=c(1,2)) 
 plot(qtl.refine.Oleic)
 plotLodProfile(qtl.refine.Oleic) 
 dev.off() 
-save(qtl.fit.Oleic, file = "~/F2/output/scantwo/qtl.fit.Oleic.Rdata")
+save(qtl.fit.final.Oleic, file = "~/F2/output/scantwo/qtl.fit.final.Oleic.Rdata")
 # summary: A08@72.3 and C03@31.0 with interaction  
 ```  
 
@@ -639,13 +643,17 @@ addint(LG.f2.after.crossover,qtl=qtl.refine.days_to_flower) # no interaction
 qtl.add.days_to_flower <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.days_to_flower)
 summary(qtl.add.days_to_flower) # no additional loci 
 
+# final model 
+qtl.fit.final.days_to_flower <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine.days_to_flower,formula = y ~ Q1 + Q2 ,get.ests=T) 
+summary(qtl.fit.final.days_to_flower)
+
 # plot result 
 png("~/F2/output/scantwo/figure/days_to_flower_scantwo_result.png", width=20, height=10, units="in", res=300)
 par(mfrow=c(1,2)) 
 plot(qtl.refine.days_to_flower)
 plotLodProfile(qtl.refine.days_to_flower) 
 dev.off() 
-save(qtl.fit.days_to_flower, file = "~/F2/output/scantwo/qtl.fit.days_to_flower.Rdata")
+save(qtl.fit.final.days_to_flower, file = "~/F2/output/scantwo/qtl.fit.final.days_to_flower.Rdata")
 
 ### days_to_bolt
 scantwo_perm_days_to_bolt <- do.call(c, scantwo_perm_days_to_flower_days_to_bolt_bolting_to_flowering)[,2]
@@ -704,4 +712,24 @@ plotLodProfile(qtl.refine2.days_to_bolt)
 dev.off() 
 save(qtl.fit2.days_to_bolt, file = "~/F2/output/scantwo/qtl.fit2.days_to_bolt.Rdata") 
 ```
+
+# check result 
+```{r}
+load("~/F2/output/scantwo/qtl.fit.final.Erucic.Rdata")
+
+load("~/F2/output/scantwo/qtl.fit.final.Oleic.Rdata")
+
+load("~/F2/output/scantwo/qtl.fit.Linolenic.Rdata")
+summary(qtl.fit.Linolenic) 
+
+load("~/F2/output/scantwo/qtl.fit2.Stearic.Rdata")
+summary(qtl.fit2.Stearic)
+
+load("~/F2/output/scantwo/qtl.fit2.days_to_bolt.Rdata")
+summary(qtl.fit2.days_to_bolt)
+
+load("~/F2/output/scantwo/qtl.fit.days_to_flower.Rdata")
+summary(qtl.fit.days_to_flower) 
+```
+
 

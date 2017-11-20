@@ -18,7 +18,7 @@ save(read.count.small, file="~/F2/output/read.count.small.Rdata")
 
 ### voom transformation 
 ```{r}
-# source("https://bioconductor.org/biocLite.R")
+# source("https://bioconductor.org/biocLite.R") 
 # biocLite("DESeq2")
 library("DESeq2")
 
