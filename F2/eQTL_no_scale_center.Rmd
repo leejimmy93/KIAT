@@ -56,9 +56,61 @@ write.table(rownames(F2_geno_data_2_Ae_Ol_new.2), file = "~/F2/data/QTL_analysis
 ```{r}
 LG.f2 <- read.cross("mm", file = "~/F2/data/QTL_analysis/F2_geno_for_one_map_final_all_expressed_gene_no_scale_center.txt", mapfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.map") ### takes one day to read in this data... 
 
-save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.all_expressed_genes.Rdata")
-important_eQTL <- LG.f2 
-important_eQTL
-LG.f2
-LG.f2$pheno %>% dim()
+save(LG.f2, file = "~/F2/output/QTL_analysis/LG.f2.all_expressed_genes_no_scale_center.Rdata") 
+LG.f2$pheno %>% dim() 
 ```
+
+### re-estimate map
+```{r} 
+load("~/F2/output/QTL_analysis/LG.f2.all_expressed_genes_no_scale_center.Rdata")
+LG.f2
+summaryMap(LG.f2)
+
+LG.f2.before.crossover <- LG.f2
+
+for (chr in names(LG.f2$geno)) { # for each chromosome in cross genotype data
+  my.chr <- get(chr,LG.f2$geno) # return the genotype data, including data & map
+  print(paste(chr,"NA before",sum(is.na(my.chr$data)))) 
+  if(ncol(my.chr$data) > 3) { 
+    my.chr$data[,2:(ncol(my.chr$data)-1)] <- sapply(2:(ncol(my.chr$data)-1),function(i) {
+      apply(my.chr$data[,(i-1):(i+1)],1,function(gt) {
+        if (any(is.na(gt))) return(gt[2]) #technically should be looking at the next genotyped marker.
+        if ( (length(unique(gt)) == 2) & (gt[1] == gt[3])) return(NA)
+        if ( length(unique(gt))  == 3) return(NA)
+        return(gt[2])
+      })
+    })
+  }
+  LG.f2$geno <- within(LG.f2$geno,assign(chr,my.chr))
+  print(paste(chr,"NA after",sum(is.na(get(chr,LG.f2$geno)$data))))
+}  
+
+map.new <- est.map(LG.f2,verbose=T,error.prob=.01) 
+save(map.new, file = "~/F2/output/QTL_analysis/map.new.fatty_acid_lipid_no_scale_center.Rdata") 
+
+LG.f2 <- replace.map(LG.f2, map.new)
+LG.f2.after.crossover <- LG.f2
+
+plot.map(LG.f2.after.crossover, alternate.chrid = T) # the old genetic map
+plot.map(LG.f2.before.crossover,LG.f2.after.crossover, alternate.chrid = T) # genetic map comparison 
+
+# fix LG10 problem using ripple 
+set.seed(16)
+LG.f2.after.crossover <- orderMarkers(LG.f2.after.crossover, chr = c(10), 
+	                        window = 5, use.ripple = TRUE, maxit = 4000, 
+	                        error.prob = 0.0001, verbose = T) 
+
+plotMap(LG.f2.after.crossover, chr = '10')
+summaryMap(LG.f2.after.crossover) # 2884
+save(LG.f2.after.crossover, file = "~/F2/output/QTL_analysis/LG.f2.after.crossover_all_expressed_genes_no_scale_center.Rdata") 
+```     
+
+### eQTL analysis on cabernet 
+1) running eQTL takes a long time, so I split the 50,000 genes into 10 subset, and run scanone on subset in parallel. 
+https://github.com/leejimmy93/KIAT_cabernet/tree/master/F2/eQTL/scanone_all_expressed_genes_1.R ... https://github.com/leejimmy93/KIAT_cabernet/tree/master/F2/eQTL/scanone_all_expressed_genes_10.R 
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scanone_all_expressed_genes_1_10.slurm 
+
+2) For permutation, since it takes too long time to run permutation on all genes, so I sampled 100 genes and ran 1000 times permutation on these genes so that median can be taken as the threshold for eQTL analysis 
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/eQTL/scanone_all_expressed_genes_perm.R 
+
+

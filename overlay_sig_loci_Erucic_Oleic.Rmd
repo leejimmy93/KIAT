@@ -194,6 +194,13 @@ autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(colo
 
 # sessioninfo
 ```{r}
+<<<<<<< HEAD
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("ggbio")
+library(ggbio)
+data(hg19IdeogramCyto, package = "biovizBase")
+head(hg19IdeogramCyto)
+=======
 # sessionInfo() 
 # R version 3.2.4 (2016-03-10)
 # Platform: x86_64-apple-darwin13.4.0 (64-bit)
@@ -235,5 +242,6 @@ autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(colo
 # [55] R6_2.2.2                   GenomicAlignments_1.6.3    lubridate_1.7.1           
 # [58] knitr_1.17                 bit_1.1-12                 bindr_0.1                 
 # [61] futile.options_1.0.0       stringi_1.1.5              Rcpp_0.12.13  
+>>>>>>> 6ac86ad39b5c2b820d2cc4d473ac40c4b8b8c673
 ```
 
