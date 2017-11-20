@@ -31,6 +31,7 @@ pheno[1:10, 1:10]
 rownames(pheno) <- gsub("\ ", "_", rownames(pheno))
 rownames(pheno) <- gsub("-", "_", rownames(pheno))
 rownames(pheno) <- gsub("\\.", "_", rownames(pheno)) 
+save(pheno, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/pheno.Rdata")
 
 # combine geno & pheno data for QTL analysis 
 colnames(F2_geno_data_2_Ae_Ol_new) <- gsub("X", "ID_", colnames(F2_geno_data_2_Ae_Ol_new))
