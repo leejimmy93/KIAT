@@ -299,6 +299,75 @@ View(SNP_gene_final_fxn)
 save(SNP_gene_final_fxn, file = "~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
 ```
 
+### check expression of these genes between Da-Ae and Da-Ol-1 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.new.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.pairwise.gt.Rdata") # pairwise 
+
+dim(DEgene.new.gt) # 15098     9 
+dim(DEgene.new.interaction) # 1701    8 
+dim(DEgene.new.tissue) # 22580     8 
+
+dim(DEgene.young); dim(DEgene.bolting); dim(DEgene.flowering); dim(DEgene.early.silique); dim(DEgene.late.silique)
+# [1] 8976    5
+# [1] 4648    5
+# [1] 6081    5
+# [1] 6695    5
+# [1] 7413    5
+
+### make a list 
+DE.list <- list(gt = DEgene.new.gt, tissue = DEgene.new.tissue, interaction = DEgene.new.interaction, young = DEgene.young, bolting = DEgene.bolting, flowering = DEgene.flowering, early_silique = DEgene.early.silique, late_silique = DEgene.late.silique)
+length(DE.list) # 8 
+
+load("~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.new.gt)]
+
+test1 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.new.gt)] %>% unique()
+
+test2 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.new.tissue)] %>% unique()
+
+test3 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.new.interaction)] %>% unique()
+
+c(test1, test2, test3) %>% unique() %>% length()
+
+test4 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.young)] %>% unique()
+
+test5 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.bolting)] %>% unique()
+
+test6 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.flowering)] %>% unique()
+
+test7 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.early.silique)] %>% unique()
+
+test8 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.late.silique)] %>% unique()
+
+DE.gt.lipid_fatty_acid <- c(test4, test5, test6, test7, test8) %>% unique()
+
+### why some genes are significant for gt term but not differentially expressed between any tissue type in pairwise analysis 
+
+genes.GWAS <- DE.gt.lipid_fatty_acid
+genes.GWAS.df <- as.data.frame(genes.GWAS)
+colnames(genes.GWAS.df) <- "V1"
+genes.GWAS.df 
+
+expression.pattern.Bn.parent.bar(vstMat.parent = vstMat.parent, gene = genes.GWAS.df) 
+ggsave("~/Desktop/2017_Nov_KIAT_report/DE.gt.lipid_fatty_acid.png", width = 7, height = 5) 
+
+temp.temp <- 
+SNP_gene_final_fxn[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% genes.GWAS.df$V1,][,c("gff.lipid_fatty_acid_genes.names", "gff.lipid_fatty_acid_genes.GO", "description")] 
+  
+colnames(temp.temp) <- c("gene_ID", "GO_term", "Arabidopsis description")
+
+View(temp.temp)
+View(SNP_gene_final_fxn)
+``` 
 
 ### plot out the distribution of sinigicant SNPs identified from published paper and my study
 ```{r}
