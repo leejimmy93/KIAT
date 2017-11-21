@@ -1137,7 +1137,7 @@ load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.new.Rdata")
 # gt effect 
 DEgene.GO.ORA.gt <- GOseq.Bn.ORA(rownames(DEgene.new.gt))
 class(DEgene.GO.ORA.gt)
-DEgene.GO.ORA.gt$Term
+DEgene.GO.ORA.gt$Term 
 # tissue effect 
 DEgene.GO.ORA.tissue <- GOseq.Bn.ORA(rownames(DEgene.new.tissue))
 DEgene.GO.ORA.tissue
