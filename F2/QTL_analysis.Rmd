@@ -442,4 +442,32 @@ use apeE for caps primer design.
 1) paste fasta seq to apeE window
 2) highlight SNP position --> click on tools --> dCAPs caculator 
 3) if there is primer, take it, otherwise, add mutation to the sequence to get primer
-4) for the other pair of primer, extract from the sequence itself, make sure the final product is not too short, greater than 100bp?   
+4) for the other pair of primer, extract from the sequence itself, make sure the final product is not too short, greater than 100bp?  
+
+### look at the phenotype data 
+In order to understand the relationship between different fatty acid traits, Julin asked me to plot a pairs plot for the phenotype data of the various fatty acid traits. 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
+LG.f2.after.crossover$pheno %>% dim() # 166 43 
+
+colnames(LG.f2.after.crossover$pheno)
+
+LG.f2.after.crossover$pheno$Behenic_acid %>% hist()
+# Behenic & cis_11_Eicosenoic_acid/
+
+pheno_fatty_acid <- 
+  LG.f2.after.crossover$pheno %>% 
+  dplyr::select(c(Palmitic_acid, Stearic_acid, Oleic_acid, vaccenic_acid, Linoleic_acid, Arachidic_acid, Linolenic_acid, Erucic_acid))
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/figure/pheno_fatty_acid_pair.png", width = 8, height = 8, units = "in", res = 300) 
+pairs(pheno_fatty_acid)
+dev.off()
+```
+
+### check the loci effect to the different fatty acid traits 
+```{r}
+
+
+
+```
+
