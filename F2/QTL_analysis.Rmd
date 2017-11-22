@@ -265,7 +265,7 @@ LG.f2.after.crossover$pheno$cis_11_Eicosenoic_acid <- ifelse(LG.f2.after.crossov
 
 LG.f2.after.crossover$pheno$Palmitoliec_aicd <- ifelse(LG.f2.after.crossover$pheno$Palmitoliec_aicd > 1, NA, LG.f2.after.crossover$pheno$Palmitoliec_aicd)
 
-LG.f2.after.crossover$pheno$Behenic_acid <- ifelse(LG.f2.after.crossover$pheno$Behenic_acid > 5, NA, LG.f2.after.crossover$pheno$Behenic_acid)
+LG.f2.after.crossover$pheno$Behenic_acid <- ifelse(LG.f2.after.crossover$pheno$Behenic_acid > 5, NA, LG.f2.after.crossover$pheno$Behenic_acid) 
 
 save(LG.f2.after.crossover, file = "LG.f2.after.crossover.43traits.corrected.Rdata")
 
@@ -333,28 +333,111 @@ lapply(c(5, 12, 14), function(trait) {
 # here we use the interval mapping method "em" as this is how cim was originaly implmented.the n.marcovar= argument defines the maximum number of marker covariates to use.
 names(cim.qtl.3.traits) <- colnames(LG.f2.after.crossover$pheno[c(5, 12, 14)])
 
-# sfInit(parallel = TRUE, cpus = parallel::detectCores()) 
-# sfExport("LG.f2.after.crossover")
-# sfLibrary(qtl)  
-# 
-# cim.perm.3.traits <- 
-#   sfLapply(c(5, 12, 14), function(trait){
-#     message(trait) # message doesn't work in here either 
-#     tmp <- cim(LG.f2.after.crossover, 
-#                pheno.col = trait, 
-#                n.marcovar=5, 
-#                method="em",
-#                n.perm=1000, 
-#                n.cluster = 16)
-#     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
-#   }) # takes almost 4 hours to finish 
-# 
-# sfStop() 
+cim.perm.3.traits <-
+  sfLapply(c(5, 12, 14), function(trait){
+    message(trait) # message doesn't work in here either
+    tmp <- cim(LG.f2.after.crossover,
+               pheno.col = trait,
+               n.marcovar=5,
+               method="em",
+               n.perm=1000)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes almost 4 hours to finish
 
-# names(cim.perm) <- colnames(LG.f2.after.crossover$pheno) 
+names(cim.perm) <- colnames(LG.f2.after.crossover$pheno) 
+```
 
-# plot(cim.qtl.3.traits[[3]],bandcol="gray90", main=i)
-# abline(h=cim.perm[[i]],lty=2) 
+### get loci estimated effect for all these traits 
+```{r}
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
+# Palmitic
+bayesint(cim.qtl$Palmitic_acid, chr = "A08", expandtomarkers = T)
+bayesint(cim.qtl$Palmitic_acid, chr = "C03", expandtomarkers = T)
+
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Palmitic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.Palmitic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 36))
+qtl.fit.Palmitic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Palmitic,formula = y ~ Q1 + Q2, get.ests=T)
+summary(qtl.fit.Palmitic) 
+
+# Arachidic 
+bayesint(cim.qtl$Arachidic_acid, chr = "A08", expandtomarkers = T)
+
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Arachidic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.Arachidic <- makeqtl(LG.f2.after.crossover,chr="A08",pos=73)
+qtl.fit.Arachidic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Arachidic,formula = y ~ Q1, get.ests=T)
+summary(qtl.fit.Arachidic) 
+
+# cis_11_Eicosenoic_acid 
+bayesint(scanone.imp$cis_11_Eicosenoic_acid, chr = "A08", expandtomarkers = T)
+
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$cis_11_Eicosenoic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.cis_11_Eicosenoic_acid <- makeqtl(LG.f2.after.crossover,chr="A08",pos=75)
+qtl.fit.cis_11_Eicosenoic_acid <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.cis_11_Eicosenoic_acid,formula = y ~ Q1, get.ests=T)
+summary(qtl.fit.cis_11_Eicosenoic_acid) 
+
+# Behenic 
+bayesint(scanone.imp$Behenic_acid, chr = "A08", expandtomarkers = T)
+bayesint(scanone.imp$Behenic_acid, chr = "C03", expandtomarkers = T)
+
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Behenic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.Behenic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 53))
+qtl.fit.Behenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Behenic,formula = y ~ Q1 + Q2, get.ests=T)
+summary(qtl.fit.Behenic) 
+
+# Linoleic 
+bayesint(cim.qtl$Linoleic_acid, chr = "A08", expandtomarkers = T)
+bayesint(cim.qtl$Linoleic_acid, chr = "C03", expandtomarkers = T)
+
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linoleic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.Linoleic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(75, 39))
+qtl.fit.Linoleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linoleic,formula = y ~ Q1 + Q2, get.ests=T)
+summary(qtl.fit.Linoleic) 
+
+# Linolenic 
+bayesint(scanone.imp$Linolenic_acid, chr = "A08", expandtomarkers = T)
+bayesint(scanone.imp$Linolenic_acid, chr = "C03", expandtomarkers = T)
+
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linolenic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.Linolenic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 36))
+qtl.fit.Linolenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formula = y ~ Q1 + Q2, get.ests=T)
+summary(qtl.fit.Linolenic)   
+
+# vaccenic
+bayesint(cim.qtl$vaccenic_acid, chr = "A08", expandtomarkers = T)
+bayesint(cim.qtl$vaccenic_acid, chr = "C03", expandtomarkers = T)
+
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$vaccenic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.vaccenic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(72, 34))
+qtl.fit.vaccenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formula = y ~ Q1 + Q2, get.ests=T)
+summary(qtl.fit.vaccenic)    
 ```
 
 ### output result from scanone & cim, QTL result visulization
