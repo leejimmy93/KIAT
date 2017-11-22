@@ -13,13 +13,13 @@ dim(read_count_F2) # 101040    166
 read.count.small <- read_count_F2[rowSums(read_count_F2 > 10) >= 166*0.25,]
 dim(read.count.small) # 59934   131  
 colnames(read.count.small)
-save(read.count.small, file="~/F2/output/read.count.small.Rdata")
+save(read.count.small, file="~/F2/output/read.count.small.Rdata") 
 ```
 
 ### voom transformation 
 ```{r}
 # source("https://bioconductor.org/biocLite.R") 
-# biocLite("DESeq2")
+# biocLite("DESeq2") 
 library("DESeq2")
 
 # define sample 
@@ -362,9 +362,10 @@ save(eQTL_result, file = "~/F2/data/eQTL_analysis/eQTL_result.Rdata")
 load("~/F2/data/eQTL_analysis/eQTL_result.Rdata")
 
 # get threshold 
-lod.thres <- median(unlist(eQTL_result[[11]])) # 95% percentile as the threshold 
+lod.thres <- median(unlist(eQTL_result[[11]])) # 95% percentile as the threshold  
 lod.thres # [1] 4.159691 
 
+###### a bunch of test 
 plot(eQTL_result[[3]]$BnaA08g12780D,bandcol="gray90", main="BnaA08g12780D") # looks good 
 plot(eQTL_result[[9]]$BnaA08g11140D,bandcol="gray90", main="BnaA08g11140D") # looks good
 plot(eQTL_result[[9]]$BnaA08g11130D,bandcol="gray90", main="BnaA08g11130D") # as expected 
@@ -372,7 +373,22 @@ abline(h=lod.thres,lty=2)
 plot(eQTL_result[[7]]$BnaC03g65980D,bandcol="gray90", main="BnaC03g65980D") # as expected
 abline(h=lod.thres,lty=2) 
 
-"BnaA08g11140D" %in% eQTL_result[[2]] 
+bayesint(eQTL_result[[3]]$BnaA08g12780D, chr = 8, expandtomarkers = T) 
+bayesint(scanone.imp$Erucic_acid, chr = "A08", expandtomarkers = T)
+
+bayesint(eQTL_result[[9]]$BnaA08g11140D, chr = 8, expandtomarkers = T) 
+bayesint(scanone.imp$Erucic_acid, chr = "A08", expandtomarkers = T)
+
+# below is the list of fatty acid genes in the interval which are differentially expressed between Da-Ae and Da-Ol-1 
+"BnaA08g11810D" %in% cis_trans_result_final$gene_ID # F
+"BnaA08g12800D" %in% cis_trans_result_final$gene_ID
+"BnaA08g13200D" %in% cis_trans_result_final$gene_ID
+"BnaA08g14550D" %in% cis_trans_result_final$gene_ID
+"BnaA08g12780D" %in% cis_trans_result_final$gene_ID
+"BnaA08g11130D" %in% cis_trans_result_final$gene_ID
+"BnaC03g67820D" %in% cis_trans_result_final$gene_ID 
+
+####### abunch of test before analysis 
 
 # get all eQTL based on this threshold 
 system.time(
@@ -529,9 +545,12 @@ dim(cis_candidate_4)  # 75225     13
 "BnaA08g11130D" %in% cis_candidate_4$gene_ID # as expected 
 "BnaA08g11140D" %in% cis_candidate_4$gene_ID # good 
 
-unique(cis_candidate_4$gene_ID) %>% length() # 7514 cis-genes 
+unique(cis_candidate_4$gene_ID) %>% length() # 7514 cis-genes
 
 # get the final set of cis- and trans- eQTL, 
+cis_candidate_4$gene_ID 
+
+
 cis_trans_result_2$cis_trans <- ifelse(cis_trans_result_2$cis_trans == "cis_candidate", "cis", "trans") 
 cis_trans_result_final <- cis_trans_result_2 
 View(cis_candidate_4)
@@ -558,9 +577,10 @@ cis_trans_result_final %>%
   dplyr::select(snp_chrom) %>% 
   unique()
   
-cis_trans_result_final %>% dim()
-geom_
+cis_trans_result_final %>% dim() # 728717 
 
+####### 
+cis_trans_result_final[cis_trans_result_final$cis_trans == "cis",]$gene_ID %>% unique() %>% length() 
 
 ```
 
