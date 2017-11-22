@@ -374,8 +374,8 @@ View(SNP_gene_final_fxn)
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/SNP.Erucic.Oleic.2.Rdata")
 SNP.Erucic.Oleic.2 %>% dim() # 235 
 
-SNP.Erucic.Oleic.known <- read.csv("~/Desktop/Erucic_Oleic_known_sig_loci.csv")
-SNP.Erucic.Oleic.known$seq.method %>% unique()
+SNP.Erucic.Oleic.known <- read.csv("~/Desktop/Erucic_Oleic_known_sig_loci.csv") 
+SNP.Erucic.Oleic.known$seq.method %>% unique() 
 
 colnames(SNP.Erucic.Oleic.known)
 
@@ -388,6 +388,8 @@ SNP.Erucic.Oleic.known$SNP_ID <- paste(SNP.Erucic.Oleic.known$CHROM, SNP.Erucic.
 SNP.Erucic.Oleic.2$SNP_ID <- paste(SNP.Erucic.Oleic.2$CHROM, SNP.Erucic.Oleic.2$start, sep = "_")
 
 head(SNP.Erucic.Oleic.known)
+tail(SNP.Erucic.Oleic.known)
+dim(SNP.Erucic.Oleic.known)
 head(SNP.Erucic.Oleic.2)  
 
 # no overlapping single SNPs 
@@ -400,6 +402,8 @@ gff.Erucic_Oleic_all <- GRanges(seqnames = Rle(SNP.Erucic.Oleic.all$CHROM),range
 gff.Erucic_Oleic_all
 autoplot(gff.Erucic_Oleic_all, layout = "karyogram", aes(color = names)) 
 ggsave(filename = "~/Desktop/pl.Erucic_Oleic_all.png", width = 13, height = 8) 
+
+### how to combine these 
 ```
 
 # sessioninfo

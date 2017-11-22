@@ -22,7 +22,7 @@ source("~/KIAT/function_BnRNAseq.R")
 # geno data 
 F2_geno_data_2_Ae_Ol_new <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.txt")
 dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
-F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10] 
 
 # pheno data 
 pheno <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Phenotype_Bnapus_all.csv", header = T, row.names = 1)
