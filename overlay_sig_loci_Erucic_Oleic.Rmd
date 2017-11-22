@@ -17,6 +17,7 @@ library("rtracklayer")
 # source("https://bioconductor.org/biocLite.R")
 # biocLite("ggbio")
 library(ggbio) 
+library(dplyr)
 ```
 
 ### import GWAS and QTL analysis CIM result 
@@ -67,6 +68,43 @@ gffRangeData
 gff<-as(gffRangeData, "GRanges")
 test <- head(gff, 50000)
 autoplot(test, layout = "karyogram", aes(color = strand))  
+
+# more demo 
+library(devtools)
+install_github("genomicsclass/ERBS")
+library(ERBS)
+data(HepG2)
+library(GenomeInfoDb)  # trim all but autosomal chroms
+seqlevels(HepG2, force=TRUE) = paste0("chr", 1:22)
+data(GM12878)
+seqlevels(GM12878, force=TRUE) = paste0("chr", 1:22)
+library(ggbio)
+autoplot(HepG2, layout="karyogram", main="ESRRA binding on HepG2")
+
+autoplot(GM12878, layout="karyogram", main="ESRRA binding on GM12878")
+
+data(GM12878)
+seqlevels(GM12878, force=TRUE) = paste0("chr", 1:22)
+autoplot(GM12878, layout="karyogram", aes(colour=log(peak)))
+
+GM12878
+
+HepG2$cell = "HepG2"
+GM12878$cell = "Bcell"
+tot = c(GM12878, HepG2)
+tot$peak10 = tot$peak/10 # copes with automatic scale of y axis
+seqlevels(tot, force=TRUE) = paste0("chr", 1:22)
+library(scales)
+
+p = autoplot(seqinfo(tot))
+p = p + layout_karyogram(tot, aes(fill=cell, colour=cell), geom="rect") +
+    scale_colour_manual(values = alpha(c("green", "red"), .1)) +
+    scale_fill_manual(values = alpha(c("green", "red"), .1))
+p
+
+p + layout_karyogram(tot, aes(x=start, y=peak10), ylim=c(15,30),
+    geom="point", color="blue", size=.2) 
+tot  
 ``` 
 
 ### draw similar plot for the overlay with sinificant loci and fatty acid genes 
@@ -97,35 +135,284 @@ rbind(lipid_fatty_acid_genes.2, SNP.Erucic.Oleic.2)
 
 gff.lipid_fatty_acid_genes.Erucic_Oleic <- GRanges(seqnames = Rle(lipid_fatty_acid_genes.Erucic_Oleic$CHROM),ranges = IRanges(start = lipid_fatty_acid_genes.Erucic_Oleic$start, end = lipid_fatty_acid_genes.Erucic_Oleic$end), names = lipid_fatty_acid_genes.Erucic_Oleic$name)
  
-gff.lipid_fatty_acid_genes
-autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names))
+# autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names))
 # this plot shows that if just looking at all lipid and fatty acid genes, there are so many that not meaningful to check the result 
 
-###### now just focus on fatty acid biosynthesis pathways genes (GO:0006633)
-# fatty_acid_gene_index <- read.delim("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/fatty_acid_biosynthesis_genes_ID.txt", header = F)
-# head(fatty_acid_gene_index)
-# nrow(fatty_acid_gene_index) # 248 
-# rownames(fatty_acid_gene_index) <- fatty_acid_gene_index$V1
-# 
-# # extract only fatty acid genes from dataset 
-# fatty.acid.genes <- (merge(parent.read.count.one.small, fatty_acid_gene_index, by="row.names"))[,1:28]
-# head(fatty.acid.genes)
-# rownames(fatty.acid.genes) <- fatty.acid.genes$Row.names
-# fatty.acid.genes <- fatty.acid.genes[,-1]
-# dim(fatty.acid.genes) # 207 27
-# fatty.acid.genes$total <- rowSums(fatty.acid.genes)
-# dim(fatty.acid.genes)
+### only focus on several lipid and fatty acid related GO terms
+# fatty acid beta-oxidation
+# lipid transporter activity
+# fatty acid biosynthetic process
+# fatty acid metabolic process
+# lipid metabolic process
+# lipid catabolic process
+# acetyl-CoA carboxylase complex
+# lipid transport
+# lipid biosynthetic process
+# fatty-acyl-CoA biosynthetic process
+# lipid binding
+
+lipid_fatty_acid_GO <- read.table("~/Desktop/Brassica_project/reference/fatty_acid_lipd_GO_11_12_2017", sep = "\"", stringsAsFactors = F)
+lipid_fatty_acid_GO <- 
+  lipid_fatty_acid_GO %>% 
+  dplyr::select(c(V2, V10)) %>% 
+  mutate(GO = V2) 
+
+head(lipid_fatty_acid_GO)
+
+napus_GO <- read.table("~/Desktop/Brassica_project/reference/Brassica_napus_GO", stringsAsFactors = F)
+
+napus_GO <- 
+  napus_GO %>% 
+  mutate(GO = V2)
+
+head(napus_GO)
+
+lipid_fatty_acid_genes <- 
+lipid_fatty_acid_GO %>% 
+  left_join(napus_GO, by = "GO") %>% 
+  mutate(GOterm = V10, name=V1) %>% 
+  dplyr::select(c(GOterm, name, GO)) 
+
+dim(lipid_fatty_acid_genes) # 1298
+head(lipid_fatty_acid_genes)
+save(lipid_fatty_acid_genes, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/lipid_fatty_acid_genes.Rdata")
+```
+
+### plot out the new lipid fatty acid gene list 
+```{r}
+lipid_fatty_acid_genes.2 <- 
+gff.mRNA %>% 
+  inner_join(lipid_fatty_acid_genes, by = "name") %>% 
+  mutate(name = GOterm) %>% 
+  dplyr::select(c(CHROM:name))
+
+lipid_fatty_acid_genes.2 %>% dim() # 1298    4 
+head(lipid_fatty_acid_genes.2)
+
+# lipid_fatty_acid_genes.Erucic_Oleic <- 
+# rbind(lipid_fatty_acid_genes.2, SNP.Erucic.Oleic.2)
+
+lipid_fatty_acid_genes.Erucic_Oleic <- lipid_fatty_acid_genes.2
+
+gff.lipid_fatty_acid_genes.Erucic_Oleic <- GRanges(seqnames = Rle(lipid_fatty_acid_genes.Erucic_Oleic$CHROM),ranges = IRanges(start = lipid_fatty_acid_genes.Erucic_Oleic$start, end = lipid_fatty_acid_genes.Erucic_Oleic$end), names = lipid_fatty_acid_genes.Erucic_Oleic$name) 
+ 
+#  [1] "lipid metabolic process"             "lipid biosynthetic process"         
+#  [3] "fatty acid biosynthetic process"     "lipid catabolic process"            
+#  [5] "fatty acid metabolic process"        "fatty acid beta-oxidation"          
+#  [7] "lipid transport"                     "lipid binding"                      
+#  [9] "fatty-acyl-CoA biosynthetic process" "acetyl-CoA carboxylase complex"     
+# [11] "lipid transporter activity"          "SNP"   
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names)) 
+ggsave(filename = "~/Desktop/pl.fatty_acid_genes.png", width = 13, height = 8)
+
+save(lipid_fatty_acid_genes.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/lipid_fatty_acid_genes.2.Rdata")
+save(SNP.Erucic.Oleic.2, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/SNP.Erucic.Oleic.2.Rdata") 
+```
+
+### continue work on this plot 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/lipid_fatty_acid_genes.2.Rdata")
+
+# rename CHROM from normal name to different name 
+gff.lipid_fatty_acid_genes.Erucic_Oleic
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "SNP"))  
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid metabolic process"), legend = FALSE) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty acid biosynthetic process"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid catabolic process"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty acid metabolic process"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty acid beta-oxidation"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid transport"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid binding"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty-acyl-CoA biosynthetic process"), alpha = 0.1) 
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "acetyl-CoA carboxylase complex"), alpha = 0.1)
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "fatty-acyl-CoA biosynthetic process"), alpha = 0.1)
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "acetyl-CoA carboxylase complex"), alpha = 0.1)
+
+autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(color = names == "lipid transporter activity"), alpha = 0.1)  
+```
+
+### list fatty acid genes within 1Mb of the SNP loci boundary 
+```{r}
+# genes under the significant loci 
+load("~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.2.Rdata")
+View(SNP_gene_final_fxn.2) 
+
+# need to get genes within 1Mb of the significant loci 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/lipid_fatty_acid_genes.Rdata")
+load("~/Desktop/2017_Nov_KIAT_report/SNP.Erucic.Oleic.Unique.Rdata")
+
+lipid_fatty_acid_genes.3 <-
+gff.mRNA %>% 
+  inner_join(lipid_fatty_acid_genes, by = "name") 
+
+lipid_fatty_acid_genes.3 %>% dim() # 1298    6 
+head(lipid_fatty_acid_genes.3) 
+gff.lipid_fatty_acid_genes <- GRanges(seqnames = Rle(lipid_fatty_acid_genes.3$CHROM),ranges = IRanges(start = lipid_fatty_acid_genes.3$start, end = lipid_fatty_acid_genes.3$end), names = lipid_fatty_acid_genes.3$name, GO = lipid_fatty_acid_genes.3$GOterm)  
+gff.lipid_fatty_acid_genes
+
+dim(SNP.Erucic.Oleic.unique) # 235 
+SNP.Erucic.Oleic.unique %>%
+  filter(CHROM=="chrA08") %>%
+  arrange(desc(POS)) # range 6985514 to 11476346 
+
+SNP.Erucic.Oleic.unique %>%
+  filter(CHROM=="chrC03") %>%
+  arrange(desc(POS))  # range 52598214 to 56930228   
+
+# on the basis of range, add 1000000 (1Mb)
+# get range as an range object 
+SNP.range <- GRanges(seqnames = Rle(c("chrA08", "chrC03")), ranges = IRanges(start = c(6985514 - 1000000, 52598214 - 1000000), end = c(11476346 + 1000000, 56930228 + 1000000)))
+SNP.range
+
+SNP_range_gene <- mergeByOverlaps(SNP.range, gff.lipid_fatty_acid_genes)
+SNP_range_gene %>% as.data.frame()
+View(SNP_range_gene)[1:26] 
+
+# also need Arabidopsis homolog name 
+napus_vs_ara.non_reciprocal <- read.table("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
+
+head(napus_vs_ara.non_reciprocal)
+dim(napus_vs_ara.non_reciprocal) # 64949 
+
+colnames(napus_vs_ara.non_reciprocal)[1] <- "names"
+
+SNP_gene_final_fxn <- merge(SNP_range_gene, napus_vs_ara.non_reciprocal, by = "names", all.x=T)
+SNP_gene_final_fxn
+View(SNP_gene_final_fxn) 
+
+colnames(SNP_gene_final_fxn)
+
+SNP_gene_final_fxn <- SNP_gene_final_fxn[,c("SNP.range.seqnames", "SNP.range.start", "SNP.range.end", "gff.lipid_fatty_acid_genes.start", "gff.lipid_fatty_acid_genes.end", "gff.lipid_fatty_acid_genes.names", "gff.lipid_fatty_acid_genes.GO", "ara_ID", "description")]
+
+View(SNP_gene_final_fxn)
+save(SNP_gene_final_fxn, file = "~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
+```
+
+### check expression of these genes between Da-Ae and Da-Ol-1 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.new.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.pairwise.gt.Rdata") # pairwise 
+
+dim(DEgene.new.gt) # 15098     9 
+dim(DEgene.new.interaction) # 1701    8 
+dim(DEgene.new.tissue) # 22580     8 
+
+dim(DEgene.young); dim(DEgene.bolting); dim(DEgene.flowering); dim(DEgene.early.silique); dim(DEgene.late.silique)
+# [1] 8976    5
+# [1] 4648    5
+# [1] 6081    5
+# [1] 6695    5
+# [1] 7413    5
+
+### make a list 
+DE.list <- list(gt = DEgene.new.gt, tissue = DEgene.new.tissue, interaction = DEgene.new.interaction, young = DEgene.young, bolting = DEgene.bolting, flowering = DEgene.flowering, early_silique = DEgene.early.silique, late_silique = DEgene.late.silique)
+length(DE.list) # 8 
+
+load("~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.new.gt)]
+
+test1 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.new.gt)] %>% unique()
+
+test2 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.new.tissue)] %>% unique()
+
+test3 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.new.interaction)] %>% unique()
+
+c(test1, test2, test3) %>% unique() %>% length()
+
+test4 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.young)] %>% unique()
+
+test5 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.bolting)] %>% unique()
+
+test6 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.flowering)] %>% unique()
+
+test7 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.early.silique)] %>% unique()
+
+test8 <- 
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% rownames(DEgene.late.silique)] %>% unique()
+
+DE.gt.lipid_fatty_acid <- c(test4, test5, test6, test7, test8) %>% unique()
+
+### why some genes are significant for gt term but not differentially expressed between any tissue type in pairwise analysis 
+
+genes.GWAS <- DE.gt.lipid_fatty_acid
+genes.GWAS.df <- as.data.frame(genes.GWAS)
+colnames(genes.GWAS.df) <- "V1"
+genes.GWAS.df 
+
+expression.pattern.Bn.parent.bar(vstMat.parent = vstMat.parent, gene = genes.GWAS.df) 
+ggsave("~/Desktop/2017_Nov_KIAT_report/DE.gt.lipid_fatty_acid.png", width = 7, height = 5) 
+
+temp.temp <- 
+SNP_gene_final_fxn[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% genes.GWAS.df$V1,][,c("gff.lipid_fatty_acid_genes.names", "gff.lipid_fatty_acid_genes.GO", "description")] 
+  
+colnames(temp.temp) <- c("gene_ID", "GO_term", "Arabidopsis description")
+
+View(temp.temp)
+View(SNP_gene_final_fxn)
+``` 
+
+### plot out the distribution of sinigicant SNPs identified from published paper and my study
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/SNP.Erucic.Oleic.2.Rdata")
+SNP.Erucic.Oleic.2 %>% dim() # 235 
+
+SNP.Erucic.Oleic.known <- read.csv("~/Desktop/Erucic_Oleic_known_sig_loci.csv") 
+SNP.Erucic.Oleic.known$seq.method %>% unique() 
+
+colnames(SNP.Erucic.Oleic.known)
+
+SNP.Erucic.Oleic.known <- SNP.Erucic.Oleic.known[,c("CHROM", "start", "end")]
+dim(SNP.Erucic.Oleic.known) # 43 3 
+SNP.Erucic.Oleic.known$CHROM <- paste("chr", SNP.Erucic.Oleic.known$CHROM, sep = "")
+SNP.Erucic.Oleic.known$name <- rep("SNP_known", nrow(SNP.Erucic.Oleic.known))
+
+SNP.Erucic.Oleic.known$SNP_ID <- paste(SNP.Erucic.Oleic.known$CHROM, SNP.Erucic.Oleic.known$start, sep = "_")
+SNP.Erucic.Oleic.2$SNP_ID <- paste(SNP.Erucic.Oleic.2$CHROM, SNP.Erucic.Oleic.2$start, sep = "_")
+
+head(SNP.Erucic.Oleic.known)
+tail(SNP.Erucic.Oleic.known)
+dim(SNP.Erucic.Oleic.known)
+head(SNP.Erucic.Oleic.2)  
+
+# no overlapping single SNPs 
+sum(SNP.Erucic.Oleic.2$SNP_ID %in% SNP.Erucic.Oleic.known$SNP_ID)
+
+SNP.Erucic.Oleic.all <- rbind(SNP.Erucic.Oleic.2, SNP.Erucic.Oleic.known)
+
+gff.Erucic_Oleic_all <- GRanges(seqnames = Rle(SNP.Erucic.Oleic.all$CHROM),ranges = IRanges(start = SNP.Erucic.Oleic.all$start, end = SNP.Erucic.Oleic.all$end), names = SNP.Erucic.Oleic.all$name) 
+
+gff.Erucic_Oleic_all
+autoplot(gff.Erucic_Oleic_all, layout = "karyogram", aes(color = names)) 
+ggsave(filename = "~/Desktop/pl.Erucic_Oleic_all.png", width = 13, height = 8) 
+
+### how to combine these 
 ```
 
 # sessioninfo
 ```{r}
-<<<<<<< HEAD
 # source("https://bioconductor.org/biocLite.R")
 # biocLite("ggbio")
 library(ggbio)
 data(hg19IdeogramCyto, package = "biovizBase")
 head(hg19IdeogramCyto)
-=======
 # sessionInfo() 
 # R version 3.2.4 (2016-03-10)
 # Platform: x86_64-apple-darwin13.4.0 (64-bit)
@@ -167,6 +454,5 @@ head(hg19IdeogramCyto)
 # [55] R6_2.2.2                   GenomicAlignments_1.6.3    lubridate_1.7.1           
 # [58] knitr_1.17                 bit_1.1-12                 bindr_0.1                 
 # [61] futile.options_1.0.0       stringi_1.1.5              Rcpp_0.12.13  
->>>>>>> 6ac86ad39b5c2b820d2cc4d473ac40c4b8b8c673
 ```
 

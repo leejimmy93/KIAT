@@ -2810,12 +2810,12 @@ load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.
 genes.GWAS <- c("BnaA08g12780D", "BnaC03g67820D")
 genes.GWAS.df <- as.data.frame(genes.GWAS)
 colnames(genes.GWAS.df) <- "V1"
-genes.GWAS.df
+genes.GWAS.df 
 
 expression.pattern.Bn.parent(genes.GWAS.df)
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/two_genes.png", width = 7, height = 5)  
 
-expression.pattern.Bn.parent.bar(vstMat.parent = vstMat.parent, gene = genes.GWAS.df)
+expression.pattern.Bn.parent.bar(vstMat.parent = vstMat.parent, gene = genes.GWAS.df) 
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/two_genes.png", width = 7, height = 5) 
 ```
 

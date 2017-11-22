@@ -1137,7 +1137,7 @@ load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.new.Rdata")
 # gt effect 
 DEgene.GO.ORA.gt <- GOseq.Bn.ORA(rownames(DEgene.new.gt))
 class(DEgene.GO.ORA.gt)
-DEgene.GO.ORA.gt$Term
+DEgene.GO.ORA.gt$Term 
 # tissue effect 
 DEgene.GO.ORA.tissue <- GOseq.Bn.ORA(rownames(DEgene.new.tissue))
 DEgene.GO.ORA.tissue
@@ -2351,7 +2351,7 @@ ggdata.parent.2$labels
 
 # start ggplot here 
 p.dengro.2 <- ggplot(data = segment(ggdata.parent.2))
-p.dendro.2 <- p.dengro.2 + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro()
+p.dendro.2 <- p.dengro.2 + geom_segment(aes(x=x, y=y, xend=xend, yend=yend)) + theme_dendro() 
 p.dendro.2 <- p.dendro.2 + geom_text(data = label(ggdata.parent.2), aes(x = x, y = y, label = label, hjust=0, color=group)) + coord_flip() + scale_y_reverse(expand=c(0.2, 0))
 p.dendro.2
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/genome_mapped/clustering_nobolting.png", width = 15, height = 8) 

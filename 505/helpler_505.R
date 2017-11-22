@@ -111,8 +111,8 @@ spearman.cor.gene.trait <- function(trait.gene.sub, phenotypes, genes){
 ### pull out expression value in Da-Ae and Da-Ol-1 for important genes 
 
 expression.pattern.Bn.parent.bar <- function(gene, vstMat.parent){
-  rownames(ID) <- ID$V1
-  data <- as.data.frame(vstMat.parent[(c(which(rownames(vstMat.parent) %in% rownames(ID)))),])
+  # rownames(ID) <- gene$V1
+  data <- as.data.frame(vstMat.parent[(c(which(rownames(vstMat.parent) %in% gene$V1))),])
   data$geneID <- rownames(data) 
   data.melt <- melt(data)
   data.melt$gt <- gsub("([[:print:]]+)(_)([[:print:]]+)(_)([[:print:]]+)","\\1",data.melt$variable)
