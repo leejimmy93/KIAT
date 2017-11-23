@@ -2576,8 +2576,9 @@ head(SNP.Erucic.Oleic)
 SNP.Erucic.Oleic.unique <- unique(SNP.Erucic.Oleic)
 dim(SNP.Erucic.Oleic.unique) # 235 2 
 head(SNP.Erucic.Oleic.unique)
+save(SNP.Erucic.Oleic.unique, file = "~/505/output/131_sample/SNP.Erucic.Oleic.Unique.Rdata")
 
-genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name) 
 genes
 
 SNP <- GRanges(seqnames = Rle(SNP.Erucic.Oleic.unique$CHROM), ranges = IRanges(start = SNP.Erucic.Oleic.unique$POS, end = SNP.Erucic.Oleic.unique$POS), ID = paste(SNP.Erucic.Oleic.unique$CHROM, SNP.Erucic.Oleic.unique$POS, sep = "_"))
@@ -2642,7 +2643,7 @@ dim(SNP_gene_final_fxn) # 204
 
 SNP_gene_final_fxn.2 <- merge(SNP_gene_final_fxn, sig_SNP_ann, by="snp_ID")
 SNP_gene_final_fxn.2 
-View(SNP_gene_final_fxn.2) 
+View(SNP_gene_final_fxn.2)  
 save(SNP_gene_final_fxn.2, file="~/505/output/131_sample/SNP_gene_final_fxn.2.Rdata")
 ```
 
@@ -2722,8 +2723,9 @@ tmp[which(tmp$GO == "GO:0015976"),]
 ```{r}
 ### identify the range of A08 & C03 QTLs 
 ### question to answer: the identified SNP loci range may provide us information, so check the genes within those region, and pull out their expression between Da-Ae & Da-Ol, check their Arabidopsis homologs  
-
+load("~/505/output/131_sample/SNP.Erucic.Oleic.Unique.Rdata")
 str(SNP.Erucic.Oleic.unique) 
+dim(SNP.Erucic.Oleic.unique) # 235 
 SNP.Erucic.Oleic.unique %>%
   filter(CHROM=="chrA08") %>%
   arrange(desc(POS)) # range 7053250 to 11476346 
@@ -2732,6 +2734,8 @@ SNP.Erucic.Oleic.unique %>%
   filter(CHROM=="chrC03") %>%
   arrange(desc(POS))  # range 52598214 to 56930228     
 
+######## this part is not consistent with the info below because new SNP dataset were used for GWAS... 
+
 # get range as an range object 
 SNP.range <- GRanges(seqnames = Rle(c("chrA08", "chrC03")), ranges = IRanges(start = c(7053250, 52598214), end = c(11476346, 56930228)))
 SNP.range
@@ -2739,7 +2743,7 @@ SNP.range
 ### BnaC03g67820D: chrC03 57461343 57463972  2630      * BnaC03g67820D
 
 SNP_range_gene <- mergeByOverlaps(SNP.range, genes)
-SNP_range_gene
+SNP_range_gene 
 
 # enrichment of these different genes 
 
@@ -2769,8 +2773,7 @@ colnames(SNP_range_gene.df)[12] <- "gene_ID"
 ## check the Arabidopsis homolog of these genes 
 SNP_range_gene.df %>% 
   semi_join(napus_vs_ara.non_reciprocal, by="gene_ID") %>%
-  View()
-
+  View() 
 
 gene_list <- 
 lapply(1:length(DE.list), function(i){
