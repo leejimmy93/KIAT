@@ -89,7 +89,7 @@ qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y
 ### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
 
 #examine our model
-summary(qtl.fit.Erucic) 
+summary(qtl.fit.Erucic)  
 
 #we can now ask if all qtls are at their most likely positions
 #this also provides a nice map

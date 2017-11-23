@@ -14,7 +14,7 @@ library(IRanges)
 library(GenomicRanges)
 library(GenomicFeatures)
 library("rtracklayer")
-# source("https://bioconductor.org/biocLite.R")
+# source("https://bioconductor.org/biocLite.R") 
 # biocLite("ggbio")
 library(ggbio) 
 library(dplyr)
@@ -356,6 +356,7 @@ genes.GWAS <- DE.gt.lipid_fatty_acid
 genes.GWAS.df <- as.data.frame(genes.GWAS)
 colnames(genes.GWAS.df) <- "V1"
 genes.GWAS.df 
+save(genes.GWAS.df, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/genes.GWAS.df.Rdata")
 
 expression.pattern.Bn.parent.bar(vstMat.parent = vstMat.parent, gene = genes.GWAS.df) 
 ggsave("~/Desktop/2017_Nov_KIAT_report/DE.gt.lipid_fatty_acid.png", width = 7, height = 5) 
@@ -365,8 +366,8 @@ SNP_gene_final_fxn[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% gene
   
 colnames(temp.temp) <- c("gene_ID", "GO_term", "Arabidopsis description")
 
-View(temp.temp)
-View(SNP_gene_final_fxn)
+View(temp.temp) 
+View(SNP_gene_final_fxn) 
 ``` 
 
 ### plot out the distribution of sinigicant SNPs identified from published paper and my study
@@ -396,14 +397,80 @@ head(SNP.Erucic.Oleic.2)
 sum(SNP.Erucic.Oleic.2$SNP_ID %in% SNP.Erucic.Oleic.known$SNP_ID)
 
 SNP.Erucic.Oleic.all <- rbind(SNP.Erucic.Oleic.2, SNP.Erucic.Oleic.known)
+SNP.Erucic.Oleic.all$CHROM = gsub(" ", "", SNP.Erucic.Oleic.all$CHROM)
+SNP.Erucic.Oleic.all$CHROM
 
 gff.Erucic_Oleic_all <- GRanges(seqnames = Rle(SNP.Erucic.Oleic.all$CHROM),ranges = IRanges(start = SNP.Erucic.Oleic.all$start, end = SNP.Erucic.Oleic.all$end), names = SNP.Erucic.Oleic.all$name) 
 
 gff.Erucic_Oleic_all
 autoplot(gff.Erucic_Oleic_all, layout = "karyogram", aes(color = names)) 
 ggsave(filename = "~/Desktop/pl.Erucic_Oleic_all.png", width = 13, height = 8) 
+```
 
-### how to combine these 
+### plot out the distribution of genetic interval identified from published paper and my study, overlay with significant marker 
+```{r}
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
+
+test.Erucic <-  
+cim.qtl$Erucic_acid[(cim.qtl$Erucic_acid$chr == "A08" | cim.qtl$Erucic_acid$chr == "C03"),] 
+test2.Erucic <- test.Erucic[grepl("^chr", rownames(test.Erucic)),]
+test2.Erucic %>% dim() # 230 
+
+test2.Erucic$POS <- gsub("(chrA08|chrC03)(_)([[:digit:]])", "\\3", rownames(test2.Erucic))
+QTL.Erucic <- test2.Erucic %>% 
+  mutate(CHROM = chr) %>% 
+  mutate(type = rep("QTL", nrow(test2.Erucic))) %>% 
+  dplyr::select(CHROM, POS, lod, type)
+
+QTL.Erucic
+
+Erucic_acid <- read.csv("~/Desktop/2017_Nov_KIAT_report/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+SNP.Erucic <- data.frame(CHROM = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", Erucic_acid[Erucic_acid$Chromosome == 15 | Erucic_acid$Chromosome == 26,]$SNP), 
+                         POS = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\4", Erucic_acid[Erucic_acid$Chromosome == 15 | Erucic_acid$Chromosome == 26,]$SNP),
+                         lod = -log(Erucic_acid[Erucic_acid$Chromosome == 15 | Erucic_acid$Chromosome == 26,]$P.value, base = 10),
+                         type = rep("GWAS", sum(Erucic_acid$Chromosome == 15 | Erucic_acid$Chromosome == 26))) 
+
+SNP.Erucic 
+
+## candidate genes 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/genes.GWAS.df.Rdata")
+gff.mRNA <- read.table("~/Desktop/Brassica_project/IGV_file/gff.mRNA")
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+
+# import fatty acid genes info (based on GO and IPR info)
+colnames(genes.GWAS.df) <- "name"
+
+genes.GWAS.df.2 <- 
+gff.mRNA %>% 
+  inner_join(genes.GWAS.df, by = "name") 
+
+genes.GWAS.df.2
+
+library(ggrepel)
+set.seed(111)
+
+p.Erucic_acid_A08 <- 
+ggplot() + geom_point(mapping = aes(x = as.numeric(as.character(POS)), y = lod), data = SNP.Erucic[SNP.Erucic$CHROM=="A08",]) + geom_line(mapping = aes(x = as.numeric(as.character(POS)), y = lod, color = "blue"), data = QTL.Erucic[QTL.Erucic$CHROM=="A08",]) + geom_hline(yintercept = 5) + geom_hline(yintercept = 42, color = "red") +  geom_text_repel(aes(x=as.numeric(as.character(start)), y=0, label=name, color = "dark_blue"), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrA08",]) + labs(title = "Erucic_A08", x = "physical position") + theme(legend.position = "None")  + geom_segment(aes(x=as.numeric(as.character(start)), y = 0, xend = as.numeric(as.character(end)), yend = 0, color = "dark_blue"), arrow = arrow(length = unit(0.5, "cm")), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrA08",]) 
+# 42 is 95% CI  
+
+p.Erucic_acid_C03 <- 
+ggplot() + geom_point(mapping = aes(x = as.numeric(as.character(POS)), y = lod), data = SNP.Erucic[SNP.Erucic$CHROM=="C03",]) + geom_line(mapping = aes(x = as.numeric(as.character(POS)), y = lod, color = "blue"), data = QTL.Erucic[QTL.Erucic$CHROM=="C03",]) + geom_hline(yintercept = 5) + geom_hline(yintercept = 21, color = "red") +   geom_text_repel(aes(x=as.numeric(as.character(start)), y=0, label=name, color = "dark blue"), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrC03",]) + labs(title = "Erucic_C03", x = "physical position") + theme(legend.position = "None") + geom_segment(aes(x=as.numeric(as.character(start)), y = 0, xend = as.numeric(as.character(end)), yend = 0, color = "dark blue"), arrow = arrow(length = unit(0.5, "cm")), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrC03",]) 
+
+p.Erucic_acid_A08
+p.Erucic_acid_C03
+
+# combine these two figure 
+library(cowplot)
+
+p.Erurcic_acid<-
+  plot_grid(
+  p.Erucic_acid_A08+theme(axis.text.x=element_text(size=8,vjust=0.5))+labs(title="Erucic acid A08"),
+  p.Erucic_acid_C03+theme(axis.text.x=element_text(size=8,vjust=0.5))+labs(title="Erucic acid C03"),
+  ncol=1, nrow = 2.5)
+
+p.Erurcic_acid
+
+save_plot("~/Desktop/2017_Nov_KIAT_report/p.Erucic_acid.png", p.Erurcic_acid, ncol = 1, nrow = 2,base_aspect_ratio = 2) 
 ```
 
 # sessioninfo
