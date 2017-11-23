@@ -1,0 +1,121 @@
+---
+title: "candidate_gene_fatty_acid"
+author: "Ruijuan Li"
+date: "11/22/2017"
+output: html_document
+---
+
+### import lib
+```{r}
+library(tidyverse)
+library(IRanges)
+library(GenomicRanges)
+library(GenomicFeatures)
+library("rtracklayer")
+library(dplyr)
+library(reshape)
+```
+
+Purpose of this script is to explore different perspectives of candidate genes for Fatty acid 
+```{r}
+load("~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
+SNP_gene_final_fxn
+
+Erucic_acid <- read.csv("~/Desktop/2017_Nov_KIAT_report/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+SNP.Erucic <- data.frame(CHROM = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", Erucic_acid$SNP), 
+                         POS = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\4", Erucic_acid$SNP)) 
+
+SNP.Erucic$POS <- as.numeric(as.character(SNP.Erucic$POS))
+SNP <- GRanges(seqnames = Rle(SNP.Erucic$CHROM), ranges = IRanges(start = SNP.Erucic$POS, end = SNP.Erucic$POS), ID = paste(SNP.Erucic$CHROM, SNP.Erucic$POS, sep = "_"))
+SNP
+length(SNP) # 174397 
+
+candidate_genes <- GRanges(seqnames = Rle(gsub("(chr)([[:print:]]+)", "\\2", SNP_gene_final_fxn$SNP.range.seqnames)),ranges = IRanges(start = SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.start, end = SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.end), names = SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names)
+
+candidate_genes
+candidate_genes_SNP <- mergeByOverlaps(SNP, candidate_genes) # do they have amino acid change?  
+candidate_genes_SNP
+
+SNP_gene_df <- as.data.frame(candidate_genes_SNP)
+SNP_gene_df
+
+SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "candidate_genes.seqnames", "SNP.start", "names")]
+SNP_gene_final 
+
+napus_vs_ara.non_reciprocal <- read.table("~/Desktop/Brassica_project/reference/napus_vs_ara.non_reciprocal.table")
+
+head(napus_vs_ara.non_reciprocal)
+dim(napus_vs_ara.non_reciprocal) # 64949 
+
+colnames(napus_vs_ara.non_reciprocal)[1] <- "names"
+
+SNP_gene_final_fxn <- merge(SNP_gene_final, napus_vs_ara.non_reciprocal, by = "names", all.x=T)
+SNP_gene_final_fxn$SNP.ID <- gsub("chr", "S", SNP_gene_final_fxn$SNP.ID)
+SNP_gene_final_fxn
+
+colnames(SNP_gene_final_fxn) <- c("gene_ID", "snp_ID", "CHROM", "POS", "Arabidopsis_homolog", "function")
+SNP_gene_final_fxn
+SNP_gene_final_fxn$snp_ID <- paste("S", SNP_gene_final_fxn$snp_ID, sep = "")
+write.csv(SNP_gene_final_fxn, file = "~/Desktop/2017_Nov_KIAT_report/GWAS_SNP_gene_fxn.csv")
+
+### check amino acid change, synonymous or not? 
+# analyze snpEff annotation file 
+# cat GWAS_SNP_gene_fxn.csv | sed 's/"//g' | sed 's/,/ /g' | awk '{print $3}' | tail -10 > significant_SNP
+# grep -f significant_SNP 505_filtered_het_0.2.recode.sorted.ann.vcf | awk '{print $3 "|" $4 "|" $5 "|" $8}' | awk 'BEGIN{FS="|"}{print $1, $2, $3, $5}' > significant_SNP_annotation 
+
+sig_SNP_ann <- read_table2("~/Desktop/2017_Nov_KIAT_report/significant_SNP_annotation", col_names=F)
+head(sig_SNP_ann)  
+colnames(sig_SNP_ann) <- c("snp_ID", "ref", "alt", "mutation_type")
+unique(sig_SNP_ann$mutation_type)                          
+
+head(SNP_gene_final_fxn)
+dim(SNP_gene_final_fxn)
+
+SNP_gene_final_fxn.2 <- merge(SNP_gene_final_fxn, sig_SNP_ann, by="snp_ID")
+SNP_gene_final_fxn.2 
+
+```
+
+# expression level of candidate genes & Erucic & Oleic acid content level 
+```{r}
+load("~/Desktop/2017_Nov_KIAT_report/vstMat.f2.Rdata") 
+vstMat.f2 %>% dim() # 56180   166 
+vstMat.f2[1:10, 1:10]
+colnames(vstMat.f2) <- gsub("Sample_F2", "ID", colnames(vstMat.f2))
+colnames(pheno)
+colnames(vstMat.f2) %in% colnames(pheno) # sample ID matched 
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/pheno.Rdata")   
+
+# get expression level for the candiate genes 
+load("~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
+rownames(vstMat.f2)[rownames(vstMat.f2) %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names] 
+
+vstMat.f2.t <- 
+as.data.frame(t(vstMat.f2[rownames(vstMat.f2) %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names,]))
+vstMat.f2.t$sample_ID <- rownames(test)
+vstMat.f2.t.melt <- melt(vstMat.f2.t) 
+
+pheno.t <- as.data.frame(t(pheno["Erucic_acid",]))
+pheno.t$sample_ID <- rownames(pheno.t) 
+pheno.t
+
+expression_pheno <- 
+vstMat.f2.t.melt %>% 
+  left_join(pheno.t, by = "sample_ID") 
+
+expression_pheno %>% head()
+
+
+png("~/Desktop/test.png", width=13, height=7, units="in", res=300)
+par(mfrow=c(3,4))
+
+for (i in colnames(vstMat.f2.t)[1:11]){
+  tmp <- expression_pheno[expression_pheno$variable == i,] 
+  cor.result <- cor(tmp$value, tmp$Erucic_acid)
+  plot(tmp$value, tmp$Erucic_acid, main = i, xlab = round(cor.result, digits = 2)) 
+}
+
+dev.off()     
+```
+

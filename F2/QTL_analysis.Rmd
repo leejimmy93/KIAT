@@ -709,15 +709,15 @@ LG.f2.after.crossover$pheno %>% dim() # 166 43
 colnames(LG.f2.after.crossover$pheno)
 
 LG.f2.after.crossover$pheno$Behenic_acid %>% hist()
-# Behenic & cis_11_Eicosenoic_acid/
+# Behenic & cis_11_Eicosenoic_acid & Palmitoliec 
 
 pheno_fatty_acid <- 
   LG.f2.after.crossover$pheno %>% 
   dplyr::select(c(Palmitic_acid, Stearic_acid, Oleic_acid, vaccenic_acid, Linoleic_acid, Arachidic_acid, Linolenic_acid, Erucic_acid))
 
-png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/figure/pheno_fatty_acid_pair.png", width = 8, height = 8, units = "in", res = 300) 
-pairs(pheno_fatty_acid)
-dev.off()
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/figure/pheno_fatty_acid_pair.png", width = 8, height = 8, units = "in", res = 300)  
+pairs(pheno_fatty_acid) 
+dev.off() 
 ```
 
 ### check the loci effect to the different fatty acid traits 
