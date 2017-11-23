@@ -31,7 +31,7 @@ pheno[1:10, 1:10]
 rownames(pheno) <- gsub("\ ", "_", rownames(pheno))
 rownames(pheno) <- gsub("-", "_", rownames(pheno))
 rownames(pheno) <- gsub("\\.", "_", rownames(pheno)) 
-save(pheno, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/pheno.Rdata")
+save(pheno, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/pheno.Rdata") 
 
 # combine geno & pheno data for QTL analysis 
 colnames(F2_geno_data_2_Ae_Ol_new) <- gsub("X", "ID_", colnames(F2_geno_data_2_Ae_Ol_new))
@@ -337,7 +337,7 @@ cim.perm.3.traits <-
   sfLapply(c(5, 12, 14), function(trait){
     message(trait) # message doesn't work in here either
     tmp <- cim(LG.f2.after.crossover,
-               pheno.col = trait,
+               pheno.col = trait, 
                n.marcovar=5,
                method="em",
                n.perm=1000)
@@ -349,7 +349,7 @@ names(cim.perm) <- colnames(LG.f2.after.crossover$pheno)
 
 ### get loci estimated effect for all these traits 
 ```{r}
-load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata") 
 # Palmitic
 bayesint(cim.qtl$Palmitic_acid, chr = "A08", expandtomarkers = T)
 bayesint(cim.qtl$Palmitic_acid, chr = "C03", expandtomarkers = T)
