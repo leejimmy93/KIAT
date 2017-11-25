@@ -415,10 +415,7 @@ for (subset in seq_along(tmp)){
   test[[subset]] <- do.call("rbind", tmp[[subset]])
 }
 
-test[[10]] %>% dim()
-
 test2 <- do.call("rbind", test)
-dim(test2) 
 ############# 
 
 # extract only SNP info 
@@ -548,12 +545,27 @@ dim(cis_candidate_4)  # 75225     13
 unique(cis_candidate_4$gene_ID) %>% length() # 7514 cis-genes
 
 # get the final set of cis- and trans- eQTL, 
-cis_candidate_4$gene_ID 
+cis_candidate_4 <- 
+cis_candidate_4 %>% 
+  mutate(cis_trans_2 = "cis") 
 
+colnames(cis_candidate_4) 
+colnames(cis_trans_result_2) 
 
-cis_trans_result_2$cis_trans <- ifelse(cis_trans_result_2$cis_trans == "cis_candidate", "cis", "trans") 
-cis_trans_result_final <- cis_trans_result_2 
-View(cis_candidate_4)
+cis_trans_result_final <- 
+cis_candidate_4 %>% 
+  full_join(cis_trans_result_2) %>% 
+  dplyr::select(-(cis_trans:loci_end))
+
+dim(cis_trans_result_final) # 728717     11 
+
+cis_trans_result_final[is.na(cis_trans_result_final$cis_trans_2),][,"cis_trans_2"] <- rep("trans", sum(is.na(cis_trans_result_final$cis_trans_2)))
+sum(cis_trans_result_final$cis_trans_2 == "cis") # 75225 
+sum(cis_trans_result_final$cis_trans_2 == "trans") # 653492 
+
+length(unique(cis_trans_result_final[cis_trans_result_final$cis_trans_2 == "cis",]$gene_ID)) # 7514
+length(unique(cis_trans_result_final[cis_trans_result_final$cis_trans_2 == "trans",]$gene_ID)) # 20929 
+
 save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_final.Rdata")
 ``` 
 
