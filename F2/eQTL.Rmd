@@ -712,13 +712,35 @@ trans_candidate_4$sub <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2"
 trans_candidate_4$chrom <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", trans_candidate_4$snp_chrom)
 trans_candidate_4$chrom <- ifelse(trans_candidate_4$sub == "A", as.numeric(as.character(trans_candidate_4$chrom)), 10 + as.numeric(as.character(trans_candidate_4$chrom)))
 
-sum(as.numeric(as.character(trans_candidate_4$LG)) != trans_candidate_4$chrom) # problem... ignore for now, come back later 
+sum(as.numeric(as.character(trans_candidate_4$LG)) != trans_candidate_4$chrom) # problem... ignore for now, come back later? no, delete these now... 
 
-###### 
+trans_candidate_5 <- 
+trans_candidate_4[!(as.numeric(as.character(trans_candidate_4$LG)) != trans_candidate_4$chrom),] 
+trans_candidate_5 %>% head()
+trans_candidate_5 %>% dim() # 23771 6 
 
+trans_candidate_5$chrom2 <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", trans_candidate_5$snp_chrom)
+
+p.transeQTL <- 
+  trans_candidate_5 %>% 
+  ggplot() + 
+  geom_histogram(aes(x = loci_start, fill = sub), binwidth = 1000000) + 
+  facet_grid(chrom2 ~ sub) +
+  labs(list(title = "", x = "trans-eQTL loci", y = "number of trans-eQTL per Mb")) +
+  theme(legend.position = "none")
+
+ggsave("~/F2/output/eQTL/figure/p.transeQTL.png", width = 9, height = 6)
+```
+
+### cis-eQTL overlap with trait-QTL --> cis-candidate genes 
+```{r}
 
 ```
 
+### trans-eQTL overlap with trait-QTL --> trans-candidate genes 
+```{r}
+
+```
 
 
 
