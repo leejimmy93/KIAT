@@ -532,17 +532,17 @@ sum(cis_candidate_3$loci_start == cis_candidate_3$loci_end) # 2575
 # use loci, gene start/end, and marker genetic position to find cis-eQTL 
 cis_candidate_4 <- 
 cis_candidate_3 %>% 
-  filter((gene_start < loci_start & gene_end > loci_start & snp_pos > loci_start & snp_pos < loci_end) |
-         (gene_start > loci_start & gene_end < loci_end & snp_pos > loci_start & snp_pos < loci_end) |
-         (gene_start < loci_end & gene_end > loci_end & snp_pos > loci_start & snp_pos < loci_end)) 
+  filter((gene_start < loci_start & gene_end > loci_start & snp_pos >= loci_start & snp_pos <= loci_end) |
+         (gene_start > loci_start & gene_end < loci_end & snp_pos >= loci_start & snp_pos <= loci_end) |
+         (gene_start < loci_end & gene_end > loci_end & snp_pos >= loci_start & snp_pos <= loci_end)) 
 
 
-dim(cis_candidate_4)  # 75225     13 
+dim(cis_candidate_4)  # 88407    13 
 "BnaA08g12780D" %in% cis_candidate_4$gene_ID # good
 "BnaA08g11130D" %in% cis_candidate_4$gene_ID # as expected 
 "BnaA08g11140D" %in% cis_candidate_4$gene_ID # good 
 
-unique(cis_candidate_4$gene_ID) %>% length() # 7514 cis-genes
+unique(cis_candidate_4$gene_ID) %>% length() # 8110 cis-genes
 
 # get the final set of cis- and trans- eQTL, 
 cis_candidate_4 <- 
@@ -552,47 +552,123 @@ cis_candidate_4 %>%
 colnames(cis_candidate_4) 
 colnames(cis_trans_result_2) 
 
-cis_trans_result_final <- 
+cis_trans_result_3 <- 
 cis_candidate_4 %>% 
   full_join(cis_trans_result_2) %>% 
-  dplyr::select(-(cis_trans:loci_end))
+  dplyr::select(-(cis_trans))
 
-dim(cis_trans_result_final) # 728717     11 
+dim(cis_trans_result_3) # 728717     13 
 
-cis_trans_result_final[is.na(cis_trans_result_final$cis_trans_2),][,"cis_trans_2"] <- rep("trans", sum(is.na(cis_trans_result_final$cis_trans_2)))
-sum(cis_trans_result_final$cis_trans_2 == "cis") # 75225 
-sum(cis_trans_result_final$cis_trans_2 == "trans") # 653492 
+cis_trans_result_3[is.na(cis_trans_result_3$cis_trans_2),][,"cis_trans_2"] <- rep("trans", sum(is.na(cis_trans_result_3$cis_trans_2)))
+sum(cis_trans_result_3$cis_trans_2 == "cis") # 88407 
+sum(cis_trans_result_3$cis_trans_2 == "trans") # 640310
 
-length(unique(cis_trans_result_final[cis_trans_result_final$cis_trans_2 == "cis",]$gene_ID)) # 7514
-length(unique(cis_trans_result_final[cis_trans_result_final$cis_trans_2 == "trans",]$gene_ID)) # 20929 
+length(unique(cis_trans_result_3[cis_trans_result_3$cis_trans_2 == "cis",]$gene_ID)) # 8110
+length(unique(cis_trans_result_3[cis_trans_result_3$cis_trans_2 == "trans",]$gene_ID)) # 20702 
 
-save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_final.Rdata")
+# get loci_start and loci_end for genes with trans-eQTL 
+trans_candidate <- cis_trans_result_3[cis_trans_result_3$cis_trans_2 == "trans",] %>% dplyr::select(gene_ID, LG) 
+trans_candidate <- unique(trans_candidate) # 23814 2
+
+trans_candidate %>% head()
+sum(trans_candidate$gene_ID %in% names(eQTL_result[[1]]), 
+    trans_candidate$gene_ID %in% names(eQTL_result[[2]]),
+    trans_candidate$gene_ID %in% names(eQTL_result[[3]]),
+    trans_candidate$gene_ID %in% names(eQTL_result[[4]]),
+    trans_candidate$gene_ID %in% names(eQTL_result[[5]]),
+    trans_candidate$gene_ID %in% names(eQTL_result[[6]]),
+    trans_candidate$gene_ID %in% names(eQTL_result[[7]]),
+    trans_candidate$gene_ID %in% names(eQTL_result[[8]]),
+    trans_candidate$gene_ID %in% names(eQTL_result[[9]]),
+    trans_candidate$gene_ID %in% names(eQTL_result[[10]])) # 23814, correct 
+
+trans_candidate_list <- list(trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[1]]),],
+                             trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[2]]),],
+                             trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[3]]),],
+                             trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[4]]),],
+                             trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[5]]),],
+                             trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[6]]),],
+                             trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[7]]),],
+                             trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[8]]),],
+                             trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[9]]),],
+                             trans_candidate[trans_candidate$gene_ID %in% names(eQTL_result[[10]]),])
+
+seq_along(trans_candidate_list[[subset]])
+
+system.time(  
+tmp.2 <- 
+lapply(seq_along(trans_candidate_list), function(subset) { 
+  print(subset)
+  lapply(seq_along(trans_candidate_list[[subset]]$gene_ID), function(index) {
+    gene <- trans_candidate_list[[subset]]$gene_ID[index] 
+    chrom <- as.numeric(as.character(trans_candidate_list[[subset]]$LG[index])) 
+    tmp1 <- bayesint(eQTL_result[[subset]][[gene]], chr = chrom, expandtomarkers = T)
+    tmp1 <- tmp1[grepl("^chr", rownames(tmp1)),] 
+    tmp1$gene_ID <- gene
+    tmp1$LG <- chrom 
+    tmp1$pos_2 <- gsub("([[:print:]]+)(_)([[:print:]])", "\\3", rownames(tmp1))
+    tmp1$loci_start_2 <- min(as.numeric(tmp1$pos_2))
+    tmp1$loci_end_2 <- max(as.numeric(tmp1$pos_2)) 
+    tmp1[1,c("gene_ID", "LG", "loci_start_2", "loci_end_2")] # the last item is the one that was returned
+    })
+}
+)
+) # 52 sec   
+
+test3 <- list()
+for (subset in seq_along(tmp.2)){
+  test3[[subset]] <- do.call("rbind", tmp.2[[subset]]) 
+}
+
+test4 <- do.call("rbind", test3)
+dim(test4) # 23814 4
+head(test4)
+
+sum(test4$loci_start < test4$loci_end) # 23770 
+sum(test4$loci_start == test4$loci_end) # 44
+
+trans_candidate_2 <- cis_trans_result_3[cis_trans_result_3$cis_trans_2 == "trans",]
+dim(trans_candidate_2) # 640310     13
+trans_candidate_2 %>% head()
+
+trans_candidate_2$LG <- as.numeric(as.character(trans_candidate_2$LG))
+
+trans_candidate_3 <- 
+trans_candidate_2 %>% 
+  left_join(test4) %>%
+  mutate(loci_start = loci_start_2, loci_end = loci_end_2) %>% 
+  dplyr::select(-(loci_start_2:loci_end_2))
+
+trans_candidate_3 %>% head()
+dim(trans_candidate_3) # 640310     13
+
+sum(trans_candidate_3$gene_start < trans_candidate_3$gene_end) # 640310
+sum(trans_candidate_3$loci_start < trans_candidate_3$loci_end) # 637051
+sum(trans_candidate_3$loci_start == trans_candidate_3$loci_end) # 3259  
+
+trans_candidate_3 %>% dim() 
+cis_candidate_4 %>% dim() 
+
+cis_trans_result_final <- 
+cis_candidate_4 %>% 
+  dplyr::select(-cis_trans) %>% 
+  rbind(trans_candidate_3)  
+
+####### also delete snps outside these ranges (in order to be consistent with cis-eQTL analysis), or this is unnecessary for now.. leave for later if needed... 
+trans_candidate_3 %>% 
+  filter(snp_chrom == "chrA09" & LG == 18) # need to delete these genes maybe, this is caused by the anchor of A09 marker to LG18 during genetic map construction   
+
+
+# save result for next step 
+save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_final.Rdata") 
 ``` 
 
 # make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position 
 ```{r}
 load("~/F2/output/eQTL/cis_trans_result_final.Rdata")
-dim(cis_trans_result_final) # 728717     11 
-cis_trans_result_final %>% head() 
-View(cis_trans_result_final)
+dim(cis_trans_result_final) # 728717     13 
+cis_trans_result_final %>% head() # give up for now... 
 
-cis_trans_result_final %>% 
-  filter(gene_chrom == "chrA06" && snp_chrom =="chrA06") %>% 
-  ggplot() + 
-  geom_point(mapping = aes(x = snp_pos, y = gene_start)) + 
-  facet_grid(~snp_chrom)
-
-colnames(cis_trans_result_final)
-
-cis_trans_result_final %>% 
-  filter(gene_chrom == "chrA06") %>% 
-  dplyr::select(snp_chrom) %>% 
-  unique()
-  
-cis_trans_result_final %>% dim() # 728717 
-
-####### 
-cis_trans_result_final[cis_trans_result_final$cis_trans == "cis",]$gene_ID %>% unique() %>% length() 
 
 ```
 
