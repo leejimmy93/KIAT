@@ -668,6 +668,7 @@ save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_final.Rda
 # make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position 
 ```{r}
 load("~/F2/output/eQTL/cis_trans_result_final.Rdata")
+
 dim(cis_trans_result_final) # 728717     15 
 cis_trans_result_final %>% head() # give up for now... 
 
@@ -679,6 +680,10 @@ cis_trans_result_final_2 <-
 dim(cis_trans_result_final_2) # 33441     8 
 cis_trans_result_final_2[cis_trans_result_final_2$cis_trans_2 == "cis",] %>% dim() # 8110
 cis_trans_result_final_2[cis_trans_result_final_2$cis_trans_2 == "trans",]$gene_ID %>% unique() %>% length() # 20702
+
+cis_eQTL_final <- cis_trans_result_final_2[cis_trans_result_final_2$cis_trans_2 == "cis",] 
+save(cis_eQTL_final, file = "~/F2/output/eQTL/cis_eQTL_final.Rdata")
+cis_eQTL_final %>% head()
 
 cis_trans_result_final_2[cis_trans_result_final_2$cis_trans_2 == "trans",][,c("loci_start_genetic", "LG", "gene_ID")] %>% dim() # 25331     3  
 cis_trans_result_final_2[cis_trans_result_final_2$cis_trans_2 == "trans",][,c("loci_start_genetic", "LG", "gene_ID")] %>% unique() %>% dim() # 23814     3  
@@ -695,16 +700,16 @@ cis_trans_result_final_2 %>%
 ########## trans-eQTL hotspot 
 cis_trans_result_final_3 <- 
   cis_trans_result_final %>% 
-  dplyr::select(gene_ID, snp_chrom, gene_chrom, gene_start, LG, loci_start, loci_end, cis_trans_2) %>% 
+  dplyr::select(gene_ID, snp_chrom, gene_chrom, gene_start, LG, loci_start, loci_end, loci_start_genetic, loci_end_genetic, cis_trans_2) %>% 
   unique()  
 
 cis_trans_result_final_3[cis_trans_result_final_3$cis_trans_2 == "trans",][,c("loci_start", "LG", "gene_ID")] %>% dim() # 25331     3  
 
 trans_candidate_4 <- 
-cis_trans_result_final_3[cis_trans_result_final_3$cis_trans_2 == "trans",][,c("loci_start", "LG", "gene_ID", "snp_chrom")] %>% unique()  # 23814     3 
+cis_trans_result_final_3[cis_trans_result_final_3$cis_trans_2 == "trans",][,c("loci_start", "LG", "gene_ID", "snp_chrom", "loci_start_genetic", "loci_end_genetic")] %>% unique()  # 23814     3 
 
 trans_candidate_4$LG != trans_candidate_4$snp_chrom
-trans_candidate_4 %>% head()
+trans_candidate_4 %>% head() 
 
 trans_candidate_4$sub <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", trans_candidate_4$snp_chrom) 
 trans_candidate_4$chrom <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", trans_candidate_4$snp_chrom)
@@ -715,9 +720,10 @@ sum(as.numeric(as.character(trans_candidate_4$LG)) != trans_candidate_4$chrom) #
 trans_candidate_5 <- 
 trans_candidate_4[!(as.numeric(as.character(trans_candidate_4$LG)) != trans_candidate_4$chrom),] 
 trans_candidate_5 %>% head()
-trans_candidate_5 %>% dim() # 23771 6 
+trans_candidate_5 %>% dim() # 23771 8  
 
 trans_candidate_5$chrom2 <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", trans_candidate_5$snp_chrom)
+save(trans_candidate_5, file = "~/F2/output/eQTL/trans_candidate_5.Rdata") # still need to be refined... 
 
 p.transeQTL <- 
   trans_candidate_5 %>% 
@@ -783,12 +789,128 @@ trait_qtl_result.final
 save(trait_qtl_result.final, file = "~/F2/output/eQTL/trait_qtl_result.final.Rdata")
 
 # 4) look for overlap between cis-eQTL and trait-eQTL 
+load("~/F2/output/eQTL/cis_eQTL_final.Rdata")
+cis_eQTL_final %>% head()
 
+trait_qtl_result.final[1,]
+gff.trait_qtl_result.final <- GRanges(seqnames = Rle(paste("chr", trait_qtl_result.final$chr, sep = "")),ranges = IRanges(start = trait_qtl_result.final$loci_start_genetic, end = trait_qtl_result.final$loci_end_genetic), trait = trait_qtl_result.final$trait)   
 
+gff.cis_eQTL_final <- GRanges(seqnames = Rle(cis_eQTL_final$snp_chrom),ranges = IRanges(start = cis_eQTL_final$loci_start_genetic, end = cis_eQTL_final$loci_end_genetic), names = cis_eQTL_final$gene_ID) 
+
+gff.cis_eQTL_final
+
+cis_eQTL_trait <- mergeByOverlaps(gff.trait_qtl_result.final, gff.cis_eQTL_final) 
+cis_eQTL_trait <- cis_eQTL_trait %>% as.data.frame() 
+
+napus_vs_ara.non_reciprocal <- read.table("~/Reference/B.napus/napus_vs_ara.non_reciprocal.table")
+head(napus_vs_ara.non_reciprocal)
+dim(napus_vs_ara.non_reciprocal) # 64949 
+
+colnames(napus_vs_ara.non_reciprocal)[1] <- "names"
+
+cis_eQTL_trait.2 <- merge(cis_eQTL_trait, napus_vs_ara.non_reciprocal, by = "names", all.x=T)
+cis_eQTL_trait.2 %>% colnames()
+
+cis_eQTL_trait.final <- 
+  cis_eQTL_trait.2 %>% 
+  mutate(gene_ID = names, trait_qtl_chr = gff.trait_qtl_result.final.seqnames, trait_loci_start = gff.trait_qtl_result.final.start, trait_loci_end = gff.trait_qtl_result.final.end, cis_eQTL_chr = gff.cis_eQTL_final.seqnames, cis_eQTL_start = gff.cis_eQTL_final.start, cis_eQTL_end = gff.cis_eQTL_final.end) %>% 
+  dplyr::select(trait, gene_ID, trait_qtl_chr, trait_loci_start, trait_loci_end, cis_eQTL_chr, cis_eQTL_start, cis_eQTL_end, ara_ID, description)
+
+dim(cis_eQTL_trait.final) # 2369 10 
+# View(cis_eQTL_trait.final)
+
+View(cis_eQTL_trait.final[cis_eQTL_trait.final$trait == "Erucic_acid",])
+
+# add GO term
+B.napus.GO <- read.delim(file="~/Reference/B.napus/Brassica_napus_GO", header=F, sep=" ")
+dim(B.napus.GO) # 150320      2 # GO annotation
+colnames(B.napus.GO) <- c("gene_ID", "GO") # better to have GO description associated with ... 
+
+tmp <- cis_eQTL_trait.final %>% 
+  left_join(B.napus.GO, "gene_ID")
+
+dim(tmp) # 5317 
+View(tmp[tmp$trait == "Erucic_acid",])
+
+GO_annotation <- read_delim("~/Reference/B.napus/GO_annotation.csv", delim = "\"")
+
+GO_annotation <- 
+GO_annotation %>% 
+  dplyr::select(input, name)
+
+dim(GO_annotation) # 1659 2 
+
+colnames(GO_annotation) <- c("GO", "GO_des")
+
+# add GO annotation 
+tmp.2 <- tmp %>% 
+  left_join(GO_annotation, "GO")
+
+tmp.2 %>% dim() # 5317 12 
+View(tmp.2[tmp.2$trait == "Erucic_acid",]) 
+
+cis_eQTL_trait.final.final <- tmp.2 
+save(cis_eQTL_trait.final.final, file = "~/F2/output/eQTL/cis_eQTL_trait.final.final.Rdata")
+View(cis_eQTL_trait.final.final[grep("lipid|fatty", cis_eQTL_trait.final.final$GO_des),]) 
 ```
 
-### trans-eQTL overlap with trait-QTL --> trans-candidate genes 
+### plot out cis-eQTL result 
 ```{r}
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
+# BnaA08g11060D & BnaA08g11140D two cis-eQTL gene for fatty acid 
+
+"BnaA08g11060D" %in% names(eQTL_result[[9]]) 
+plot(eQTL_result[[9]]$BnaA08g11140D,bandcol="gray90", main="BnaA08g11140D") # looks good
+ 
+cim.qtl[["BnaA08g11140D"]] <- eQTL_result[[9]]$BnaA08g11140D
+cim.qtl[["BnaA08g11060D"]] <- eQTL_result[[9]]$BnaA08g11060D
+
+cim.qtl[["BnaA08g11140D"]]$chr <- ifelse(cim.qtl[["BnaA08g11140D"]]$chr == "8", "A08", cim.qtl[["BnaA08g11140D"]]$chr)
+cim.qtl[["BnaA08g11140D"]]$chr <- ifelse(cim.qtl[["BnaA08g11140D"]]$chr == "13", "C03", cim.qtl[["BnaA08g11140D"]]$chr)
+
+cim.qtl[["BnaA08g11060D"]]$chr <- ifelse(cim.qtl[["BnaA08g11060D"]]$chr == "8", "A08", cim.qtl[["BnaA08g11060D"]]$chr)
+cim.qtl[["BnaA08g11060D"]]$chr <- ifelse(cim.qtl[["BnaA08g11060D"]]$chr == "13", "C03", cim.qtl[["BnaA08g11060D"]]$chr)
+
+# oil related  
+oil_cim_eQTL_1 <- 
+qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic_acid"), 
+                       data.frame(cim.qtl[["Stearic_acid"]], method = "Stearic_acid"), 
+                       data.frame(cim.qtl[["Oleic_acid"]], method = "Oleic_acid"),
+                       data.frame(cim.qtl[["vaccenic_acid"]], method = "vaccenic_acid"), 
+                       data.frame(cim.qtl[["Linoleic_acid"]], method = "Linoleic_acid"),
+                       data.frame(cim.qtl[["Arachidic_acid"]], method = "Arachidic_acid"),
+                       data.frame(cim.qtl[["Linolenic_acid"]], method = "Linolenic_acid"),
+                       data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid"),
+                       data.frame(cim.qtl[["BnaA08g11140D"]], method = "BnaA08g11140D")
+                       ),
+         chrs = c("A08", "C03"), 
+         # lod = cim.perm[[1]], 
+         title = "BnaA08g11140D cis-eQTL",
+         rug = TRUE)  
+
+oil_cim_eQTL_2 <- 
+qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic_acid"), 
+                       data.frame(cim.qtl[["Stearic_acid"]], method = "Stearic_acid"), 
+                       data.frame(cim.qtl[["Oleic_acid"]], method = "Oleic_acid"),
+                       data.frame(cim.qtl[["vaccenic_acid"]], method = "vaccenic_acid"), 
+                       data.frame(cim.qtl[["Linoleic_acid"]], method = "Linoleic_acid"),
+                       data.frame(cim.qtl[["Arachidic_acid"]], method = "Arachidic_acid"),
+                       data.frame(cim.qtl[["Linolenic_acid"]], method = "Linolenic_acid"),
+                       data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid"),
+                       data.frame(cim.qtl[["BnaA08g11060D"]], method = "BnaA08g11060D")
+                       ),
+         chrs = c("A08", "C03"), 
+         # lod = cim.perm[[1]], 
+         title = "BnaA08g11060D cis-eQTL",
+         rug = TRUE)  
+
+ggsave(oil_cim_eQTL_1$plot, filename = "~/F2/output/eQTL/figure/oil_cim_eQTL_1.png", width = 8, height = 5) 
+ggsave(oil_cim_eQTL_2$plot, filename = "~/F2/output/eQTL/figure/oil_cim_eQTL_2.png", width = 8, height = 5)  
+```
+
+### trans-eQTL overlap with trait-QTL --> trans-candidate genes  
+```{r}
+load("~/F2/output/eQTL/trans_candidate_5.Rdata")
 
 
 
