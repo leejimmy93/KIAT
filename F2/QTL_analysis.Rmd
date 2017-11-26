@@ -697,27 +697,99 @@ SNP.flower.bolt.unique.F2 <- data.frame(CHROM = gsub("(chrA10|chrC06)(_)([[:digi
 
 SNP.flower.bolt.unique.F2 
 save(SNP.flower.bolt.unique.F2, file = "~/F2/output/QTL_analysis/SNP.flower.bolt.unique.F2.Rdata")
-=======
-4) for the other pair of primer, extract from the sequence itself, make sure the final product is not too short, greater than 100bp?  
+
+# 4) for the other pair of primer, extract from the sequence itself, make sure the final product is not too short, greater than 100bp?  
+```
 
 ### look at the phenotype data 
 In order to understand the relationship between different fatty acid traits, Julin asked me to plot a pairs plot for the phenotype data of the various fatty acid traits. 
+
 ```{r}
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
-LG.f2.after.crossover$pheno %>% dim() # 166 43 
-
-colnames(LG.f2.after.crossover$pheno)
-
-LG.f2.after.crossover$pheno$Behenic_acid %>% hist()
-# Behenic & cis_11_Eicosenoic_acid & Palmitoliec 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/pheno.Rdata")
 
 pheno_fatty_acid <- 
-  LG.f2.after.crossover$pheno %>% 
+  as.data.frame(t(pheno)) %>% 
   dplyr::select(c(Palmitic_acid, Stearic_acid, Oleic_acid, vaccenic_acid, Linoleic_acid, Arachidic_acid, Linolenic_acid, Erucic_acid))
 
 png("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_analysis/figure/pheno_fatty_acid_pair.png", width = 8, height = 8, units = "in", res = 300)  
 pairs(pheno_fatty_acid) 
 dev.off() 
+
+# after check the pairs plot, Julin said: "I am curious about the outliers in the linolenic vs erucic and linolenic vs oleic plots.  I'd like to to get those two plots with the points colored by genotype at the two loci. 
+
+# QTL result 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/overlay/cim.qtl.43traits.Rdata")
+bayesint(cim.qtl$Erucic_acid, chr = "A08")
+#                  chr      pos      lod
+# chrA08_10120555  A08 72.33080 44.25032
+# chrA08_10120555  A08 72.33080 44.25032
+# chrA08_10043132  A08 73.25008 42.80078
+
+bayesint(cim.qtl$Erucic_acid, chr = "C03")
+#                 chr      pos      lod
+# cC03.loc30      C03 30.00000 22.04239
+# chrC03_53755234 C03 34.87978 23.41476
+# chrC03_53748114 C03 35.05260 22.10259
+
+bayesint(cim.qtl$Oleic_acid, chr = "A08")
+#                 chr     pos      lod
+# cA08.loc72      A08 72.0000 27.81306
+# chrA08_10120555 A08 72.3308 28.64849
+# cA08.loc76      A08 76.0000 27.53047
+
+bayesint(cim.qtl$Oleic_acid, chr = "C03", expandtomarkers = T)
+#                 chr      pos        lod
+# chrC03_56259623 C03 29.17130  1.2902093
+# cC03.loc37      C03 37.00000 17.4676054
+# chrC03_50371054 C03 42.71985  0.4248082
+
+bayesint(cim.qtl$Linolenic_acid, chr = "A08")
+#                 chr      pos      lod
+# chrA08_10120555 A08 72.33080 6.326089
+# chrA08_10043132 A08 73.25008 7.183112
+# cA08.loc78      A08 78.00000 6.423398
+
+bayesint(cim.qtl$Linolenic_acid, chr = "C03")
+#                 chr      pos      lod
+# chrC03_53755234 C03 34.87978 4.649860
+# chrC03_53442609 C03 36.06502 5.692567
+# cC03.loc41      C03 41.00000 4.599865
+
+# So I pick SNP chrA08_10120555 to represent the loci on chrA08,and SNP chrC03_53755234 to represent the loci on C03 
+
+F2_geno_data_2_Ae_Ol_new <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.txt")
+F2_geno_data_2_Ae_Ol_new
+colnames(F2_geno_data_2_Ae_Ol_new) <- gsub("X", "ID_", colnames(F2_geno_data_2_Ae_Ol_new))
+colnames(F2_geno_data_2_Ae_Ol_new)
+
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
+geno_A08 <- F2_geno_data_2_Ae_Ol_new[rownames(F2_geno_data_2_Ae_Ol_new) %in% "chrA08_10120555",]
+geno_C03 <- F2_geno_data_2_Ae_Ol_new[rownames(F2_geno_data_2_Ae_Ol_new) %in% "chrC03_53755234",]
+
+pheno_fatty_acid$ID <- rownames(pheno_fatty_acid)
+geno_A08 <- as.data.frame(t(geno_A08))
+geno_A08$ID <- rownames(geno_A08)
+geno_C03 <- as.data.frame(t(geno_C03))
+geno_C03$ID <- rownames(geno_C03)
+
+pheno_fatty_acid_geno_2loci <- 
+pheno_fatty_acid %>% 
+  left_join(geno_A08, by = "ID") %>% 
+  left_join(geno_C03, by = "ID") %>% 
+  dplyr::select(-ID)
+
+dim(pheno_fatty_acid_geno_2loci) # 166 6 
+save(pheno_fatty_acid_geno_2loci, file = "~/Desktop/2017_Nov_KIAT_report/pheno_fatty_acid_geno_2loci.Rdata")
+
+library(GGally)
+p.fatty_acid_A08 <- 
+ggpairs(pheno_fatty_acid_geno_2loci[,c("Erucic_acid",  "Linolenic_acid", "Oleic_acid", "chrA08_10120555")], aes(color = chrA08_10120555, alpha = 0.4)) 
+
+# p.fatty_acid_C03 <- 
+ggpairs(pheno_fatty_acid_geno_2loci[,c("Erucic_acid",  "Linolenic_acid", "Oleic_acid", "chrC03_53755234")], aes(color = chrC03_53755234, alpha = 0.4)) 
+
+ggsave(p.fatty_acid_A08, filename = "~/Desktop/2017_Nov_KIAT_report/p.fatty_acid_A08.png", width = 13, height = 8)
+ggsave(p.fatty_acid_C03, filename = "~/Desktop/2017_Nov_KIAT_report/p.fatty_acid_C03.png", width = 13, height = 8)  
 ```
 
 ### check the loci effect to the different fatty acid traits 
@@ -725,6 +797,5 @@ dev.off()
 
 
 
->>>>>>> 8644c2abce85914d86a71f3675c38f88d3db6a2f
 ```
 
