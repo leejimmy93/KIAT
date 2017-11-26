@@ -531,12 +531,17 @@ sum(cis_candidate_3$gene_start < cis_candidate_3$gene_end) # 492708
 sum(cis_candidate_3$loci_start < cis_candidate_3$loci_end) # 490133
 sum(cis_candidate_3$loci_start == cis_candidate_3$loci_end) # 2575 
 
+
 # use loci, gene start/end, and marker genetic position to find cis-eQTL 
 cis_candidate_4 <- 
 cis_candidate_3 %>% 
   filter((gene_start < loci_start & gene_end > loci_start & snp_pos >= loci_start & snp_pos <= loci_end) |
          (gene_start > loci_start & gene_end < loci_end & snp_pos >= loci_start & snp_pos <= loci_end) |
          (gene_start < loci_end & gene_end > loci_end & snp_pos >= loci_start & snp_pos <= loci_end)) 
+
+gff.cis_eQTL_candidate_gene <- GRanges(seqnames = Rle(cis_candidate_3$gene_chrom),ranges = IRanges(start = cis_candidate_3$gene_start, end = cis_candidate_3$gene_end), names = cis_candidate_3$gene_ID)
+gff.cis_eQTL_candidate_loci <- GRanges(seqnames = Rle(cis_candidate_3$snp_chrom),ranges = IRanges(start = cis_candidate_3$loci_start, end = cis_candidate_3$loci_end))
+
 
 
 dim(cis_candidate_4)  # 88407    13 
@@ -911,10 +916,78 @@ ggsave(oil_cim_eQTL_2$plot, filename = "~/F2/output/eQTL/figure/oil_cim_eQTL_2.p
 ### trans-eQTL overlap with trait-QTL --> trans-candidate genes  
 ```{r}
 load("~/F2/output/eQTL/trans_candidate_5.Rdata")
+load("~/F2/output/eQTL/trait_qtl_result.final.Rdata")
 
+# look for overlap between cis-eQTL and trait-eQTL 
+trans_candidate_5 %>% head()
 
+trait_qtl_result.final[1,]
+gff.trait_qtl_result.final <- GRanges(seqnames = Rle(paste("chr", trait_qtl_result.final$chr, sep = "")),ranges = IRanges(start = trait_qtl_result.final$loci_start_genetic, end = trait_qtl_result.final$loci_end_genetic), trait = trait_qtl_result.final$trait)   
 
+gff.trans_candidate_5 <- GRanges(seqnames = Rle(trans_candidate_5$snp_chrom),ranges = IRanges(start = trans_candidate_5$loci_start_genetic, end = trans_candidate_5$loci_end_genetic), names = trans_candidate_5$gene_ID) 
 
+gff.trans_candidate_5
+
+trans_eQTL_trait <- mergeByOverlaps(gff.trait_qtl_result.final, gff.trans_candidate_5) 
+trans_eQTL_trait <- trans_eQTL_trait %>% as.data.frame() 
+
+napus_vs_ara.non_reciprocal <- read.table("~/Reference/B.napus/napus_vs_ara.non_reciprocal.table")
+head(napus_vs_ara.non_reciprocal)
+dim(napus_vs_ara.non_reciprocal) # 64949 
+
+colnames(napus_vs_ara.non_reciprocal)[1] <- "names"
+
+trans_eQTL_trait.2 <- merge(trans_eQTL_trait, napus_vs_ara.non_reciprocal, by = "names", all.x=T)
+trans_eQTL_trait.2 %>% colnames()
+
+trans_eQTL_trait.final <- 
+  trans_eQTL_trait.2 %>% 
+  mutate(gene_ID = names, trait_qtl_chr = gff.trait_qtl_result.final.seqnames, trait_loci_start = gff.trait_qtl_result.final.start, trait_loci_end = gff.trait_qtl_result.final.end, trans_eQTL_chr = gff.trans_candidate_5.seqnames, trans_eQTL_start = gff.trans_candidate_5.start, trans_eQTL_end = gff.trans_candidate_5.end) %>% 
+  dplyr::select(trait, gene_ID, trait_qtl_chr, trait_loci_start, trait_loci_end, trans_eQTL_chr, trans_eQTL_start, trans_eQTL_end, ara_ID, description)
+
+dim(trans_eQTL_trait.final) # 7327 10 
+
+View(trans_eQTL_trait.final[trans_eQTL_trait.final$trait == "Erucic_acid",])
+
+# add GO term
+B.napus.GO <- read.delim(file="~/Reference/B.napus/Brassica_napus_GO", header=F, sep=" ")
+dim(B.napus.GO) # 150320      2 # GO annotation
+colnames(B.napus.GO) <- c("gene_ID", "GO") # better to have GO description associated with ... 
+
+tmp <- trans_eQTL_trait.final %>% 
+  left_join(B.napus.GO, "gene_ID")
+
+dim(tmp) # 16822 
+
+GO_annotation <- read_delim("~/Reference/B.napus/GO_annotation.csv", delim = "\"")
+
+GO_annotation <- 
+GO_annotation %>% 
+  dplyr::select(input, name)
+
+dim(GO_annotation) # 1659 2 
+
+colnames(GO_annotation) <- c("GO", "GO_des")
+
+# add GO annotation 
+tmp.2 <- tmp %>% 
+  left_join(GO_annotation, "GO")
+
+tmp.2 %>% dim() # 16822 12 
+
+###### due to some problem in cis- and trans- eQTL analysis, some loci are defined as both cis- and trans- eQTL for a gene, those loci with trans- signature should be deleted... go back to the original anaysis afterwards 
+
+tmp.2 %>% head()
+load("~/F2/output/eQTL/cis_eQTL_trait.final.final.Rdata")
+
+colnames(cis_eQTL_trait.final.final)[c(6, 7, 8)] <- c("trans_eQTL_chr", "trans_eQTL_start", "trans_eQTL_end") 
+
+trans_eQTL_trait.final.final <- 
+tmp.2 %>% 
+  anti_join(cis_eQTL_trait.final.final) 
+
+save(trans_eQTL_trait.final.final, file = "~/F2/output/eQTL/trans_eQTL_trait.final.final.Rdata")
+View(trans_eQTL_trait.final.final[grep("lipid|fatty", trans_eQTL_trait.final.final$GO_des),])   
 ```
 
 
