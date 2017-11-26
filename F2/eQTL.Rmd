@@ -670,7 +670,7 @@ trans_candidate_3 %>%
 save(cis_trans_result_final, file = "~/F2/output/eQTL/cis_trans_result_final.Rdata") 
 ``` 
 
-# make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position 
+### make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position 
 ```{r}
 load("~/F2/output/eQTL/cis_trans_result_final.Rdata")
 
