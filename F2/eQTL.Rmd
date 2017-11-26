@@ -4,6 +4,11 @@ output: html_document
 ---
 Purpose of this script is to find loci controlling expression of different genes. We will firstly focus on fatty acid related genes.  
 
+### import lib
+```{r}
+library(tidyverse)
+```
+
 ### import data, get genes with detectable expression  
 ```{r}
 read_count_F2 <- read.table("~/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1)
@@ -990,6 +995,46 @@ save(trans_eQTL_trait.final.final, file = "~/F2/output/eQTL/trans_eQTL_trait.fin
 View(trans_eQTL_trait.final.final[grep("lipid|fatty", trans_eQTL_trait.final.final$GO_des),])   
 ```
 
+### Go enrichment of trans-eQTL for the different acid traits 
+```{r}
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+
+load("~/Desktop/2017_Nov_KIAT_report/trans_eQTL_trait.final.final.Rdata")
+trans_eQTL_trait.final.final %>% head()
+trans_eQTL_trait.final.final.acid <- trans_eQTL_trait.final.final[grep("acid", trans_eQTL_trait.final.final$trait),]
+dim(trans_eQTL_trait.final.final.acid) # 5164 12 
+
+trans_eQTL_trait.final.final.acid <- 
+trans_eQTL_trait.final.final.acid %>% 
+  filter(trait != "Behenic_acid") %>% 
+  filter(trait != "cis_11_Eicosenoic_acid") %>% 
+  filter(trait != "Myristic_acid")
+
+dim(trans_eQTL_trait.final.final.acid) # 4408 12 
+write.table(trans_eQTL_trait.final.final.acid$GO_des, file = "~/Desktop/2017_Nov_KIAT_report/test.txt") 
+
+GOseq.Bn.ORA(unique(trans_eQTL_trait.final.final.acid$gene_ID)) # no enriched go terms 
+unique(trans_eQTL_trait.final.final.acid$gene_ID) %>% length() # 384 
+
+colnames(trans_eQTL_trait.final.final.acid) 
+trans_eQTL_trait.final.final.acid %>% 
+  dplyr::select(gene_ID, ara_ID, description) %>% 
+  unique() %>% 
+  dim()  
+
+# fatty acid related genes 
+trans_eQTL_trait.final.final.acid[grep("lipid|fatty", trans_eQTL_trait.final.final.acid$GO_des),] %>% 
+  dplyr::select(gene_ID, description, GO_des) %>% 
+  unique() %>% 
+  View()
+
+# transcription factor genes 
+TF.trans_eQTL.acid <- 
+trans_eQTL_trait.final.final.acid[grep("binding", trans_eQTL_trait.final.final.acid$GO_des),] %>% 
+  dplyr::select(gene_ID, description, GO_des) %>% 
+  unique() 
+save(TF.trans_eQTL.acid, file = "~/Desktop/2017_Nov_KIAT_report/TF.trans_eQTL.acid.Rdata")
+```
 
 
 

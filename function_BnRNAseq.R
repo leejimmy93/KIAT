@@ -2,7 +2,7 @@
 
 ####### 1) GO annotaion 
 # ORA with GOseq (Brassica napa version)
-prerequisit
+# prerequisit
 library(ShortRead);library(goseq);library(GO.db);library("annotate")
 # for ggplot heatmap
 library(WGCNA);library(ggplot2);library(reshape2);library(scales); library (plyr)
