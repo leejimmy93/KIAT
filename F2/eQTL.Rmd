@@ -692,7 +692,7 @@ cis_trans_result_final_2 %>%
   geom_point(mapping = aes(x=loci_start_genetic, y=gene_start)) 
 # problem with this is that some LG I have reversed direction. 
 
-# trans-eQTL hotspot 
+########## trans-eQTL hotspot 
 cis_trans_result_final_3 <- 
   cis_trans_result_final %>% 
   dplyr::select(gene_ID, snp_chrom, gene_chrom, gene_start, LG, loci_start, loci_end, cis_trans_2) %>% 
@@ -702,8 +702,6 @@ cis_trans_result_final_3[cis_trans_result_final_3$cis_trans_2 == "trans",][,c("l
 
 trans_candidate_4 <- 
 cis_trans_result_final_3[cis_trans_result_final_3$cis_trans_2 == "trans",][,c("loci_start", "LG", "gene_ID", "snp_chrom")] %>% unique()  # 23814     3 
-
-25331-23814
 
 trans_candidate_4$LG != trans_candidate_4$snp_chrom
 trans_candidate_4 %>% head()
@@ -734,11 +732,86 @@ ggsave("~/F2/output/eQTL/figure/p.transeQTL.png", width = 9, height = 6)
 
 ### cis-eQTL overlap with trait-QTL --> cis-candidate genes 
 ```{r}
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
+load("~/F2/output/QTL_analysis/cim.perm.43traits.Rdata")
+
+# 1) get all the SNPs with lod score greater than the threshold 
+system.time(
+tmp <- 
+lapply(names(cim.qtl), function(trait) {
+  print(trait)
+    tmp1 <- cim.qtl[[trait]][cim.qtl[[trait]]$lod > cim.perm[[trait]],]
+    if (nrow(tmp1) > 0){
+    tmp1$trait <- trait
+    tmp1$snp_ID <- rownames(tmp1)
+    tmp1
+  }
+})
+)
+
+test <- do.call("rbind", tmp)
+test 
+
+trait_qtl_result <- test[grepl("^chr", test$snp_ID),] ###### should keep loci w/o physical info because otherwise I am losing some eQTL.. 
+dim(trait_qtl_result) # 162      5 
+trait_qtl_result %>% head()
+
+unique(trait_qtl_result$snp_ID) %>% length # 59 
+unique(trait_qtl_result$trait) %>% length() # 13  
+
+
+############# get loci interval info for all traits 
+system.time(  
+tmp.2 <- 
+  lapply(seq_along(tmp), function(index) {
+    if (nrow(tmp[[index]]) >= 1) {
+    sub = gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\1", tmp[[index]]$chr) 
+    chrom = gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", tmp[[index]]$chr)
+    chrom <- ifelse(sub == "A", as.numeric(as.character(chrom)), 10 + as.numeric(as.character(chrom)))
+    tmp1 <- bayesint(cim.qtl[[trait]], chr = chrom, expandtomarkers = T)
+    tmp1 <- tmp1[grepl("^chr", rownames(tmp1)),] 
+    tmp1$trait <- names(cim.qtl)[index]
+    tmp1$LG <- chrom 
+    tmp1$pos_2 <- gsub("([[:print:]]+)(_)([[:print:]])", "\\3", rownames(tmp1))
+    tmp1$loci_start_2 <- min(as.numeric(tmp1$pos_2))
+    tmp1$loci_end_2 <- max(as.numeric(tmp1$pos_2)) 
+    tmp1$loci_start_genetic_2 <- min(as.numeric(tmp1$pos))
+    tmp1$loci_end_genetic_2 <- max(as.numeric(tmp1$pos))
+    tmp1[1,c("trait", "LG", "loci_start_2", "loci_end_2", "loci_start_genetic_2", "loci_end_genetic_2")] # the last item is the one that was returned
+    }
+    }
+    )
+)
+  
+
+system.time(
+tmp.2 <- 
+  lapply(names(cim.qtl)[names(cim.qtl) %in% test$trait], function(trait) {
+    print(trait)
+    sub = gsub("(Bna)(A|C)(01|02|03|04|05|06|07|08|09|10)([[:print:]]+)", "\\2", gene) 
+    chrom = gsub("(Bna)(A|C)(01|02|03|04|05|06|07|08|09|10)([[:print:]]+)", "\\3", gene)
+    chrom <- ifelse(sub == "A", as.numeric(as.character(chrom)), 10 + as.numeric(as.character(chrom)))
+    tmp1 <- bayesint(eQTL_result[[subset]][[gene]], chr = chrom, expandtomarkers = T)
+    tmp1 <- tmp1[grepl("^chr", rownames(tmp1)),] 
+    tmp1$gene_ID <- gene
+    tmp1$pos_2 <- gsub("([[:print:]]+)(_)([[:print:]])", "\\3", rownames(tmp1))
+    tmp1$loci_start <- min(as.numeric(tmp1$pos_2))
+    tmp1$loci_end <- max(as.numeric(tmp1$pos_2)) 
+    tmp1$loci_start_genetic <- min(as.numeric(tmp1$pos))
+    tmp1$loci_end_genetic <- max(as.numeric(tmp1$pos))
+    tmp1[1,c("gene_ID", "loci_start", "loci_end", "loci_start_genetic", "loci_end_genetic")] # the last item is the one that was returned
+    })
+)
+
+
 
 ```
 
 ### trans-eQTL overlap with trait-QTL --> trans-candidate genes 
 ```{r}
+
+
+
 
 ```
 
