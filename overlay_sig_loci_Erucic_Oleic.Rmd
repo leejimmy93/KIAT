@@ -121,7 +121,7 @@ colnames(lipid_fatty_acid_genes) <- "name"
 lipid_fatty_acid_genes.2 <- 
 gff.mRNA %>% 
   inner_join(lipid_fatty_acid_genes, by = "name") %>% 
-  mutate(name = "lipid_fatty_acid_genes")
+  mutate(name = "lipid_fatty_acid_genes") 
 
 lipid_fatty_acid_genes.2 %>% dim() # 7346    4 
 
@@ -454,7 +454,7 @@ ggplot() + geom_point(mapping = aes(x = as.numeric(as.character(POS)), y = lod),
 # 42 is 95% CI  
 
 p.Erucic_acid_C03 <- 
-ggplot() + geom_point(mapping = aes(x = as.numeric(as.character(POS)), y = lod), data = SNP.Erucic[SNP.Erucic$CHROM=="C03",]) + geom_line(mapping = aes(x = as.numeric(as.character(POS)), y = lod, color = "blue"), data = QTL.Erucic[QTL.Erucic$CHROM=="C03",]) + geom_hline(yintercept = 5) + geom_hline(yintercept = 21, color = "red") +   geom_text_repel(aes(x=as.numeric(as.character(start)), y=0, label=name, color = "dark blue"), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrC03",]) + labs(title = "Erucic_C03", x = "physical position") + theme(legend.position = "None") + geom_segment(aes(x=as.numeric(as.character(start)), y = 0, xend = as.numeric(as.character(end)), yend = 0, color = "dark blue"), arrow = arrow(length = unit(0.5, "cm")), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrC03",]) 
+ggplot() + geom_point(mapping = aes(x = as.numeric(as.character(POS)), y = lod), data = SNP.Erucic[SNP.Erucic$CHROM=="C03",]) + geom_line(mapping = aes(x = as.numeric(as.character(POS)), y = lod, color = "blue"), data = QTL.Erucic[QTL.Erucic$CHROM=="C03",]) + geom_hline(yintercept = 5) + geom_hline(yintercept = 21, color = "red") +   geom_text_repel(aes(x=as.numeric(as.character(start)), y=0, label=name, color = "dark blue"), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrC03",]) + labs(title = "Erucic_C03", x = "physical position") + theme(legend.position = "None") + geom_segment(aes(x=as.numeric(as.character(start)), y = 0, xend = as.numeric(as.character(end)), yend = 0, color = "dark blue"), arrow = arrow(length = unit(0.5, "cm")), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrC03",])  
 
 p.Erucic_acid_A08
 p.Erucic_acid_C03
@@ -470,7 +470,7 @@ p.Erurcic_acid<-
 
 p.Erurcic_acid
 
-save_plot("~/Desktop/2017_Nov_KIAT_report/p.Erucic_acid.png", p.Erurcic_acid, ncol = 1, nrow = 2,base_aspect_ratio = 2) 
+save_plot("~/Desktop/2017_Nov_KIAT_report/p.Erucic_acid.png", p.Erurcic_acid, ncol = 1, nrow = 2,base_aspect_ratio = 2)
 ```
 
 # sessioninfo
