@@ -751,58 +751,38 @@ lapply(names(cim.qtl), function(trait) {
 
 test <- do.call("rbind", tmp)
 test 
+trait_qtl_result <- test
 
-trait_qtl_result <- test[grepl("^chr", test$snp_ID),] ###### should keep loci w/o physical info because otherwise I am losing some eQTL.. 
-dim(trait_qtl_result) # 162      5 
-trait_qtl_result %>% head()
+unique(trait_qtl_result$snp_ID) %>% length # 128 
+unique(trait_qtl_result$trait) %>% length() # 17   
 
-unique(trait_qtl_result$snp_ID) %>% length # 59 
-unique(trait_qtl_result$trait) %>% length() # 13  
-
-
-############# get loci interval info for all traits 
-system.time(  
-tmp.2 <- 
-  lapply(seq_along(tmp), function(index) {
-    if (nrow(tmp[[index]]) >= 1) {
-    sub = gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\1", tmp[[index]]$chr) 
-    chrom = gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", tmp[[index]]$chr)
-    chrom <- ifelse(sub == "A", as.numeric(as.character(chrom)), 10 + as.numeric(as.character(chrom)))
-    tmp1 <- bayesint(cim.qtl[[trait]], chr = chrom, expandtomarkers = T)
-    tmp1 <- tmp1[grepl("^chr", rownames(tmp1)),] 
-    tmp1$trait <- names(cim.qtl)[index]
-    tmp1$LG <- chrom 
-    tmp1$pos_2 <- gsub("([[:print:]]+)(_)([[:print:]])", "\\3", rownames(tmp1))
-    tmp1$loci_start_2 <- min(as.numeric(tmp1$pos_2))
-    tmp1$loci_end_2 <- max(as.numeric(tmp1$pos_2)) 
-    tmp1$loci_start_genetic_2 <- min(as.numeric(tmp1$pos))
-    tmp1$loci_end_genetic_2 <- max(as.numeric(tmp1$pos))
-    tmp1[1,c("trait", "LG", "loci_start_2", "loci_end_2", "loci_start_genetic_2", "loci_end_genetic_2")] # the last item is the one that was returned
-    }
-    }
-    )
-)
-  
-
+# 2) get loci interval info for all traits 
 system.time(
 tmp.2 <- 
-  lapply(names(cim.qtl)[names(cim.qtl) %in% test$trait], function(trait) {
-    print(trait)
-    sub = gsub("(Bna)(A|C)(01|02|03|04|05|06|07|08|09|10)([[:print:]]+)", "\\2", gene) 
-    chrom = gsub("(Bna)(A|C)(01|02|03|04|05|06|07|08|09|10)([[:print:]]+)", "\\3", gene)
-    chrom <- ifelse(sub == "A", as.numeric(as.character(chrom)), 10 + as.numeric(as.character(chrom)))
-    tmp1 <- bayesint(eQTL_result[[subset]][[gene]], chr = chrom, expandtomarkers = T)
-    tmp1 <- tmp1[grepl("^chr", rownames(tmp1)),] 
-    tmp1$gene_ID <- gene
-    tmp1$pos_2 <- gsub("([[:print:]]+)(_)([[:print:]])", "\\3", rownames(tmp1))
-    tmp1$loci_start <- min(as.numeric(tmp1$pos_2))
-    tmp1$loci_end <- max(as.numeric(tmp1$pos_2)) 
+  lapply(seq_along(trait_qtl_result$trait), function(index) {
+    print(index)
+    tmp1 <- bayesint(cim.qtl[[trait_qtl_result$trait[index]]], chr = trait_qtl_result$chr[index], expandtomarkers = T)
+    # tmp1 <- tmp1[grepl("^chr", rownames(tmp1)),] 
+    tmp1$trait <- trait_qtl_result$trait[index]
+    tmp1$chr <- trait_qtl_result$chr[index] 
+    # tmp1$pos_2 <- gsub("([[:print:]]+)(_)([[:print:]])", "\\3", rownames(tmp1))
+    # tmp1$loci_start <- min(as.numeric(tmp1$pos_2))
+    # tmp1$loci_end <- max(as.numeric(tmp1$pos_2)) 
     tmp1$loci_start_genetic <- min(as.numeric(tmp1$pos))
     tmp1$loci_end_genetic <- max(as.numeric(tmp1$pos))
-    tmp1[1,c("gene_ID", "loci_start", "loci_end", "loci_start_genetic", "loci_end_genetic")] # the last item is the one that was returned
+    tmp1[1,c("trait", "chr", "loci_start_genetic", "loci_end_genetic")] # the last item is the one that was returned
     })
 )
 
+tmp.2[[14]] 
+
+# 3) finalize  
+test <- as.tibble(do.call("rbind", tmp.2))
+trait_qtl_result.final <- unique(test) 
+trait_qtl_result.final
+save(trait_qtl_result.final, file = "~/F2/output/eQTL/trait_qtl_result.final.Rdata")
+
+# 4) look for overlap between cis-eQTL and trait-eQTL 
 
 
 ```
