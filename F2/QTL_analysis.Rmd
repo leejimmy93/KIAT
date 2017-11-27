@@ -463,7 +463,6 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to
          rug = TRUE, 
          title = "growth  related")
 
-
 # flower related 
 flower_cim <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to_flower"), 
