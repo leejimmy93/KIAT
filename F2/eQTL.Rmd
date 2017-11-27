@@ -989,7 +989,7 @@ colnames(cis_eQTL_trait.final.final)[c(6, 7, 8)] <- c("trans_eQTL_chr", "trans_e
 
 trans_eQTL_trait.final.final <- 
 tmp.2 %>% 
-  anti_join(cis_eQTL_trait.final.final) 
+  anti_join(cis_eQTL_trait.final.final)  
 
 save(trans_eQTL_trait.final.final, file = "~/F2/output/eQTL/trans_eQTL_trait.final.final.Rdata")
 View(trans_eQTL_trait.final.final[grep("lipid|fatty", trans_eQTL_trait.final.final$GO_des),])   
