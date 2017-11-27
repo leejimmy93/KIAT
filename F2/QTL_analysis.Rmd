@@ -799,3 +799,28 @@ ggsave(p.fatty_acid_C03, filename = "~/Desktop/2017_Nov_KIAT_report/p.fatty_acid
 
 ```
 
+# illustrate figure 
+```{r}
+test <- data.frame(x = c("AA", "AB", "BB"),
+           y = c(10, 20, 30))
+test
+
+p1.test <- 
+test %>% 
+ggplot() + 
+  geom_col(mapping = aes(x = x, y = y)) + 
+  labs(list(x = "genotype at loci", y = "average phenotype", title = "no dominance effect"))
+ggsave(p1.test, filename = "~/Desktop/2017_Nov_KIAT_report/p1.test.png", width = 3, height = 4)
+
+test2 <- data.frame(x = c("AA", "AB", "BB"),
+           y = c(10, 12, 30))
+
+p1.test2 <- 
+test2 %>% 
+ggplot() + 
+  geom_col(mapping = aes(x = x, y = y)) + 
+  labs(list(x = "genotype at loci", y = "average phenotype", title = "with dominance effect"))
+ggsave(p1.test2, filename = "~/Desktop/2017_Nov_KIAT_report/p1.test2.png", width = 3, height = 4)
+
+```
+
