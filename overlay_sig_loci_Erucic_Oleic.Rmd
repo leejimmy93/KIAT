@@ -486,6 +486,125 @@ p.Erurcic_acid
 save_plot("~/Desktop/2017_Nov_KIAT_report/p.Erucic_acid.png", p.Erurcic_acid, ncol = 1, nrow = 2,base_aspect_ratio = 3.5) 
 ```
 
+FnP wants to get the Erucic and Oleic acid marker from my study, both QTL mapping and GWAS. For GWAS, I am going to extract all the significant SNPs. For QTL, I am going to get markers in the 1Mb interval or markers above the lod score threshold... 
+```{r}
+## from GWAS 
+setwd("~/Desktop/2017_Nov_KIAT_report/")
+Erucic_acid <- read.csv("GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("GAPIT..Oleic_acid.GWAS.Results.csv", header = T) 
+
+Erucic_Oleic <- rbind(Erucic_acid, Oleic_acid)
+
+SNP.Erucic.Oleic <- data.frame(CHROM = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", Erucic_Oleic[Erucic_Oleic$P.value < 0.00001,]$SNP),  
+                         POS = gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\4", Erucic_Oleic[Erucic_Oleic$P.value < 0.00001,]$SNP)) 
+
+SNP.Erucic.Oleic$CHROM <- paste("chr", SNP.Erucic.Oleic$CHROM, sep = "")
+SNP.Erucic.Oleic$POS <- as.numeric(as.character(SNP.Erucic.Oleic$POS))
+SNP.Erucic.Oleic$SNP_ID <- paste(SNP.Erucic.Oleic$CHROM, SNP.Erucic.Oleic$POS, sep = "_")
+SNP.Erucic.Oleic$SNP_ID <- gsub("chr", "S", SNP.Erucic.Oleic$SNP_ID)
+
+SNP.Erucic.Oleic.unique <- unique(SNP.Erucic.Oleic)
+dim(SNP.Erucic.Oleic.unique) # 235 2 
+
+SNP.Erucic.Oleic.unique$Erucic <- SNP.Erucic.Oleic.unique$SNP_ID %in% Erucic_acid[Erucic_acid$P.value< 0.00001,]$SNP
+SNP.Erucic.Oleic.unique$Oleic <- SNP.Erucic.Oleic.unique$SNP_ID %in% Oleic_acid[Oleic_acid$P.value< 0.00001,]$SNP
+
+SNP.Erucic.Oleic.unique
+sum(SNP.Erucic.Oleic.unique$Erucic) # 231
+sum(SNP.Erucic.Oleic.unique$Oleic) # 104 
+
+# get Da-Ae and Da-Ol-1 SNP set 
+Ae_Ol <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/vcf.Ae.Ol.intersect.final.csv", stringsAsFactors = F)
+Ae_Ol %>% head() 
+Ae_Ol$SNP_ID <- paste(Ae_Ol$CHROM, Ae_Ol$POS, sep = "_")
+Ae_Ol$SNP_ID <- gsub("chr", "S", Ae_Ol$SNP_ID)
+
+SNP.Erucic.Oleic.unique.marker <- 
+SNP.Erucic.Oleic.unique %>% 
+  inner_join(Ae_Ol)  
+dim(SNP.Erucic.Oleic.unique.marker) # 85 10 
+
+SNP.Erucic.Oleic.unique.marker$Ae.gt <- 
+ifelse(SNP.Erucic.Oleic.unique.marker$Ae.gt=="0/0", paste(SNP.Erucic.Oleic.unique.marker$REF, SNP.Erucic.Oleic.unique.marker$REF, sep = ""), paste(SNP.Erucic.Oleic.unique.marker$ALT, SNP.Erucic.Oleic.unique.marker$ALT, sep = ""))
+
+SNP.Erucic.Oleic.unique.marker$Ol.gt <- 
+ifelse(SNP.Erucic.Oleic.unique.marker$Ol.gt=="0/0", paste(SNP.Erucic.Oleic.unique.marker$REF, SNP.Erucic.Oleic.unique.marker$REF, sep = ""), paste(SNP.Erucic.Oleic.unique.marker$ALT, SNP.Erucic.Oleic.unique.marker$ALT, sep = ""))
+
+SNP.Erucic.Oleic.unique.marker.GWAS <- 
+SNP.Erucic.Oleic.unique.marker %>% 
+  filter(Erucic == TRUE, Oleic == TRUE) %>%
+  dplyr::select(CHROM, POS, Ae.gt, Ol.gt, SNP_ID)
+
+## from QTL mapping 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/overlay/cim.qtl.43traits.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/overlay/cim.perm.43traits.Rdata")
+
+cim.qtl.sig.Erucic <- cim.qtl$Erucic_acid[cim.qtl$Erucic_acid$lod > cim.perm$Erucic_acid,]
+cim.qtl.sig.Oleic <- cim.qtl$Oleic_acid[cim.qtl$Oleic_acid$lod > cim.perm$Oleic_acid,]
+
+cim.qtl.sig.Erucic$SNP_ID <- rownames(cim.qtl.sig.Erucic)
+cim.qtl.sig.Oleic$SNP_ID <- rownames(cim.qtl.sig.Oleic) 
+
+cim.qtl.sig.Erucic <- 
+cim.qtl.sig.Erucic[grep("^chr", cim.qtl.sig.Erucic$SNP_ID),] %>% 
+  dplyr::select(SNP_ID) 
+
+cim.qtl.sig.Oleic <- 
+cim.qtl.sig.Oleic[grep("^chr", cim.qtl.sig.Oleic$SNP_ID),] %>% 
+  dplyr::select(SNP_ID) 
+
+dim(cim.qtl.sig.Erucic) # 22
+dim(cim.qtl.sig.Oleic) # 19 
+
+SNP.Erucic.Oleic.unique.marker.QTL <- 
+rbind(cim.qtl.sig.Erucic, cim.qtl.sig.Oleic) %>% unique() 
+dim(SNP.Erucic.Oleic.unique.marker.QTL) # 25 
+
+SNP.Erucic.Oleic.unique.marker.QTL$CHROM <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)([[:print:]]+)", "\\1\\2\\3", SNP.Erucic.Oleic.unique.marker.QTL$SNP_ID)
+
+SNP.Erucic.Oleic.unique.marker.QTL$POS <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\5", SNP.Erucic.Oleic.unique.marker.QTL$SNP_ID)
+
+SNP.Erucic.Oleic.unique.marker.QTL$Erucic <- SNP.Erucic.Oleic.unique.marker.QTL$SNP_ID %in% cim.qtl.sig.Erucic$SNP_ID
+SNP.Erucic.Oleic.unique.marker.QTL$Oleic <- SNP.Erucic.Oleic.unique.marker.QTL$SNP_ID %in% cim.qtl.sig.Oleic$SNP_ID
+SNP.Erucic.Oleic.unique.marker.QTL$POS <- as.numeric(SNP.Erucic.Oleic.unique.marker.QTL$POS)
+SNP.Erucic.Oleic.unique.marker.QTL$SNP_ID <- gsub("chr", "S", SNP.Erucic.Oleic.unique.marker.QTL$SNP_ID)
+
+SNP.Erucic.Oleic.unique.marker.QTL <- 
+SNP.Erucic.Oleic.unique.marker.QTL %>% 
+  inner_join(Ae_Ol) 
+
+SNP.Erucic.Oleic.unique.marker.QTL %>% dim() # 25 
+
+SNP.Erucic.Oleic.unique.marker.QTL$Ae.gt <- 
+ifelse(SNP.Erucic.Oleic.unique.marker.QTL$Ae.gt=="0/0", paste(SNP.Erucic.Oleic.unique.marker.QTL$REF, SNP.Erucic.Oleic.unique.marker.QTL$REF, sep = ""), paste(SNP.Erucic.Oleic.unique.marker.QTL$ALT, SNP.Erucic.Oleic.unique.marker.QTL$ALT, sep = ""))
+
+SNP.Erucic.Oleic.unique.marker.QTL$Ol.gt <- 
+ifelse(SNP.Erucic.Oleic.unique.marker.QTL$Ol.gt=="0/0", paste(SNP.Erucic.Oleic.unique.marker.QTL$REF, SNP.Erucic.Oleic.unique.marker.QTL$REF, sep = ""), paste(SNP.Erucic.Oleic.unique.marker.QTL$ALT, SNP.Erucic.Oleic.unique.marker.QTL$ALT, sep = ""))
+
+SNP.Erucic.Oleic.unique.marker.QTL <- 
+SNP.Erucic.Oleic.unique.marker.QTL %>% 
+  filter(Erucic == TRUE & Oleic == TRUE) %>%
+  dplyr::select(CHROM, POS, Ae.gt, Ol.gt, SNP_ID)
+
+dim(SNP.Erucic.Oleic.unique.marker.QTL) # 16 
+dim(SNP.Erucic.Oleic.unique.marker.GWAS) # 43 
+
+SNP.Erucic.Oleic.unique.marker.GWAS.QTL <- 
+rbind(SNP.Erucic.Oleic.unique.marker.QTL, SNP.Erucic.Oleic.unique.marker.GWAS) %>% unique() 
+
+SNP.Erucic.Oleic.unique.marker.GWAS.QTL$GWAS <- SNP.Erucic.Oleic.unique.marker.GWAS.QTL$SNP_ID %in% SNP.Erucic.Oleic.unique.marker.GWAS$SNP_ID
+
+SNP.Erucic.Oleic.unique.marker.GWAS.QTL$QTL <- SNP.Erucic.Oleic.unique.marker.GWAS.QTL$SNP_ID %in% SNP.Erucic.Oleic.unique.marker.QTL$SNP_ID
+
+SNP.Erucic.Oleic.unique.marker.GWAS.QTL.final <- 
+SNP.Erucic.Oleic.unique.marker.GWAS.QTL %>% 
+  dplyr::select(-(SNP_ID:QTL))
+
+SNP.Erucic.Oleic.unique.marker.GWAS.QTL.final %>% dim()
+write.csv(SNP.Erucic.Oleic.unique.marker.GWAS.QTL.final, file = "~/Desktop/2017_Nov_KIAT_report/SNP.Erucic.Oleic.unique.marker.GWAS.QTL.final.csv")
+```
+
 # sessioninfo
 ```{r}
 # source("https://bioconductor.org/biocLite.R")
