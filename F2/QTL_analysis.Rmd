@@ -451,6 +451,18 @@ load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
 plot(cim.qtl[[1]], chr="C09")  
 colnames(LG.f2.after.crossover$pheno)
 
+# flower and growth related 
+flower_growth_cim <- 
+qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to_flower"), 
+                       data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_bolt"),
+                       data.frame(cim.qtl[["root_weight_2016_05_13"]], method = "root_weight_2016_05_13"), 
+                       data.frame(cim.qtl[["plant_height_2016_05_13"]], method = "plant_height_2016_05_13"), 
+                       data.frame(cim.qtl[["leaf_number_2016_03_21"]], method = "leaf_number_2016_03_21")),
+         chrs = c("A10", "C06"), 
+         # lod = c(cim.perm[["days_to_bolt"]]),
+         rug = TRUE, 
+         title = "growth  related")
+
 # flower related 
 flower_cim <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to_flower"), 

@@ -159,7 +159,7 @@ p.toomany.mapping
 # histogram of unmapped 
 p.un.mapping <- ggplot(data=mapping_result_505)
 p.un.mapping <- p.un.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Unmapped_Mismatches+mapping_result_505$Percent_Unmapped_Other+mapping_result_505$Percent_Unmapped_Too_Short, fill=batch), binwidth = 2.5) 
-p.un.mapping <- p.un.mapping + labs(list(title = "histogram of unmapped reads percentage", x = "Percent of unmapped reads", y = "number of samples"))
+p.un.mapping <- p.un.mapping + labs(list(title = "histogram of unmapped reads percentage", x = "Percent of unmapped reads", y = "number of samples")) 
 p.un.mapping
 # ggsave(p.un.mapping, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/un_mapped.png", height = 8, width = 11)
 
@@ -2941,7 +2941,7 @@ length(flowering_time[flowering_time$P.value < 0.00001,]$SNP) # 1
 length(bolting_time[bolting_time$P.value < 0.00001,]$SNP) # 5
 
 SNP.time
-SNP.time.unique <- unique(SNP.time)
+SNP.time.unique <- unique(SNP.time) 
 dim(SNP.time.unique) # 6 2 
 head(SNP.time.unique)
 
@@ -3232,6 +3232,7 @@ sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", header = T)
 sample_des_e_sub <- sample_des_c[,c("Sample.ID","TotalReads","Name")]
 
 rep1 <- rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub)
+<<<<<<< HEAD
 rep1$Name 
 ```
 
@@ -3245,6 +3246,187 @@ Erucic_acid %>%
   dplyr::select(Chromosome, Chrom_name) %>% 
   unique()
 Chrom_name
+=======
+rep1$Name
+```
+
+### GWAS on all fatty acid composition and oil content 
+```{r}
+fatty_acid_oil_new <- read.csv("~/505/data/phenotype/505_fatty_acid_20171128.csv")
+colnames(fatty_acid_oil_new)
+
+pheno.505.fatty.acid <- 
+fatty_acid_oil_new %>% 
+  dplyr::select(Line.number:Erucic.acid..C22.1n9.) 
+
+colnames(pheno.505.fatty.acid) <- c("SN", "Oil_content", "Caprylic_acid", "Capric_acid", "Lauric_acid", "Myristic_acid", "Pentadecanoic_acid", "Palmitic_acid", "Palmitoliec_aicd", "Heptadecanoic_acid", "Stearic_acid", "Oleic_acid", "vaccenic_acid", "Linoleic_acid", "Arachidic_acid", "cis_11_Eicosenoic_acid", "Linolenic_acid", "Behenic_acid", "Erucic_acid")
+
+str(pheno.505.fatty.acid)
+pheno.505.fatty.acid[1:10, 1:10]
+# replace SN with sample ID in genotype data  
+sample_des_c <- read.csv("~/505/data/phenotype/batch_c.csv", stringsAsFactors=F, header=T)
+sample_des_d <- read.csv("~/505/data/phenotype/batch_d.csv", stringsAsFactors=F, header=T)
+sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", stringsAsFactors=F, header=T)
+
+sample_des_c_sub2 <- sample_des_c[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_d_sub2 <- sample_des_d[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_e_sub2 <- sample_des_e[,c("Sample.ID", "No..of.Sowing", "Name")]
+
+sample_des_d_sub2 <- sample_des_d_sub2[c(1:41),]
+sample_des_sub2 <- rbind(sample_des_c_sub2, sample_des_d_sub2, sample_des_e_sub2)
+
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
+sample_des_sub2$SN %in% pheno.505.fatty.acid$SN
+
+pheno.505.fatty.acid.merge <- merge(sample_des_sub2, pheno.505.fatty.acid, by = "SN")
+colnames(pheno.505.fatty.acid.merge)
+pheno.505.fatty.acid.merge %>% dim() # 131 22 
+
+pheno_data_505 <- 
+  pheno.505.fatty.acid.merge %>% 
+    dplyr::select(-SN) %>% 
+    dplyr::select(-(No..of.Sowing:Name))  
+    
+colnames(pheno_data_505)[1] <- "Taxa" 
+dim(pheno_data_505) # 131 19 
+
+save(pheno_data_505, file="~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata")  
+
+load("~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata")
+
+png("~/505/output/131_sample/pheno_fatty_acid_pair.png", width = 30, height = 30, units = "in", res = 300)  
+pheno_data_505 %>% 
+  dplyr::select(-Taxa) %>% 
+  pairs()
+dev.off()   
+```
+
+### GWAS on all fatty acid traits 
+```{r}
+# https://github.com/leejimmy93/KIAT/blob/master/505/GWAS_505_late_silique_fatty_acid_all.R
+# generate mahattan plot 
+
+# Oil_content", "Myristic_acid", "Pentadecanoic_acid", "Palmitic_acid", "Palmitoliec_aicd", "Heptadecanoic_acid", "Stearic_acid", "Oleic_acid", "vaccenic_acid", "Linoleic_acid", "Arachidic_acid", "cis_11_Eicosenoic_acid", "Linolenic_acid", "Behenic_acid", "Erucic_acid" These many traits have GWAS results, the other three don't because of two few data points. 
+
+Oil_content <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Oil_content.GWAS.Results.csv", header = T)
+
+# Caprylic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Caprylic_acid.GWAS.Results.csv", header = T)
+
+# Capric_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Capric_acid.GWAS.Results.csv", header = T)
+
+# Lauric_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Lauric_acid.GWAS.Results.csv", header = T)
+
+Myristic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Myristic_acid.GWAS.Results.csv", header = T)
+
+Pentadecanoic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Pentadecanoic_acid.GWAS.Results.csv", header = T)
+
+Palmitic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Palmitic_acid.GWAS.Results.csv", header = T)
+
+Palmitoliec_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Palmitoliec_aicd.GWAS.Results.csv", header = T)
+
+Heptadecanoic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Heptadecanoic_acid.GWAS.Results.csv", header = T)
+
+Stearic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Stearic_acid.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+vaccenic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..vaccenic_acid.GWAS.Results.csv", header = T)
+
+Linoleic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Linoleic_acid.GWAS.Results.csv", header = T)
+
+Arachidic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Arachidic_acid.GWAS.Results.csv", header = T)
+
+cis_11_Eicosenoic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..cis_11_Eicosenoic_acid.GWAS.Results.csv", header = T)
+
+Linolenic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Linolenic_acid.GWAS.Results.csv", header = T)
+
+Behenic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Behenic_acid.GWAS.Results.csv", header = T)
+
+Erucic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Erucic_acid.GWAS.Results.csv", header = T) 
+
+fatty_acid_all <- list(Oil_content, Myristic_acid, Pentadecanoic_acid, Palmitic_acid, Palmitoliec_acid, Heptadecanoic_acid, Stearic_acid, Oleic_acid, vaccenic_acid, Linoleic_acid, Arachidic_acid, cis_11_Eicosenoic_acid, Linolenic_acid, Behenic_acid, Erucic_acid)
+
+length(fatty_acid_all) # 15 
+names(fatty_acid_all) <- c("Oil_content", "Myristic_acid", "Pentadecanoic_acid", "Palmitic_acid", "Palmitoliec_aicd", "Heptadecanoic_acid", "Stearic_acid", "Oleic_acid", "vaccenic_acid", "Linoleic_acid", "Arachidic_acid", "cis_11_Eicosenoic_acid", "Linolenic_acid", "Behenic_acid", "Erucic_acid")
+fatty_acid_all[["Oil_content"]] %>% head()
+colnames(fatty_acid_all[["Oil_content"]])
+# plot and save all plot 
+
+png("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/figure/131_sample/all_fatty_acid_1.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+
+colnames(fatty_acid_all[["Oil_content"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["Myristic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["Pentadecanoic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+
+manhattan((fatty_acid_all[["Oil_content"]]), main = "Oil_content", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["Myristic_acid"]]), main = "Myristic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["Pentadecanoic_acid"]]), main = "Pentadecanoic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+dev.off() 
+
+png("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/figure/131_sample/all_fatty_acid_2.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+
+colnames(fatty_acid_all[["Palmitic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["Palmitoliec_aicd"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["Heptadecanoic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+
+manhattan((fatty_acid_all[["Palmitic_acid"]]), main = "Palmitic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["Palmitoliec_aicd"]]), main = "Palmitoliec_aicd", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["Heptadecanoic_acid"]]), main = "Heptadecanoic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+dev.off()  
+
+png("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/figure/131_sample/all_fatty_acid_3.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+
+colnames(fatty_acid_all[["Stearic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["Oleic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["vaccenic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+
+manhattan((fatty_acid_all[["Stearic_acid"]]), main = "Stearic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["Oleic_acid"]]), main = "Oleic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["vaccenic_acid"]]), main = "vaccenic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+dev.off()  
+
+png("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/figure/131_sample/all_fatty_acid_4.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+
+colnames(fatty_acid_all[["Linoleic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["Arachidic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["cis_11_Eicosenoic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+
+manhattan((fatty_acid_all[["Linoleic_acid"]]), main = "Linoleic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["Arachidic_acid"]]), main = "Arachidic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["cis_11_Eicosenoic_acid"]]), main = "cis_11_Eicosenoic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+dev.off()   
+
+png("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/figure/131_sample/all_fatty_acid_5.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(3,1)) 
+
+colnames(fatty_acid_all[["Linolenic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["Behenic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(fatty_acid_all[["Erucic_acid"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+
+manhattan((fatty_acid_all[["Linolenic_acid"]]), main = "Linolenic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["Behenic_acid"]]), main = "Behenic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+manhattan((fatty_acid_all[["Erucic_acid"]]), main = "Erucic_acid", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+dev.off()    
+>>>>>>> 626ffb90ee71a0b3c125c96dbff7e8a094689943
 ```
 
 
