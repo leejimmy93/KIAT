@@ -300,7 +300,7 @@ head(SNP_chr.unique)
 SNP_chr_main.unique <- SNP_chr.unique[!grepl("RANDOM", SNP_chr.unique$ID),]  
 head(SNP_chr_main.unique)
 SNP_chr_main.unique$subgenome <- gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\1", SNP_chr_main.unique$ID)   
-SNP_chr_main.unique$chr_ID <- gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID) 
+SNP_chr_main.unique$chr_ID <- gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID)    
 
 # do a little calculation: how many SNPs on main & random chromosomes? 
 sum(SNP_chr_main.unique$V1) # 200897        
