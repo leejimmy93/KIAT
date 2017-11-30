@@ -3217,7 +3217,6 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 ```{r}
 # sample description 
 # is batch F duplicate or new lines for 505? 
-```{r}
 # sample description 
 sample_des_f <- read.csv("~/505/data/phenotype/batch_f.csv", header = T) 
 sample_des_f_sub <- sample_des_f[,c("Sample.ID","TotalReads", "Name")]
@@ -3233,6 +3232,21 @@ sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", header = T)
 sample_des_e_sub <- sample_des_c[,c("Sample.ID","TotalReads","Name")]
 
 rep1 <- rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub)
+<<<<<<< HEAD
+rep1$Name 
+```
+
+### get the chromosome name for chromsome ID from GWAS result 
+```{r}
+Erucic_acid <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/myGAPIT/late_silique/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+Erucic_acid$Chrom_name <- gsub("(S)([[:print:]]+)(_)([[:digit:]]+)", "\\2", Erucic_acid$SNP)   
+
+Chrom_name <- 
+Erucic_acid %>% 
+  dplyr::select(Chromosome, Chrom_name) %>% 
+  unique()
+Chrom_name
+=======
 rep1$Name
 ```
 
@@ -3412,6 +3426,7 @@ manhattan((fatty_acid_all[["Behenic_acid"]]), main = "Behenic_acid", ylim = c(0,
 manhattan((fatty_acid_all[["Erucic_acid"]]), main = "Erucic_acid", ylim = c(0, 8), cex = 0.6,
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
 dev.off()    
+>>>>>>> 626ffb90ee71a0b3c125c96dbff7e8a094689943
 ```
 
 

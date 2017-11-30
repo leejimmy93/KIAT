@@ -73,7 +73,6 @@ dim(SNP_gene_final_fxn)
 
 SNP_gene_final_fxn.2 <- merge(SNP_gene_final_fxn, sig_SNP_ann, by="snp_ID")
 SNP_gene_final_fxn.2 
-
 ```
 
 # expression level of candidate genes & Erucic & Oleic acid content level 
@@ -106,7 +105,6 @@ vstMat.f2.t.melt %>%
 
 expression_pheno %>% head()
 
-
 png("~/Desktop/test.png", width=13, height=7, units="in", res=300)
 par(mfrow=c(3,4))
 
@@ -118,4 +116,23 @@ for (i in colnames(vstMat.f2.t)[1:11]){
 
 dev.off()     
 ```
+
+### overlaps between these genes & cis- and trans- eQTL gene? 
+```{r}
+load("~/Desktop/2017_Nov_KIAT_report/trans_eQTL_trait.final.final.Rdata")
+trans_eQTL_trait.final.final %>% head()
+trans_eQTL_trait.final.final.acid <- trans_eQTL_trait.final.final[grep("acid", trans_eQTL_trait.final.final$trait),]
+dim(trans_eQTL_trait.final.final.acid) # 5164 12 
+
+load("~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% trans_eQTL_trait.final.final.acid$gene_ID # no trans-eQTL genes 
+
+load("~/Desktop/2017_Nov_KIAT_report/cis_eQTL_trait.final.final.Rdata")
+cis_eQTL_trait.final.final %>% head()
+cis_eQTL_trait.final.final.acid <- cis_eQTL_trait.final.final[grep("acid", cis_eQTL_trait.final.final$trait),]
+dim(cis_eQTL_trait.final.final.acid) # 2767 12 
+
+SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names[SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names %in% cis_eQTL_trait.final.final.acid$gene_ID] # no trans-eQTL genes 
+```
+
 

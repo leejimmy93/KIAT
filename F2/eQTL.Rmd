@@ -1028,11 +1028,32 @@ trans_eQTL_trait.final.final.acid[grep("lipid|fatty", trans_eQTL_trait.final.fin
   unique() %>% 
   View()
 
+test <- 
+trans_eQTL_trait.final.final.acid[grep("lipid|fatty", trans_eQTL_trait.final.final.acid$GO_des),] %>% 
+  dplyr::select(gene_ID, description, GO_des) %>% 
+  unique() 
+
+test[-grep("phospholipid", test$GO_des),] %>% View
+
+  
 # transcription factor genes 
 TF.trans_eQTL.acid <- 
 trans_eQTL_trait.final.final.acid[grep("binding", trans_eQTL_trait.final.final.acid$GO_des),] %>% 
   dplyr::select(gene_ID, description, GO_des) %>% 
   unique() 
+
+TF.trans_eQTL.acid$gene_ID %>% unique() %>% length() 
+
+test <- 
+trans_eQTL_trait.final.final.acid[grep("DNA|nucleotide|transcription", trans_eQTL_trait.final.final.acid$GO_des),] %>% 
+  dplyr::select(gene_ID, description, GO_des) %>% 
+  unique() 
+
+test[grep("binding", test$GO_des),] %>% 
+  View() 
+	
+# DNA binding/nucleotide binding/transcription factor activity/ 
+
 save(TF.trans_eQTL.acid, file = "~/Desktop/2017_Nov_KIAT_report/TF.trans_eQTL.acid.Rdata")
 ```
 
