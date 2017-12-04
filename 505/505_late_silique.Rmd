@@ -3558,9 +3558,9 @@ lm.Linolenic <- lm(Linolenic_acid ~ SA08_10597112 * SC03_56259024, data = data_t
 lm.Erucic <- lm(Erucic_acid ~ SA08_10597112 * SC03_56259024, data = data_three_acid)
 lm.Oleic <- lm(Oleic_acid ~ SA08_10597112 * SC03_56259024, data = data_three_acid)
 
-summary(lm.Linolenic) 
-summary(lm.Erucic)
-summary(lm.Oleic)
+summary.lm.Linolenic <- summary(lm.Linolenic) 
+summary.lm.Erucic <- summary(lm.Erucic)
+summary.lm.Oleic <- summary(lm.Oleic)
 
 anova(lm.Linolenic) # assessing significance of fixed effects 
 anova(lm.Erucic)
@@ -3581,8 +3581,50 @@ summary(m.Linolenic.brms)
 fixef(m.Linolenic.brms)  
 
 # plot out the lmerTest result 
+allele.effect.result <- function(data){ # data is summary.lm.Linolenic$coefficients 
+  tmp <- as.data.frame(data[,c("Estimate", "Std. Error")])
+  colnames(tmp) <- c("mean", "SE")
+  tmp <- tmp[-(grep("NN", rownames(tmp))),]
+  
+  tmp$SA08_10597112 <- c("AA", "AB", "BB", "AA", "AA", "AB", "BB", "AB", "BB")
+  tmp$SC03_56259024 <- c("AA", "AA", "AA", "AB", "BB", "AB", "AB", "BB", "BB")
+  
+  tmp$mean[9] = tmp$mean[1]+tmp$mean[3]+tmp$mean[5]+tmp$mean[9]
+  tmp$mean[8] = tmp$mean[1]+tmp$mean[2]+tmp$mean[5]+tmp$mean[8]
+  tmp$mean[7] = tmp$mean[1]+tmp$mean[3]+tmp$mean[4]+tmp$mean[7]
+  tmp$mean[6] = tmp$mean[1]+tmp$mean[2]+tmp$mean[4]+tmp$mean[6]
+  tmp$mean[5] = tmp$mean[1]+tmp$mean[5]
+  tmp$mean[4] = tmp$mean[1]+tmp$mean[4]
+  tmp$mean[3] = tmp$mean[1]+tmp$mean[3]
+  tmp$mean[2] = tmp$mean[1]+tmp$mean[2]
+  
+  tmp$ymin <- tmp$mean - tmp$SE
+  tmp$ymax <- tmp$mean + tmp$SE
+  
+  tmp$SA08_10597112 <- factor(tmp$SA08_10597112, c("AA", "AB", "BB"))
+  tmp$SC03_56259024 <- factor(tmp$SC03_56259024, c("AA", "AB", "BB"))
+  
+  pl <- 
+  tmp %>% 
+    ggplot() + 
+    geom_line(mapping = aes(x=SC03_56259024, y = mean, color = SA08_10597112, group=SA08_10597112)) 
+  return(pl) 
+}
 
+pl.allele.effect.Linolenic <- allele.effect.result(summary.lm.Linolenic$coefficients)
+pl.allele.effect.Erucic <- allele.effect.result(summary.lm.Erucic$coefficients)
+pl.allele.effect.Oleic <- allele.effect.result(summary.lm.Oleic$coefficients) 
 
+library(cowplot)
+
+plot.all<-plot_grid(
+  pl.allele.effect.Erucic+theme(legend.position = "none", axis.text.x=element_text(size=8,vjust=0.5))+labs(title="Erucic acid"),
+  pl.allele.effect.Oleic+theme(legend.position = "none", axis.text.x=element_text(size=8,vjust=0.5))+labs(title="Oleic acid"),
+  pl.allele.effect.Linolenic+theme(legend.position = "none", axis.text.x=element_text(size=8,vjust=0.5))+labs(title="Linolenic acid"),
+  ncol=3, nrow = 1,labels=c("","","",""))
+
+plot.all
+save_plot("~/505/output/131_sample/allele_effect_plot.all.png", plot.all, ncol = 1, nrow = 3,base_aspect_ratio = 0.8) 
 ```
 
 
