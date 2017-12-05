@@ -166,3 +166,4 @@ expression.pattern.Bn.parent.bar <- function(gene, vstMat.parent){
   
   return(p) 
 }  
+

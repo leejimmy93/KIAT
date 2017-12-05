@@ -14,7 +14,7 @@ output:
 ```
 
 # preprocess 
-```{r}
+```{r} 
 # 1) download 
 
 # 2) trimming 
@@ -3233,7 +3233,7 @@ sample_des_e_sub <- sample_des_c[,c("Sample.ID","TotalReads","Name")]
 
 rep1 <- rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub)
 <<<<<<< HEAD
-rep1$Name 
+rep1$Name  
 ```
 
 ### get the chromosome name for chromsome ID from GWAS result 
