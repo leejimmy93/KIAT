@@ -1131,13 +1131,13 @@ expression.pattern.Bn.parent.with.annot(ID, fatty.acid.genes.annotation)
 # GO enrichment analysis 
 ```{r}
 # load all necessary functions 
-# source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.new.Rdata")
 
 # gt effect 
 DEgene.GO.ORA.gt <- GOseq.Bn.ORA(rownames(DEgene.new.gt))
 class(DEgene.GO.ORA.gt)
-DEgene.GO.ORA.gt$Term 
+DEgene.GO.ORA.gt$Term  
 # tissue effect 
 DEgene.GO.ORA.tissue <- GOseq.Bn.ORA(rownames(DEgene.new.tissue))
 DEgene.GO.ORA.tissue
@@ -1160,7 +1160,7 @@ gt_gt.tissue.melt$logPvalue <- -log10(gt_gt.tissue.melt$value)
 pl.heatmap1 <- ggplot(data = gt_gt.tissue.melt)
 pl.heatmap1 <- pl.heatmap1 + geom_tile(color = "black", aes(x = factor(variable), y = Term, fill=logPvalue)) + scale_fill_gradient2(low=muted("green"), high=muted("magenta")) 
 pl.heatmap1 <- pl.heatmap1 + labs(y = "GO term", x="", title=" ") 
-pl.heatmap1
+pl.heatmap1 
 
 # young 
 DEgene.young.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young))

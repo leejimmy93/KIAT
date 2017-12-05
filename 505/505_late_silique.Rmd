@@ -3429,5 +3429,19 @@ dev.off()
 >>>>>>> 626ffb90ee71a0b3c125c96dbff7e8a094689943
 ```
 
+```{r}
+Auto %>% 
+  dplyr::select(-name) %>% 
+  apply(2, range)
+
+Auto %>% 
+  dplyr::select(-name) %>% 
+  apply(2, mean)
+
+Auto %>% 
+  dplyr::select(-name) %>% 
+  apply(2, sd) 
+
+```
 
 
