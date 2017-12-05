@@ -60,6 +60,28 @@ IUPAC.code <- function(temp2){
   return(temp2)
 }
 
+IUPAC.code.reverse <- function(temp2){
+  temp2 <- data.frame(sapply(temp2, function(x) sub("A","AA",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("T","TT",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("C","CC",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("G","GG",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("Y","CT",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("R","AG",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("W","AT",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("S","GC",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("K","TG",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("M","CA",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("Y","TC",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("R","GA",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("W","TA",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("S","CG",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("K","GT",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("M","AC",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("N","NN",x)))
+  
+  return(temp2)
+}
+
 # this function is for??? 
 vcf_sigSNP_extract <- function(vcf, significant_SNP){ 
   vcf.new <-  
@@ -144,3 +166,4 @@ expression.pattern.Bn.parent.bar <- function(gene, vstMat.parent){
   
   return(p) 
 }  
+

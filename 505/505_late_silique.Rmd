@@ -14,7 +14,7 @@ output:
 ```
 
 # preprocess 
-```{r}
+```{r} 
 # 1) download 
 
 # 2) trimming 
@@ -300,7 +300,7 @@ head(SNP_chr.unique)
 SNP_chr_main.unique <- SNP_chr.unique[!grepl("RANDOM", SNP_chr.unique$ID),]  
 head(SNP_chr_main.unique)
 SNP_chr_main.unique$subgenome <- gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\1", SNP_chr_main.unique$ID)   
-SNP_chr_main.unique$chr_ID <- gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID) 
+SNP_chr_main.unique$chr_ID <- gsub("(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", SNP_chr_main.unique$ID)    
 
 # do a little calculation: how many SNPs on main & random chromosomes? 
 sum(SNP_chr_main.unique$V1) # 200897        
@@ -3233,7 +3233,7 @@ sample_des_e_sub <- sample_des_c[,c("Sample.ID","TotalReads","Name")]
 
 rep1 <- rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub)
 <<<<<<< HEAD
-rep1$Name 
+rep1$Name  
 ```
 
 ### get the chromosome name for chromsome ID from GWAS result 
@@ -3426,7 +3426,205 @@ manhattan((fatty_acid_all[["Behenic_acid"]]), main = "Behenic_acid", ylim = c(0,
 manhattan((fatty_acid_all[["Erucic_acid"]]), main = "Erucic_acid", ylim = c(0, 8), cex = 0.6,
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
 dev.off()    
->>>>>>> 626ffb90ee71a0b3c125c96dbff7e8a094689943
+```
+
+### fit a model for the A08 and C03 loci from Linolenic acid, see whether there is interaction or not. 
+```{r}
+Linolenic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Linolenic_acid.GWAS.Results.csv", header = T, stringsAsFactors = F)
+
+Oleic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+Erucic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
+
+colnames(Linolenic_acid)
+Linolenic_acid$P.value # data is already sorted based on p-value, pick A08 marker and C03 marker which have the smallest p-value 
+
+A08_marker <- 
+Linolenic_acid %>% 
+  filter(Chromosome == "15") %>% 
+  head(2) %>% 
+  dplyr::select(SNP) 
+  # as.character() 
+
+C03_marker <- 
+Linolenic_acid %>% 
+  filter(Chromosome == "26") %>% 
+  head(4) %>% 
+  dplyr::select(SNP) %>% 
+  as.character() 
+
+# I want to combine Linolenic, Erucic, and Oleic acid analysis altogether, so chose two peak markers which are significant for all three fatty acid compositions, also these two markers are present in Da-Ae and Da-Ol-1 SNP set. 
+A08_marker <- "SA08_10597112" 
+C03_marker <- "SC03_56259024" 
+
+# check to see whether these two SNPs are present in Da-Ae and Da-Ol-1 data 
+Ae_Ol <- read.csv("~/SNP_parent/result/vcf.Ae.Ol.intersect.final.csv", stringsAsFactors = F)
+Ae_Ol %>% head() 
+Ae_Ol$SNP_ID <- paste(Ae_Ol$CHROM, Ae_Ol$POS, sep = "_")
+Ae_Ol$SNP_ID <- gsub("chr", "S", Ae_Ol$SNP_ID)
+
+# extract gt info for these two markers 
+geno_505_hmp <- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.hmp.txt", head=FALSE, stringsAsFactors = F) 
+dim(geno_505_hmp) # 174398    142 
+geno_505_hmp[1:10, 1:10]
+
+rownames(geno_505_hmp) <- geno_505_hmp$V1
+
+geno_505_hmp.2 <- 
+geno_505_hmp %>% 
+  dplyr::select(-(V2:V11))  
+
+dim(geno_505_hmp.2)
+geno_505_hmp.2 <- geno_505_hmp.2[,-1] 
+colnames(geno_505_hmp.2) <- geno_505_hmp.2[1,] 
+geno_505_hmp.2 <- geno_505_hmp.2[-1,]
+dim(geno_505_hmp.2) # 174397    131
+geno_505_hmp.2[1:10, 1:10] 
+
+geno_A08_C03 <- 
+geno_505_hmp.2[(rownames(geno_505_hmp.2) %in% A08_marker) | (rownames(geno_505_hmp.2) %in% C03_marker),] 
+rname <- rownames(geno_A08_C03)
+geno_A08_C03 <- 
+IUPAC.code.reverse(temp2 = geno_A08_C03)
+
+geno_A08_C03$SNP_ID <- rname
+geno_A08_C03
+
+geno_A08_C03# polarize againt Da-Ae and Da-Ol-1 gt 
+Ae_Ol_A08_C03 <- Ae_Ol[(Ae_Ol$SNP_ID %in% A08_marker) | (Ae_Ol$SNP_ID %in% C03_marker),] 
+Ae_Ol_A08_C03
+
+geno_A08_C03_Ae_Ol <- 
+geno_A08_C03 %>% 
+  left_join(Ae_Ol_A08_C03)  
+
+# get genotype for Da-Ae and Da-Ol-1 
+geno_A08_C03_Ae_Ol$Ae.gt <- 
+ifelse(geno_A08_C03_Ae_Ol$Ae.gt == "0/0", paste(geno_A08_C03_Ae_Ol$REF, geno_A08_C03_Ae_Ol$REF, sep = ""), paste(geno_A08_C03_Ae_Ol$ALT, geno_A08_C03_Ae_Ol$ALT, sep = ""))
+
+geno_A08_C03_Ae_Ol$Ol.gt <- 
+ifelse(geno_A08_C03_Ae_Ol$Ol.gt == "0/0", paste(geno_A08_C03_Ae_Ol$REF, geno_A08_C03_Ae_Ol$REF, sep = ""), paste(geno_A08_C03_Ae_Ol$ALT, geno_A08_C03_Ae_Ol$ALT, sep = ""))
+
+geno_A08_C03_Ae_Ol
+# get genotype for 
+geno_A08_C03_Ae_Ol_new <- data.frame()
+
+for (i in colnames(geno_A08_C03_Ae_Ol)[1:131]){
+  # print(i)   
+  for (j in 1:nrow(geno_A08_C03_Ae_Ol)){
+    print(j)
+    if (geno_A08_C03_Ae_Ol[j,i] == "NN"){
+      geno_A08_C03_Ae_Ol_new[j,i] = "NN"
+    } else if (geno_A08_C03_Ae_Ol[j,i] != geno_A08_C03_Ae_Ol[j,"Ae.gt"] & geno_A08_C03_Ae_Ol[j,i] != geno_A08_C03_Ae_Ol[j,"Ol.gt"]){
+      geno_A08_C03_Ae_Ol_new[j,i] = "AB"
+    } else if (geno_A08_C03_Ae_Ol[j,i] == geno_A08_C03_Ae_Ol[j,"Ae.gt"]){
+      geno_A08_C03_Ae_Ol_new[j,i] = "AA"
+    } else {
+      geno_A08_C03_Ae_Ol_new[j,i] = "BB" 
+    }
+  }
+}  
+
+rownames(geno_A08_C03_Ae_Ol_new) <- geno_A08_C03_Ae_Ol$SNP_ID
+
+geno_A08_C03_Ae_Ol_new <- as.data.frame(t(geno_A08_C03_Ae_Ol_new))
+geno_A08_C03_Ae_Ol_new$Taxa <- rownames(geno_A08_C03_Ae_Ol_new)
+geno_A08_C03_Ae_Ol_new$Taxa <- gsub("\\.","\\-", rownames(geno_A08_C03_Ae_Ol_new))
+geno_A08_C03_Ae_Ol_new$Taxa <- gsub("X", "", geno_A08_C03_Ae_Ol_new$Taxa)
+geno_A08_C03_Ae_Ol_new$Taxa
+
+# combine with phenotype data 
+load("~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata")
+pheno_data_505_Linolenic <- 
+pheno_data_505 %>% 
+  dplyr::select(Taxa,Linolenic_acid, Erucic_acid, Oleic_acid)
+
+data_three_acid <- 
+geno_A08_C03_Ae_Ol_new %>% 
+  left_join(pheno_data_505_Linolenic) 
+
+### start modeling 
+summary(data_three_acid)
+data_three_acid$Taxa <- as.factor(data_three_acid$Taxa)
+data_three_acid$SA08_10597112 %>% class()
+data_three_acid$SC03_56259024 %>% class()
+
+### try lmerTest 
+library(lmerTest)
+# mixed effect linear model selection (taxa as random effect), using all orignal data scale 
+data_three_acid$SA08_10597112 <- relevel(data_three_acid$SA08_10597112, ref = "AA")
+data_three_acid$SC03_53911912 <- relevel(data_three_acid$SC03_56259024, ref = "AA")
+lm.Linolenic <- lm(Linolenic_acid ~ SA08_10597112 * SC03_56259024, data = data_three_acid)
+lm.Erucic <- lm(Erucic_acid ~ SA08_10597112 * SC03_56259024, data = data_three_acid)
+lm.Oleic <- lm(Oleic_acid ~ SA08_10597112 * SC03_56259024, data = data_three_acid)
+
+summary.lm.Linolenic <- summary(lm.Linolenic) 
+summary.lm.Erucic <- summary(lm.Erucic)
+summary.lm.Oleic <- summary(lm.Oleic)
+
+anova(lm.Linolenic) # assessing significance of fixed effects 
+anova(lm.Erucic)
+anova(lm.Oleic)
+lm.Linolenic$coefficients 
+
+### if I try in brms  
+library(brms)
+data_three_acid$SA08_10597112 <- relevel(data_three_acid$SA08_10597112, ref = "AA")
+data_Linolenic$SC03_56259024 <- relevel(data_three_acid$SC03_56259024, ref = "AA") 
+
+m.Linolenic.brms <- brm(Linolenic_acid ~  SA08_10597112 * SC03_56259024, 
+            data = data_Linolenic,
+            prior = c(set_prior("normal(0,10)",class="b")) # sets prior for all b coefficients  
+) 
+
+summary(m.Linolenic.brms)
+fixef(m.Linolenic.brms)  
+
+# plot out the lmerTest result 
+allele.effect.result <- function(data){ # data is summary.lm.Linolenic$coefficients 
+  tmp <- as.data.frame(data[,c("Estimate", "Std. Error")])
+  colnames(tmp) <- c("mean", "SE")
+  tmp <- tmp[-(grep("NN", rownames(tmp))),]
+  
+  tmp$SA08_10597112 <- c("AA", "AB", "BB", "AA", "AA", "AB", "BB", "AB", "BB")
+  tmp$SC03_56259024 <- c("AA", "AA", "AA", "AB", "BB", "AB", "AB", "BB", "BB")
+  
+  tmp$mean[9] = tmp$mean[1]+tmp$mean[3]+tmp$mean[5]+tmp$mean[9]
+  tmp$mean[8] = tmp$mean[1]+tmp$mean[2]+tmp$mean[5]+tmp$mean[8]
+  tmp$mean[7] = tmp$mean[1]+tmp$mean[3]+tmp$mean[4]+tmp$mean[7]
+  tmp$mean[6] = tmp$mean[1]+tmp$mean[2]+tmp$mean[4]+tmp$mean[6]
+  tmp$mean[5] = tmp$mean[1]+tmp$mean[5]
+  tmp$mean[4] = tmp$mean[1]+tmp$mean[4]
+  tmp$mean[3] = tmp$mean[1]+tmp$mean[3]
+  tmp$mean[2] = tmp$mean[1]+tmp$mean[2]
+  
+  tmp$ymin <- tmp$mean - tmp$SE
+  tmp$ymax <- tmp$mean + tmp$SE
+  
+  tmp$SA08_10597112 <- factor(tmp$SA08_10597112, c("AA", "AB", "BB"))
+  tmp$SC03_56259024 <- factor(tmp$SC03_56259024, c("AA", "AB", "BB"))
+  
+  pl <- 
+  tmp %>% 
+    ggplot() + 
+    geom_line(mapping = aes(x=SC03_56259024, y = mean, color = SA08_10597112, group=SA08_10597112)) 
+  return(pl) 
+}
+
+pl.allele.effect.Linolenic <- allele.effect.result(summary.lm.Linolenic$coefficients)
+pl.allele.effect.Erucic <- allele.effect.result(summary.lm.Erucic$coefficients)
+pl.allele.effect.Oleic <- allele.effect.result(summary.lm.Oleic$coefficients) 
+
+library(cowplot)
+
+plot.all<-plot_grid(
+  pl.allele.effect.Erucic+theme(legend.position = "none", axis.text.x=element_text(size=8,vjust=0.5))+labs(title="Erucic acid"),
+  pl.allele.effect.Oleic+theme(legend.position = "none", axis.text.x=element_text(size=8,vjust=0.5))+labs(title="Oleic acid"),
+  pl.allele.effect.Linolenic+theme(legend.position = "none", axis.text.x=element_text(size=8,vjust=0.5))+labs(title="Linolenic acid"),
+  ncol=3, nrow = 1,labels=c("","","",""))
+
+plot.all
+save_plot("~/505/output/131_sample/allele_effect_plot.all.png", plot.all, ncol = 1, nrow = 3,base_aspect_ratio = 0.8) 
 ```
 
 ```{r}
