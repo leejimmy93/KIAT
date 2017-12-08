@@ -3627,5 +3627,19 @@ plot.all
 save_plot("~/505/output/131_sample/allele_effect_plot.all.png", plot.all, ncol = 1, nrow = 3,base_aspect_ratio = 0.8) 
 ```
 
+```{r}
+Auto %>% 
+  dplyr::select(-name) %>% 
+  apply(2, range)
+
+Auto %>% 
+  dplyr::select(-name) %>% 
+  apply(2, mean)
+
+Auto %>% 
+  dplyr::select(-name) %>% 
+  apply(2, sd) 
+
+```
 
 

@@ -850,13 +850,14 @@ save(pheno_fatty_acid_geno_2loci, file = "~/Desktop/2017_Nov_KIAT_report/pheno_f
 
 library(GGally)
 p.fatty_acid_A08 <- 
-ggpairs(pheno_fatty_acid_geno_2loci[,c("Erucic_acid",  "Linolenic_acid", "Oleic_acid", "chrA08_10120555")], aes(color = chrA08_10120555, alpha = 0.4)) 
+ggpairs(pheno_fatty_acid_geno_2loci[,c("Erucic_acid",  "Linolenic_acid", "Oleic_acid", "chrA08_10120555")], aes(color = chrA08_10120555, alpha = 0.4))  
 
+p.fatty_acid_A08
 # p.fatty_acid_C03 <- 
 ggpairs(pheno_fatty_acid_geno_2loci[,c("Erucic_acid",  "Linolenic_acid", "Oleic_acid", "chrC03_53755234")], aes(color = chrC03_53755234, alpha = 0.4)) 
 
 ggsave(p.fatty_acid_A08, filename = "~/Desktop/2017_Nov_KIAT_report/p.fatty_acid_A08.png", width = 13, height = 8)
-ggsave(p.fatty_acid_C03, filename = "~/Desktop/2017_Nov_KIAT_report/p.fatty_acid_C03.png", width = 13, height = 8)  
+ggsave(p.fatty_acid_C03, filename = "~/Desktop/2017_Nov_KIAT_report/p.fatty_acid_C03.png", width = 13, height = 8)   
 ```
 
 ### check the loci effect to the different fatty acid traits 
