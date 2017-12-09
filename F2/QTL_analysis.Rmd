@@ -330,6 +330,7 @@ save(scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.perm.imp.43trait
 # check result by plotting 
 load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits.corrected")
 load("~/F2/output/QTL_analysis/scanone.imp.43traits.corrected")
+
 plot(scanone.imp[["Palmitoliec_aicd"]],bandcol="gray90")
 abline(h=scanone.perm.imp[["Palmitoliec_aicd"]],lty=2)
 

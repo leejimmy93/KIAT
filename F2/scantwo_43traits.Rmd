@@ -909,6 +909,94 @@ dev.off()
 test <- effectplot(LG.f2.after.crossover, mname1 = "chrA08_10120555", mname2 = "chrC03_56259623")
 test
 
+### Palmitic acid 
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.corrrected.Rdata")
+bayesint(cim.qtl$Palmitic_acid, chr = "A08", expandtomarkers = T) # 72
+bayesint(cim.qtl$Palmitic_acid, chr = "C03", expandtomarkers = T) # 36 
+
+load("LG.f2.after.crossover.43traits.corrected.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Palmitic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+
+mar <- find.marker(LG.f2.after.crossover, c("A08", "C03"), c(72, 36)) 
+png("~/F2/output/QTL_analysis/figure/loci_effect_Palmitic.png", width=15, height=7, units="in", res=300)
+par(mfrow = c(1,2))
+plot.pxg(LG.f2.after.crossover, marker = mar)
+effectplot(LG.f2.after.crossover, mname1 = "A08@72", mname2 = "C03@36")
+dev.off()  
+
+### Arachidic acid 
+bayesint(cim.qtl$Arachidic_acid, chr = "A08", expandtomarkers = T) # 78
+
+load("LG.f2.after.crossover.43traits.corrected.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Arachidic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+
+mar <- find.marker(LG.f2.after.crossover, "A08", 78) 
+png("~/F2/output/QTL_analysis/figure/loci_effect_Arachidic.png", width=15, height=7, units="in", res=300)
+par(mfrow = c(1,2))
+plot.pxg(LG.f2.after.crossover, marker = mar)
+effectplot(LG.f2.after.crossover, mname1 = "A08@78")
+dev.off() 
+
+### Behenic acid 
+bayesint(cim.qtl$Behenic_acid, chr = "A08", expandtomarkers = T) # 73
+bayesint(cim.qtl$Behenic_acid, chr = "C03", expandtomarkers = T) # 35
+
+load("LG.f2.after.crossover.43traits.corrected.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Behenic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+
+mar <- find.marker(LG.f2.after.crossover, c("A08", "C03"), c(73, 35)) 
+png("~/F2/output/QTL_analysis/figure/loci_effect_Behenic.png", width=15, height=7, units="in", res=300)
+par(mfrow = c(1,2))
+plot.pxg(LG.f2.after.crossover, marker = mar)
+effectplot(LG.f2.after.crossover, mname1 = "A08@73", mname2 = "A03@35")
+dev.off() 
+
+### vaccennic acid 
+bayesint(cim.qtl$vaccenic_acid, chr = "A08", expandtomarkers = T) # 72
+
+load("LG.f2.after.crossover.43traits.corrected.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$vaccenic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+
+mar <- find.marker(LG.f2.after.crossover, "A08", 72) 
+png("~/F2/output/QTL_analysis/figure/loci_effect_vaccenic.png", width=15, height=7, units="in", res=300)
+par(mfrow = c(1,2))
+plot.pxg(LG.f2.after.crossover, marker = mar)
+effectplot(LG.f2.after.crossover, mname1 = "A08@72") 
+dev.off()  
+
+### Escosinic acid 
+bayesint(cim.qtl$cis_11_Eicosenoic_acid, chr = "A08", expandtomarkers = T) # 76
+
+load("LG.f2.after.crossover.43traits.corrected.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$cis_11_Eicosenoic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+
+mar <- find.marker(LG.f2.after.crossover, "A08", 76) 
+png("~/F2/output/QTL_analysis/figure/loci_effect_escosinic.png", width=15, height=7, units="in", res=300)
+par(mfrow = c(1,2))
+plot.pxg(LG.f2.after.crossover, marker = mar)
+effectplot(LG.f2.after.crossover, mname1 = "A08@76")
+dev.off()  
+
+### Linoieic acid 
+bayesint(cim.qtl$Linoleic_acid, chr = "A08", expandtomarkers = T) # 72.6
+bayesint(cim.qtl$Linoleic_acid, chr = "C03", expandtomarkers = T) # 39 
+
+load("LG.f2.after.crossover.43traits.corrected.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linoleic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+
+mar <- find.marker(LG.f2.after.crossover, c("A08", "C03"), c(72.6, 39)) 
+png("~/F2/output/QTL_analysis/figure/loci_effect_linoleic.png", width=15, height=7, units="in", res=300)
+par(mfrow = c(1,2)) 
+plot.pxg(LG.f2.after.crossover, marker = mar)
+effectplot(LG.f2.after.crossover, mname1 = "A08@72.6", mname2 = "C03@39")
+dev.off()   
+
 ### 
 load("~/F2/output/scantwo/qtl.fit2.days_to_bolt.Rdata")
 summary(qtl.fit2.days_to_bolt)
