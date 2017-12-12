@@ -15,7 +15,7 @@ scanone and cim only evaluate the evidence for a QTL one location a time.  It is
 ```{r}
 # running scantwo analysis and permutation seprately
 # 1) scantwo analysis on cabernet 
-# https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scantwo_v2.R 
+# https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scantwo_v2.R  
 
 # scantwo permutation 100 times for 43 traits, split traits file so that each file has 2 traits, in total 20 files, and each run is only 10 permutation, combine permutation result after finish running. 
 # https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scantwo_perm_1.R ... scantwo_perm_10.R, submit to slurm queue using https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scantwo_perm_1_10.slurm 
@@ -30,6 +30,7 @@ scantwo.imp.43traits <- c(scantwo.imp.42traits, list(scantwo.imp))
 names(scantwo.imp.43traits)[[43]] <- "bolting_to_flowering"
 
 length(scantwo.imp.43traits) # 43 
+save(scantwo.imp.43traits, file = "~/F2/output/scantwo/scantwo.imp.43traits.Rdata")
 
 # also load scanone & CIM result 
 load("~/F2/output/QTL_analysis/scanone.imp.43traits")
@@ -41,7 +42,7 @@ names(LG.f2.after.crossover$geno)[11:19] <- paste("C", c("01", "02", "03", "04",
 save(LG.f2.after.crossover, file = "~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
 ```
 
-### oil content 
+### oil content & Caprylic acid 
 ```{r}
 load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
 # load data 
@@ -53,6 +54,7 @@ scantwo_perm_Crude_oil_contents_Caprylic_acid <- sapply(files, function(x) mget(
 # permutation data check 
 scantwo_perm_Crude_oil_contents <- summary(do.call(c, scantwo_perm_Crude_oil_contents_Caprylic_acid)[,1])
 
+# oil content 
 scantwo_perm_Crude_oil_contents
 # Crude_oil_contents (144 permutations)
 #     full  fv1  int  add  av1  one
@@ -60,6 +62,74 @@ scantwo_perm_Crude_oil_contents
 # 10% 11.0 8.88 7.37 7.25 5.24 3.86 
 
 summary(scantwo.imp.42traits[["Crude_oil_contents"]], thresholds = c(11.7, 9.19, 7.72, 7.47, 5.51)) # signal for just additive   
+
+# caprylic acid 
+# permutation data check 
+scantwo_perm_Caprylic_acid <- summary(do.call(c, scantwo_perm_Crude_oil_contents_Caprylic_acid)[,2])
+
+# oil content 
+scantwo_perm_Caprylic_acid
+# Caprylic_acid (144 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  10.7 8.11 6.82 6.96 3.64 4.02
+# 10% 10.0 7.66 6.33 6.49 3.36 3.75
+
+summary(scantwo.imp.42traits[["Caprylic_acid"]], thresholds = c(10.7, 8.11, 6.82, 6.96, 3.64)) # signal for just additive   
+#         pos1f pos2f lod.full lod.fv1 lod.int     pos1a pos2a lod.add lod.av1
+# c11:c11    23    51     7.63    5.01    0.53        23    51     7.1    4.48
+
+# review previous result 
+### load scanone/cim/scantwo result
+summary(scanone.imp[["Caprylic_acid"]])
+summary(cim.qtl[["Caprylic_acid"]]) 
+summary(scantwo.imp.42traits[["Caprylic_acid"]], thresholds = c(10.7, 8.11, 6.82, 6.96, 3.64)) # 
+
+# load LG 
+#create an object to hold QTL of interest
+load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Caprylic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.Caprylic <- makeqtl(LG.f2.after.crossover,chr=c("C01", "C01"),pos=c(23, 51)) 
+
+qtlm.Caprylic # 
+
+#make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
+qtl.fit.Caprylic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Caprylic,formula = y ~ Q1 + Q2, get.ests=T)
+### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
+
+#examine our model
+summary(qtl.fit.Caprylic)  
+
+#we can now ask if all qtls are at their most likely positions
+#this also provides a nice map
+qtl.refine.Caprylic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Caprylic,
+                        formula= y ~ Q1 + Q2)
+#you can see from the LOD scores that the new model is not much better than the old model.  Nevertheless we can keep this as our new model
+
+#we can test for interactions specifically among these loci
+addint(LG.f2.after.crossover,qtl=qtl.refine.Caprylic) # not significant 
+
+# scan the genome for additional QTL to add to this model 
+qtl.add.Caprylic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Caprylic)
+summary(qtl.add.Caprylic) # no additional QTL 
+
+qtl.refine.Caprylic
+# final
+qtl.fit.final.Caprylic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine.Caprylic, get.ests=T, formula = y ~ Q1 + Q2)
+summary(qtl.fit.final.Caprylic)  
+
+# plot out 
+png("~/F2/output/scantwo/figure/Caprylic_scantwo_result.png", width=20, height=10, units="in", res=300)
+par(mfrow=c(1,2)) 
+#positions can be plotted on the map
+plot(qtl.refine.Caprylic)
+#or showing lod scores
+plotLodProfile(qtl.refine.Caprylic) 
+dev.off()
+save(qtl.fit.final.Caprylic, file = "~/F2/output/scantwo/qtl.fit.final.Caprylic.Rdata")   
 ```
 
 ### Erucic acid & Oleic acid 
@@ -315,7 +385,7 @@ save(qtl.fit.final.Linolenic, file = "~/F2/output/scantwo/qtl.fit.final.Linoleni
 ```
 
 #### only work on traits with significant loci 
-### Palmnitic_acid 
+### Palmnitic_acid & Myristic acid 
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Myristic_Palmitic/"
 files <- list.files(path=path)
@@ -331,9 +401,20 @@ summary(scantwo_perm_Palmitic)
 
 summary(scantwo.imp.42traits[["Palmitic_acid"]],perm=scantwo_perm_Palmitic,alpha=.05,pval=T)
 # no two loci 
+
+# Myristic
+scantwo_perm_Myristic <- do.call(c, scantwo_perm_Myristic_Palmitic)[,1]
+summary(scantwo_perm_Myristic)
+# Myristic_acid (128 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  11.3 8.61 7.14 7.34 4.22 4.03
+# 10% 10.7 8.09 6.97 6.63 3.94 3.69
+
+summary(scantwo.imp.42traits[["Myristic_acid"]],perm=scantwo_perm_Myristic,alpha=.05,pval=T)
+# no two loci  
 ```
 
-### Stearic_acid
+### Stearic_acid & Vaccenic_acid 
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Stearic_vaccenic/"
 files <- list.files(path=path)
@@ -430,10 +511,10 @@ addint(LG.f2.after.crossover,qtl=qtl.refine.vaccenic) #
 qtl.add.vaccenic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.vaccenic)
 summary(qtl.add.vaccenic) 
 
-# I guess this is the same loci ... leave it as it is now... 
+# I guess this is the same loci ... leave it as it is now... same two linked loci 
 ```
 
-### Linoleic_acid
+### Linoleic_acid & 
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Linoleic_Arachidic/"
 files <- list.files(path=path)
@@ -506,7 +587,7 @@ dev.off()
 save(qtl.fit2.Arachidic, file = "~/F2/output/scantwo/qtl.fit2.Arachidic.Rdata")
 ```
 
-### Behenic_acid
+### Behenic_acid (wait for new result because this phenotype dataset has problem)
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Behenic_Weight_of_survey/"
 files <- list.files(path=path)
@@ -550,7 +631,7 @@ summary(qtl.add.Behenic) # chrA08_2980704  A08  94.4 7.327
 ###### problematic dataset???  
 ```
 
-### Weight_of_one_thousand_seeds
+### Weight_of_one_thousand_seeds  
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Weight_of_one_thousand_seeds_Number_of_survey_seeds/"
 files <- list.files(path=path)
@@ -564,10 +645,10 @@ summary(scantwo_perm_Weight_of_one_thousand_seeds)
 # 5%  10.05 8.15 7.07 7.02 4.49 3.75
 # 10%  9.87 7.77 6.56 6.65 4.14 3.61
 
-summary(scantwo.imp.42traits[["Weight_of_one_thousand_seeds"]],perm=scantwo_perm_Weight_of_one_thousand_seeds,alpha=.05,pval=T) 
+summary(scantwo.imp.42traits[["Weight_of_one_thousand_seeds"]],perm=scantwo_perm_Weight_of_one_thousand_seeds,alpha=.05,pval=T)  
 ```
 
-### leaf_number_2016_03_21
+### leaf_number_2016_03_21 & plant_height_2016_05_13 
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/leaf_number_2016_03_21_plant_height_2016_05_13/"
 files <- list.files(path=path)
@@ -596,7 +677,7 @@ summary(scantwo.imp.42traits[["plant_height_2016_05_13"]],perm=scantwo_perm_plan
 # There were no pairs of loci meeting the criteria. 
 ```
 
-### plant_width_2016_02_17
+### plant_width_2016_02_17 & plant_width_2016_01_20 
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/plant_width_2016_01_20_plant_width_2016_02_17/"
 files <- list.files(path=path)
@@ -612,9 +693,19 @@ summary(scantwo_perm_plant_width_2016_02_17)
 
 summary(scantwo.imp.42traits[["plant_width_2016_02_17"]],perm=scantwo_perm_plant_width_2016_02_17,alpha=.05,pval=T)  
 # There were no pairs of loci meeting the criteria.  
+
+scantwo_perm_plant_width_2016_01_20 <- do.call(c, scantwo_perm_plant_width_2016_01_20_plant_width_2016_02_17)[,1]
+summary(scantwo_perm_plant_width_2016_01_20)
+# plant_width_2016_01_20 (128 permutations)
+#      full  fv1  int  add  av1  one
+# 5%  10.14 8.13 6.99 7.32 4.60 3.76
+# 10%  9.89 7.89 6.56 6.96 4.41 3.62
+
+summary(scantwo.imp.42traits[["plant_width_2016_01_20"]],perm=scantwo_perm_plant_width_2016_01_20,alpha=.05,pval=T)   
+# There were no pairs of loci meeting the criteria. 
 ```
 
-### root_weight_2016_05_13
+### root_weight_2016_05_13 & plant_height_2016_03_16 
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/plant_height_2016_03_16_root_weight_2016_05_13/"
 files <- list.files(path=path)
@@ -630,9 +721,20 @@ summary(scantwo_perm_root_weight_2016_05_13)
 
 summary(scantwo.imp.42traits[["root_weight_2016_05_13"]],perm=scantwo_perm_root_weight_2016_05_13,alpha=.05,pval=T)  
 # There were no pairs of loci meeting the criteria.  
+
+# plant_height_2016_03_16 
+scantwo_perm_plant_height_2016_03_16 <- do.call(c, scantwo_perm_plant_height_2016_03_16_root_weight_2016_05_13)[,1]
+summary(scantwo_perm_plant_height_2016_03_16)
+# plant_height_2016_03_16 (96 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  11.5 9.34 7.86 7.53 5.92 4.10
+# 10% 11.3 8.90 7.45 7.17 5.52 3.84
+
+summary(scantwo.imp.42traits[["plant_height_2016_03_16"]],perm=scantwo_perm_plant_height_2016_03_16,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
 ```
 
-### days_to_flower
+### days_to_flower & days_to_bolt & bolting_to_flower 
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/days_to_flower_days_to_bolt_bolting_to_flowering/"
 files <- list.files(path=path)
@@ -740,7 +842,172 @@ plot(qtl.refine2.days_to_bolt)
 plotLodProfile(qtl.refine2.days_to_bolt) 
 dev.off() 
 save(qtl.fit2.days_to_bolt, file = "~/F2/output/scantwo/qtl.fit2.days_to_bolt.Rdata") 
+
+# bolting to flower 
+scantwo_perm_bolting_to_flowering <- do.call(c, scantwo_perm_days_to_flower_days_to_bolt_bolting_to_flowering)[,3]
+summary(scantwo_perm_bolting_to_flowering)
+# bolting_to_flowering (160 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  14.3 12.7 9.53 9.17 7.64 3.92
+# 10% 13.8 12.0 9.12 8.77 7.21 3.62
+
+load("~/F2/output/scantwo/scantwo.imp.43traits.Rdata")
+summary(scantwo.imp.43traits[["bolting_to_flowering"]],perm=scantwo_perm_bolting_to_flowering,alpha=.05,pval=T)  
+#  There were no pairs of loci meeting the criteria. 
 ```
+
+### No__of transplanting_plants & No.of survival plants (two invalid pheno data)
+### Survival rate & lobe number 2015_12_28     21,22
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Survival_rate_lobe_number_2015_12_28/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_Survival_rate_lobe_number_2015_12_28 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_Survival_rate <- do.call(c, scantwo_perm_Survival_rate_lobe_number_2015_12_28)[,1]
+summary(scantwo_perm_Survival_rate)
+# Survival_rate (112 permutations)
+#     full   fv1  int  add  av1  one
+# 5%  12.4 10.43 8.39 7.59 5.33 4.28
+# 10% 11.6  9.51 7.86 7.15 4.89 3.91
+
+summary(scantwo.imp.42traits[["Survival_rate"]],perm=scantwo_perm_Survival_rate,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+
+scantwo_perm_lobe_number_2015_12_28 <- do.call(c, scantwo_perm_Survival_rate_lobe_number_2015_12_28)[,2]
+summary(scantwo_perm_lobe_number_2015_12_28)
+# lobe_number_2015_12_28 (112 permutations)
+#     full  fv1  int  add   av1  one
+# 5%  17.5 16.1 13.1 12.1 10.52 4.39
+# 10% 17.0 15.6 12.7 11.4  9.98 3.96
+
+summary(scantwo.imp.42traits[["lobe_number_2015_12_28"]],perm=scantwo_perm_lobe_number_2015_12_28,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+```
+
+### lobe_number_2016_01_21 & lobe_number_2016_02_18   23,24
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/lobe_number_2016_01_21_lobe_number_2016_02_18/"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_lobe_number_2016_01_21_lobe_number_2016_02_18 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_lobe_number_2016_01_21 <- do.call(c, scantwo_perm_lobe_number_2016_01_21_lobe_number_2016_02_18)[,1]
+summary(scantwo_perm_lobe_number_2016_01_21)
+# lobe_number_2016_01_21 (160 permutations)
+#     full  fv1  int  add  av1  one
+# 5%  10.8 8.21 7.12 7.15 4.28 4.30
+# 10% 10.5 8.01 6.82 6.90 4.07 3.92
+
+summary(scantwo.imp.42traits[["lobe_number_2016_01_21"]],perm=scantwo_perm_lobe,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+
+scantwo_perm_lobe_number_2016_02_18 <- do.call(c, scantwo_perm_lobe_number_2016_01_21_lobe_number_2016_02_18)[,2]
+summary(scantwo_perm_lobe_number_2016_02_18)
+
+summary(scantwo.imp.42traits[["lobe_number_2016_02_18"]],perm=scantwo_perm_lobe_number_2016_02_18,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.   
+```
+
+### lobe_number_03_21 & leaf_number_2015_12_28   25,26
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/lobe_number_03_21_leaf_number_2015_12_28/"
+files <- list.files(path=path)
+setwd(path) 
+scantwo_perm_lobe_number_03_21_leaf_number_2015_12_28 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_lobe_number_03_21 <- do.call(c, scantwo_perm_lobe_number_03_21_leaf_number_2015_12_28)[,1]
+summary(scantwo_perm_lobe_number_03_21) 
+
+summary(scantwo.imp.42traits[["lobe_number_2016_03_21"]],perm=scantwo_perm_lobe_number_03_21,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+
+scantwo_perm_leaf_number_2015_12_28 <- do.call(c, scantwo_perm_lobe_number_03_21_leaf_number_2015_12_28)[,2]
+summary(scantwo_perm_leaf_number_2015_12_28)
+
+summary(scantwo.imp.42traits[["leaf_number_2015_12_28"]],perm=scantwo_perm_leaf_number_2015_12_28,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+```
+
+### leaf_number_2016_01_21 & leaf_number_2016_02_18   27,28
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/leaf_number_2016_01_21_leaf_number_2016_02_18/"
+files <- list.files(path=path)
+setwd(path) 
+scantwo_perm_leaf_number_2016_01_21_leaf_number_2016_02_18 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_leaf_number_2016_01_21 <- do.call(c, scantwo_perm_leaf_number_2016_01_21_leaf_number_2016_02_18)[,1]
+summary(scantwo_perm_leaf_number_2016_01_21) 
+
+summary(scantwo.imp.42traits[["leaf_number_2016_01_21"]],perm=scantwo_perm_leaf_number_2016_01_21,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+
+scantwo_perm_leaf_number_2016_02_18 <- do.call(c, scantwo_perm_leaf_number_2016_01_21_leaf_number_2016_02_18)[,2]
+summary(scantwo_perm_leaf_number_2016_02_18)
+
+summary(scantwo.imp.42traits[["leaf_number_2016_02_18"]],perm=scantwo_perm_leaf_number_2016_02_18,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.   
+```
+
+### plant_weight_2016_05_13 & plant_width_2015_12_18   31,32
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/plant_weight_2016_05_13_plant_width_2015_12_18/"
+files <- list.files(path=path)
+setwd(path) 
+scantwo_perm_plant_weight_2016_05_13_plant_width_2015_12_18 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_plant_weight_2016_05_13 <- do.call(c, scantwo_perm_plant_weight_2016_05_13_plant_width_2015_12_18)[,1]
+summary(scantwo_perm_plant_weight_2016_05_13) 
+
+summary(scantwo.imp.42traits[["plant_weight_2016_05_13"]],perm=scantwo_perm_plant_weight_2016_05_13,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+
+scantwo_perm_plant_width_2015_12_18 <- do.call(c, scantwo_perm_plant_weight_2016_05_13_plant_width_2015_12_18)[,2]
+summary(scantwo_perm_plant_width_2015_12_18)
+
+summary(scantwo.imp.42traits[["plant_width_2015_12_18"]],perm=scantwo_perm_plant_width_2015_12_18,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+```
+
+### plant_width_2016_03_16 & plant_height_2015_12_18   35,36
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/plant_width_2016_03_16_plant_height_2015_12_18/"
+files <- list.files(path=path)
+setwd(path) 
+scantwo_perm_plant_width_2016_03_16_plant_height_2015_12_18 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_plant_width_2016_03_16 <- do.call(c, scantwo_perm_plant_width_2016_03_16_plant_height_2015_12_18)[,1]
+summary(scantwo_perm_plant_width_2016_03_16) 
+
+summary(scantwo.imp.42traits[["plant_width_2016_03_16"]],perm=scantwo_perm_plant_width_2016_03_16,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+
+scantwo_perm_plant_height_2015_12_18 <- do.call(c, scantwo_perm_plant_width_2016_03_16_plant_height_2015_12_18)[,2]
+summary(scantwo_perm_plant_height_2015_12_18)
+
+summary(scantwo.imp.42traits[["plant_height_2015_12_18"]],perm=scantwo_perm_plant_height_2015_12_18,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+```
+
+### plant_height_2016_01_20 & plant_height_2016_02_17   37,38
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/plant_height_2016_01_20_plant_height_2016_02_17/"
+files <- list.files(path=path)
+setwd(path) 
+scantwo_perm_plant_height_2016_01_20_plant_height_2016_02_17 <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+scantwo_perm_plant_height_2016_01_20 <- do.call(c, scantwo_perm_plant_height_2016_01_20_plant_height_2016_02_17)[,1]
+summary(scantwo_perm_plant_height_2016_01_20) 
+
+summary(scantwo.imp.42traits[["plant_height_2016_01_20"]],perm=scantwo_perm_plant_height_2016_01_20,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+
+scantwo_perm_plant_height_2016_02_17 <- do.call(c, scantwo_perm_plant_height_2016_01_20_plant_height_2016_02_17)[,2]
+summary(scantwo_perm_plant_height_2016_02_17)
+
+summary(scantwo.imp.42traits[["plant_height_2016_02_17"]],perm=scantwo_perm_plant_height_2016_02_17,alpha=.05,pval=T)  
+# There were no pairs of loci meeting the criteria.  
+``` 
 
 ### check result and make effectplot 
 ```{r}
@@ -986,7 +1253,7 @@ dev.off()
 bayesint(cim.qtl$Linoleic_acid, chr = "A08", expandtomarkers = T) # 72.6
 bayesint(cim.qtl$Linoleic_acid, chr = "C03", expandtomarkers = T) # 39 
 
-load("LG.f2.after.crossover.43traits.corrected.Rdata")
+load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.corrected.Rdata")
 LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linoleic_acid)
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 
@@ -995,20 +1262,36 @@ png("~/F2/output/QTL_analysis/figure/loci_effect_linoleic.png", width=15, height
 par(mfrow = c(1,2)) 
 plot.pxg(LG.f2.after.crossover, marker = mar)
 effectplot(LG.f2.after.crossover, mname1 = "A08@72.6", mname2 = "C03@39")
-dev.off()   
+dev.off()    
+
+### Caprylic acid 
+load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.corrected.Rdata")
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Caprylic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+
+mar <- find.marker(LG.f2.after.crossover, c("C01", "C01"), c(22.0, 50.1)) 
+png("~/F2/output/QTL_analysis/figure/loci_effect_Caprylic.png", width=15, height=7, units="in", res=300)
+par(mfrow = c(1,2)) 
+plot.pxg(LG.f2.after.crossover, marker = mar)
+effectplot(LG.f2.after.crossover, mname1 = "C01@22.0", mname2 = "C01@50.1")
+dev.off()    
 
 ### 
 load("~/F2/output/scantwo/qtl.fit2.days_to_bolt.Rdata")
 summary(qtl.fit2.days_to_bolt)
 
 load("~/F2/output/scantwo/qtl.fit.days_to_flower.Rdata")
-summary(qtl.fit.days_to_flower) 
+summary(qtl.fit.days_to_flower)  
 ```
 
-### plot marker effect 
-```{r}
+### correct 3 phenotype data and re-run scantwo 
+three traits don't seem to have correct phenotype data, so I corrected the data and re-run scantwo on them. cis_11_Eicosenoic_acid, Palmitoliec_aicd, and Behenic_acid were corrected and new data saved as "~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.corrected.Rdata".  
 
+running scantwo analysis and permutation seprately
+1) scantwo analysis on cabernet 
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scantwo_v2.R  
 
-```
+scantwo permutation 100 times for 43 traits, split traits file so that each file has 2 traits, in total 20 files, and each run is only 10 permutation, combine permutation result after finish running. 
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scantwo_perm_1.R ... scantwo_perm_10.R, submit to slurm queue using https://github.com/leejimmy93/KIAT_cabernet/blob/master/F2/scantwo_perm_1_10.slurm 
 
 

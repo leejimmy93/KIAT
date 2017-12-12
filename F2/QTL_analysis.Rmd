@@ -232,7 +232,7 @@ cim.perm <-
     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
   }) # takes almost 4 hours to finish 
 
-sfStop() 
+sfStop()  
 
 names(cim.perm) <- colnames(LG.f2.after.crossover$pheno)
 
