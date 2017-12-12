@@ -232,7 +232,7 @@ cim.perm <-
     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
   }) # takes almost 4 hours to finish 
 
-sfStop() 
+sfStop()  
 
 names(cim.perm) <- colnames(LG.f2.after.crossover$pheno)
 
@@ -271,8 +271,8 @@ save(LG.f2.after.crossover, file = "LG.f2.after.crossover.43traits.corrected.Rda
 
 # rerun scanone & cim on these three traits 
 summaryMap(LG.f2.after.crossover)
-LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation? 
-LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability?  
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability 
 
 # permutation 
 sfInit(parallel = TRUE, cpus = parallel::detectCores()) 
@@ -285,12 +285,15 @@ scanone.perm.imp.3.traits <-
     print(trait) # print doesn't work in here 
     tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000, n.cluster = 16)
     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
-  }) # takes 40 mins to finish 
+  }) 
 )
+
+  #  user  system elapsed 
+  # 0.204   0.132 127.701
+
 sfStop() 
 
 names(scanone.perm.imp.3.traits) <- colnames(LG.f2.after.crossover$pheno[,c(5, 12, 14)])
-# save(scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.perm.imp.43traits")
 
 system.time(
 scanone.imp.3.traits <- 
@@ -324,6 +327,19 @@ scanone.imp$Behenic_acid <- scanone.imp.3.traits$Behenic_acid
 save(scanone.imp, file = "~/F2/output/QTL_analysis/scanone.imp.43traits.corrected")  
 save(scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.perm.imp.43traits.corrected")
 
+# check result by plotting 
+load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits.corrected")
+load("~/F2/output/QTL_analysis/scanone.imp.43traits.corrected")
+
+plot(scanone.imp[["Palmitoliec_aicd"]],bandcol="gray90")
+abline(h=scanone.perm.imp[["Palmitoliec_aicd"]],lty=2)
+
+plot(scanone.imp[["cis_11_Eicosenoic_acid"]],bandcol="gray90")
+abline(h=scanone.perm.imp[["cis_11_Eicosenoic_acid"]],lty=2)
+
+plot(scanone.imp[["Behenic_acid"]],bandcol="gray90")
+abline(h=scanone.perm.imp[["Behenic_acid"]],lty=2)  
+
 # cim 
 cim.qtl.3.traits <- 
 lapply(c(5, 12, 14), function(trait) {
@@ -333,6 +349,11 @@ lapply(c(5, 12, 14), function(trait) {
 # here we use the interval mapping method "em" as this is how cim was originaly implmented.the n.marcovar= argument defines the maximum number of marker covariates to use.
 names(cim.qtl.3.traits) <- colnames(LG.f2.after.crossover$pheno[c(5, 12, 14)])
 
+sfInit(parallel = TRUE, cpus = parallel::detectCores()) 
+sfExport("LG.f2.after.crossover")
+sfLibrary(qtl)
+
+system.time( 
 cim.perm.3.traits <-
   sfLapply(c(5, 12, 14), function(trait){
     message(trait) # message doesn't work in here either
@@ -342,14 +363,55 @@ cim.perm.3.traits <-
                method="em",
                n.perm=1000)
     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
-  }) # takes almost 4 hours to finish
+  }) # takes almost 40 mins to finish
+)
 
-names(cim.perm) <- colnames(LG.f2.after.crossover$pheno) 
+sfStop()   
+names(cim.perm.3.traits) <- colnames(LG.f2.after.crossover$pheno[c(5, 12, 14)])  
+
+plot(cim.qtl.3.traits[[1]],bandcol="gray90")
+abline(h=cim.perm.3.traits[[1]],lty=2)
+
+plot(cim.qtl.3.traits[[2]],bandcol="gray90")
+abline(h=cim.perm.3.traits[[2]],lty=2)
+
+plot(cim.qtl.3.traits[[3]],bandcol="gray90", main=i)
+abline(h=cim.perm.3.traits[[3]],lty=2)
+
+load("~/F2/output/QTL_analysis/cim.perm.43traits.Rdata")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
+
+cim.perm$Palmitoliec_aicd <- cim.perm.3.traits$Palmitoliec_aicd
+cim.perm$cis_11_Eicosenoic_acid <- cim.perm.3.traits$cis_11_Eicosenoic_acid
+cim.perm$Behenic_acid <- cim.perm.3.traits$Behenic_acid
+
+cim.qtl$Palmitoliec_aicd <- cim.qtl.3.traits$Palmitoliec_aicd
+cim.qtl$cis_11_Eicosenoic_acid <- cim.qtl.3.traits$cis_11_Eicosenoic_acid
+cim.qtl$Behenic_acid <- cim.qtl.3.traits$Behenic_acid
+
+save(cim.qtl, file = "~/F2/output/QTL_analysis/cim.qtl.43traits.corrrected.Rdata")  
+save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.43traits.corrected.Rdata")
+
+# check result by plotting 
+plot(cim.qtl[["Palmitoliec_aicd"]],bandcol="gray90")
+abline(h=cim.perm[["Palmitoliec_aicd"]],lty=2)
+
+plot(cim.qtl[["cis_11_Eicosenoic_acid"]],bandcol="gray90")
+abline(h=cim.perm[["cis_11_Eicosenoic_acid"]],lty=2)
+
+plot(cim.qtl[["Behenic_acid"]],bandcol="gray90")
+abline(h=cim.perm[["Behenic_acid"]],lty=2)  
 ```
 
-### get loci estimated effect for all these traits 
+### get loci estimated effect for all these traits  
 ```{r}
+<<<<<<< HEAD
 load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
+=======
+# Palmitolec acid has differnet QTL, which might be caused by its incorrect phenotype data? 
+
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.corrrected.Rdata") 
+>>>>>>> f58eccb8afa7610dc3b754f57f96453bc837b321
 # Palmitic
 bayesint(cim.qtl$Palmitic_acid, chr = "A08", expandtomarkers = T)
 bayesint(cim.qtl$Palmitic_acid, chr = "C03", expandtomarkers = T)
@@ -361,9 +423,9 @@ LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate
 
 qtlm.Palmitic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 36))
 qtl.fit.Palmitic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Palmitic,formula = y ~ Q1 + Q2, get.ests=T)
-summary(qtl.fit.Palmitic) 
+summary(qtl.fit.Palmitic) # two positive effect 
 
-# Arachidic 
+# Arachidic  
 bayesint(cim.qtl$Arachidic_acid, chr = "A08", expandtomarkers = T)
 
 load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
@@ -371,12 +433,12 @@ LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Arachid
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
 
-qtlm.Arachidic <- makeqtl(LG.f2.after.crossover,chr="A08",pos=73)
+qtlm.Arachidic <- makeqtl(LG.f2.after.crossover,chr="A08",pos=78)
 qtl.fit.Arachidic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Arachidic,formula = y ~ Q1, get.ests=T)
-summary(qtl.fit.Arachidic) 
+summary(qtl.fit.Arachidic) # one positive effect 
 
-# cis_11_Eicosenoic_acid 
-bayesint(scanone.imp$cis_11_Eicosenoic_acid, chr = "A08", expandtomarkers = T)
+# cis_11_Eicosenoic_acid (1 loci)
+bayesint(cim.qtl$cis_11_Eicosenoic_acid, chr = "A08", expandtomarkers = T)
 
 load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
 LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$cis_11_Eicosenoic_acid)
@@ -385,20 +447,20 @@ LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate
 
 qtlm.cis_11_Eicosenoic_acid <- makeqtl(LG.f2.after.crossover,chr="A08",pos=75)
 qtl.fit.cis_11_Eicosenoic_acid <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.cis_11_Eicosenoic_acid,formula = y ~ Q1, get.ests=T)
-summary(qtl.fit.cis_11_Eicosenoic_acid) 
+summary(qtl.fit.cis_11_Eicosenoic_acid) # one negative effect 
 
 # Behenic 
-bayesint(scanone.imp$Behenic_acid, chr = "A08", expandtomarkers = T)
-bayesint(scanone.imp$Behenic_acid, chr = "C03", expandtomarkers = T)
+bayesint(cim.qtl$Behenic_acid, chr = "A08", expandtomarkers = T)
+bayesint(cim.qtl$Behenic_acid, chr = "C03", expandtomarkers = T)
 
 load("~/F2/output/scantwo/LG.f2.after.crossover.final.rename.Rdata")
 LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Behenic_acid)
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
 
-qtlm.Behenic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 53))
+qtlm.Behenic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 35))
 qtl.fit.Behenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Behenic,formula = y ~ Q1 + Q2, get.ests=T)
-summary(qtl.fit.Behenic) 
+summary(qtl.fit.Behenic) # two negative effect 
 
 # Linoleic 
 bayesint(cim.qtl$Linoleic_acid, chr = "A08", expandtomarkers = T)
@@ -411,7 +473,7 @@ LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate
 
 qtlm.Linoleic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(75, 39))
 qtl.fit.Linoleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linoleic,formula = y ~ Q1 + Q2, get.ests=T)
-summary(qtl.fit.Linoleic) 
+summary(qtl.fit.Linoleic) # two positive effect 
 
 # Linolenic 
 bayesint(scanone.imp$Linolenic_acid, chr = "A08", expandtomarkers = T)
@@ -424,7 +486,7 @@ LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate
 
 qtlm.Linolenic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 36))
 qtl.fit.Linolenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formula = y ~ Q1 + Q2, get.ests=T)
-summary(qtl.fit.Linolenic)   
+summary(qtl.fit.Linolenic)  # strong interaction only plot can tell 
 
 # vaccenic
 bayesint(cim.qtl$vaccenic_acid, chr = "A08", expandtomarkers = T)
@@ -437,7 +499,9 @@ LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate
 
 qtlm.vaccenic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(72, 34))
 qtl.fit.vaccenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formula = y ~ Q1 + Q2, get.ests=T)
-summary(qtl.fit.vaccenic)    
+summary(qtl.fit.vaccenic) # two positive effect   
+
+# summary: except for Behenic acid, Erucic acid, and Escosinic acid for which B allele has negative effect, and Linolenic acid for which there is strong interaction between the two loci, all the other fatty acid trait get positive effect from B allele. B allele is the allele from Da-Ol-1. 
 ```
 
 ### output result from scanone & cim, QTL result visulization
@@ -775,10 +839,35 @@ ggpairs(pheno_Erucic_Oleic)
 
 ```
 
+<<<<<<< HEAD
 ### check the loci effect to the different fatty acid traits 
 ```{r}
 
 
 
+=======
+# illustrate figure 
+```{r}
+test <- data.frame(x = c("AA", "AB", "BB"),
+           y = c(10, 20, 30))
+test
+
+p1.test <- 
+test %>% 
+ggplot() + 
+  geom_col(mapping = aes(x = x, y = y)) + 
+  labs(list(x = "genotype at loci", y = "average phenotype", title = "no dominance effect"))
+ggsave(p1.test, filename = "~/Desktop/2017_Nov_KIAT_report/p1.test.png", width = 3, height = 4)
+
+test2 <- data.frame(x = c("AA", "AB", "BB"),
+           y = c(10, 12, 30))
+
+p1.test2 <- 
+test2 %>% 
+ggplot() + 
+  geom_col(mapping = aes(x = x, y = y)) + 
+  labs(list(x = "genotype at loci", y = "average phenotype", title = "with dominance effect"))
+ggsave(p1.test2, filename = "~/Desktop/2017_Nov_KIAT_report/p1.test2.png", width = 3, height = 4) 
+>>>>>>> f58eccb8afa7610dc3b754f57f96453bc837b321
 ```
 
