@@ -81,7 +81,9 @@ output:
 # extract sequences that need go for annotation 
 # cat longest_orfs.pep | grep ">" | sed 's/:/\t/g' | awk '{print $2}' | sort | uniq > for_annotation
 
-# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/transdecoder/after_cap3/Ol.u.fa.cap.contigs_singlets.transdecoder_dir/for_annotation_ID Ol.u.fa.cap.contigs_singlets > Ol_ref_for_annotation.fa
+# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/assembly_parent/transdecoder/after_cap3/Ol.u.fa.cap.contigs_singlets.transdecoder_dir/for_annotation_ID Ol.u.fa.cap.contigs_singlets > Ol_ref_for_annotation.fa  
+
+
 ```
 
 #### de-novo based 

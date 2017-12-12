@@ -31,7 +31,7 @@ pheno[1:10, 1:10]
 rownames(pheno) <- gsub("\ ", "_", rownames(pheno))
 rownames(pheno) <- gsub("-", "_", rownames(pheno))
 rownames(pheno) <- gsub("\\.", "_", rownames(pheno)) 
-save(pheno, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/pheno.Rdata") 
+save(pheno, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/pheno.Rdata")
 
 # combine geno & pheno data for QTL analysis 
 colnames(F2_geno_data_2_Ae_Ol_new) <- gsub("X", "ID_", colnames(F2_geno_data_2_Ae_Ol_new))
@@ -337,7 +337,7 @@ cim.perm.3.traits <-
   sfLapply(c(5, 12, 14), function(trait){
     message(trait) # message doesn't work in here either
     tmp <- cim(LG.f2.after.crossover,
-               pheno.col = trait, 
+               pheno.col = trait,
                n.marcovar=5,
                method="em",
                n.perm=1000)
@@ -349,7 +349,7 @@ names(cim.perm) <- colnames(LG.f2.after.crossover$pheno)
 
 ### get loci estimated effect for all these traits 
 ```{r}
-load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata") 
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
 # Palmitic
 bayesint(cim.qtl$Palmitic_acid, chr = "A08", expandtomarkers = T)
 bayesint(cim.qtl$Palmitic_acid, chr = "C03", expandtomarkers = T)
@@ -450,18 +450,6 @@ load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
 
 plot(cim.qtl[[1]], chr="C09")  
 colnames(LG.f2.after.crossover$pheno)
-
-# flower and growth related 
-flower_growth_cim <- 
-qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to_flower"), 
-                       data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_bolt"),
-                       data.frame(cim.qtl[["root_weight_2016_05_13"]], method = "root_weight_2016_05_13"), 
-                       data.frame(cim.qtl[["plant_height_2016_05_13"]], method = "plant_height_2016_05_13"), 
-                       data.frame(cim.qtl[["leaf_number_2016_03_21"]], method = "leaf_number_2016_03_21")),
-         chrs = c("A10", "C06"), 
-         # lod = c(cim.perm[["days_to_bolt"]]),
-         rug = TRUE, 
-         title = "growth  related")
 
 # flower related 
 flower_cim <- 
@@ -729,6 +717,10 @@ dev.off()
 
 # after check the pairs plot, Julin said: "I am curious about the outliers in the linolenic vs erucic and linolenic vs oleic plots.  I'd like to to get those two plots with the points colored by genotype at the two loci. 
 
+colnames(pheno_fatty_acid)
+pheno_Erucic_Oleic <- pheno_fatty_acid[,c("Erucic_acid",  "Linolenic_acid", "Oleic_acid")]
+pairs(pheno_Erucic_Oleic)
+
 # QTL result 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/overlay/cim.qtl.43traits.Rdata")
 bayesint(cim.qtl$Erucic_acid, chr = "A08")
@@ -778,62 +770,15 @@ F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
 geno_A08 <- F2_geno_data_2_Ae_Ol_new[rownames(F2_geno_data_2_Ae_Ol_new) %in% "chrA08_10120555",]
 geno_C03 <- F2_geno_data_2_Ae_Ol_new[rownames(F2_geno_data_2_Ae_Ol_new) %in% "chrC03_53755234",]
 
-pheno_fatty_acid$ID <- rownames(pheno_fatty_acid)
-geno_A08 <- as.data.frame(t(geno_A08))
-geno_A08$ID <- rownames(geno_A08)
-geno_C03 <- as.data.frame(t(geno_C03))
-geno_C03$ID <- rownames(geno_C03)
+install.packages("GGally")
+ggpairs(pheno_Erucic_Oleic)
 
-pheno_fatty_acid_geno_2loci <- 
-pheno_fatty_acid %>% 
-  left_join(geno_A08, by = "ID") %>% 
-  left_join(geno_C03, by = "ID") %>% 
-  dplyr::select(-ID)
-
-dim(pheno_fatty_acid_geno_2loci) # 166 6 
-save(pheno_fatty_acid_geno_2loci, file = "~/Desktop/2017_Nov_KIAT_report/pheno_fatty_acid_geno_2loci.Rdata")
-
-library(GGally)
-p.fatty_acid_A08 <- 
-ggpairs(pheno_fatty_acid_geno_2loci[,c("Erucic_acid",  "Linolenic_acid", "Oleic_acid", "chrA08_10120555")], aes(color = chrA08_10120555, alpha = 0.4))  
-
-p.fatty_acid_A08
-# p.fatty_acid_C03 <- 
-ggpairs(pheno_fatty_acid_geno_2loci[,c("Erucic_acid",  "Linolenic_acid", "Oleic_acid", "chrC03_53755234")], aes(color = chrC03_53755234, alpha = 0.4)) 
-
-ggsave(p.fatty_acid_A08, filename = "~/Desktop/2017_Nov_KIAT_report/p.fatty_acid_A08.png", width = 13, height = 8)
-ggsave(p.fatty_acid_C03, filename = "~/Desktop/2017_Nov_KIAT_report/p.fatty_acid_C03.png", width = 13, height = 8)   
 ```
 
 ### check the loci effect to the different fatty acid traits 
 ```{r}
 
 
-
-```
-
-# illustrate figure 
-```{r}
-test <- data.frame(x = c("AA", "AB", "BB"),
-           y = c(10, 20, 30))
-test
-
-p1.test <- 
-test %>% 
-ggplot() + 
-  geom_col(mapping = aes(x = x, y = y)) + 
-  labs(list(x = "genotype at loci", y = "average phenotype", title = "no dominance effect"))
-ggsave(p1.test, filename = "~/Desktop/2017_Nov_KIAT_report/p1.test.png", width = 3, height = 4)
-
-test2 <- data.frame(x = c("AA", "AB", "BB"),
-           y = c(10, 12, 30))
-
-p1.test2 <- 
-test2 %>% 
-ggplot() + 
-  geom_col(mapping = aes(x = x, y = y)) + 
-  labs(list(x = "genotype at loci", y = "average phenotype", title = "with dominance effect"))
-ggsave(p1.test2, filename = "~/Desktop/2017_Nov_KIAT_report/p1.test2.png", width = 3, height = 4)
 
 ```
 

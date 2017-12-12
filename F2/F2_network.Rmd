@@ -1,0 +1,19 @@
+---
+title: "F2_network"
+author: "Ruijuan Li"
+date: "12/8/2017"
+output: html_document
+---
+
+Goal of this script is to build networks for B.napus F2 RNAseq data using WGCNA, referred to Julin's analysis on his rapa data https://github.com/MaloofLab/BrapaNetworks 
+
+### read count 
+```{r}
+
+```
+
+### WGCNA for network 
+```{r}
+
+```
+

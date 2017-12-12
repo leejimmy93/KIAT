@@ -489,7 +489,7 @@ save_plot("~/Desktop/2017_Nov_KIAT_report/p.Erucic_acid.png", p.Erurcic_acid, nc
 FnP wants to get the Erucic and Oleic acid marker from my study, both QTL mapping and GWAS. For GWAS, I am going to extract all the significant SNPs. For QTL, I am going to get markers in the 1Mb interval or markers above the lod score threshold... 
 ```{r}
 ## from GWAS 
-setwd("~/Desktop/2017_Nov_KIAT_report/")
+setwd("~/Desktop/Brassica_project/KIAT_RNA_seq/2017_Nov_KIAT_report/")
 Erucic_acid <- read.csv("GAPIT..Erucic_acid.GWAS.Results.csv", header = T)
 
 Oleic_acid <- read.csv("GAPIT..Oleic_acid.GWAS.Results.csv", header = T) 
