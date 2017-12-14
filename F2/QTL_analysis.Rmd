@@ -14,7 +14,7 @@ library(qtl)
 library(snowfall)
 library(ggrepel) 
 library(Biostrings)
-source("~/KIAT/function_BnRNAseq.R")
+source("~/KIAT/function_BnRNAseq.R") 
 ```
 
 ### reformat file with geno and pheno info

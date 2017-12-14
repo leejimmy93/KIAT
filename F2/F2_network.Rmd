@@ -7,13 +7,113 @@ output: html_document
 
 Goal of this script is to build networks for B.napus F2 RNAseq data using WGCNA, referred to Julin's analysis on his rapa data https://github.com/MaloofLab/BrapaNetworks 
 
-### read count 
+### load libs
 ```{r}
+library(WGCNA)
+library(tidyverse)
+library(edgeR)
+library(DESeq2)
+```
 
+### read count load, and process read count for WGCNA  
+```{r}
+load("~/F2/output/vstMat.f2.Rdata")
+dim(vstMat.f2) # 56180   166 
+
+# follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/ProcessCounts.Rmd 
+read_count_F2 <- read.table("~/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1)
+dim(read_count_F2) # 101040    166
+
+# load in batch information 
+batchA <- read.csv("~/F2/data/network_analysis/F2_batchA.csv")
+batchB <- read.csv("~/F2/data/network_analysis/F2_batchB.csv")
+batchC <- read.csv("~/F2/data/network_analysis/F2_batchC.csv")
+
+batchA <- data.frame(sample_ID = batchA$No..of.Sowing, 
+                     batch = rep("A", nrow(batchA)))
+
+batchB <- data.frame(sample_ID = batchB$No..of.Sowing, 
+                     batch = rep("B", nrow(batchB)))
+
+batchC <- data.frame(sample_ID = batchC$No..of.Sowing[1:46], 
+                     batch = rep("C", 46))
+
+batch_info <- rbind(batchA, batchB, batchC) 
+batch_info %>% dim() # 166 2 
+
+# combine batch information to the 
+batch_info$sample_ID <- paste("Sample_F2_", batch_info$sample_ID, sep = "")
+batch_info <- batch_info[match(colnames(read_count_F2), batch_info$sample_ID),] # reorder batch_info to make it the same order as read count  
+all(batch_info$sample_ID == colnames(read_count_F2)) # True 
+
+# sample description 
+F2.sample <- data.frame(batch = factor(batch_info$batch), 
+                        genotype = factor(batch_info$sample_ID)) 
+
+# remove lowly expressed genes 
+read.count.small <- read_count_F2[rowSums(read_count_F2 > 10) >= 166*0.25,]
+dim(read.count.small) # 56180   166   
+
+# Normalize
+dge.F2 <- DGEList(counts = read.count.small, group = F2.sample$genotype)
+dge.F2 <- calcNormFactors(dge.F2)
+hist(dge.F2$samples$norm.factors)
+
+batch_info$group <- batch_info$sample_ID 
+dge.F2$samples %>% 
+  left_join(batch_info, by = "group") %>% 
+  ggplot() + 
+  geom_histogram(aes(x = norm.factors, fill = batch))
+
+# since there is very big batch effect for batch B, I decided to analyze batch A+C and batch B seperately. 
+
+# get sepereate gene expression data for A+C and B 
+# A+C 
+read_count_F2.AC <- read_count_F2[,colnames(read_count_F2) %in% batch_info$sample_ID[batch_info$batch == "A" | batch_info$batch == "C"]] 
+read_count_F2.AC %>% dim() # 101040    125
+
+read_count_F2.B <- read_count_F2[,colnames(read_count_F2) %in% batch_info$sample_ID[batch_info$batch == "B"]] 
+read_count_F2.B %>% dim() # 101040    41 
+
+# filter lowly expressed genes 
+read.count.small.F2.AC <- read_count_F2.AC[rowSums(read_count_F2.AC > 10) >= 125*0.25,]
+dim(read.count.small.F2.AC) # 57376   125 
+
+read.count.small.F2.B <- read_count_F2.B[rowSums(read_count_F2.B > 10) >= 41*0.25,]
+dim(read.count.small.F2.B) # 47754    41
+
+# vst transformation of the two subset of data 
+# batch AC 
+read.count.sample.AC <- data.frame(genotype=factor(F2.sample[F2.sample$batch == "A" | F2.sample$batch == "C",]$genotype), 
+                                   batch=factor(F2.sample[F2.sample$batch == "A" | F2.sample$batch == "C",]$batch)) 
+
+all(read.count.sample.AC$genotype == colnames(read.count.small.F2.AC)) # True, same order 
+
+dds.f2.AC <- DESeqDataSetFromMatrix(countData = round(read.count.small.F2.AC), colData = read.count.sample.AC, design = ~genotype)  # the model matrix is not full rank, so the model cannot be fit as specified. One or more variables or interaction terms in the design formula are linear combinations of the others and must be removed. The hope is that although there is still small batch effect exist, we hope that can be removed by using the norm.factors  
+
+vsd.f2.AC <- varianceStabilizingTransformation(dds.f2.AC)
+vstMat.f2.AC <- assay(vsd.f2.AC) 
+colnames(vstMat.f2.AC) <- colnames(read.count.small.F2.AC) 
+save(vstMat.f2, file = "~/F2/output/vstMat.f2.AC.Rdata")
+
+# batch B
+read.count.sample.B <- data.frame(genotype=factor(F2.sample[F2.sample$batch == "B",]$genotype), 
+                                   batch=factor(F2.sample[F2.sample$batch == "B",]$batch)) 
+
+all(read.count.sample.B$genotype == colnames(read.count.small.F2.B)) # True, same order 
+
+dds.f2.B <- DESeqDataSetFromMatrix(countData = round(read.count.small.F2.B), colData = read.count.sample.B, design = ~genotype)  # the model matrix is not full rank, so the model cannot be fit as specified. One or more variables or interaction terms in the design formula are linear combinations of the others and must be removed. The hope is that although there is still small batch effect exist, we hope that can be removed by using the norm.factors  
+
+vsd.f2.B <- varianceStabilizingTransformation(dds.f2.B)
+vstMat.f2.B <- assay(vsd.f2.B) 
+colnames(vstMat.f2.B) <- colnames(read.count.small.F2.B) 
+vstMat.f2.B %>% dim()
+save(vstMat.f2.B, file = "~/F2/output/vstMat.f2.B.Rdata") 
 ```
 
 ### WGCNA for network 
 ```{r}
+
 
 ```
 
