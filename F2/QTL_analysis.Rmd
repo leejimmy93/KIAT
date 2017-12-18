@@ -506,10 +506,10 @@ summary(qtl.fit.vaccenic) # two positive effect
 
 ### output result from scanone & cim, QTL result visulization
 ```{r}
-load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits")
-load("~/F2/output/QTL_analysis/scanone.imp.43traits")
-load("~/F2/output/QTL_analysis/cim.qtl.43traits.Rdata")
-load("~/F2/output/QTL_analysis/cim.perm.43traits.Rdata")
+load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits.corrected")
+load("~/F2/output/QTL_analysis/scanone.imp.43traits.corrected")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.corrrected.Rdata")
+load("~/F2/output/QTL_analysis/cim.perm.43traits.corrected.Rdata")
 load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.Rdata")
 
 plot(cim.qtl[[1]], chr="C09")  
@@ -529,6 +529,12 @@ ggsave(flower_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/o
 ggsave(flower_cim$plot, filename = "~/F2/output/QTL_analysis/figure/flower_cim.png", width = 7, height = 4) 
 
 # oil related  
+# library(RColorBrewer)
+# library(colorRamps)
+# 
+# colourCount = 10 
+# getPalette = colorRampPalette(brewer.pal(9, "Set1"))  # can be alternate way to plot the result for paper 
+
 oil_cim <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic_acid"), 
                        data.frame(cim.qtl[["Stearic_acid"]], method = "Stearic_acid"), 
@@ -537,7 +543,9 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic
                        data.frame(cim.qtl[["Linoleic_acid"]], method = "Linoleic_acid"),
                        data.frame(cim.qtl[["Arachidic_acid"]], method = "Arachidic_acid"),
                        data.frame(cim.qtl[["Linolenic_acid"]], method = "Linolenic_acid"),
-                       data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid")),
+                       data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid"),
+                       data.frame(cim.qtl[["cis_11_Eicosenoic_acid"]], method = "cis_11_Eicosenoic_acid"),
+                       data.frame(cim.qtl[["Behenic_acid"]], method = "Behenic_acid")),
          chrs = c("A08", "C03"), 
          # lod = cim.perm[[1]], 
          title = "Fatty acid traits",
@@ -842,12 +850,6 @@ ggpairs(pheno_Erucic_Oleic)
 <<<<<<< HEAD
 ### check the loci effect to the different fatty acid traits 
 ```{r}
-
-
-
-=======
-# illustrate figure 
-```{r}
 test <- data.frame(x = c("AA", "AB", "BB"),
            y = c(10, 20, 30))
 test
@@ -868,6 +870,6 @@ ggplot() +
   geom_col(mapping = aes(x = x, y = y)) + 
   labs(list(x = "genotype at loci", y = "average phenotype", title = "with dominance effect"))
 ggsave(p1.test2, filename = "~/Desktop/2017_Nov_KIAT_report/p1.test2.png", width = 3, height = 4) 
->>>>>>> f58eccb8afa7610dc3b754f57f96453bc837b321
 ```
+
 
