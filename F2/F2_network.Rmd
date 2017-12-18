@@ -13,6 +13,9 @@ library(WGCNA)
 library(tidyverse)
 library(edgeR)
 library(DESeq2)
+library(magrittr)
+library(gplots)
+options(stringsAsFactors = FALSE)
 ```
 
 ### read count load, and process read count for WGCNA  
@@ -72,47 +75,75 @@ dge.F2$samples %>%
 read_count_F2.AC <- read_count_F2[,colnames(read_count_F2) %in% batch_info$sample_ID[batch_info$batch == "A" | batch_info$batch == "C"]] 
 read_count_F2.AC %>% dim() # 101040    125
 
-read_count_F2.B <- read_count_F2[,colnames(read_count_F2) %in% batch_info$sample_ID[batch_info$batch == "B"]] 
-read_count_F2.B %>% dim() # 101040    41 
-
 # filter lowly expressed genes 
 read.count.small.F2.AC <- read_count_F2.AC[rowSums(read_count_F2.AC > 10) >= 125*0.25,]
 dim(read.count.small.F2.AC) # 57376   125 
 
-read.count.small.F2.B <- read_count_F2.B[rowSums(read_count_F2.B > 10) >= 41*0.25,]
-dim(read.count.small.F2.B) # 47754    41
-
-# vst transformation of the two subset of data 
+# vst transformation of the two subset of data, these transformed values will be used in WGCNA analysis 
 # batch AC 
-read.count.sample.AC <- data.frame(genotype=factor(F2.sample[F2.sample$batch == "A" | F2.sample$batch == "C",]$genotype), 
+read.count.sample.AC <- data.frame(group=factor(F2.sample[F2.sample$batch == "A" | F2.sample$batch == "C",]$genotype), 
                                    batch=factor(F2.sample[F2.sample$batch == "A" | F2.sample$batch == "C",]$batch)) 
+
 
 all(read.count.sample.AC$genotype == colnames(read.count.small.F2.AC)) # True, same order 
 
-dds.f2.AC <- DESeqDataSetFromMatrix(countData = round(read.count.small.F2.AC), colData = read.count.sample.AC, design = ~genotype)  # the model matrix is not full rank, so the model cannot be fit as specified. One or more variables or interaction terms in the design formula are linear combinations of the others and must be removed. The hope is that although there is still small batch effect exist, we hope that can be removed by using the norm.factors  
-
+dds.f2.AC <- DESeqDataSetFromMatrix(countData = round(read.count.small.F2.AC), colData = read.count.sample.AC, design = ~group)  
 vsd.f2.AC <- varianceStabilizingTransformation(dds.f2.AC)
 vstMat.f2.AC <- assay(vsd.f2.AC) 
 colnames(vstMat.f2.AC) <- colnames(read.count.small.F2.AC) 
-save(vstMat.f2, file = "~/F2/output/vstMat.f2.AC.Rdata")
+save(vstMat.f2.AC, file = "~/F2/output/vstMat.f2.AC.Rdata") 
 
-# batch B
-read.count.sample.B <- data.frame(genotype=factor(F2.sample[F2.sample$batch == "B",]$genotype), 
-                                   batch=factor(F2.sample[F2.sample$batch == "B",]$batch)) 
+### get genes that are differentially expressed among the different genotypes using edgeR 
+# normalize 
+dge.read.count <- DGEList(counts=read.count.small.F2.AC, group=read.count.sample.AC$group)
+dge.read.count <- calcNormFactors(dge.read.count, method = "TMM")
+hist(dge.read.count$samples$norm.factors)
 
-all(read.count.sample.B$genotype == colnames(read.count.small.F2.B)) # True, same order 
+# # GLM model w/o reps 
+design.read.count <- model.matrix(~group, data = read.count.sample.AC)
+bcv <- 0.4
+dge.read.count$common.dispersion <- bcv ^ 2 
 
-dds.f2.B <- DESeqDataSetFromMatrix(countData = round(read.count.small.F2.B), colData = read.count.sample.B, design = ~genotype)  # the model matrix is not full rank, so the model cannot be fit as specified. One or more variables or interaction terms in the design formula are linear combinations of the others and must be removed. The hope is that although there is still small batch effect exist, we hope that can be removed by using the norm.factors  
+### mds plot 
+mds <- plotMDS(dge.read.count, method = "bcv",labels = dge.read.count$samples$group)
+x <- as.data.frame(mds$x)
+y <- as.data.frame(mds$y)
+distance_matrix <- merge(x, y, by="row.names")
+distance_matrix$Row.names
 
-vsd.f2.B <- varianceStabilizingTransformation(dds.f2.B)
-vstMat.f2.B <- assay(vsd.f2.B) 
-colnames(vstMat.f2.B) <- colnames(read.count.small.F2.B) 
-vstMat.f2.B %>% dim()
-save(vstMat.f2.B, file = "~/F2/output/vstMat.f2.B.Rdata") 
+# merge with batch info 
+batch_info %>% head()
+colnames(distance_matrix)[1] <- "sample_ID"
+distance_matrix.all <- merge(distance_matrix, batch_info, by = "sample_ID")
+
+p.mds.batch <- ggplot(data=distance_matrix.all, aes(mds$x, mds$y, color=factor(batch)))
+p.mds.batch <- p.mds.batch + geom_point(size=1) 
+p.mds.batch <- p.mds.batch + scale_color_brewer(type="qual",palette="Set1")
+p.mds.batch 
+# a clear batch effect, will this affect WGCNA result? 
+
+## fit model & look for DEGs
+fit.read.count <- glmFit(dge.read.count, design.read.count)
+
+# detect DEGs, finding genes different between any of the two lines 
+lrt.read.count <- glmLRT(fit.read.count, coef=2:125) # find any genes that are differentially expressed compared to the reference genotype (the intercept) 
+topTags(lrt.read.count)
+DEgene.F2 <- topTags(lrt.read.count,n = Inf)$table[topTags(lrt.read.count,n = Inf)$table$FDR<1e-05,]
+dim(DEgene.F2) # 21513   128 
+
+### pick genes which have differential expression across samples for WGCNA (FDR < 1e-05)
+vstMat.f2.AC.WGCNA <- vstMat.f2.AC[rownames(vstMat.f2.AC) %in% rownames(DEgene.F2),]
+dim(vstMat.f2.AC.WGCNA) # 21513   125 
+save(vstMat.f2.AC.WGCNA, file ="~/F2/output/vstMat.f2.AC.WGCNA.Rdata")
 ```
 
-### WGCNA for network 
+### WGCNA for network  
+refer to https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
 ```{r}
+
+
+
+
 
 
 ```
