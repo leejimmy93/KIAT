@@ -40,7 +40,7 @@ F2_geno_data_2_Ae_Ol_new[1:10, 1:10]
 F2_geno_data_2_Ae_Ol_new.t <- as.data.frame(t(F2_geno_data_2_Ae_Ol_new))
 F2_geno_data_2_Ae_Ol_new.t$ID <- rownames(F2_geno_data_2_Ae_Ol_new.t)
 pheno.t <- as.data.frame(t(pheno)) 
-pheno.t$ID <- rownames(pheno.t)
+pheno.t$ID <- rownames(pheno.t) 
 
 F2_geno_data_2_Ae_Ol_new.2 <- 
 F2_geno_data_2_Ae_Ol_new.t %>% 

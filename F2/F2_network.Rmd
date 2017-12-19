@@ -15,6 +15,7 @@ library(edgeR)
 library(DESeq2)
 library(magrittr)
 library(gplots)
+library(reshape2)
 options(stringsAsFactors = FALSE)
 ```
 
@@ -194,9 +195,6 @@ enableWGCNAThreads()
 load("~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
 dim(vstMat.f2.A.WGCNA) 
 
-# phenotype data F2 for batch A  
-
-
 # transform expression data 
 head(vstMat.f2.A.WGCNA[,1:6])
 vstMat.f2.A.WGCNA.t <- t(vstMat.f2.A.WGCNA)
@@ -237,7 +235,7 @@ text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 # choose 6 
 softPower <- 6
 adjacency <- adjacency(vstMat.f2.A.WGCNA.t, power = softPower)
-# Turn adjacency into topological overlap
+# Turn adjacency into topological overlap, topological overlap leads to a network distance measure 
 TOM <- TOMsimilarity(adjacency); # add system.time() here next time 
 dissTOM <- 1-TOM 
 
@@ -256,6 +254,7 @@ dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
                              deepSplit <- 2, pamRespectsDendro = FALSE,
                              minClusterSize = minModuleSize);
 table(dynamicMods)
+table(dynamicMods) %>% length() # 56 modules 
 
 # Convert numeric lables into colors
 dynamicColors = labels2colors(dynamicMods)
@@ -312,13 +311,49 @@ colorOrder = c("grey", standardColors(50));
 moduleLabels = match(moduleColors, colorOrder)-1;
 MEs = mergedMEs
 
+save(MEs, file = "~/F2/output/network_analysis/MEs_batchA.Rdata")
+```
+
+### relate modules to trait and identify important genes 
+```{r}
+load("~/F2/output/network_analysis/MEs_batchA.Rdata")
+load("~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
+
+# include triat value 
 head(MEs)
-dim(MEs)
-dim(blups.CR) 
-rownames(expr.data.CR.t)
-rownames(MEs)
+dim(MEs) # 55 modules, two merged into one after module merge 
+rownames(vstMat.f2.A.WGCNA.t) 
+rownames(MEs) 
 rownames(MEs) <- rownames(vstMat.f2.A.WGCNA.t)
-# head(blups.CR) phenotype data 
+MEs$line <- rownames(MEs)
+
+# correct phenotype data 
+load("~/F2/data/network_analysis/pheno.Rdata")
+
+pheno.t <- 
+pheno %>% 
+  t() %>% 
+  as.data.frame()
+
+## correct the three traits and also add the 43rd trait from bolting to flower 
+par(mfrow = c(1,1))
+pheno.t$cis_11_Eicosenoic_acid <- ifelse(pheno.t$cis_11_Eicosenoic_acid > 5, NA, pheno.t$cis_11_Eicosenoic_acid)
+pheno.t$Palmitoliec_aicd <- ifelse(pheno.t$Palmitoliec_aicd > 1, NA, pheno.t$Palmitoliec_aicd)
+pheno.t$Behenic_acid <- ifelse(pheno.t$Behenic_acid > 5, NA, pheno.t$Behenic_acid) 
+
+pheno.t %>% 
+  dplyr::select(cis_11_Eicosenoic_acid, Palmitoliec_aicd, Behenic_acid) %>% 
+  melt() %>% 
+  ggplot() + 
+  geom_histogram(aes(x = value, fill = variable)) +
+  facet_wrap(~variable, nrow = 3, ncol = 1)
+
+pheno.t$bolting_to_flowering <- pheno.t$days_to_flower -  pheno.t$days_to_bolt
+save(pheno.t, file = "~/F2/data/network_analysis/pheno.t.Rdata")
+
+
+
+
 ```
 
 
