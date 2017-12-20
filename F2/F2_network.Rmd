@@ -351,9 +351,79 @@ pheno.t %>%
 pheno.t$bolting_to_flowering <- pheno.t$days_to_flower -  pheno.t$days_to_bolt
 save(pheno.t, file = "~/F2/data/network_analysis/pheno.t.Rdata")
 
+rownames(pheno.t) <- gsub("ID", "Sample_F2", rownames(pheno.t))
+blups.F2.A <- 
+pheno.t[rownames(pheno.t) %in% MEs$line,] 
+
+blups.F2.A$line <- rownames(blups.F2.A)
+MEs$line 
+
+# merge module & trait values 
+ME.blups.F2.A <- 
+MEs %>% 
+  left_join(blups.F2.A, by = "line") 
+
+dim(ME.blups.F2.A) # 79 99 (43 + 55 +1"line")
+colnames(ME.blups.F2.A)
+
+blups.cor <- cor(ME.blups.F2.A[,1:55], ME.blups.F2.A[,56:98], use = "p")
+blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.f2.A.WGCNA.t))
+blups.cor.sig <- blups.cor
+blups.cor.sig[blups.cor.P>0.05] <- NA 
+blups.cor.sig 
+
+MEs <- MEs %>% dplyr::select(-line) 
+ME.blups.F2.A <- ME.blups.F2.A %>% dplyr::select(-line)  
+blups.F2.A <- blups.F2.A %>% dplyr::select(-line) 
+
+# plot it 
+# Will display correlations and their p-values
+png(filename = "~/F2/output/network_analysis/Module-trait_heatmap_F2_A.png",width=20, height=16, units="in", res=300)
+par(mar = c(8, 5, 3, 3));
+# Display the correlation values within a heatmap plot
+labeledHeatmap(Matrix = blups.cor,
+               xLabels = names(blups.F2.A),
+               yLabels = names(MEs), 
+               ySymbols = names(MEs),
+               xSymbols = names(blups.F2.A),
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = signif(blups.cor.sig,2),
+               setStdMargins = FALSE,
+               cex.text = 0.5,
+               zlim = c(-1,1),
+               main = paste("F2 A Module-trait relationships")) 
+
+dev.off()  
+
+########## up to here, understanding of eigengene... 
 
 
 
+# Arbitrary, but let's take the max and min for each trait (so long as they are significant)
+
+blups.cor.5 <- blups.cor.sig
+
+cor.top <- t(apply(blups.cor.5,1,function(x) {
+  maxx = max(x,na.rm=TRUE)
+  minx = min(x,na.rm=TRUE)
+  ifelse(x == maxx | x == minx, x, NA)
+}
+))
+dim(cor.top) # 55 43
+
+cor.top <- cor.top[,apply(cor.top,2,function(x) !all(is.na(x)))]
+cor.top %>% dim() # 55 34
+
+write.csv(cor.top,"~/F2/output/network_analysis/Eigen_trait_cor_F2_A_.5_threshold.csv") 
+
+# write the Eigen genes
+
+head(MEs[,colnames(cor.top)]) 
+write.csv(MEs[,colnames(cor.top)],"Top_Eigen_genes_CR.csv")
+# write all Eigen genes 
+
+write.csv(MEs,"All_Eigen_genes_CR.csv") 
 ```
 
 
