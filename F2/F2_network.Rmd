@@ -430,7 +430,6 @@ follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/get
 
 ```{r}
 library(qtl)
-# one thing I need to figure out, what is the individual's name in the map... so that later on when I load data for R/qtl, I don't need to reformat everything... 
 
 
 ```
