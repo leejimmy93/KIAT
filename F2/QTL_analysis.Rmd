@@ -872,4 +872,41 @@ ggplot() +
 ggsave(p1.test2, filename = "~/Desktop/2017_Nov_KIAT_report/p1.test2.png", width = 3, height = 4) 
 ```
 
+### check revised genetic map with ID added 
+use the revised genetic map with individual's name added, check to see whether it is correct by running scanone 
+```{r}
+F2.map <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv", 
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later 
+
+plot.map(F2.map)
+summaryMap(F2.map) # 2884 
+
+F2.map <- sim.geno(F2.map,step=1,n.draws=32) # imputation  
+F2.map <- calc.genoprob(F2.map,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability? 
+
+F2.map$pheno %>% colnames()
+# Erucic acid 
+scanone.imp.Erucic <- scanone(F2.map,pheno.col=15,method="imp") # 
+plot(scanone.imp.Erucic,bandcol="gray90", main="Erucic_acid")
+
+# Oleic acid 
+scanone.imp.Oleic <- scanone(F2.map,pheno.col=8,method="imp") # 
+plot(scanone.imp.Oleic,bandcol="gray90", main="Oleic_acid") 
+# OK, this looks correct! 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
