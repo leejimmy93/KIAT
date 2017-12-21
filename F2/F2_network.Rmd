@@ -417,6 +417,7 @@ write.csv(cor.top,"~/F2/output/network_analysis/Eigen_trait_cor_F2_A_.5_threshol
 
 # write the Eigen genes
 head(MEs[,colnames(cor.top)]) 
+MEs[,colnames(cor.top)] %>% dim # 79 28 get 28 eigen genes for 28 modules which are significantly correlated with traits 
 write.csv(MEs[,colnames(cor.top)], file = "~/F2/output/network_analysis/Top_Eigen_genes_F2_A.csv")
 
 # write all Eigen genes 
@@ -429,9 +430,10 @@ follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/get
 " What are the QTL for eigen genes? Eigen genes were computed from WGCNA clusters. I am taking the top eigen genes that were correlated with growth model traits and determining eQTL for these."
 
 ```{r}
-library(qtl)
+library(qtl)  
 # one thing I need to figure out, what is the individual's name in the map... so that later on when I load data for R/qtl, I don't need to reformat everything... 
 
+blups.F2.A %>% rownames()
 
 ```
 
