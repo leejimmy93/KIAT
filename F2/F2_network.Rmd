@@ -375,11 +375,12 @@ blups.cor.sig
 MEs <- MEs %>% dplyr::select(-line) 
 ME.blups.F2.A <- ME.blups.F2.A %>% dplyr::select(-line)  
 blups.F2.A <- blups.F2.A %>% dplyr::select(-line) 
+save(blups.F2.A, file = "~/F2/output/network_analysis/blups.F2.A.Rdata")
 
 # plot it 
 # Will display correlations and their p-values
 png(filename = "~/F2/output/network_analysis/Module-trait_heatmap_F2_A.png",width=20, height=16, units="in", res=300)
-par(mar = c(8, 5, 3, 3));
+par(mar = c(8, 5, 3, 3)); 
 # Display the correlation values within a heatmap plot
 labeledHeatmap(Matrix = blups.cor,
                yLabels = names(blups.F2.A),
@@ -431,11 +432,51 @@ follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/get
 
 ```{r}
 library(qtl)  
-# one thing I need to figure out, what is the individual's name in the map... so that later on when I load data for R/qtl, I don't need to reformat everything... 
 
-blups.F2.A %>% rownames()
+eigen.F2.A <- read.csv("~/F2/output/network_analysis/Top_Eigen_genes_F2_A.csv")
+eigen.all.F2.A <- read.csv("~/F2/output/network_analysis/All_Eigen_genes_F2_A.csv")
 
+colnames(eigen.all.F2.A) 
+
+eigen.all.t <- eigen.all.F2.A %>%
+  select(-X) %>%
+  t() %>%
+  as_tibble %>%
+  dplyr::mutate(id=colnames(eigen.all.F2.A)[-1]) %>%
+  dplyr::select(id,everything())
+
+colnames(eigen.all.t)[-1] <- eigen.all.F2.A$X
+
+eigen.all.t[1:10, 1:10] 
+write.csv(eigen.all.t, file = "~/F2/output/network_analysis/Eigen_genes_qtl_input_F2_A.csv")
+
+cross.F2.A <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
+                         phefile = "~/F2/output/network_analysis/Eigen_genes_qtl_input_revised.csv", 
+                         genotypes = c("AA", "AB", "BB"))
+
+# cross.F2.A <- calc.errorlod(cross.F2.A, error.prob=0.001)
+
+cross.F2.A <- sim.geno(cross.F2.A,step=1,n.draws=32) # imputation? 
+cross.F2.A <- calc.genoprob(cross.F2.A,step=1)
+
+scanone_eigen.F2.A <- scanone(cross.F2.A, pheno.col = 2:ncol(cross.F2.A$pheno), 
+	         method = "imp", use = "all.obs")
+
+set.seed(12345)
+system.time(
+permtest.F2.A <- scanone(cross.F2.A, method = "imp", 
+                       pheno.col = 2:ncol(cross.F2.A$pheno),
+                       n.perm = 1000,
+                       n.cluster=8)) 
+
+alphas <- seq(0.01, 0.10, by = 0.01)
+lod.thrs <- summary(permtest.F2.A, alphas)
+lod.thrs  
+
+save(cross.F2.A, scanone_eigen.F2.A, permtest.F2.A, lod.thrs,file = "~/F2/output/network_analysis/scanone-eigengene-qtl_F2_A.RData")
 ```
+
+
 
 
 
