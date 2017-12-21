@@ -161,7 +161,7 @@ write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_proje
 ```
 
 ### calculate two point rf 
-F2_map_construction_LOD3_rf0.5_missing_0.10.R 
+F2_map_construction_LOD3_rf0.5_missing_0.10.R  
 
 ### use madmapper to assign markers to clusters/LGs 
 [http://cgpdb.ucdavis.edu/XLinkage/MadMapper/Genetic_Map_MadMapper_Arabidopsis.html]
@@ -548,4 +548,25 @@ plot.map(LG.f2.madmapper.before.crossover,LG.f2.madmapper.after.crossover, alter
 dev.off()  
 ``` 
 
+### get line ID for the genetic map file, format pheno data  
+```{r}
+F2_geno_data_2_Ae_Ol_new <- 
+read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.txt")
+dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
+
+F2_map <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/LG.f2.madmapper.final_gen.csv")
+colnames(F2_map)[4:169]  <- gsub("X", "Sample_F2_", colnames(F2_geno_data_2_Ae_Ol_new))
+colnames(F2_map) 
+write.csv(F2_map, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/LG.f2.madmapper.final_gen_revised.csv")  
+
+### format phenotype data to the right format for read.cross 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/pheno.t.Rdata")
+F2.pheno <- as.data.frame(t(pheno.t))
+colnames(F2.pheno)
+colnames(F2.pheno) <- gsub("ID", "Sample_F2", colnames(F2.pheno))
+colnames(F2.pheno)
+
+F2.pheno <- F2.pheno[match(colnames(F2_map)[4:169], colnames(F2.pheno))] 
+write.csv(F2.pheno, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2.pheno.csv")
+```
 

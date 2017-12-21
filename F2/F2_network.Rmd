@@ -431,7 +431,15 @@ follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/get
 " What are the QTL for eigen genes? Eigen genes were computed from WGCNA clusters. I am taking the top eigen genes that were correlated with growth model traits and determining eQTL for these."
 
 ```{r}
+<<<<<<< HEAD
+library(qtl)
+=======
 library(qtl)  
+<<<<<<< HEAD
+=======
+# one thing I need to figure out, what is the individual's name in the map... so that later on when I load data for R/qtl, I don't need to reformat everything... 
+>>>>>>> 8bd678e2ecd5fb264f7e81c91e293f08f6be52b3
+>>>>>>> f06fcddce5734a7d5dc54d214d1782e5e27bcaa5
 
 eigen.F2.A <- read.csv("~/F2/output/network_analysis/Top_Eigen_genes_F2_A.csv")
 eigen.all.F2.A <- read.csv("~/F2/output/network_analysis/All_Eigen_genes_F2_A.csv")
