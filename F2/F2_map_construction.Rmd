@@ -10,7 +10,7 @@ The goal of this analysis is to build genetic map using F2 genotyping informatio
 
 ### install & load package 
 ```{r}
-# install.packages("onemap") 
+# install.packages("onemap")  
 # install.packages("tkrplot", type="source") 
 library(tcltk)
 library(tkrplot)
