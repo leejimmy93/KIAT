@@ -319,8 +319,8 @@ save(MEs, file = "~/F2/output/network_analysis/MEs_batchA.Rdata")
 load("~/F2/output/network_analysis/MEs_batchA.Rdata")
 load("~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
 
-# include triat value 
-head(MEs)
+# include triat value  
+head(MEs)  
 dim(MEs) # 55 modules, two merged into one after module merge 
 rownames(vstMat.f2.A.WGCNA.t) 
 rownames(MEs) 
@@ -366,7 +366,7 @@ MEs %>%
 dim(ME.blups.F2.A) # 79 99 (43 + 55 +1"line")
 colnames(ME.blups.F2.A)
 
-blups.cor <- cor(ME.blups.F2.A[,1:55], ME.blups.F2.A[,56:98], use = "p")
+blups.cor <- cor(ME.blups.F2.A[,57:99], ME.blups.F2.A[,1:55], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info 
 blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.f2.A.WGCNA.t))
 blups.cor.sig <- blups.cor
 blups.cor.sig[blups.cor.P>0.05] <- NA 
@@ -382,10 +382,10 @@ png(filename = "~/F2/output/network_analysis/Module-trait_heatmap_F2_A.png",widt
 par(mar = c(8, 5, 3, 3));
 # Display the correlation values within a heatmap plot
 labeledHeatmap(Matrix = blups.cor,
-               xLabels = names(blups.F2.A),
-               yLabels = names(MEs), 
-               ySymbols = names(MEs),
-               xSymbols = names(blups.F2.A),
+               yLabels = names(blups.F2.A),
+               xLabels = names(MEs), 
+               xSymbols = names(MEs),
+               ySymbols = names(blups.F2.A),
                colorLabels = FALSE,
                colors = blueWhiteRed(50),
                textMatrix = signif(blups.cor.sig,2),
@@ -396,34 +396,31 @@ labeledHeatmap(Matrix = blups.cor,
 
 dev.off()  
 
-########## up to here, understanding of eigengene... 
-
-
-
+# again follow Julin's method 
 # Arbitrary, but let's take the max and min for each trait (so long as they are significant)
 
-blups.cor.5 <- blups.cor.sig
+blups.cor.5 <- blups.cor.sig  
+dim(blups.cor.5) # 43 55 
 
-cor.top <- t(apply(blups.cor.5,1,function(x) {
-  maxx = max(x,na.rm=TRUE)
+cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait 
+  maxx = max(x,na.rm=TRUE) 
   minx = min(x,na.rm=TRUE)
-  ifelse(x == maxx | x == minx, x, NA)
+  ifelse(x == maxx | x == minx, x, NA) # only keep the largest and smallest correlation for each trait 
 }
-))
-dim(cor.top) # 55 43
+)) 
+dim(cor.top) # 43 55 
 
-cor.top <- cor.top[,apply(cor.top,2,function(x) !all(is.na(x)))]
-cor.top %>% dim() # 55 34
+cor.top <- cor.top[,apply(cor.top,2,function(x) !all(is.na(x)))] # keep modules which have significant correlations with traits
+cor.top %>% dim() # 43 28 
 
 write.csv(cor.top,"~/F2/output/network_analysis/Eigen_trait_cor_F2_A_.5_threshold.csv") 
 
 # write the Eigen genes
-
 head(MEs[,colnames(cor.top)]) 
-write.csv(MEs[,colnames(cor.top)],"Top_Eigen_genes_CR.csv")
-# write all Eigen genes 
+write.csv(MEs[,colnames(cor.top)], file = "~/F2/output/network_analysis/Top_Eigen_genes_F2_A.csv")
 
-write.csv(MEs,"All_Eigen_genes_CR.csv") 
+# write all Eigen genes 
+write.csv(MEs, file = "~/F2/output/network_analysis/All_Eigen_genes_F2_A.csv")  
 ```
 
 
