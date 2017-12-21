@@ -143,7 +143,7 @@ F1.young.gene.Ae_ratio %>%
 save(F1.young.gene.Ae_ratio, file="~/F1_SNP/output/F1.young.gene.Ae_ratio.Rdata")
 ```
 
-###### work from here for gene level ASE analysis 
+### work from here for gene level ASE analysis 
 ```{r}
 library(brms)
 
@@ -330,10 +330,11 @@ brms1 <- brm(Ae.counts | trials(total.counts) ~ cross,
              data=onegene) 
 ```
 
-```{r}
+```{r} 
 brms1
 plot(brms1)
 ```
+
 does this make sense? 
 ```{r}
 #Estimate for 414 probability of being Da-Ae?
@@ -368,7 +369,7 @@ brms2
 plot(brms2)
 ```
 
-# compare model 1 and model 2 
+### compare model 1 and model 2 
 ```{r}
 AIC(brms1, brms2) # fixed model is better than mixed model... 
 brms1
@@ -392,7 +393,7 @@ brms3 <- update(brms2,newdata=gene2)
 brms3 
 ``` 
 
-# write model in rethinking format
+### write model in rethinking format
 ```{r}
 # mixed model 
 brms2 <- brm(Ae.counts | trials(total.counts) ~ cross + (1|SNP_ID),
@@ -503,14 +504,14 @@ check result for fixed effect & mixed effect
 
 * gene imprinting, ie. genes inherited from one parent is methylated so that allele is not expressed or expressed at a very low level. 
 
-After checking the result, I realized that there are many genes which show different ASE between crosses but not differentialy expressed between crosses, or genes that are differentially expressed but not show ASE.  
+After checking the result, I realized that there are many genes which show different ASE between crosses but not differentialy expressed between crosses, or genes that are differentially expressed but not show ASE.   
 
-For genes that show DE but not different ASE, there can be several different conditions:
+For genes that show DE but not different ASE, there can be several different reasons:
 
 1) non-genetic, which is due to maternal effect, ie. the maternal environment effect
-2) genetic, genes which show different ASE are transcription factors which affect the expression of other genes, although the affected genes don'g show different ASE. (FLC example)
+2) genetic, genes which show different ASE are transcription factors which affect the expression of other genes, although the affected genes don't show different ASE. (FLC example)
 
-but why different ASE but no different expression? ... 
+but why different ASE but no different expression? ...  
 too much power to detect ASE? ... 
 
 * as a summary of the result: 4024 genes show DE between the two corsses (414 & 415), but only around 200 genes show different ASE using brms. 
@@ -539,9 +540,10 @@ use MBASED for ASE in F1
 ```{r}
 # source("https://bioconductor.org/biocLite.R")
 # biocLite("MBASED")
-library(MBASED)
+library(MBASED) 
 
 ```
+
 
 
 

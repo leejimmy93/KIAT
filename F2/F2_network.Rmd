@@ -7,13 +7,449 @@ output: html_document
 
 Goal of this script is to build networks for B.napus F2 RNAseq data using WGCNA, referred to Julin's analysis on his rapa data https://github.com/MaloofLab/BrapaNetworks 
 
-### read count 
+### load libs
 ```{r}
+library(WGCNA)
+library(tidyverse)
+library(edgeR)
+library(DESeq2)
+library(magrittr)
+library(gplots)
+library(reshape2)
+options(stringsAsFactors = FALSE)
+```
+
+### read count load, and process read count for WGCNA  
+```{r}
+load("~/F2/output/vstMat.f2.Rdata")
+dim(vstMat.f2) # 56180   166 
+
+# follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/ProcessCounts.Rmd 
+read_count_F2 <- read.table("~/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1)
+dim(read_count_F2) # 101040    166
+
+# load in batch information 
+batchA <- read.csv("~/F2/data/network_analysis/F2_batchA.csv")
+batchB <- read.csv("~/F2/data/network_analysis/F2_batchB.csv")
+batchC <- read.csv("~/F2/data/network_analysis/F2_batchC.csv")
+
+batchA <- data.frame(sample_ID = batchA$No..of.Sowing, 
+                     batch = rep("A", nrow(batchA)))
+
+batchB <- data.frame(sample_ID = batchB$No..of.Sowing, 
+                     batch = rep("B", nrow(batchB)))
+
+batchC <- data.frame(sample_ID = batchC$No..of.Sowing[1:46], 
+                     batch = rep("C", 46))
+
+batch_info <- rbind(batchA, batchB, batchC) 
+batch_info %>% dim() # 166 2 
+
+# combine batch information to the 
+batch_info$sample_ID <- paste("Sample_F2_", batch_info$sample_ID, sep = "")
+batch_info <- batch_info[match(colnames(read_count_F2), batch_info$sample_ID),] # reorder batch_info to make it the same order as read count  
+all(batch_info$sample_ID == colnames(read_count_F2)) # True 
+
+# sample description 
+F2.sample <- data.frame(batch = factor(batch_info$batch), 
+                        genotype = factor(batch_info$sample_ID)) 
+
+# remove lowly expressed genes 
+read.count.small <- read_count_F2[rowSums(read_count_F2 > 10) >= 166*0.25,]
+dim(read.count.small) # 56180   166   
+
+# Normalize
+dge.F2 <- DGEList(counts = read.count.small, group = F2.sample$genotype)
+dge.F2 <- calcNormFactors(dge.F2)
+hist(dge.F2$samples$norm.factors)
+
+batch_info$group <- batch_info$sample_ID 
+dge.F2$samples %>% 
+  left_join(batch_info, by = "group") %>% 
+  ggplot() + 
+  geom_histogram(aes(x = norm.factors, fill = batch))
+
+# since there is very big batch effect for batch B, I decided to analyze batch A+C and batch B seperately. 
+
+# get sepereate gene expression data for A+C and B 
+# A+C 
+read_count_F2.AC <- read_count_F2[,colnames(read_count_F2) %in% batch_info$sample_ID[batch_info$batch == "A" | batch_info$batch == "C"]] 
+read_count_F2.AC %>% dim() # 101040    125
+
+# filter lowly expressed genes 
+read.count.small.F2.AC <- read_count_F2.AC[rowSums(read_count_F2.AC > 10) >= 125*0.25,]
+dim(read.count.small.F2.AC) # 57376   125 
+
+# vst transformation of the two subset of data, these transformed values will be used in WGCNA analysis 
+# batch AC 
+read.count.sample.AC <- data.frame(group=factor(F2.sample[F2.sample$batch == "A" | F2.sample$batch == "C",]$genotype), 
+                                   batch=factor(F2.sample[F2.sample$batch == "A" | F2.sample$batch == "C",]$batch)) 
+
+
+all(read.count.sample.AC$genotype == colnames(read.count.small.F2.AC)) # True, same order 
+
+dds.f2.AC <- DESeqDataSetFromMatrix(countData = round(read.count.small.F2.AC), colData = read.count.sample.AC, design = ~group)  
+vsd.f2.AC <- varianceStabilizingTransformation(dds.f2.AC)
+vstMat.f2.AC <- assay(vsd.f2.AC) 
+colnames(vstMat.f2.AC) <- colnames(read.count.small.F2.AC) 
+save(vstMat.f2.AC, file = "~/F2/output/vstMat.f2.AC.Rdata") 
+
+### get genes that are differentially expressed among the different genotypes using edgeR 
+# normalize 
+dge.read.count <- DGEList(counts=read.count.small.F2.AC, group=read.count.sample.AC$group)
+dge.read.count <- calcNormFactors(dge.read.count, method = "TMM")
+hist(dge.read.count$samples$norm.factors)
+
+# # GLM model w/o reps 
+design.read.count <- model.matrix(~group, data = read.count.sample.AC)
+bcv <- 0.4
+dge.read.count$common.dispersion <- bcv ^ 2 
+
+### mds plot  
+mds <- plotMDS(dge.read.count, method = "bcv",labels = dge.read.count$samples$group)
+x <- as.data.frame(mds$x) 
+y <- as.data.frame(mds$y)
+distance_matrix <- merge(x, y, by="row.names")
+distance_matrix$Row.names
+
+# merge with batch info 
+batch_info %>% head()
+colnames(distance_matrix)[1] <- "sample_ID"
+distance_matrix.all <- merge(distance_matrix, batch_info, by = "sample_ID")
+
+p.mds.batch <- ggplot(data=distance_matrix.all, aes(mds$x, mds$y, color=factor(batch)))
+p.mds.batch <- p.mds.batch + geom_point(size=1) 
+p.mds.batch <- p.mds.batch + scale_color_brewer(type="qual",palette="Set1")
+p.mds.batch 
+# a clear batch effect, will this affect WGCNA result? 
+
+## fit model & look for DEGs
+fit.read.count <- glmFit(dge.read.count, design.read.count)
+
+# detect DEGs, finding genes different between any of the two lines 
+lrt.read.count <- glmLRT(fit.read.count, coef=2:125) # find any genes that are differentially expressed compared to the reference genotype (the intercept) 
+topTags(lrt.read.count)
+DEgene.F2 <- topTags(lrt.read.count,n = Inf)$table[topTags(lrt.read.count,n = Inf)$table$FDR<1e-05,]
+dim(DEgene.F2) # 21513   128 
+
+### pick genes which have differential expression across samples for WGCNA (FDR < 1e-05)
+vstMat.f2.AC.WGCNA <- vstMat.f2.AC[rownames(vstMat.f2.AC) %in% rownames(DEgene.F2),]
+dim(vstMat.f2.AC.WGCNA) # 21513   125 
+save(vstMat.f2.AC.WGCNA, file ="~/F2/output/vstMat.f2.AC.WGCNA.Rdata")
+
+# Since there is such a strong batch effect even between batch A & C (check the p.mds.batch plot), I decided to fristly run WGCNA on only sample from batch A (79 samples)
+
+# get sepereate gene expression data for A
+read_count_F2.A <- read_count_F2[,colnames(read_count_F2) %in% batch_info$sample_ID[batch_info$batch == "A" ]] 
+read_count_F2.A %>% dim() # 101040     79
+
+# filter lowly expressed genes 
+read.count.small.F2.A <- read_count_F2.A[rowSums(read_count_F2.A > 10) >= 79*0.25,]
+dim(read.count.small.F2.A) # 58376    79 
+
+# vst transformation of the two subset of data, these transformed values will be used in WGCNA analysis 
+read.count.sample.A <- data.frame(group=factor(F2.sample[F2.sample$batch == "A",]$genotype)) 
+
+all(read.count.sample.A$genotype == colnames(read.count.small.F2.A)) # True, same order 
+
+dds.f2.A <- DESeqDataSetFromMatrix(countData = round(read.count.small.F2.A), colData = read.count.sample.A, design = ~group)  
+vsd.f2.A <- varianceStabilizingTransformation(dds.f2.A)
+vstMat.f2.A <- assay(vsd.f2.A) 
+colnames(vstMat.f2.A) <- colnames(read.count.small.F2.A) 
+save(vstMat.f2.A, file = "~/F2/output/vstMat.f2.A.Rdata") 
+
+### get genes that are differentially expressed among the different genotypes using edgeR 
+# normalize 
+dge.read.count <- DGEList(counts=read.count.small.F2.A, group=read.count.sample.A$group)
+dge.read.count <- calcNormFactors(dge.read.count, method = "TMM")
+hist(dge.read.count$samples$norm.factors)
+
+# # GLM model w/o reps 
+design.read.count <- model.matrix(~group, data = read.count.sample.A)
+bcv <- 0.4
+dge.read.count$common.dispersion <- bcv ^ 2 
+
+### mds plot  
+plotMDS(dge.read.count, method = "bcv",labels = dge.read.count$samples$group)
+
+## fit model & look for DEGs
+fit.read.count <- glmFit(dge.read.count, design.read.count)
+
+# detect DEGs, finding genes different between any of the two lines 
+lrt.read.count <- glmLRT(fit.read.count, coef=2:79) # find any genes that are differentially expressed compared to the reference genotype (the intercept) 
+topTags(lrt.read.count)
+DEgene.F2 <- topTags(lrt.read.count,n = Inf)$table[topTags(lrt.read.count,n = Inf)$table$FDR<10e-05,]
+dim(DEgene.F2) # 16181    82  
+
+### pick genes which have differential expression across samples for WGCNA (FDR < 1e-05)
+vstMat.f2.A.WGCNA <- vstMat.f2.A[rownames(vstMat.f2.A) %in% rownames(DEgene.F2),]
+dim(vstMat.f2.A.WGCNA) # 16181    79 
+save(vstMat.f2.A.WGCNA, file ="~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
+```
+
+### WGCNA for network  
+refer to https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
+```{r}
+enableWGCNAThreads()
+
+load("~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
+dim(vstMat.f2.A.WGCNA) 
+
+# transform expression data 
+head(vstMat.f2.A.WGCNA[,1:6])
+vstMat.f2.A.WGCNA.t <- t(vstMat.f2.A.WGCNA)
+head(vstMat.f2.A.WGCNA.t[,1:6]) 
+
+# check sample quality 
+gag.CR <- goodSamplesGenes(vstMat.f2.A.WGCNA.t, verbose = 3)
+gag.CR$allOK
+
+# cluster samples to look for outliers
+sampleTREE.CR <- hclust(dist(vstMat.f2.A.WGCNA.t), method = "average")
+plot(sampleTREE.CR,cex=.6) # should be able to color based on batch, see whether outliers are due to batch effect 
+# heatmap.2(vstMat.f2.A.WGCNA.t,Rowv=as.dendrogram(sampleTREE.CR), scale="col", trace="none")
+# are there spurious sample that seem different from other samples? outliers? 
+
+# soft threshold:  In an unsigned coexpression network, modules correspond to clusters of genes with high absolute correlations. In a signed network, modules correspond to positively correlated genes.
+powers <- c(c(1:10), seq(from = 12, to=30, by=2))
+sft <- pickSoftThreshold(vstMat.f2.A.WGCNA.t, powerVector = powers, verbose = 5, networkType = "unsigned")
+
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2)) 
+cex1 <- 0.9 
+# Scale-free topology fit index as a fCRction of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"))
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red")
+# this line corresponds to using an R^2 cut-off of h
+abline(h=0.90,col="red")
+# Mean connectivity as a fCRction of the soft-thresholding power
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red") 
+# For this unsigned networks, while I didn't get plautea but 6 is the suggested power to use and it gives me high R squared to fit a scale free network model. 
+
+# choose 6 
+softPower <- 6
+adjacency <- adjacency(vstMat.f2.A.WGCNA.t, power = softPower)
+# Turn adjacency into topological overlap, topological overlap leads to a network distance measure 
+TOM <- TOMsimilarity(adjacency); # add system.time() here next time 
+dissTOM <- 1-TOM 
+
+# Call the hierarchical clustering fCRction
+geneTree <- hclust(as.dist(dissTOM), method = "average")
+# Plot the resulting clustering tree (dendrogram)
+sizeGrWindow(12,9)
+plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity",
+     labels = FALSE, hang = 0.04)
+
+# define modules 
+# We like large modules, so we set the minimum module size relatively high:
+minModuleSize <- 30;
+# Module identification using dynamic tree cut:
+dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
+                             deepSplit <- 2, pamRespectsDendro = FALSE,
+                             minClusterSize = minModuleSize);
+table(dynamicMods)
+table(dynamicMods) %>% length() # 56 modules 
+
+# Convert numeric lables into colors
+dynamicColors = labels2colors(dynamicMods)
+table(dynamicColors)
+# Plot the dendrogram and colors CRderneath
+sizeGrWindow(8,6)
+plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05,
+                    main = "Gene dendrogram and module colors")
+
+
+# merge similar modules
+# Calculate eigengenes
+MEList <- moduleEigengenes(vstMat.f2.A.WGCNA.t, colors = dynamicColors)
+MEs <- MEList$eigengenes
+# Calculate dissimilarity of module eigengenes
+MEDiss <- 1-cor(MEs);
+# Cluster module eigengenes
+METree <- hclust(as.dist(MEDiss), method = "average");
+# Plot the result
+sizeGrWindow(7, 6)
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+
+# merge with correlation > 0.8
+
+MEDissThres = 0.2
+# Plot the cut line into the dendrogram
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+abline(h=MEDissThres, col = "red")
+# Call an automatic merging fCRction
+merge = mergeCloseModules(vstMat.f2.A.WGCNA.t, dynamicColors, cutHeight = MEDissThres, verbose = 3)
+# The merged module colors
+mergedColors = merge$colors
+# Eigengenes of the new merged modules:
+mergedMEs = merge$newMEs
+
+# compare pre and post merge
+
+sizeGrWindow(12, 9)
+#pdf(file = "Plots/geneDendro-3.pdf", wi = 9, he = 6)
+plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
+c("Dynamic Tree Cut", "Merged dynamic"),
+dendroLabels = FALSE, hang = 0.03,
+addGuide = TRUE, guideHang = 0.05)
+#dev.off()
+
+# Rename to moduleColors
+moduleColors = mergedColors
+# Construct numerical labels corresponding to the colors
+colorOrder = c("grey", standardColors(50));
+moduleLabels = match(moduleColors, colorOrder)-1;
+MEs = mergedMEs
+
+save(MEs, file = "~/F2/output/network_analysis/MEs_batchA.Rdata")
+```
+
+### relate modules to trait and identify important genes 
+```{r}
+load("~/F2/output/network_analysis/MEs_batchA.Rdata")
+load("~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
+
+# include triat value  
+head(MEs)  
+dim(MEs) # 55 modules, two merged into one after module merge 
+rownames(vstMat.f2.A.WGCNA.t) 
+rownames(MEs) 
+rownames(MEs) <- rownames(vstMat.f2.A.WGCNA.t)
+MEs$line <- rownames(MEs)
+
+# correct phenotype data 
+load("~/F2/data/network_analysis/pheno.Rdata")
+
+pheno.t <- 
+pheno %>% 
+  t() %>% 
+  as.data.frame()
+
+## correct the three traits and also add the 43rd trait from bolting to flower 
+par(mfrow = c(1,1))
+pheno.t$cis_11_Eicosenoic_acid <- ifelse(pheno.t$cis_11_Eicosenoic_acid > 5, NA, pheno.t$cis_11_Eicosenoic_acid)
+pheno.t$Palmitoliec_aicd <- ifelse(pheno.t$Palmitoliec_aicd > 1, NA, pheno.t$Palmitoliec_aicd)
+pheno.t$Behenic_acid <- ifelse(pheno.t$Behenic_acid > 5, NA, pheno.t$Behenic_acid) 
+
+pheno.t %>% 
+  dplyr::select(cis_11_Eicosenoic_acid, Palmitoliec_aicd, Behenic_acid) %>% 
+  melt() %>% 
+  ggplot() + 
+  geom_histogram(aes(x = value, fill = variable)) +
+  facet_wrap(~variable, nrow = 3, ncol = 1)
+
+pheno.t$bolting_to_flowering <- pheno.t$days_to_flower -  pheno.t$days_to_bolt
+save(pheno.t, file = "~/F2/data/network_analysis/pheno.t.Rdata")
+
+rownames(pheno.t) <- gsub("ID", "Sample_F2", rownames(pheno.t))
+blups.F2.A <- 
+pheno.t[rownames(pheno.t) %in% MEs$line,] 
+
+blups.F2.A$line <- rownames(blups.F2.A)
+MEs$line 
+
+# merge module & trait values 
+ME.blups.F2.A <- 
+MEs %>% 
+  left_join(blups.F2.A, by = "line") 
+
+dim(ME.blups.F2.A) # 79 99 (43 + 55 +1"line")
+colnames(ME.blups.F2.A)
+
+blups.cor <- cor(ME.blups.F2.A[,57:99], ME.blups.F2.A[,1:55], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info 
+blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.f2.A.WGCNA.t))
+blups.cor.sig <- blups.cor
+blups.cor.sig[blups.cor.P>0.05] <- NA 
+blups.cor.sig 
+
+MEs <- MEs %>% dplyr::select(-line) 
+ME.blups.F2.A <- ME.blups.F2.A %>% dplyr::select(-line)  
+blups.F2.A <- blups.F2.A %>% dplyr::select(-line) 
+
+# plot it 
+# Will display correlations and their p-values
+png(filename = "~/F2/output/network_analysis/Module-trait_heatmap_F2_A.png",width=20, height=16, units="in", res=300)
+par(mar = c(8, 5, 3, 3));
+# Display the correlation values within a heatmap plot
+labeledHeatmap(Matrix = blups.cor,
+               yLabels = names(blups.F2.A),
+               xLabels = names(MEs), 
+               xSymbols = names(MEs),
+               ySymbols = names(blups.F2.A),
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = signif(blups.cor.sig,2),
+               setStdMargins = FALSE,
+               cex.text = 0.5,
+               zlim = c(-1,1),
+               main = paste("F2 A Module-trait relationships")) 
+
+dev.off()  
+
+# again follow Julin's method 
+# Arbitrary, but let's take the max and min for each trait (so long as they are significant)
+
+blups.cor.5 <- blups.cor.sig  
+dim(blups.cor.5) # 43 55 
+
+cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait 
+  maxx = max(x,na.rm=TRUE) 
+  minx = min(x,na.rm=TRUE)
+  ifelse(x == maxx | x == minx, x, NA) # only keep the largest and smallest correlation for each trait 
+}
+)) 
+dim(cor.top) # 43 55 
+
+cor.top <- cor.top[,apply(cor.top,2,function(x) !all(is.na(x)))] # keep modules which have significant correlations with traits
+cor.top %>% dim() # 43 28 
+
+write.csv(cor.top,"~/F2/output/network_analysis/Eigen_trait_cor_F2_A_.5_threshold.csv") 
+
+# write the Eigen genes
+head(MEs[,colnames(cor.top)]) 
+write.csv(MEs[,colnames(cor.top)], file = "~/F2/output/network_analysis/Top_Eigen_genes_F2_A.csv")
+
+# write all Eigen genes 
+write.csv(MEs, file = "~/F2/output/network_analysis/All_Eigen_genes_F2_A.csv")   
+```
+
+### get eigen gene QTL
+follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/get_eigengene_QTL.Rmd 
+
+" What are the QTL for eigen genes? Eigen genes were computed from WGCNA clusters. I am taking the top eigen genes that were correlated with growth model traits and determining eQTL for these."
+
+```{r}
+library(qtl)
+# one thing I need to figure out, what is the individual's name in the map... so that later on when I load data for R/qtl, I don't need to reformat everything... 
+
 
 ```
 
-### WGCNA for network 
-```{r}
 
-```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
