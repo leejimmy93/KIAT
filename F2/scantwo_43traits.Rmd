@@ -318,7 +318,7 @@ scantwo_perm_cis_11_Eicosenoic_Linolenic <- sapply(files, function(x) mget(load(
 
 # permutation data check 
 summary(do.call(c, scantwo_perm_cis_11_Eicosenoic_Linolenic)[,1])
-# cis_11_Eicosenoic_acid (160 permutations)
+# cis_11_Eicosenoic_acid (160 permutations) 
 #     full  fv1  int  add  av1  one
 # 5%  67.1 65.9 48.2 31.8 30.4 4.91
 # 10% 52.9 51.9 42.6 28.7 27.6 4.20
