@@ -19,9 +19,9 @@ library(reshape2)
 options(stringsAsFactors = FALSE)  
 ```
 
-### read count load, and process read count for WGCNA  
+### read count load, and process read count for WGCNA, because WGCNA needs data to have guassian distribution, and it is better to work with genes which have high variance across samples, so expression anlaysis was conducted to get those genes.     
 ```{r}
-load("~/F2/output/vstMat.f2.Rdata")
+load("~/F2/output/vstMat.f2.Rdata") 
 dim(vstMat.f2) # 56180   166 
 
 # follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/ProcessCounts.Rmd 
@@ -40,7 +40,7 @@ batchB <- data.frame(sample_ID = batchB$No..of.Sowing,
                      batch = rep("B", nrow(batchB)))
 
 batchC <- data.frame(sample_ID = batchC$No..of.Sowing[1:46], 
-                     batch = rep("C", 46))
+                     batch = rep("C", 46)) 
 
 batch_info <- rbind(batchA, batchB, batchC) 
 batch_info %>% dim() # 166 2 
@@ -189,11 +189,12 @@ save(vstMat.f2.A.WGCNA, file ="~/F2/output/vstMat.f2.A.WGCNA.Rdata")
 
 ### WGCNA for network  
 refer to https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
+Julin had very clear and short explanation of what WGCNA is doing for network analysis, read it! 
 ```{r}
 enableWGCNAThreads()
 
 load("~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
-dim(vstMat.f2.A.WGCNA) 
+dim(vstMat.f2.A.WGCNA) #  16181    79 
 
 # transform expression data 
 head(vstMat.f2.A.WGCNA[,1:6])
@@ -235,9 +236,10 @@ text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 # choose 6 
 softPower <- 6
 adjacency <- adjacency(vstMat.f2.A.WGCNA.t, power = softPower)
-# Turn adjacency into topological overlap, topological overlap leads to a network distance measure 
-TOM <- TOMsimilarity(adjacency); # add system.time() here next time 
-dissTOM <- 1-TOM 
+# Turn adjacency into topological overlap, topological overlap leads to a network distance measure
+dim(adjacency) # 16181 16181 
+TOM <- system.time(TOMsimilarity(adjacency)); # add system.time() here next time. Calculation of the topological overlap matrix from a given adjacency matrix. 
+dissTOM <- 1-TOM  
 
 # Call the hierarchical clustering fCRction
 geneTree <- hclust(as.dist(dissTOM), method = "average")
@@ -268,8 +270,8 @@ plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
 
 
 # merge similar modules
-# Calculate eigengenes
-MEList <- moduleEigengenes(vstMat.f2.A.WGCNA.t, colors = dynamicColors)
+# Calculate eigengenes 
+MEList <- moduleEigengenes(vstMat.f2.A.WGCNA.t, colors = dynamicColors) # Calculates module eigengenes (1st principal component) of modules in a given single dataset. 
 MEs <- MEList$eigengenes
 # Calculate dissimilarity of module eigengenes
 MEDiss <- 1-cor(MEs);
@@ -292,7 +294,7 @@ merge = mergeCloseModules(vstMat.f2.A.WGCNA.t, dynamicColors, cutHeight = MEDiss
 # The merged module colors
 mergedColors = merge$colors
 # Eigengenes of the new merged modules:
-mergedMEs = merge$newMEs
+mergedMEs = merge$newMEs 
 
 # compare pre and post merge
 
@@ -314,7 +316,7 @@ MEs = mergedMEs
 save(MEs, file = "~/F2/output/network_analysis/MEs_batchA.Rdata")
 ```
 
-### relate modules to trait and identify important genes 
+### relate modules to trait and identify important genes, still following https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
 ```{r}
 load("~/F2/output/network_analysis/MEs_batchA.Rdata")
 load("~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
@@ -366,7 +368,7 @@ MEs %>%
 dim(ME.blups.F2.A) # 79 99 (43 + 55 +1"line")
 colnames(ME.blups.F2.A)
 
-blups.cor <- cor(ME.blups.F2.A[,57:99], ME.blups.F2.A[,1:55], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info 
+blups.cor <- cor(ME.blups.F2.A[,57:99], ME.blups.F2.A[,1:55], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info, calculate correlation between eigengene and trait value
 blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.f2.A.WGCNA.t))
 blups.cor.sig <- blups.cor
 blups.cor.sig[blups.cor.P>0.05] <- NA 
@@ -393,9 +395,9 @@ labeledHeatmap(Matrix = blups.cor,
                setStdMargins = FALSE,
                cex.text = 0.5,
                zlim = c(-1,1),
-               main = paste("F2 A Module-trait relationships")) 
+               main = paste("F2 A Module-trait relationships")) # this figure shows the correlation between traits and eigene gene of different modules, only correlation with P-value smaller than 0.05 were shown with correlation value 
 
-dev.off()  
+dev.off()   
 
 # again follow Julin's method 
 # Arbitrary, but let's take the max and min for each trait (so long as they are significant)
@@ -428,7 +430,7 @@ write.csv(MEs, file = "~/F2/output/network_analysis/All_Eigen_genes_F2_A.csv")
 ### get eigen gene QTL
 follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/get_eigengene_QTL.Rmd 
 
-"What are the QTL for eigen genes? Eigen genes were computed from WGCNA clusters. I am taking the top eigen genes that were correlated with growth model traits and determining eQTL for these." 
+"What are the QTL for eigen genes? Eigen genes were computed from WGCNA clusters. I am taking the top eigen genes that were correlated with growth model traits and determining eQTL for these." Actually here QTL for all 56 modules were calculated... 
 
 ```{r}
 library(qtl)    
@@ -473,7 +475,7 @@ alphas <- seq(0.01, 0.10, by = 0.01)
 lod.thrs <- summary(permtest.F2.A, alphas)
 lod.thrs  
 
-save(cross.F2.A, scanone_eigen.F2.A, permtest.F2.A, lod.thrs, file = "~/F2/output/network_analysis/scanone-eigengene-qtl_F2_A.RData") 
+save(cross.F2.A, scanone_eigen.F2.A, permtest.F2.A, lod.thrs, file = "~/F2/output/network_analysis/scanone-eigengene-qtl_F2_A.RData") # this is the QTL result for all 55 modules, no matter whether significant correlation were identified with trait or not. 
 ```
 
 ### analyze eigengene QTL 
@@ -595,7 +597,7 @@ eigen.qtl.combined %>% dim()
 unique(traitQTL.annotated$trait)
 unique(eigen.qtl.combined$trait)  
 
-### tomorrow to do, understand the whole process and re-run with batch info considered... 
+### tomorrow to do, understand the whole process and re-run with batch info considered...  
 ```
 
 
