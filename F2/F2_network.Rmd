@@ -238,7 +238,7 @@ softPower <- 6
 adjacency <- adjacency(vstMat.f2.A.WGCNA.t, power = softPower)
 # Turn adjacency into topological overlap, topological overlap leads to a network distance measure
 dim(adjacency) # 16181 16181 
-TOM <- system.time(TOMsimilarity(adjacency)); # add system.time() here next time. Calculation of the topological overlap matrix from a given adjacency matrix. 
+TOM <- TOMsimilarity(adjacency); # add system.time() here next time. Calculation of the topological overlap matrix from a given adjacency matrix. 
 dissTOM <- 1-TOM  
 
 # Call the hierarchical clustering fCRction
@@ -364,6 +364,7 @@ MEs$line
 ME.blups.F2.A <- 
 MEs %>% 
   left_join(blups.F2.A, by = "line") 
+save(ME.blups.F2.A, file = "~/F2/output/network_analysis/ME.blups.F2.A.Rdata")
 
 dim(ME.blups.F2.A) # 79 99 (43 + 55 +1"line")
 colnames(ME.blups.F2.A)
@@ -572,7 +573,7 @@ eigen.annotated <- lapply(1:nrow(bayesint.result),function(row) { # for each tra
   qtl <- bayesint.result[row,]  
   results <- subset(BnapusAnnotation, chrom==qtl$chr &
                     start >= qtl$start & # genes which fall into the QTL interval 
-                    end <= qtl$end)
+                    end <= qtl$end) 
 } 
 )  
 names(eigen.annotated) <- bayesint.result$trait  
@@ -595,28 +596,104 @@ eigen.qtl.combined %>% head()
 eigen.qtl.combined %>% dim() 
 
 unique(traitQTL.annotated$trait)
-unique(eigen.qtl.combined$trait)  
+unique(eigen.qtl.combined$trait)   
 
 ### tomorrow to do, understand the whole process and re-run with batch info considered...  
-```
+```  
 
+### gene relationship to trait and important modules: gene significance and module membership
 
+For each module,define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Also quantify associations of individual genes with our trait of interest by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. 
 
+```{r}
+load("~/F2/output/network_analysis/ME.blups.F2.A.Rdata")
+load("~/F2/output/vstMat.f2.A.WGCNA.Rdata")
+dim(vstMat.f2.A.WGCNA) #  16181    79 
 
+# transform expression data 
+head(vstMat.f2.A.WGCNA[,1:6])
+vstMat.f2.A.WGCNA.t <- t(vstMat.f2.A.WGCNA)
+head(vstMat.f2.A.WGCNA.t[,1:6])  
 
+nSamples <- nrow(ME.blups.F2.A)
+# names (colors) of the modules
+modNames <- substring(names(ME.blups.F2.A)[1:55], 3)
+all(rownames(vstMat.f2.A.WGCNA.t) == ME.blups.F2.A$line)
+geneModuleMembership = as.data.frame(cor(vstMat.f2.A.WGCNA.t, ME.blups.F2.A[1:55], use = "p"))
+MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples))
+MMPvalue[1:10, 1:10]
 
+names(geneModuleMembership) = paste("MM", modNames, sep="")
+names(MMPvalue) = paste("p.MM", modNames, sep="");
+geneTraitSignificance = as.data.frame(cor(vstMat.f2.A.WGCNA.t, ME.blups.F2.A[57:99], use = "p"));
+GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
+names(geneTraitSignificance) = paste("GS.", names(ME.blups.F2.A[57:99]), sep="");
+names(GSPvalue) = paste("p.GS.", names(ME.blups.F2.A[57:99]), sep="")
+View(GSPvalue)
 
+###  Intramodular analysis: identifying genes with high GS and MM (do this 43 times to save plot for each trait)
+names(geneTraitSignificance)
+png("~/F2/output/network_analysis/figure/Crude_oil_contents", width=25, height=15, units="in", res=300) 
+par(mfrow=c(8,7))  
 
+for (i in modNames){
+module = i
+column = match(module, modNames);
+moduleGenes = moduleColors==module;
+verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
+  abs(geneTraitSignificance[moduleGenes, "GS.Crude_oil_contents"]),  
+  xlab = paste("Module Membership in", module, "module"),
+  ylab = "Gene significance for body weight", 
+  main = paste("Module membership vs. gene significance\n"), 
+  cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2)
+}   
+dev.off()   ### didn't finish yet, but how to look at the result?  
 
+### summary output of network analysis results
+# We have found modules with high association with our trait of interest, and have identified their central players by the Module Membership measure. 
 
+colnames(vstMat.f2.A.WGCNA.t)[moduleColors=="brown"] 
+BnapusAnnotation %>% head() 
+probes = colnames(vstMat.f2.A.WGCNA.t)
+probes2annot = match(probes, BnapusAnnotation$name)
+# The following is the number or probes without annotation:
+sum(is.na(probes2annot))  # 0 
 
+# Create the starting data frame
+geneInfo0 = data.frame(name = probes,
+            subject = BnapusAnnotation$subject[probes2annot],
+            AGI = BnapusAnnotation$AGI[probes2annot],
+            # At_symbol = BnapusAnnotation$At_symbol[probes2annot],
+            moduleColor = moduleColors,
+            geneTraitSignificance,
+            GSPvalue) 
 
+geneInfo0[1:10, 1:10]
+geneInfo %>% dim() 
+# Order modules by their significance for Erucic acid 
+modOrder = order(-abs(cor(ME.blups.F2.A[1:55], ME.blups.F2.A$Oleic_acid, use = "p")))  # gives the order of modules based on correlation value. 
 
+# Add module membership information in the chosen order
+for (mod in 1:ncol(geneModuleMembership)) # for each module 
+{
+oldNames = names(geneInfo0) 
+geneInfo0 = data.frame(geneInfo0, geneModuleMembership[, modOrder[mod]],
+                      MMPvalue[, modOrder[mod]]); 
+names(geneInfo0) = c(oldNames, paste("MM.", modNames[modOrder[mod]], sep=""),
+paste("p.MM.", modNames[modOrder[mod]], sep="")) 
+}
+# Order the genes in the geneInfo variable first by module color, then by geneTraitSignificance
+geneOrder = order(geneInfo0$moduleColor, -abs(geneInfo0$GS.Oleic_acid));
+geneInfo = geneInfo0[geneOrder, ]  
+geneInfo$name %>% head(100)  
 
+which(geneInfo$name == "BnaA08g11140D") # how to use this information for interpretation... 
 
-
-
-
+###### decided to focus on modules which are highly associated with certain traits 
+### can do GO enrichment of modules which are significantly associated with certain traits. 
+### 
+# use cor.top file can find the modules which are significantly assocaited with certain trait, then can do GO enrichment of those different modules and find genes which are of high GS and MM. 
+``` 
 
 
 
