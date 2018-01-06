@@ -8,14 +8,15 @@ output: html_document
 Goal of this script is to build networks for B.napus F2 RNAseq data using WGCNA, referred to Julin's analysis on his rapa data https://github.com/MaloofLab/BrapaNetworks 
 
 ### load libs
-```{r}
-library(WGCNA)
+```{r} 
+library(WGCNA) 
 library(tidyverse) 
 library(edgeR)
 library(DESeq2)
 library(magrittr) 
 library(gplots)
 library(reshape2)
+library(sva) 
 options(stringsAsFactors = FALSE)  
 ```
 
@@ -57,6 +58,7 @@ F2.sample <- data.frame(batch = factor(batch_info$batch),
 # remove lowly expressed genes 
 read.count.small <- read_count_F2[rowSums(read_count_F2 > 10) >= 166*0.25,]
 dim(read.count.small) # 56180   166   
+save(read.count.small, file = "~/F2/output/network_analysis/read.count.small.F2.Rdata")
 
 # Normalize
 dge.F2 <- DGEList(counts = read.count.small, group = F2.sample$genotype)
@@ -74,7 +76,7 @@ dge.F2$samples %>%
 # get sepereate gene expression data for A+C and B 
 # A+C 
 read_count_F2.AC <- read_count_F2[,colnames(read_count_F2) %in% batch_info$sample_ID[batch_info$batch == "A" | batch_info$batch == "C"]] 
-read_count_F2.AC %>% dim() # 101040    125
+read_count_F2.AC %>% dim() # 101040    125 
 
 # filter lowly expressed genes 
 read.count.small.F2.AC <- read_count_F2.AC[rowSums(read_count_F2.AC > 10) >= 125*0.25,]
@@ -114,6 +116,8 @@ distance_matrix$Row.names
 
 # merge with batch info 
 batch_info %>% head()
+save(batch_info, file = "~/F2/output/network_analysis/batch_info.Rdata")
+
 colnames(distance_matrix)[1] <- "sample_ID"
 distance_matrix.all <- merge(distance_matrix, batch_info, by = "sample_ID")
 
@@ -184,14 +188,54 @@ dim(DEgene.F2) # 16181    82
 ### pick genes which have differential expression across samples for WGCNA (FDR < 1e-05)
 vstMat.f2.A.WGCNA <- vstMat.f2.A[rownames(vstMat.f2.A) %in% rownames(DEgene.F2),]
 dim(vstMat.f2.A.WGCNA) # 16181    79 
-save(vstMat.f2.A.WGCNA, file ="~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
+save(vstMat.f2.A.WGCNA, file ="~/F2/output/vstMat.f2.A.WGCNA.Rdata")   
+```
+
+### correct batch effect 
+```{r}
+load("~/F2/output/vstMat.f2.Rdata") 
+load("~/F2/output/network_analysis/batch_info.Rdata")
+
+# check vst transformed data to see is there any batch effect. 
+vstMat.f2 %>% dim() # 56180 
+test1 <- as.matrix(dist(t(vstMat.f2)))  
+
+#perform the multi-dimensional scaling
+test2 <- as.data.frame(cmdscale(test1))
+head(test2) #now we have 2 dimensions 
+plot(test2)
+test2$sample_ID <- rownames(test2)
+test2 %>% 
+  left_join(batch_info, by = "sample_ID") %>% 
+  ggplot() + 
+  geom_point(aes(x = V1, y= V2, color = as.factor(batch))) # bad, clear batch effect   
+
+# correct batch effect 
+vstMat.f2.batch.corrected <- removeBatchEffect(vstMat.f2, batch = batch_info$batch) 
+test1 <- as.matrix(dist(t(vstMat.f2.batch.corrected)))  
+test2 <- as.data.frame(cmdscale(test1))
+test2$sample_ID <- rownames(test2)
+test2 %>% 
+  left_join(batch_info, by = "sample_ID") %>% 
+  ggplot() + 
+  geom_point(aes(x = V1, y= V2, color = as.factor(batch))) # great, batch effect removed 
+save(vstMat.f2.batch.corrected, file = "~/F2/output/network_analysis/vstMat.f2.batch.corrected.Rdata")
+
+# get genes with large stdv across F2 samples, the reason I use this because later on co-expression file were obtained using vst transfomred data directly. 
+vstMat.f2.batch.corrected <- as.data.frame(vstMat.f2.batch.corrected)
+vstMat.f2.batch.corrected$sd <- as.numeric(apply(vstMat.f2.batch.corrected,1,sd))  
+vstMat.f2.batch.corrected.largeSD<-vstMat.f2.batch.corrected[vstMat.f2.batch.corrected$sd>0.5,] 
+dim(vstMat.f2.batch.corrected.largeSD) # 25554   167  
+vstMat.f2.batch.corrected.largeSD <- vstMat.f2.batch.corrected.largeSD[,1:166]
+
+save(vstMat.f2.batch.corrected.largeSD, file = "~/F2/output/network_analysis/vstMat.f2.batch.corrected.largeSD.Rdata")
 ```
 
 ### WGCNA for network  
 refer to https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
 Julin had very clear and short explanation of what WGCNA is doing for network analysis, read it! 
 ```{r}
-enableWGCNAThreads()
+enableWGCNAThreads() 
 
 load("~/F2/output/vstMat.f2.A.WGCNA.Rdata")  
 dim(vstMat.f2.A.WGCNA) #  16181    79 
@@ -692,8 +736,9 @@ which(geneInfo$name == "BnaA08g11140D") # how to use this information for interp
 ###### decided to focus on modules which are highly associated with certain traits 
 ### can do GO enrichment of modules which are significantly associated with certain traits. 
 ### 
-# use cor.top file can find the modules which are significantly assocaited with certain trait, then can do GO enrichment of those different modules and find genes which are of high GS and MM. 
+# use cor.top file can find the modules which are significantly assocaited with certain trait, then can do GO enrichment of those different modules and find genes which are of high GS and MM.  
 ``` 
+
 
 
 

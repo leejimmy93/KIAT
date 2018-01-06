@@ -376,7 +376,7 @@ genDist <- as.matrix(dist(geno.numeric.2))
 
 #perform the multi-dimensional scaling
 geno.mds <- as.data.frame(cmdscale(genDist))
-head(geno.mds) #now we have 2 dimensions
+head(geno.mds) #now we have 2 dimensions 
 dim(geno.mds)
 plot(geno.mds)  
 
