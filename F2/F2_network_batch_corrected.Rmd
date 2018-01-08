@@ -283,10 +283,10 @@ permtest.F2 <- scanone(cross.F2, method = "imp",
                        n.cluster=8)) 
 
 alphas <- seq(0.01, 0.10, by = 0.01)
-lod.thrs <- summary(permtest.F2.A, alphas)
+lod.thrs <- summary(permtest.F2, alphas)
 lod.thrs  
 
-save(cross.F2.A, scanone_eigen.F2.A, permtest.F2.A, lod.thrs, file = "~/F2/output/network_analysis/scanone-eigengene-qtl_F2_A.RData") # this is the QTL result for all 55 modules, no matter whether significant correlation were identified with trait or not. 
+save(cross.F2, scanone_eigen.F2, permtest.F2, lod.thrs, file = "~/F2/output/network_analysis/scanone-eigengene-qtl_F2.RData") # this is the QTL result for all 95 modules, no matter whether significant correlation were identified with trait or not. 
 ```
 
 ### analyze eigengene QTL 
@@ -295,7 +295,7 @@ refer to https://github.com/MaloofLab/BrapaNetworks/blob/master/analyze_eigengen
 The goal is to find QTL peaks for the WGCNA eigen genes and see if those overalp with any trait QTL. We are only focusing on eigen genes that correlated with some growth traits/paramters. 
 
 ```{r}
-load("~/F2/output/network_analysis/scanone-eigengene-qtl_F2_A.RData")    
+load("~/F2/output/network_analysis/scanone-eigengene-qtl_F2.RData")    
 library(stringr) 
 
 # plot QTL 
@@ -303,7 +303,7 @@ threshold.99 <- tibble(perm.threshold=lod.thrs[1,],
                        trait=colnames(lod.thrs)) # 99% threshold  
 
 scanone.gather <-  
-scanone_eigen.F2.A %>% 
+scanone_eigen.F2 %>% 
   gather(key = trait, value = LOD, -chr, -pos) %>% 
   mutate(color=str_sub(trait,3,100)) %>% 
   left_join(threshold.99) 
@@ -314,9 +314,9 @@ pl.CR <- scanone.gather %>%
   geom_hline(aes(yintercept=perm.threshold),lty=2,lwd=.5,alpha=.5) +
   facet_grid(trait ~ chr, scales="free") +
   theme(strip.text.y = element_text(angle=0), axis.text.x = element_text(angle=90)) +
-  ggtitle("F2-A Eigen Gene QTL")
+  ggtitle("F2 Eigen Gene QTL")
 
-pl.CR  
+# pl.CR  
 
 # Look for overlap  
 # For each eigen gene, find QTL borders and look for overlap with trait QTL. For each eigen gene first identify chromosomes with "significant" peaks (in this case > 99% permuation threshold) and then runs bayesint() on them to define the intervals 
@@ -329,7 +329,7 @@ sig.chrs
 
 # now for each significant chromosome/trait combo run bayesint
 bayesint.list <- apply(sig.chrs,1,function(hit) { # for every row("trait, chr, count") in eigengene module 
-    result <- bayesint(scanone_eigen.F2.A[c("chr","pos",hit["trait"])],  
+    result <- bayesint(scanone_eigen.F2[c("chr","pos",hit["trait"])],  
                      chr=hit["chr"], 
                      lodcolumn = 1, 
                      expandtomarkers = TRUE 
@@ -358,26 +358,7 @@ bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine
 bayesint.result 
 
 # annotate eigenene QTL 
-# get annotation file same as what Julin has 
-napus_vs_ara.non_reciprocal <- read.table("~/Reference/B.napus/napus_vs_ara.non_reciprocal.table")
-colnames(napus_vs_ara.non_reciprocal)[1] <- "name"
-napus_vs_ara.non_reciprocal %>% head()
-
-gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
-dim(gff.mRNA) # 101040      4 
-head(gff.mRNA) 
-colnames(gff.mRNA) <- c("chrom", "start", "end", "name")  
-
-BnapusAnnotation <- 
-gff.mRNA %>% 
-  left_join(napus_vs_ara.non_reciprocal) %>% 
-  mutate(subject = ara_ID, AGI = gsub("([[:print:]]+)(.)([[:print:]])", "\\1", ara_ID), At_symbol = description, chrom = gsub("(chr)([[:print:]])", "\\2", chrom)) %>% 
-  dplyr::select(-ara_ID, -description) 
-
-dim(BnapusAnnotation) #  101040      7 
-
-BnapusAnnotation %>% head()
-save(BnapusAnnotation, file = "~/Reference/B.napus/BnapusAnnotation.Rdata")
+load("~/Reference/B.napus/BnapusAnnotation.Rdata")
 
 eigen.annotated <- lapply(1:nrow(bayesint.result),function(row) { # for each trait/module 
   qtl <- bayesint.result[row,]  
@@ -403,7 +384,7 @@ load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata")
 colnames(eigen.annotated.small)[1] <- "module"
 eigen.qtl.combined <- inner_join(eigen.annotated.small,traitQTL.annotated,by=c("eigen_eQTL_candidate"="name")) 
 eigen.qtl.combined %>% head()    
-eigen.qtl.combined %>% dim() 
+eigen.qtl.combined %>% dim() # 11759    11 
 
 unique(traitQTL.annotated$trait)
 unique(eigen.qtl.combined$trait)   
