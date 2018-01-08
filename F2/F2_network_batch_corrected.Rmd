@@ -1,0 +1,413 @@
+---
+title: "F2_network_batch_corrected"
+output: html_document
+---
+
+Goal of this script is to build networks for B.napus F2 RNAseq data using WGCNA, referred to Julin's analysis on his rapa data https://github.com/MaloofLab/BrapaNetworks, this time with batch effect corrected/removed. 
+
+### load libs
+```{r} 
+library(WGCNA) 
+library(tidyverse) 
+library(edgeR)
+library(DESeq2)
+library(magrittr) 
+library(gplots)
+library(reshape2)
+library(sva) 
+options(stringsAsFactors = FALSE)  
+``` 
+
+### WGCNA for network  
+refer to https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
+Julin had very clear and short explanation of what WGCNA is doing for network analysis, read it! 
+```{r}
+enableWGCNAThreads() 
+
+load("~/F2/output/network_analysis/vstMat.f2.batch.corrected.largeSD.Rdata")
+dim(vstMat.f2.batch.corrected.largeSD) #  25554   166 
+
+# transform expression data 
+head(vstMat.f2.batch.corrected.largeSD[,1:6])
+vstMat.f2.batch.corrected.largeSD.t <- t(vstMat.f2.batch.corrected.largeSD)
+head(vstMat.f2.batch.corrected.largeSD.t[,1:6]) 
+save(vstMat.f2.batch.corrected.largeSD.t, file = "~/F2/output/network_analysis/vstMat.f2.batch.corrected.largeSD.t.Rdata")
+
+# check sample quality 
+gag.CR <- goodSamplesGenes(vstMat.f2.batch.corrected.largeSD.t, verbose = 3)
+gag.CR$allOK
+
+# cluster samples to look for outliers
+sampleTREE.CR <- hclust(dist(vstMat.f2.batch.corrected.largeSD.t), method = "average")
+plot(sampleTREE.CR,cex=.6) # should be able to color based on batch, see whether outliers are due to batch effect 
+# heatmap.2(vstMat.f2.A.WGCNA.t,Rowv=as.dendrogram(sampleTREE.CR), scale="col", trace="none")
+# are there spurious sample that seem different from other samples? outliers? 
+
+# soft threshold:  In an unsigned coexpression network, modules correspond to clusters of genes with high absolute correlations. In a signed network, modules correspond to positively correlated genes.
+powers <- c(c(1:10), seq(from = 12, to=30, by=2))
+sft <- pickSoftThreshold(vstMat.f2.batch.corrected.largeSD.t, powerVector = powers, verbose = 5, networkType = "unsigned")
+
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2)) 
+cex1 <- 0.9 
+# Scale-free topology fit index as a fCRction of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"))
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red")
+# this line corresponds to using an R^2 cut-off of h
+abline(h=0.90,col="red")
+# Mean connectivity as a fCRction of the soft-thresholding power
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red") 
+# For this unsigned networks, while I didn't get plautea but 6 is the suggested power to use and it gives me high R squared to fit a scale free network model. 
+
+# choose 6 
+softPower <- 6
+adjacency <- adjacency(vstMat.f2.batch.corrected.largeSD.t, power = softPower)
+# Turn adjacency into topological overlap, topological overlap leads to a network distance measure
+dim(adjacency) # 25554 25554 
+TOM <- TOMsimilarity(adjacency); # add system.time() here next time. Calculation of the topological overlap matrix from a given adjacency matrix. 
+dissTOM <- 1-TOM  
+
+# Call the hierarchical clustering fCRction
+geneTree <- hclust(as.dist(dissTOM), method = "average")
+# Plot the resulting clustering tree (dendrogram)
+sizeGrWindow(12,9)
+plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity",
+     labels = FALSE, hang = 0.04)
+
+# define modules 
+# We like large modules, so we set the minimum module size relatively high:
+minModuleSize <- 30;
+# Module identification using dynamic tree cut:
+dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
+                             deepSplit <- 2, pamRespectsDendro = FALSE,
+                             minClusterSize = minModuleSize);
+table(dynamicMods)
+table(dynamicMods) %>% length() # 99 modules 
+
+# Convert numeric lables into colors
+dynamicColors = labels2colors(dynamicMods)
+table(dynamicColors)
+# Plot the dendrogram and colors CRderneath
+sizeGrWindow(8,6)
+plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05,
+                    main = "Gene dendrogram and module colors")
+
+
+# merge similar modules
+# Calculate eigengenes 
+MEList <- moduleEigengenes(vstMat.f2.batch.corrected.largeSD.t, colors = dynamicColors) # Calculates module eigengenes (1st principal component) of modules in a given single dataset. 
+MEs <- MEList$eigengenes 
+# Calculate dissimilarity of module eigengenes
+MEDiss <- 1-cor(MEs);
+# Cluster module eigengenes
+METree <- hclust(as.dist(MEDiss), method = "average");
+# Plot the result
+sizeGrWindow(7, 6)
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+
+# merge with correlation > 0.8
+
+MEDissThres = 0.2
+# Plot the cut line into the dendrogram
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+abline(h=MEDissThres, col = "red")
+# Call an automatic merging fCRction
+merge = mergeCloseModules(vstMat.f2.batch.corrected.largeSD.t, dynamicColors, cutHeight = MEDissThres, verbose = 3)
+# The merged module colors
+mergedColors = merge$colors
+# Eigengenes of the new merged modules:
+mergedMEs = merge$newMEs 
+
+# compare pre and post merge
+
+sizeGrWindow(12, 9)
+#pdf(file = "Plots/geneDendro-3.pdf", wi = 9, he = 6)
+plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
+c("Dynamic Tree Cut", "Merged dynamic"),
+dendroLabels = FALSE, hang = 0.03,
+addGuide = TRUE, guideHang = 0.05)
+#dev.off()
+
+# Rename to moduleColors
+moduleColors = mergedColors
+# Construct numerical labels corresponding to the colors
+colorOrder = c("grey", standardColors(50));
+moduleLabels = match(moduleColors, colorOrder)-1;
+MEs = mergedMEs
+
+save(MEs, file = "~/F2/output/network_analysis/MEs_batch_corrected.Rdata")
+```
+
+### relate modules to trait and identify important genes, still following https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
+```{r}
+load("~/F2/output/network_analysis/MEs_batch_corrected.Rdata")
+load("~/F2/output/network_analysis/vstMat.f2.batch.corrected.largeSD.t.Rdata")  
+
+# include triat value  
+head(MEs)  
+dim(MEs) # 95 modules, two merged into one after module merge 
+rownames(vstMat.f2.batch.corrected.largeSD.t) 
+rownames(MEs) 
+rownames(MEs) <- rownames(vstMat.f2.batch.corrected.largeSD.t)
+MEs$line <- rownames(MEs)
+
+load("~/F2/data/network_analysis/pheno.t.Rdata")
+
+rownames(pheno.t) <- gsub("ID", "Sample_F2", rownames(pheno.t))
+blups.F2 <- 
+pheno.t[rownames(pheno.t) %in% MEs$line,] 
+
+blups.F2$line <- rownames(blups.F2.A)
+MEs$line 
+
+# merge module & trait values 
+ME.blups.F2 <- 
+MEs %>% 
+  left_join(blups.F2, by = "line") 
+save(ME.blups.F2, file = "~/F2/output/network_analysis/ME.blups.F2.Rdata")
+
+dim(ME.blups.F2) # 166 139 (43 + 95 +1"line")
+colnames(ME.blups.F2)
+
+blups.cor <- cor(ME.blups.F2[,97:139], ME.blups.F2[,1:95], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info, calculate correlation between eigengene and trait value
+blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.f2.batch.corrected.largeSD.t))
+blups.cor.sig <- blups.cor
+blups.cor.sig[blups.cor.P>0.05] <- NA 
+blups.cor.sig 
+
+MEs <- MEs %>% dplyr::select(-line) 
+ME.blups.F2 <- ME.blups.F2 %>% dplyr::select(-line)  
+blups.F2 <- blups.F2 %>% dplyr::select(-line) 
+save(blups.F2, file = "~/F2/output/network_analysis/blups.F2.Rdata")
+
+# plot it 
+# Will display correlations and their p-values
+png(filename = "~/F2/output/network_analysis/Module-trait_heatmap_F2_batch_corrected.png",width=20, height=16, units="in", res=300)
+par(mar = c(8, 5, 3, 3)); 
+# Display the correlation values within a heatmap plot
+labeledHeatmap(Matrix = blups.cor,
+               yLabels = names(blups.F2),
+               xLabels = names(MEs), 
+               xSymbols = names(MEs),
+               ySymbols = names(blups.F2),
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = signif(blups.cor.sig,2),
+               setStdMargins = FALSE,
+               cex.text = 0.5,
+               zlim = c(-1,1),
+               main = paste("F2 Module-trait relationships")) # this figure shows the correlation between traits and eigene gene of different modules, only correlation with P-value smaller than 0.05 were shown with correlation value 
+
+dev.off()   
+
+# again follow Julin's method 
+# Arbitrary, but let's take the max and min for each trait (so long as they are significant)
+
+blups.cor.5 <- blups.cor.sig  
+dim(blups.cor.5) # 43 95 
+
+cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait 
+  maxx = max(x,na.rm=TRUE) 
+  minx = min(x,na.rm=TRUE)
+  ifelse(x == maxx | x == minx, x, NA) # only keep the largest and smallest correlation for each trait 
+}
+)) 
+dim(cor.top) # 43 95 
+
+cor.top <- cor.top[,apply(cor.top,2,function(x) !all(is.na(x)))] # keep modules which have significant correlations with traits
+cor.top %>% dim() # 43 38 
+
+write.csv(cor.top,"~/F2/output/network_analysis/Eigen_trait_cor_F2.5_threshold.csv") 
+
+# write the Eigen genes
+head(MEs[,colnames(cor.top)]) 
+MEs[,colnames(cor.top)] %>% dim # 166 38 get 38 eigen genes for 38 modules which are significantly correlated with traits 
+write.csv(MEs[,colnames(cor.top)], file = "~/F2/output/network_analysis/Top_Eigen_genes_F2.csv")
+
+# write all Eigen genes 
+write.csv(MEs, file = "~/F2/output/network_analysis/All_Eigen_genes_F2.csv")   
+```
+
+### get eigen gene QTL
+follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/get_eigengene_QTL.Rmd 
+
+"What are the QTL for eigen genes? Eigen genes were computed from WGCNA clusters. I am taking the top eigen genes that were correlated with growth model traits and determining eQTL for these." Actually here QTL for all 56 modules were calculated... 
+
+```{r}
+library(qtl)    
+
+eigen.F2 <- read.csv("~/F2/output/network_analysis/Top_Eigen_genes_F2.csv") 
+eigen.all.F2 <- read.csv("~/F2/output/network_analysis/All_Eigen_genes_F2.csv")
+
+colnames(eigen.all.F2) 
+
+eigen.all.t <- eigen.all.F2 %>%
+  select(-X) %>%
+  t() %>%
+  as_tibble %>%
+  dplyr::mutate(id=colnames(eigen.all.F2)[-1]) %>%
+  dplyr::select(id,everything())
+
+colnames(eigen.all.t)[-1] <- eigen.all.F2$X
+
+eigen.all.t[1:10, 1:10] 
+write.csv(eigen.all.t, file = "~/F2/output/network_analysis/Eigen_genes_qtl_input_F2.csv") # revise this file to get Eigen_genes_qtl_input_revised.csv 
+
+cross.F2 <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
+                         phefile = "~/F2/output/network_analysis/Eigen_genes_qtl_input_F2_revised.csv", 
+                         genotypes = c("AA", "AB", "BB"))  
+
+# cross.F2.A <- calc.errorlod(cross.F2.A, error.prob=0.001) 
+
+cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?  
+cross.F2 <- calc.genoprob(cross.F2,step=1)
+
+scanone_eigen.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), 
+	         method = "imp", use = "all.obs")
+
+set.seed(12345) 
+system.time(
+permtest.F2 <- scanone(cross.F2, method = "imp", 
+                       pheno.col = 2:ncol(cross.F2$pheno),
+                       n.perm = 1000,
+                       n.cluster=8)) 
+
+alphas <- seq(0.01, 0.10, by = 0.01)
+lod.thrs <- summary(permtest.F2.A, alphas)
+lod.thrs  
+
+save(cross.F2.A, scanone_eigen.F2.A, permtest.F2.A, lod.thrs, file = "~/F2/output/network_analysis/scanone-eigengene-qtl_F2_A.RData") # this is the QTL result for all 55 modules, no matter whether significant correlation were identified with trait or not. 
+```
+
+### analyze eigengene QTL 
+refer to https://github.com/MaloofLab/BrapaNetworks/blob/master/analyze_eigengene_QTL.Rmd 
+
+The goal is to find QTL peaks for the WGCNA eigen genes and see if those overalp with any trait QTL. We are only focusing on eigen genes that correlated with some growth traits/paramters. 
+
+```{r}
+load("~/F2/output/network_analysis/scanone-eigengene-qtl_F2_A.RData")    
+library(stringr) 
+
+# plot QTL 
+threshold.99 <- tibble(perm.threshold=lod.thrs[1,], 
+                       trait=colnames(lod.thrs)) # 99% threshold  
+
+scanone.gather <-  
+scanone_eigen.F2.A %>% 
+  gather(key = trait, value = LOD, -chr, -pos) %>% 
+  mutate(color=str_sub(trait,3,100)) %>% 
+  left_join(threshold.99) 
+
+pl.CR <- scanone.gather %>% 
+  ggplot(aes(x=pos,y=LOD)) +
+  geom_line() +
+  geom_hline(aes(yintercept=perm.threshold),lty=2,lwd=.5,alpha=.5) +
+  facet_grid(trait ~ chr, scales="free") +
+  theme(strip.text.y = element_text(angle=0), axis.text.x = element_text(angle=90)) +
+  ggtitle("F2-A Eigen Gene QTL")
+
+pl.CR  
+
+# Look for overlap  
+# For each eigen gene, find QTL borders and look for overlap with trait QTL. For each eigen gene first identify chromosomes with "significant" peaks (in this case > 99% permuation threshold) and then runs bayesint() on them to define the intervals 
+
+sig.chrs <- scanone.gather %>% filter(LOD > perm.threshold) %>%
+  group_by(trait,chr) %>% 
+  summarise(count = n()) # this is to get the significant chr ID for each trait 
+
+sig.chrs
+
+# now for each significant chromosome/trait combo run bayesint
+bayesint.list <- apply(sig.chrs,1,function(hit) { # for every row("trait, chr, count") in eigengene module 
+    result <- bayesint(scanone_eigen.F2.A[c("chr","pos",hit["trait"])],  
+                     chr=hit["chr"], 
+                     lodcolumn = 1, 
+                     expandtomarkers = TRUE 
+  )
+  colnames(result)[3] <- "LOD" 
+  result
+}) 
+
+names(bayesint.list) <- sig.chrs$trait
+
+bayesint.list <- lapply(bayesint.list,function(x) 
+                          x %>% 
+                          as.data.frame() %>%
+                          rownames_to_column(var="markername")  %>% # make rownames to column and use "markername" as the colname for the new colomn  
+                          mutate(chr=as.character(chr))
+)
+
+bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine list into tibble 
+  dplyr::select(trait,chr,pos,markername,LOD) %>% 
+  separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
+  group_by(trait,chr) %>% 
+  summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
+  #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
+  mutate(start=ifelse(start==end,max(0,start-20000),start), end=ifelse(start==end,end+20000,end))
+  
+bayesint.result 
+
+# annotate eigenene QTL 
+# get annotation file same as what Julin has 
+napus_vs_ara.non_reciprocal <- read.table("~/Reference/B.napus/napus_vs_ara.non_reciprocal.table")
+colnames(napus_vs_ara.non_reciprocal)[1] <- "name"
+napus_vs_ara.non_reciprocal %>% head()
+
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+head(gff.mRNA) 
+colnames(gff.mRNA) <- c("chrom", "start", "end", "name")  
+
+BnapusAnnotation <- 
+gff.mRNA %>% 
+  left_join(napus_vs_ara.non_reciprocal) %>% 
+  mutate(subject = ara_ID, AGI = gsub("([[:print:]]+)(.)([[:print:]])", "\\1", ara_ID), At_symbol = description, chrom = gsub("(chr)([[:print:]])", "\\2", chrom)) %>% 
+  dplyr::select(-ara_ID, -description) 
+
+dim(BnapusAnnotation) #  101040      7 
+
+BnapusAnnotation %>% head()
+save(BnapusAnnotation, file = "~/Reference/B.napus/BnapusAnnotation.Rdata")
+
+eigen.annotated <- lapply(1:nrow(bayesint.result),function(row) { # for each trait/module 
+  qtl <- bayesint.result[row,]  
+  results <- subset(BnapusAnnotation, chrom==qtl$chr &
+                    start >= qtl$start & # genes which fall into the QTL interval 
+                    end <= qtl$end) 
+} 
+)  
+names(eigen.annotated) <- bayesint.result$trait  
+
+eigen.annotated <- bind_rows(eigen.annotated,.id="trait") %>% # combine list into data.frame 
+  mutate(chrom=as.character(chrom)) %>%
+  left_join(bayesint.result,by=c("trait","chrom"="chr")) #get eQTL LOD
+colnames(eigen.annotated)[5] <- "eigen_eQTL_candidate"
+colnames(eigen.annotated)
+eigen.annotated.small <- eigen.annotated %>% select(trait,eigen_eQTL_candidate,ends_with("LOD"))
+
+eigen.annotated.small %>% head() 
+
+# given bayesint results, find overlaps with trait QTL, need to get genes under QTL for traits 
+load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata")
+
+colnames(eigen.annotated.small)[1] <- "module"
+eigen.qtl.combined <- inner_join(eigen.annotated.small,traitQTL.annotated,by=c("eigen_eQTL_candidate"="name")) 
+eigen.qtl.combined %>% head()    
+eigen.qtl.combined %>% dim() 
+
+unique(traitQTL.annotated$trait)
+unique(eigen.qtl.combined$trait)   
+
+### tomorrow to do, understand the whole process and re-run with batch info considered...  
+```  
+ 
