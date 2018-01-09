@@ -149,8 +149,7 @@ MEs = mergedMEs
 save(MEs, file = "~/F2/output/network_analysis/MEs_batch_corrected.Rdata")
 ```
 
-### GO enrichment of all modules  
-
+### GO enrichment of all modules   
 ```{r}
 load("~/F2/output/network_analysis/vstMat.f2.batch.corrected.largeSD.t.Rdata")
 dim(vstMat.f2.batch.corrected.largeSD.t) # 166 25554   
@@ -174,8 +173,7 @@ lapply(unique(vstMat.f2.batch.corrected.largeSD$module), function(module) {
 names(GO_module) <- unique(vstMat.f2.batch.corrected.largeSD$module)
 GO_module
 
-save(GO_module, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/network_analysis/GO_module.Rdata")
-
+save(GO_module, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/network_analysis/GO_module.Rdata") 
 ```
 
 ### relate modules to trait and identify important genes, still following https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
@@ -265,8 +263,26 @@ MEs[,colnames(cor.top)] %>% dim # 166 38 get 38 eigen genes for 38 modules which
 write.csv(MEs[,colnames(cor.top)], file = "~/F2/output/network_analysis/Top_Eigen_genes_F2.csv")
 
 # write all Eigen genes 
-write.csv(MEs, file = "~/F2/output/network_analysis/All_Eigen_genes_F2.csv")   
-```
+write.csv(MEs, file = "~/F2/output/network_analysis/All_Eigen_genes_F2.csv")  
+
+# check enriched GO terms for correlated clusters 
+load("~/F2/output/network_analysis/GO_module.Rdata")
+load("~/F2/output/network_analysis/blups.cor.sig_F2.Rdata")
+
+blups.cor.sig <- blups.cor.sig %>% as.data.frame()
+
+blups.cor.sig.GO <- 
+lapply(rownames(blups.cor.sig), function(trait) {
+  cor <- blups.cor.sig[trait,][!is.na(blups.cor.sig[trait,])]
+  subset_module <- names(blups.cor.sig[trait,])[!is.na(blups.cor.sig[trait,])] 
+  GO_module <- GO_module[subset_module] 
+  names(GO_module) <- paste(subset_module, cor, sep = ":")
+  GO_module
+})
+
+names(blups.cor.sig.GO) <- rownames(blups.cor.sig)
+### went through the enriched GO term for highly correlated clusters of each trait, didn't find they make too much sense, because cluster green and brown which are fatty acid enriched clusters are correlated with growth trait as well. and modules which are highly correlated with oil traits and growth traits have no enriched GO terms...  
+``` 
 
 ### get eigen gene QTL
 follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/get_eigengene_QTL.Rmd 
@@ -461,7 +477,17 @@ eigen.qtl.combined.final[!is.na(eigen.qtl.combined.final$value),] %>%
   
 View(eigen.qtl.combined.final.result) 
 
+# check GO enriched terms for the important clusters with key driver identified... 
+load("~/F2/output/network_analysis/GO_module.Rdata")
 
-
+GO_module$MEdarkolivegreen
+GO_module$MEdarkorange2
+GO_module$MEdarkviolet
+GO_module$MElightpink3
+GO_module$MElightpink4
+GO_module$MEmaroon
+GO_module$MEpaleturquoise
+GO_module$MEthistle1 
+ 
 ```
 
