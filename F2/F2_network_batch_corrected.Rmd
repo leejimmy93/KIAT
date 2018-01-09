@@ -487,7 +487,26 @@ GO_module$MElightpink3
 GO_module$MElightpink4
 GO_module$MEmaroon
 GO_module$MEpaleturquoise
-GO_module$MEthistle1 
- 
-```
+GO_module$MEthistle1  
+
+eigen.qtl.combined.final %>% dim() 
+eigen.qtl.combined.final$trait%>% unique()
+
+eigen.qtl.combined.final[eigen.qtl.combined.final$trait == "Behenic_acid",]$eigen_eQTL_candidate 
+
+# BnaC03g65980D FAE1; BnaA08g11130D FAE1; BnaA08g11140D; BnaC03g66040D; BnaA08g12780D; BnaA08g12800D; 
+# BnaC03g62710D; BnaC03g65690D; BnaC03g65910D 
+
+test <- c("BnaC03g65980D", "BnaC03g66040D", "BnaC03g62710D", "BnaC03g65690D", "BnaC03g65910D", "BnaC03g65700D")
+
+eigen.qtl.combined.final.result2 <- 
+lapply(unique(eigen.qtl.combined.final$trait), function(trait) {
+  eigen.qtl.combined.final[eigen.qtl.combined.final$trait == trait,]$chrom %>% unique() 
+}) 
+
+names(eigen.qtl.combined.final.result2) <- unique(eigen.qtl.combined.final$trait)
+eigen.qtl.combined.final.result2
+
+###### summary: except for Arachidic_acid show A08 as genetically linked QTL loci for WGCNA modules, Myristic_acid & C06; Palmitic_acid & A08 C03; Linolenic acid & A08 C03; all the other oil traits show C03 as the connected QTL loci for WGCNA modules. For growth traits: 
+``` 
 
