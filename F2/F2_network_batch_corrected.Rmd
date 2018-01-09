@@ -184,11 +184,11 @@ blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.f2.batch.corrected.largeSD
 blups.cor.sig <- blups.cor
 blups.cor.sig[blups.cor.P>0.05] <- NA 
 blups.cor.sig 
+save(blups.cor.sig, file = "~/F2/output/network_analysis/blups.cor.sig_F2.Rdata")
 
 MEs <- MEs %>% dplyr::select(-line) 
 ME.blups.F2 <- ME.blups.F2 %>% dplyr::select(-line)  
 blups.F2 <- blups.F2 %>% dplyr::select(-line) 
-save(blups.F2, file = "~/F2/output/network_analysis/blups.F2.Rdata")
 
 # plot it 
 # Will display correlations and their p-values
@@ -389,6 +389,49 @@ eigen.qtl.combined %>% dim() # 11759    11
 unique(traitQTL.annotated$trait)
 unique(eigen.qtl.combined$trait)   
 
-### tomorrow to do, understand the whole process and re-run with batch info considered...  
+### tomorrow to do, understand the whole process and re-run with batch info considered...   
+save(eigen.qtl.combined, file = "~/F2/output/network_analysis/eigen.qtl.combined_F2.Rdata")
 ```  
- 
+
+### analyze network analysis result further 
+
+Q: for trait which have QTL genes overlapped with eigengene QTL genes, are those module/eigengene significantly associated with those traits?  
+
+```{r}
+eigen.F2 <- read.csv("~/F2/output/network_analysis/Top_Eigen_genes_F2.csv") 
+load("~/F2/output/network_analysis/eigen.qtl.combined_F2.Rdata")
+# read.csv(file = "~/F2/output/network_analysis/Eigen_trait_cor_F2.5_threshold.csv")
+load("~/F2/output/network_analysis/blups.cor.sig_F2.Rdata")
+
+cor.top <- read.csv(file = "~/F2/output/network_analysis/Eigen_trait_cor_F2.5_threshold.csv") 
+# so there should be two modules with non-NA significance value for each trait, confirm this! 
+sapply(1:nrow(cor.top), function(i) sum(!is.na(cor.top[i,]))) %>% 
+  length() # Caprylic_acid only have one module with significant correlation 
+
+# for each trait-module combination, add correlation value as an extra column   
+blups.cor.sig.2 <- 
+blups.cor.sig %>% 
+  melt() %>% 
+  mutate(feature = paste(Var1, Var2, sep = "-")) %>% 
+  dplyr::select(value, feature) 
+
+eigen.qtl.combined.2 <- 
+eigen.qtl.combined %>% 
+  mutate(feature = paste(trait, module, sep = "-")) 
+  
+eigen.qtl.combined.final <- 
+eigen.qtl.combined.2 %>% 
+  left_join(blups.cor.sig.2, by = "feature")  
+
+# make a summary file of how the correlation look like for each trait and module combination with genes specified 
+eigen.qtl.combined.final.result <- 
+eigen.qtl.combined.final[!is.na(eigen.qtl.combined.final$value),] %>% 
+  group_by(module, trait, value) %>% 
+  summarise()
+  
+View(eigen.qtl.combined.final.result)
+
+### GO enrichment of the several important modules 
+
+```
+
