@@ -673,7 +673,7 @@ geneTraitSignificance = as.data.frame(cor(vstMat.f2.A.WGCNA.t, ME.blups.F2.A[57:
 GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
 names(geneTraitSignificance) = paste("GS.", names(ME.blups.F2.A[57:99]), sep="");
 names(GSPvalue) = paste("p.GS.", names(ME.blups.F2.A[57:99]), sep="")
-View(GSPvalue)
+View(GSPvalue) 
 
 ###  Intramodular analysis: identifying genes with high GS and MM (do this 43 times to save plot for each trait)
 names(geneTraitSignificance)
@@ -715,16 +715,16 @@ geneInfo0 = data.frame(name = probes,
 geneInfo0[1:10, 1:10]
 geneInfo %>% dim() 
 # Order modules by their significance for Erucic acid 
-modOrder = order(-abs(cor(ME.blups.F2.A[1:55], ME.blups.F2.A$Oleic_acid, use = "p")))  # gives the order of modules based on correlation value. 
+modOrder = order(-abs(cor(ME.blups.F2.A[1:55], ME.blups.F2.A$Oleic_acid, use = "p")))  # gives the order of modules based on correlation value.  
 
 # Add module membership information in the chosen order
 for (mod in 1:ncol(geneModuleMembership)) # for each module 
 {
 oldNames = names(geneInfo0) 
 geneInfo0 = data.frame(geneInfo0, geneModuleMembership[, modOrder[mod]],
-                      MMPvalue[, modOrder[mod]]); 
+                      MMPvalue[, modOrder[mod]]);  
 names(geneInfo0) = c(oldNames, paste("MM.", modNames[modOrder[mod]], sep=""),
-paste("p.MM.", modNames[modOrder[mod]], sep="")) 
+paste("p.MM.", modNames[modOrder[mod]], sep=""))  
 }
 # Order the genes in the geneInfo variable first by module color, then by geneTraitSignificance
 geneOrder = order(geneInfo0$moduleColor, -abs(geneInfo0$GS.Oleic_acid));

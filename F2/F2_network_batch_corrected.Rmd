@@ -125,10 +125,11 @@ abline(h=MEDissThres, col = "red")
 merge = mergeCloseModules(vstMat.f2.batch.corrected.largeSD.t, dynamicColors, cutHeight = MEDissThres, verbose = 3)
 # The merged module colors
 mergedColors = merge$colors
+save(mergedColors, file = "~/F2/output/network_analysis/mergedColors.Rdata")
 # Eigengenes of the new merged modules:
 mergedMEs = merge$newMEs 
 
-# compare pre and post merge
+# compare pre and post merge 
 
 sizeGrWindow(12, 9)
 #pdf(file = "Plots/geneDendro-3.pdf", wi = 9, he = 6)
@@ -146,6 +147,22 @@ moduleLabels = match(moduleColors, colorOrder)-1;
 MEs = mergedMEs
 
 save(MEs, file = "~/F2/output/network_analysis/MEs_batch_corrected.Rdata")
+```
+
+### GO enrichment of all modules  
+
+```{r}
+load("~/F2/output/network_analysis/vstMat.f2.batch.corrected.largeSD.t.Rdata")
+dim(vstMat.f2.batch.corrected.largeSD.t) # 166 25554   
+
+vstMat.f2.batch.corrected.largeSD <- as.data.frame(t(vstMat.f2.batch.corrected.largeSD.t)) 
+vstMat.f2.batch.corrected.largeSD$module <- paste("ME", moduleColors, sep = "")
+
+save(vstMat.f2.batch.corrected.largeSD, file = "~/F2/output/network_analysis/vstMat.f2.batch.corrected.largeSD_2.Rdata")
+# GO enrichment on every module gene cluster (do this on MAC)
+#  
+
+
 ```
 
 ### relate modules to trait and identify important genes, still following https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
@@ -225,7 +242,7 @@ cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait
 dim(cor.top) # 43 95 
 
 cor.top <- cor.top[,apply(cor.top,2,function(x) !all(is.na(x)))] # keep modules which have significant correlations with traits
-cor.top %>% dim() # 43 38 
+cor.top %>% dim() # 43 39 
 
 write.csv(cor.top,"~/F2/output/network_analysis/Eigen_trait_cor_F2.5_threshold.csv") 
 
@@ -429,9 +446,9 @@ eigen.qtl.combined.final[!is.na(eigen.qtl.combined.final$value),] %>%
   group_by(module, trait, value) %>% 
   summarise()
   
-View(eigen.qtl.combined.final.result)
+View(eigen.qtl.combined.final.result) 
 
-### GO enrichment of the several important modules 
+
 
 ```
 
