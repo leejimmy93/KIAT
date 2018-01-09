@@ -247,7 +247,7 @@ p.QUAL.Ae <- p.QUAL.Ae + geom_histogram(aes(log10(QUAL), fill=Ae_gt))
 p.QUAL.Ae <- p.QUAL.Ae + facet_wrap(~Ae_gt, ncol = 1) 
 p.QUAL.Ae <- p.QUAL.Ae +labs(list(x="log10(QUAL)", y="Number of SNPs"))  
 p.QUAL.Ae <- p.QUAL.Ae + theme(legend.position = "none")
-p.QUAL.Ae 
+p.QUAL.Ae  
 
 ggsave(p.QUAL.Ae, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/p.QUAL.Ae.png", height = 4, width = 6) 
 
@@ -2599,10 +2599,7 @@ R500_IMB211.reform$R500_allele_ratio <- round(R500_IMB211.reform$R500_alt.depth/
 hist(R500_IMB211.reform$MAF_R500)
 # hist(R500_IMB211.reform[R500_IMB211.reform$R500_gt=="0/1",]$R500_allele_ratio)
 hist(R500_IMB211.reform[R500_IMB211.reform$R500_gt=="0/1",]$MAF_R500)
-```
-
-
-
+``` 
 
 
 

@@ -1144,7 +1144,7 @@ DEgene.GO.ORA.tissue
 DEgene.GO.ORA.tissue$Term 
 # gt:tissue effect 
 DEgene.GO.ORA.interaction <- GOseq.Bn.ORA(rownames(DEgene.new.interaction))
-DEgene.GO.ORA.interaction$Term 
+DEgene.GO.ORA.interaction$Term  
 save(DEgene.new.gt, DEgene.new.tissue, DEgene.new.interaction, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.new.Rdata")
 
 # draw heatmap for gt & gt:tissue effect genes 

@@ -160,8 +160,21 @@ vstMat.f2.batch.corrected.largeSD$module <- paste("ME", moduleColors, sep = "")
 
 save(vstMat.f2.batch.corrected.largeSD, file = "~/F2/output/network_analysis/vstMat.f2.batch.corrected.largeSD_2.Rdata")
 # GO enrichment on every module gene cluster (do this on MAC)
-#  
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/network_analysis/vstMat.f2.batch.corrected.largeSD_2.Rdata") 
+
+GO_module <- 
+lapply(unique(vstMat.f2.batch.corrected.largeSD$module), function(module) {
+  test <- rownames(vstMat.f2.batch.corrected.largeSD[vstMat.f2.batch.corrected.largeSD$module == module,])
+  tryCatch(
+    GOseq.Bn.ORA(test), error= function(e) NA)
+})
+
+names(GO_module) <- unique(vstMat.f2.batch.corrected.largeSD$module)
+GO_module
+
+save(GO_module, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/network_analysis/GO_module.Rdata")
 
 ```
 
