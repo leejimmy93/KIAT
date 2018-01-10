@@ -174,6 +174,10 @@ names(GO_module) <- unique(vstMat.f2.batch.corrected.largeSD$module)
 GO_module
 
 save(GO_module, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/network_analysis/GO_module.Rdata") 
+
+MEmarron <- vstMat.f2.batch.corrected.largeSD[vstMat.f2.batch.corrected.largeSD$module == "MEmaroon",] %>% rownames()
+MEmarron
+test %in% MEmarron     
 ```
 
 ### relate modules to trait and identify important genes, still following https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
@@ -507,6 +511,6 @@ lapply(unique(eigen.qtl.combined.final$trait), function(trait) {
 names(eigen.qtl.combined.final.result2) <- unique(eigen.qtl.combined.final$trait)
 eigen.qtl.combined.final.result2
 
-###### summary: except for Arachidic_acid show A08 as genetically linked QTL loci for WGCNA modules, Myristic_acid & C06; Palmitic_acid & A08 C03; Linolenic acid & A08 C03; all the other oil traits show C03 as the connected QTL loci for WGCNA modules. For growth traits: 
+###### summary: except for Arachidic_acid show A08 as genetically linked QTL loci for WGCNA modules, Myristic_acid & C06; Palmitic_acid & A08 C03; Linolenic acid & A08 C03; all the other oil traits show C03 as the connected QTL loci for WGCNA modules. For growth traits:  
 ``` 
 

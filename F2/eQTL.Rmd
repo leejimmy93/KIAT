@@ -6,7 +6,7 @@ Purpose of this script is to find loci controlling expression of different genes
 
 ### import lib
 ```{r}
-library(tidyverse)
+library(tidyverse) 
 ```
 
 ### import data, get genes with detectable expression  
@@ -38,8 +38,8 @@ save(vstMat.f2, file = "~/F2/output/vstMat.f2.Rdata")
 ```
 
 ### scale and center
-```{r}
-dim(vstMat.f2) # 56180   166 
+```{r} 
+dim(vstMat.f2) # 56180   166  
 vstMat.f2.centered.scaled <- scale(vstMat.f2, center = TRUE, scale = TRUE) # center to zero
 save(vstMat.f2.centered.scaled, file = "~/F2/output/vstMat.f2.centered.scaled.Rdata")
 ```
