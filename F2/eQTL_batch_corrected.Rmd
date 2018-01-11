@@ -34,18 +34,23 @@ cross.F2 <- calc.genoprob(cross.F2,step=1)
 scanone_eQTL.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), 
 	         method = "imp", use = "all.obs")
 
-### permutation... 
-set.seed(12345)  
-system.time(
-permtest.F2 <- scanone(cross.F2, method = "imp", 
-                       pheno.col = 2:ncol(cross.F2$pheno),
-                       n.perm = 1000,
-                       n.cluster=8)) 
+### permutation...  
+set.seed(12345)   
+permtest.F2 <- scanone(cross.F2, method = "imp", n.perm = 10000)  
 
 alphas <- seq(0.01, 0.10, by = 0.01)
 lod.thrs <- summary(permtest.F2, alphas)
 lod.thrs  
 
-save(cross.F2, scanone_eigen.F2, permtest.F2, lod.thrs, file = "~/F2/output/network_analysis/scanone-eigengene-qtl_F2.RData") # this is the QTL result for all 95 modules, no matter whether significant correlation were identified with trait or not.  
+
+# set.seed(12345) 
+# permtest <- scanone(brass_total, method = "imp", n.perm = 10000)
+# permtest
+# alphas <- seq(0.01, 0.10, by = 0.01)
+# lod.thrs <- summary(permtest, alphas)
+# lod.thrs # 1% cutoff 3.84, 5 to be more conservative
+
+
+save(cross.F2, scanone_eigen.F2, permtest.F2, lod.thrs, file = "~/F2/output/network_analysis/scanone-eigengene-qtl_F2.RData") # this is the QTL result for all 95 modules, no matter whether significant correlation were identified with trait or not.   
 ```
 

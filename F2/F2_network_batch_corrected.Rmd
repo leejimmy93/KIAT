@@ -15,7 +15,7 @@ library(magrittr)
 library(gplots)
 library(reshape2)
 library(sva) 
-options(stringsAsFactors = FALSE)  
+options(stringsAsFactors = FALSE)   
 ``` 
 
 ### WGCNA for network  
@@ -175,9 +175,30 @@ GO_module
 
 save(GO_module, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/network_analysis/GO_module.Rdata") 
 
-MEmarron <- vstMat.f2.batch.corrected.largeSD[vstMat.f2.batch.corrected.largeSD$module == "MEmaroon",] %>% rownames()
-MEmarron
+MEmarron <- vstMat.f2.batch.corrected.largeSD[vstMat.f2.batch.corrected.largeSD$module == "MEmaroon",] %>% rownames() 
+MEmarron # +-
 test %in% MEmarron     
+MEdarkolivegreen <- vstMat.f2.batch.corrected.largeSD[vstMat.f2.batch.corrected.largeSD$module == "MEdarkolivegreen",] %>% rownames() # +-
+MEdarkolivegreen
+MEthistle <- vstMat.f2.batch.corrected.largeSD[vstMat.f2.batch.corrected.largeSD$module == "MEthistle",] %>% rownames() # -+
+MEthistle
+MEbrown4 <- vstMat.f2.batch.corrected.largeSD[vstMat.f2.batch.corrected.largeSD$module == "MEbrown4",] %>% rownames() # -+
+MEdarkolivegreen4 <- vstMat.f2.batch.corrected.largeSD[vstMat.f2.batch.corrected.largeSD$module == "MEdarkolivegreen4",] %>% rownames() # -+ 
+MEdarkolivegreen4
+MEdarkorange2 <- vstMat.f2.batch.corrected.largeSD[vstMat.f2.batch.corrected.largeSD$module == "MEdarkorange2",] %>% rownames() #-+ 
+MEdarkorange2
+
+imp_modules <- list(MEmarron, MEdarkolivegreen, MEthistle, MEbrown4, MEdarkolivegreen4, MEdarkorange2)
+lapply(1:length(imp_modules), function(module) {
+  FAE_FAD %in% module
+})
+FAE_FAD
+
+for (i in FAE_FAD){
+  print(vstMat.f2.batch.corrected.largeSD[i,]$module) 
+}
+
+vstMat.f2.batch.corrected.largeSD["BnaAnng34160D",]
 ```
 
 ### relate modules to trait and identify important genes, still following https://github.com/MaloofLab/BrapaNetworks/blob/master/WGCNA_CR.Rmd 
@@ -241,6 +262,44 @@ labeledHeatmap(Matrix = blups.cor,
                main = paste("F2 Module-trait relationships")) # this figure shows the correlation between traits and eigene gene of different modules, only correlation with P-value smaller than 0.05 were shown with correlation value 
 
 dev.off()   
+
+# only show the several highly associated modules and the real traits 
+non_traits <- c("Weight_of_survey", "Number_of_survey_seeds", "No__of_Transplanting_plants", "No__of_Survival_plant")
+
+traits <- names(blups.F2)[!(names(blups.F2) %in% non_traits)]
+
+MEs.sub <- 
+MEs %>% 
+  dplyr::select(MEdarkolivegreen:MEmaroon, MEdarkturquoise:MEthistle1) # module line correlation 
+
+blups.cor.sig.sub <- 
+blups.cor.sig %>% 
+   dplyr::select(MEdarkolivegreen:MEmaroon, MEdarkturquoise:MEthistle1) # 
+blups.cor.sig.sub  <- blups.cor.sig.sub[traits,] 
+
+blups.cor.sub <- 
+  blups.cor %>% 
+  as.data.frame() %>% 
+  dplyr::select(MEdarkolivegreen:MEmaroon, MEdarkturquoise:MEthistle1)
+blups.cor.sub <- blups.cor.sub[traits,]
+
+png(filename = "~/F2/output/network_analysis/Module-trait_heatmap_F2_batch_corrected_sub.png",width=12, height=8, units="in", res=300)
+par(mar = c(10, 13, 3, 2)); # bottom, left, top, right 
+# Display the correlation values within a heatmap plot
+labeledHeatmap(Matrix = blups.cor.sub,
+               yLabels = traits,
+               xLabels = names(MEs), 
+               xSymbols = names(MEs),
+               ySymbols = traits,
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = signif(blups.cor.sig.sub,2),
+               setStdMargins = FALSE,
+               cex.text = 0.5,
+               zlim = c(-1,1),
+               main = paste("F2 Module-trait relationships")) # this figure shows the correlation between traits and eigene gene of different modules, only correlation with P-value smaller than 0.05 were shown with correlation value 
+
+dev.off()  
 
 # again follow Julin's method 
 # Arbitrary, but let's take the max and min for each trait (so long as they are significant)
@@ -369,11 +428,11 @@ pl.CR <- scanone.gather %>%
 # pl.CR  
 
 # Look for overlap  
-# For each eigen gene, find QTL borders and look for overlap with trait QTL. For each eigen gene first identify chromosomes with "significant" peaks (in this case > 99% permuation threshold) and then runs bayesint() on them to define the intervals 
+# For each eigen gene, find QTL borders and look for overlap with trait QTL. For each eigen gene first identify chromosomes with "significant" peaks (in this case > 99% permuation threshold) and then runs esint() on them to define the intervals 
 
 sig.chrs <- scanone.gather %>% filter(LOD > perm.threshold) %>%
   group_by(trait,chr) %>% 
-  summarise(count = n()) # this is to get the significant chr ID for each trait 
+  dplyr::summarise(count = n()) # this is to get the significant chr ID for each trait 
 
 sig.chrs
 
@@ -401,7 +460,7 @@ bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine
   dplyr::select(trait,chr,pos,markername,LOD) %>% 
   separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
   group_by(trait,chr) %>% 
-  summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
+  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
   #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
   mutate(start=ifelse(start==end,max(0,start-20000),start), end=ifelse(start==end,end+20000,end))
   
@@ -424,9 +483,18 @@ eigen.annotated <- bind_rows(eigen.annotated,.id="trait") %>% # combine list int
   left_join(bayesint.result,by=c("trait","chrom"="chr")) #get eQTL LOD
 colnames(eigen.annotated)[5] <- "eigen_eQTL_candidate"
 colnames(eigen.annotated)
-eigen.annotated.small <- eigen.annotated %>% select(trait,eigen_eQTL_candidate,ends_with("LOD"))
+eigen.annotated.small <- eigen.annotated %>% dplyr::select(trait,eigen_eQTL_candidate,ends_with("LOD"))
 
 eigen.annotated.small %>% head() 
+######### just to check ########
+test <- 
+eigen.annotated.small %>% 
+  filter(trait == "MEmaroon" | trait == "MEdarkolivegreen" | trait == "MEdarkolivegreen4" | trait == "MEthistle" | trait == "MEbrown4" | trait =="MEdarkorange2") %>% 
+  dplyr::select(eigen_eQTL_candidate) 
+
+FAE_FAD %in% test$eigen_eQTL_candidate 
+BnaC03g63890D # FAE and FAD genes are not either within gene clusters or 
+########## just to check ######## 
 
 # given bayesint results, find overlaps with trait QTL, need to get genes under QTL for traits 
 load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata")
@@ -501,7 +569,7 @@ eigen.qtl.combined.final[eigen.qtl.combined.final$trait == "Behenic_acid",]$eige
 # BnaC03g65980D FAE1; BnaA08g11130D FAE1; BnaA08g11140D; BnaC03g66040D; BnaA08g12780D; BnaA08g12800D; 
 # BnaC03g62710D; BnaC03g65690D; BnaC03g65910D 
 
-test <- c("BnaC03g65980D", "BnaC03g66040D", "BnaC03g62710D", "BnaC03g65690D", "BnaC03g65910D", "BnaC03g65700D")
+FAE_FAD <- c("BnaC03g65980D", "BnaC03g66040D", "BnaC03g67820D", "BnaA08g11130D", "BnaA08g11140D", "BnaA0812780D", "BnaA08g12800D")
 
 eigen.qtl.combined.final.result2 <- 
 lapply(unique(eigen.qtl.combined.final$trait), function(trait) {
@@ -510,7 +578,14 @@ lapply(unique(eigen.qtl.combined.final$trait), function(trait) {
 
 names(eigen.qtl.combined.final.result2) <- unique(eigen.qtl.combined.final$trait)
 eigen.qtl.combined.final.result2
-
+View(eigen.qtl.combined.final.result) 
 ###### summary: except for Arachidic_acid show A08 as genetically linked QTL loci for WGCNA modules, Myristic_acid & C06; Palmitic_acid & A08 C03; Linolenic acid & A08 C03; all the other oil traits show C03 as the connected QTL loci for WGCNA modules. For growth traits:  
 ``` 
+
+### test 
+```{r}
+scanone_eigen.F2 %>% 
+  dplyr::select(chr, pos, MEdarkorange2) %>% 
+  plot() 
+```
 
