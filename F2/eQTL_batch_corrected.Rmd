@@ -25,32 +25,28 @@ write.csv(vstMat.f2.batch.corrected, file = "~/F2/output/network_analysis/vstMat
 
 cross.F2 <- read.cross("csvsr", genfile =  "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
                          phefile = "~/F2/output/network_analysis/vstMat.f2.batch.corrected_revised.csv",
-                         genotypes = c("AA", "AB", "BB"))   
-
+                         genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
 
 cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?  
-cross.F2 <- calc.genoprob(cross.F2,step=1)
+cross.F2 <- calc.genoprob(cross.F2,step=1) 
 
 scanone_eQTL.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), 
-	         method = "imp", use = "all.obs")
+	         method = "imp", use = "all.obs") 
 
 ### permutation...  
 set.seed(12345)   
-permtest.F2 <- scanone(cross.F2, method = "imp", n.perm = 10000)  
+permtest.F2 <- scanone(cross.F2, pheno.col = 2, method = "imp", n.perm = 10000)  
 
-alphas <- seq(0.01, 0.10, by = 0.01)
-lod.thrs <- summary(permtest.F2, alphas)
-lod.thrs  
+alphas <- seq(0.01, 0.10, by = 0.01) 
+lod.thrs <- summary(permtest.F2, alphas) 
+lod.thrs   
 
+save(cross.F2, scanone_eQTL.F2, permtest.F2, lod.thrs, file = "~/F2/output/eQTL/scanone-eqtl_F2.RData") 
+```
 
-# set.seed(12345) 
-# permtest <- scanone(brass_total, method = "imp", n.perm = 10000)
-# permtest
-# alphas <- seq(0.01, 0.10, by = 0.01)
-# lod.thrs <- summary(permtest, alphas)
-# lod.thrs # 1% cutoff 3.84, 5 to be more conservative
+### determine cis- and trans- eQTL 
+```{r}
 
 
-save(cross.F2, scanone_eigen.F2, permtest.F2, lod.thrs, file = "~/F2/output/network_analysis/scanone-eigengene-qtl_F2.RData") # this is the QTL result for all 95 modules, no matter whether significant correlation were identified with trait or not.   
 ```
 
