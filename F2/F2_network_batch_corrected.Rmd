@@ -15,7 +15,7 @@ library(magrittr)
 library(gplots)
 library(reshape2)
 library(sva) 
-options(stringsAsFactors = FALSE)   
+options(stringsAsFactors = FALSE)    
 ``` 
 
 ### WGCNA for network  

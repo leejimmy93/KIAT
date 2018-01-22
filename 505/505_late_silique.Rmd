@@ -3638,8 +3638,26 @@ Auto %>%
 
 Auto %>% 
   dplyr::select(-name) %>% 
-  apply(2, sd) 
+  apply(2, sd)  
+```
 
+### check indel effect 
+```{r}
+# get snpEff annotation for the 505.vcf then extract BnaA08g11130D and BnaC03g65980D related annotations 
+BnaA08g11130D <- read.table("~/505/vcf_late_silique_131_sample/combined/BnaA08g11130D", as.is=T,na.strings = ".")
+BnaC03g65980D <- read.table("~/505/vcf_late_silique_131_sample/combined/BnaC03g65980D", as.is=T,na.strings = ".")
+load("~/505/output/131_sample/SNP.Erucic.Oleic.Unique.Rdata")
+SNP.Erucic.Oleic.unique %>% dim() # 235 2 
+SNP.Erucic.Oleic.unique %>% colnames() 
+
+FAE1 <- rbind(BnaA08g11130D, BnaC03g65980D)
+FAE1 %>% dim() 
+
+colnames(FAE1)[1:2] <- c("CHROM", "POS")
+
+SNP.Erucic.Oleic.unique %>% 
+  semi_join(FAE1) %>% 
+  dim() # no common items, all of them were filtered out because of either not being SNP or low quality  
 ```
 
 
