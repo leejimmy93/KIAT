@@ -47,7 +47,7 @@ save(vstMat.f2.centered.scaled, file = "~/F2/output/vstMat.f2.centered.scaled.Rd
 ### get fatty acid & lipid genes 
 ```{r}
 load("~/F2/output/vstMat.f2.centered.scaled.Rdata") 
-vstMat.f2.centered.scaled[1:10, 1:10]
+vstMat.f2.centered.scaled[1:10, 1:10] 
 
 # get lipid and fatty acid related genes using GO and IPR term 
 # cat Brassica_napus_IPR.withdescription.gz | grep "fatty\|lipid" > fatty_acid_related/lipid_fatty_acid_IPR

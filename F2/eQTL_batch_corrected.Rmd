@@ -6,10 +6,10 @@ output: html_document
 Purpose of this script is to find loci controlling expression of different genes. We will firstly focus on fatty acid related genes. this version does not do scale and center, also batch effect were corrected. 
 
 ### import lib
-```{r}
+```{r} 
 library(tidyverse) 
 library(qtl)
-library(snowfall)
+library(snowfall) 
 library(ggrepel) 
 library(Biostrings)
 source("~/KIAT/function_BnRNAseq.R")
@@ -148,12 +148,58 @@ save(cis_eQTL, trans_eQTL, file = "~/F2/output/eQTL/cis_trans_result_new.Rdata")
 ```{r}
 # trait QTL using scanone result 
 load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata")
+load("~/F2/output/eQTL/cis_trans_result_new.Rdata")
 
+cis_eQTL %>% dim() # 8512   10 
+trans_eQTL %>% dim() # 13869    10 
 
+cis_eQTL.qtl.combined <- inner_join(cis_eQTL,traitQTL.annotated,by=c("gene_ID"="name")) 
+cis_eQTL.qtl.combined %>% head()    
+cis_eQTL.qtl.combined %>% dim() # 2484   17  
+
+colnames(cis_eQTL.qtl.combined) 
+
+trans_eQTL.qtl.combined <- inner_join(trans_eQTL,traitQTL.annotated,by=c("gene_ID"="name")) 
+trans_eQTL.qtl.combined %>% head()    
+trans_eQTL.qtl.combined %>% dim() # 2165    17 
+
+cis_eQTL.qtl.combined %>% 
+  dplyr::select(trait.x, gene_ID, trait.y, subject, At_symbol) %>% 
+  View()
+
+cis_eQTL.qtl.combined %>% 
+  # dplyr::select(trait.x, gene_ID, trait.y, subject, At_symbol) %>% 
+  filter(trait.y == "Erucic_acid") %>% 
+  dplyr::select(start.y, end.y)
+
+napus_GO <- read.table("~/Reference/B.napus/Brassica_napus_GO", stringsAsFactors = F)
+colnames(napus_GO)[1] <- "gene_ID"
+napus_GO %>% 
+  group_by(gene_ID) %>% 
+  dplyr::summarise(count = n()) 
+
+# sapply(unique(napus_GO$gene_ID), function(i) 
+#   )
+
+test <- 
+napus_GO %>% 
+  dplyr::filter(gene_ID == "BnaA01g00010D") 
+
+test %>% 
+  summarise(paste(V2, collapse = ";")) 
+
+test
+```
+
+### make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position 
+```{r}
 
 ```
 
+### tran-eQTL hotspot 
+```{r}
 
+```
 
 
 
