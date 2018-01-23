@@ -810,7 +810,7 @@ gff.cis_eQTL_final <- GRanges(seqnames = Rle(cis_eQTL_final$snp_chrom),ranges = 
 gff.cis_eQTL_final
 
 cis_eQTL_trait <- mergeByOverlaps(gff.trait_qtl_result.final, gff.cis_eQTL_final) 
-cis_eQTL_trait <- cis_eQTL_trait %>% as.data.frame() 
+cis_eQTL_trait <- cis_eQTL_trait %>% as.data.frame()  
 
 napus_vs_ara.non_reciprocal <- read.table("~/Reference/B.napus/napus_vs_ara.non_reciprocal.table")
 head(napus_vs_ara.non_reciprocal)

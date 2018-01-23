@@ -286,7 +286,7 @@ load("~/Desktop/Brassica_project/KIAT_RNA_seq/F1/data/F1.young.gene.Ae_ratio.Rda
 
 Calcaulte  total and Ae counts because this is what (I think) we want to work with in the binomial model
 ```{r}
-F1.young.gene.Ae_ratio %>% head()
+F1.young.gene.Ae_ratio %>% head() 
 F1.young.gene.Ae_ratio <-  F1.young.gene.Ae_ratio %>%  
   mutate(total_F1_414.counts=F1_414_RO+F1_414_AO, # total count 
          total_F1_415.counts=F1_415_RO+F1_415_AO,

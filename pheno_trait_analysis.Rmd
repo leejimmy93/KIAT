@@ -1,0 +1,24 @@
+---
+title: "phone_trait_analysis"
+author: "Ruijuan Li"
+date: "1/22/2018"
+output: html_document
+---
+
+Goal of this script is to summarize the trait values, caculate heritability, as well as correlation/heatmap for different traits 
+
+### summary of trait values
+```{r}
+
+```
+
+### heritability 
+```{r}
+
+```
+
+### correlation & heatmap for different traits 
+```{r}
+
+```
+
