@@ -147,8 +147,8 @@ save(cis_eQTL, trans_eQTL, file = "~/F2/output/eQTL/cis_trans_result_new.Rdata")
 ### find overlaps between eQTL & trait QTL  
 ```{r}
 # trait QTL using scanone result 
-load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata")
-load("~/F2/output/eQTL/cis_trans_result_new.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/traitQTL.annotated.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/cis_trans_result_new.Rdata")
 
 cis_eQTL %>% dim() # 8512   10 
 trans_eQTL %>% dim() # 13869    10 
@@ -161,34 +161,38 @@ colnames(cis_eQTL.qtl.combined)
 
 trans_eQTL.qtl.combined <- inner_join(trans_eQTL,traitQTL.annotated,by=c("gene_ID"="name")) 
 trans_eQTL.qtl.combined %>% head()    
-trans_eQTL.qtl.combined %>% dim() # 2165    17 
-
-cis_eQTL.qtl.combined %>% 
-  dplyr::select(trait.x, gene_ID, trait.y, subject, At_symbol) %>% 
-  View()
-
-cis_eQTL.qtl.combined %>% 
-  # dplyr::select(trait.x, gene_ID, trait.y, subject, At_symbol) %>% 
-  filter(trait.y == "Erucic_acid") %>% 
-  dplyr::select(start.y, end.y)
-
-napus_GO <- read.table("~/Reference/B.napus/Brassica_napus_GO", stringsAsFactors = F)
+trans_eQTL.qtl.combined %>% dim() # 2165    17  
+  
+napus_GO <- read.table("~/Desktop/Brassica_project/reference/Brassica_napus_GO", stringsAsFactors = F)
 colnames(napus_GO)[1] <- "gene_ID"
+
+napus_GO_combined <- 
 napus_GO %>% 
   group_by(gene_ID) %>% 
-  dplyr::summarise(count = n()) 
+  summarise(paste(V2, collapse = ";"))  
 
-# sapply(unique(napus_GO$gene_ID), function(i) 
-#   )
+colnames(napus_GO_combined)[2] <- "B.napus_GO_term"
+colnames(cis_eQTL.qtl.combined)
 
-test <- 
-napus_GO %>% 
-  dplyr::filter(gene_ID == "BnaA01g00010D") 
+cis_eQTL.qtl.combined.final <- 
+cis_eQTL.qtl.combined %>% 
+  left_join(napus_GO_combined) %>% 
+  mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
+  dplyr::select(-c(start.x, end.x, start.y, end.y)) 
+  
+trans_eQTL.qtl.combined.final <- 
+trans_eQTL.qtl.combined %>% 
+  left_join(napus_GO_combined) %>% 
+  mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
+  dplyr::select(-c(start.x, end.x, start.y, end.y)) 
 
-test %>% 
-  summarise(paste(V2, collapse = ";")) 
+trans_eQTL.qtl.combined.final
+write.csv(cis_eQTL.qtl.combined.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/cis_eQTL.qtl.combined.final.csv")
 
-test
+write.csv(trans_eQTL.qtl.combined.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/trans_eQTL.qtl.combined.final.csv") 
+
+### make some plot for several important genes 
+
 ```
 
 ### make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position 
