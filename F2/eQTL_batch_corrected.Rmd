@@ -215,30 +215,24 @@ trans_eQTL.qtl.combined %>%
   mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
   dplyr::select(-c(start.x, end.x, start.y, end.y)) 
 
-<<<<<<< HEAD
 trans_eQTL.qtl.combined.final$B.napus_GO_term 
 write.csv(cis_eQTL.qtl.combined.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/cis_eQTL.qtl.combined.final.csv")
-=======
+
 trans_eQTL.qtl.combined.final 
 write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")
->>>>>>> a9fa049aa1c49bd6a1d88340e9bec82a7c3e99a6
 
 write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/trans_eQTL.qtl.combined.final.csv") 
 
-<<<<<<< HEAD
 ### make some plot for several important genes 
 # the two FAE 
 
 # the two 
-```
-=======
 ### make some table & plot for several important genes 
 # 1) Fatty acid/flowering/growth related genes for cis-eQTL final list 
 View(cis_eQTL.qtl.combined.final[grep("lipid|fatty", cis_eQTL.qtl.combined.final$GO_des),])  
 
 # 2) transcription factor coding genes for cis-eQTL final list
 View(cis_eQTL.qtl.combined.final[grep("DNA|nucleotide|transcription", cis_eQTL.qtl.combined.final$GO_des),])  
->>>>>>> a9fa049aa1c49bd6a1d88340e9bec82a7c3e99a6
 
 # 3) Fatty acid/flowering/growth related genes for trans-eQTL final list  
 View(trans_eQTL.qtl.combined.final[grep("lipid|fatty", trans_eQTL.qtl.combined.final$GO_des),])   
@@ -353,9 +347,23 @@ ggsave(p.transeQTL_hotspot, filename = "~/F2/output/eQTL/p.transeQTL_hotspot.png
 
 ### GO enrichment of trans-eQTL for different phenotypic traits, do this on MAC 
 ```{r}
-load("~/F2/output/eQTL/cis_trans_result_new.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 
+dim(cis_eQTL.qtl.combined.final) # 2484   18 
+dim(trans_eQTL.qtl.combined.final) #2165   18
 
+trans_eQTL.qtl.combined.final %>% colnames()
+trans_eQTL.qtl.combined.final %>% head()
+
+GO_trans_eQTL <- 
+lapply(unique(trans_eQTL.qtl.combined.final$trait.y), function(trait) {
+  test <- trans_eQTL.qtl.combined.final$trait.x[trans_eQTL.qtl.combined.final$trait.y == trait]
+  tryCatch(
+    GOseq.Bn.ORA(test), error= function(e) NA)
+})
+
+names(GO_trans_eQTL) <- unique(trans_eQTL.qtl.combined.final$trait.y) # no enriched GO terms, probably due to those cis-like trans-eQTL's existence.   
 ```
 
 
