@@ -947,16 +947,16 @@ bayesint.list <- lapply(bayesint.list,function(x)
 ) 
 
 bayesint.list 
-bayesint.list %>% length()
+bayesint.list %>% length() # 28 
 
 bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine list into tibble 
   dplyr::select(trait,chr,pos,markername,LOD) %>% 
   separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
   group_by(trait,chr) %>% 
-  summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
+  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
   #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
   mutate(start=ifelse(start==end,max(0,start-20000),start), end=ifelse(start==end,end+20000,end))
-  
+
 bayesint.result %>% dim() # 28 6 
 
 # annotate eigenene QTL  
@@ -980,7 +980,7 @@ traitQTL.annotated %>%
   mutate(start = start.y, end = end.y) %>% 
   dplyr::select(-start.x, -end.x, -start.y, -end.y, -min_eQTL_LOD, -max_eQTL_LOD) 
 
-save(traitQTL.annotated, file = "~/F2/output/QTL_analysis/traitQTL.annotated.Rdata")
+save(traitQTL.annotated, file = "~/F2/output/QTL_analysis/traitQTL.annotated.Rdata") 
 ```
 
 

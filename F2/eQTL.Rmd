@@ -818,7 +818,7 @@ dim(napus_vs_ara.non_reciprocal) # 64949
 
 colnames(napus_vs_ara.non_reciprocal)[1] <- "names"
 
-cis_eQTL_trait.2 <- merge(cis_eQTL_trait, napus_vs_ara.non_reciprocal, by = "names", all.x=T)
+cis_eQTL_trait.2 <- merge(cis_eQTL_trait, napus_vs_ara.non_reciprocal, by = "names", all.x=T) 
 cis_eQTL_trait.2 %>% colnames()
 
 cis_eQTL_trait.final <- 
