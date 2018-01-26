@@ -342,6 +342,10 @@ ggsave(p.transeQTL_hotspot, filename = "~/F2/output/eQTL/p.transeQTL_hotspot.png
 ```{r}
 load("~/F2/output/eQTL/cis_trans_result_new.Rdata")
 
+cis_eQTL %>% dim() # 8512   11 
+trans_eQTL %>% dim() # 13869    11 
+
+
 
 ```
 
