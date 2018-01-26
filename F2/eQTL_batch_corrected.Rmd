@@ -186,13 +186,15 @@ trans_eQTL.qtl.combined %>%
   mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
   dplyr::select(-c(start.x, end.x, start.y, end.y)) 
 
-trans_eQTL.qtl.combined.final
+trans_eQTL.qtl.combined.final$B.napus_GO_term 
 write.csv(cis_eQTL.qtl.combined.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/cis_eQTL.qtl.combined.final.csv")
 
 write.csv(trans_eQTL.qtl.combined.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/trans_eQTL.qtl.combined.final.csv") 
 
 ### make some plot for several important genes 
+# the two FAE 
 
+# the two 
 ```
 
 ### make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position 
