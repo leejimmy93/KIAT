@@ -317,9 +317,41 @@ ggsave(p.eQTL_2mb, filename = "~/F2/output/eQTL/figure/p.eQTL_2mb.png", height =
 * trans-eQTL hotspot better to be plotted from the distribution figure above, but since I cannot get that done correctly due to the problem of my current genetic map. trans-eQTL hotspot, hard to see... 
 
 ```{r}
+load("~/F2/output/eQTL/cis_trans_result_new.Rdata")
 # still need to make histogram to look for trans-eQTL hotspot 
 
-# GO enrichment analysis .... 
+cis_eQTL %>% dim() # 8512   11 
+trans_eQTL %>% dim() # 13869    11 
+
+trans_eQTL$sub <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", trans_eQTL$eQTL_chr) 
+
+trans_eQTL$sub_chrom <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", trans_eQTL$eQTL_chr) 
+
+p.transeQTL_hotspot <- 
+  trans_eQTL %>% 
+  ggplot() + 
+  geom_histogram(aes(x = pos, fill = sub), binwidth = 10) + 
+  facet_grid(sub_chrom ~ sub) +
+  labs(list(title = "", x = "trans-eQTL loci", y = "number of trans-eQTL per cM")) +
+  theme(legend.position = "none")
+
+ggsave(p.transeQTL_hotspot, filename = "~/F2/output/eQTL/p.transeQTL_hotspot.png", height = 8, width = 12)
 ``` 
+
+### GO enrichment of trans-eQTL for different phenotypic traits, do this on MAC 
+```{r}
+load("~/F2/output/eQTL/cis_trans_result_new.Rdata")
+
+
+```
+
+
+
+
+
+
+
+
+
 
 
