@@ -1,5 +1,5 @@
 ---
-title: "phone_trait_analysis"
+title: "pheno_trait_analysis"
 author: "Ruijuan Li"
 date: "1/22/2018"
 output: html_document
@@ -7,13 +7,71 @@ output: html_document
 
 Goal of this script is to summarize the trait values, caculate heritability, as well as correlation/heatmap for different traits 
 
-### summary of trait values
+### growth trait 
 ```{r}
 
 ```
 
+### summary of trait values 
+```{r}
+phefile = read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/F2.pheno.csv", stringsAsFactors = F, row.names = 1, header = F) 
+phefile %>% dim() # 166 44 
+
+phefile <- as.data.frame(t(phefile))  
+
+colnames(phefile)
+rname <- phefile$id %>% as.character()
+
+phefile <- 
+phefile %>% 
+  dplyr::select(-Weight_of_survey, -Number_of_survey_seeds, -No__of_Transplanting_plants, -No__of_Survival_plant, -id)  
+
+phefile <- sapply(colnames(phefile), function(trait) as.numeric(as.character(phefile[,trait])))
+phefile <- as.data.frame(phefile)
+rownames(phefile) <- rname
+
+trait_sd <- sapply(colnames(phefile), function(trait) sd(phefile[,trait], na.rm = T))
+
+### mean, range, sd, histogram 
+trait_summary <- 
+summary(phefile) %>% as.data.frame() %>% 
+  separate(Freq, into=c("class", "value"), sep = ":") %>% 
+  spread(key = class, value = value) %>% 
+  dplyr::select(-Var1) 
+
+colnames(trait_summary)  <- c("trait", "1st_Quantile", "3rd_Quantile", "max", "mean", "median", "min", "missing_data", "to_delete")
+
+trait_summary <- 
+trait_summary %>% 
+  mutate(missing_rate = round(as.numeric(missing_data)/166, 2)) %>% 
+  dplyr::select(mean, median, max, min, missing_rate)  
+
+trait_summary <- 
+as.data.frame(sapply(trait_summary, function(x) 
+   round(as.numeric(x), 2)))
+
+rownames(trait_summary) <- colnames(phefile)
+trait_summary$missing_rate <- ifelse(is.na(trait_summary$missing_rate), 0, trait_summary$missing_rate)
+write.csv(trait_summary, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_summary.csv")
+
+p.trait <- 
+phefile %>% melt() %>% 
+  ggplot() + 
+  geom_histogram(mapping = aes(value), bins = 15, fill = "white", color = "black") +
+  facet_wrap(~variable, scales = "free") + 
+  labs(x = "", y = "number of lines")
+
+ggsave(p.trait, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/p.trait.png", width = 15, height = 10) 
+```
+
 ### heritability 
 ```{r}
+# heritability is formally defined as the proportion of phenotypic variation (VP) that is due to variation in genetic values (VG); Broad-sense heritability, defined as H2 = VG/VP, captures the proportion of phenotypic variation due to genetic values that may include effects due to dominance and epistasis; On the other hand, narrow-sense heritability, h2 = VA/VP, captures only that proportion of genetic variation that is due to additive genetic values (VA).  
+
+library(lme4)
+library(lmerTest)
+
+# I see that Julin have repliates so that heritability can be caculated after fitting a linear model with fixed and random effect, with line effect as random effect. Then using VarCorr() function I can get the amount of variance due to line and the total amount of variance, then H2 can be calculated by deviding the 1st by the 2nd value. However, here I don't have replicates, so how to calculate this???  
 
 ```
 
