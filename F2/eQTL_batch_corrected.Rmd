@@ -356,12 +356,19 @@ dim(trans_eQTL.qtl.combined.final) #2165   18
 trans_eQTL.qtl.combined.final %>% colnames()
 trans_eQTL.qtl.combined.final %>% head()
 
+<<<<<<< HEAD
+cis_eQTL %>% dim() # 8512   11 
+trans_eQTL %>% dim() # 13869    11 
+
+
+=======
 GO_trans_eQTL <- 
 lapply(unique(trans_eQTL.qtl.combined.final$trait.y), function(trait) {
   test <- trans_eQTL.qtl.combined.final$trait.x[trans_eQTL.qtl.combined.final$trait.y == trait]
   tryCatch(
     GOseq.Bn.ORA(test), error= function(e) NA)
 })
+>>>>>>> 5cc63181f800a1a6ec73b24621ab52f98911a3fa
 
 names(GO_trans_eQTL) <- unique(trans_eQTL.qtl.combined.final$trait.y) # no enriched GO terms, probably due to those cis-like trans-eQTL's existence.   
 ```
