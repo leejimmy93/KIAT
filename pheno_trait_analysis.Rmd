@@ -62,6 +62,7 @@ phefile %>% melt() %>%
   labs(x = "", y = "number of lines")
 
 ggsave(p.trait, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/p.trait.png", width = 15, height = 10) 
+save(phefile, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
 ```
 
 ### heritability 
@@ -77,6 +78,62 @@ library(lmerTest)
 
 ### correlation & heatmap for different traits 
 ```{r}
+# pairs plot for different oil composition trait, flowering trait, and growth related trait 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
 
+trait_cor <- round(cor(phefile, use = "pairwise.complete.obs"), digits = 2) 
+# show pair of traits whose correlation are above 0.5 
+high.cor.pair(trait_cor, threshold = 0.5)
+
+write.csv(trait_cor, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_cor.csv")
+
+# heatmap 
+library(devtools)
+# install_github("raivokolde/pheatmap")
+library(pheatmap)
+library(RColorBrewer)
+rownames(phefile) <- gsub("(Sample_)([[:print:]]+)", "\\2", rownames(phefile))
+
+# change color scheme later on??? 
+png(filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_heatmap.png",width=22, height=6, units="in", res=300)
+par(mar = c(3, 3, 3, 3))
+pheatmap(as.matrix(t(scale(phefile))),
+     scale="row",
+     clustering_method = "average", 
+     # cellheight = 10,
+     # cellwidth = 5,
+     border_color=NA,
+     fontsize_row = 6, 
+     legend = F
+)   
+dev.off()    
+```
+
+### appendix function for this script 
+```{r}
+### function to extract pair of traits with high correlation 
+high.cor.pair <- function(correlation, threshold){ 
+
+  dup.cordinate <- 
+    which(abs(correlation) >= threshold & lower.tri(correlation), arr.ind = T, useNames = F) 
+  cor.value <- 
+    correlation[which(abs(correlation) >= threshold & lower.tri(correlation), 
+                      arr.ind = T, useNames = F)] 
+
+  # dup.number <- length(unique(c(dup.cordinate[,1], dup.cordinate[,2])))
+  dup.cordinate.df <- as.data.frame(dup.cordinate)
+  dup.cordinate.df$V3 <- cor.value
+  sample.ID <- colnames(correlation) 
+
+  # extract duplicate pair information based on their coordicate
+  output <- data.frame(matrix(nrow = nrow(dup.cordinate.df), ncol = 3))
+  for (i in 1:nrow(dup.cordinate.df)){ 
+    output[i,1] <- sample.ID[dup.cordinate.df[i,1]]
+    output[i,2] <- sample.ID[dup.cordinate.df[i,2]]
+    output[i,3] <- dup.cordinate.df[i,3]
+  }
+
+  output  
+}   
 ```
 
