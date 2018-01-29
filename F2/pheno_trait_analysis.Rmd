@@ -24,7 +24,7 @@ rname <- phefile$id %>% as.character()
 
 phefile <- 
 phefile %>% 
-  dplyr::select(-Weight_of_survey, -Number_of_survey_seeds, -No__of_Transplanting_plants, -No__of_Survival_plant, -id)  
+  dplyr::select(-Weight_of_survey, -Number_of_survey_seeds, -No__of_Transplanting_plants, -No__of_Survival_plant, -id)   
 
 phefile <- sapply(colnames(phefile), function(trait) as.numeric(as.character(phefile[,trait])))
 phefile <- as.data.frame(phefile)
@@ -61,6 +61,7 @@ phefile %>% melt() %>%
   facet_wrap(~variable, scales = "free") + 
   labs(x = "", y = "number of lines")
 
+p.trait 
 ggsave(p.trait, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/p.trait.png", width = 15, height = 10) 
 save(phefile, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
 ```
