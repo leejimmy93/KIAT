@@ -1,0 +1,139 @@
+---
+title: "pheno_trait_analysis"
+author: "Ruijuan Li"
+date: "1/22/2018"
+output: html_document
+---
+
+Goal of this script is to summarize the trait values, caculate heritability, as well as correlation/heatmap for different traits 
+
+### growth trait 
+```{r}
+
+```
+
+### summary of trait values 
+```{r}
+phefile = read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/F2.pheno.csv", stringsAsFactors = F, row.names = 1, header = F) 
+phefile %>% dim() # 166 44 
+
+phefile <- as.data.frame(t(phefile))  
+
+colnames(phefile)
+rname <- phefile$id %>% as.character()
+
+phefile <- 
+phefile %>% 
+  dplyr::select(-Weight_of_survey, -Number_of_survey_seeds, -No__of_Transplanting_plants, -No__of_Survival_plant, -id)  
+
+phefile <- sapply(colnames(phefile), function(trait) as.numeric(as.character(phefile[,trait])))
+phefile <- as.data.frame(phefile)
+rownames(phefile) <- rname
+
+trait_sd <- sapply(colnames(phefile), function(trait) sd(phefile[,trait], na.rm = T))
+
+### mean, range, sd, histogram 
+trait_summary <- 
+summary(phefile) %>% as.data.frame() %>% 
+  separate(Freq, into=c("class", "value"), sep = ":") %>% 
+  spread(key = class, value = value) %>% 
+  dplyr::select(-Var1) 
+
+colnames(trait_summary)  <- c("trait", "1st_Quantile", "3rd_Quantile", "max", "mean", "median", "min", "missing_data", "to_delete")
+
+trait_summary <- 
+trait_summary %>% 
+  mutate(missing_rate = round(as.numeric(missing_data)/166, 2)) %>% 
+  dplyr::select(mean, median, max, min, missing_rate)  
+
+trait_summary <- 
+as.data.frame(sapply(trait_summary, function(x) 
+   round(as.numeric(x), 2)))
+
+rownames(trait_summary) <- colnames(phefile)
+trait_summary$missing_rate <- ifelse(is.na(trait_summary$missing_rate), 0, trait_summary$missing_rate)
+write.csv(trait_summary, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_summary.csv")
+
+p.trait <- 
+phefile %>% melt() %>% 
+  ggplot() + 
+  geom_histogram(mapping = aes(value), bins = 15, fill = "white", color = "black") +
+  facet_wrap(~variable, scales = "free") + 
+  labs(x = "", y = "number of lines")
+
+ggsave(p.trait, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/p.trait.png", width = 15, height = 10) 
+save(phefile, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
+```
+
+### heritability 
+```{r}
+# heritability is formally defined as the proportion of phenotypic variation (VP) that is due to variation in genetic values (VG); Broad-sense heritability, defined as H2 = VG/VP, captures the proportion of phenotypic variation due to genetic values that may include effects due to dominance and epistasis; On the other hand, narrow-sense heritability, h2 = VA/VP, captures only that proportion of genetic variation that is due to additive genetic values (VA).  
+
+library(lme4)
+library(lmerTest)
+
+# I see that Julin have repliates so that heritability can be caculated after fitting a linear model with fixed and random effect, with line effect as random effect. Then using VarCorr() function I can get the amount of variance due to line and the total amount of variance, then H2 can be calculated by deviding the 1st by the 2nd value. However, here I don't have replicates, so how to calculate this???  
+
+```
+
+### correlation & heatmap for different traits 
+```{r}
+# pairs plot for different oil composition trait, flowering trait, and growth related trait 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
+
+trait_cor <- round(cor(phefile, use = "pairwise.complete.obs"), digits = 2) 
+# show pair of traits whose correlation are above 0.5 
+high.cor.pair(trait_cor, threshold = 0.5)
+
+write.csv(trait_cor, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_cor.csv")
+
+# heatmap 
+library(devtools)
+# install_github("raivokolde/pheatmap")
+library(pheatmap)
+library(RColorBrewer)
+rownames(phefile) <- gsub("(Sample_)([[:print:]]+)", "\\2", rownames(phefile))
+
+# change color scheme later on??? 
+png(filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_heatmap.png",width=22, height=6, units="in", res=300)
+par(mar = c(3, 3, 3, 3))
+pheatmap(as.matrix(t(scale(phefile))),
+     scale="row",
+     clustering_method = "average", 
+     # cellheight = 10,
+     # cellwidth = 5,
+     border_color=NA,
+     fontsize_row = 6, 
+     legend = F
+)   
+dev.off()    
+```
+
+### appendix function for this script 
+```{r}
+### function to extract pair of traits with high correlation 
+high.cor.pair <- function(correlation, threshold){ 
+
+  dup.cordinate <- 
+    which(abs(correlation) >= threshold & lower.tri(correlation), arr.ind = T, useNames = F) 
+  cor.value <- 
+    correlation[which(abs(correlation) >= threshold & lower.tri(correlation), 
+                      arr.ind = T, useNames = F)] 
+
+  # dup.number <- length(unique(c(dup.cordinate[,1], dup.cordinate[,2])))
+  dup.cordinate.df <- as.data.frame(dup.cordinate)
+  dup.cordinate.df$V3 <- cor.value
+  sample.ID <- colnames(correlation) 
+
+  # extract duplicate pair information based on their coordicate
+  output <- data.frame(matrix(nrow = nrow(dup.cordinate.df), ncol = 3))
+  for (i in 1:nrow(dup.cordinate.df)){ 
+    output[i,1] <- sample.ID[dup.cordinate.df[i,1]]
+    output[i,2] <- sample.ID[dup.cordinate.df[i,2]]
+    output[i,3] <- dup.cordinate.df[i,3]
+  }
+
+  output  
+}      
+```
+
