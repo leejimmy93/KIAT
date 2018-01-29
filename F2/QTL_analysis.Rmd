@@ -983,6 +983,15 @@ traitQTL.annotated %>%
 save(traitQTL.annotated, file = "~/F2/output/QTL_analysis/traitQTL.annotated.Rdata") 
 ```
 
+```{r}
+phefile = read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", stringsAsFactors = F, header = F) 
+phefile %>% dim()
+
+phefile[phefile$V1 == "Behenic_acid",][,2:167] %>% as.numeric() %>% hist()
+phefile[phefile$V1 == "cis_11_Eicosenoic_acid",][,2:167] %>% as.numeric() %>% hist()
+phefile[phefile$V1 == "Palmitoliec_aicd",][,2:167] %>% as.numeric() %>% hist() 
+```
+
 
 
 
