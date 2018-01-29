@@ -5,14 +5,14 @@ output: html_document
 
 Goal of this script is to build networks for B.napus F2 RNAseq data using WGCNA, referred to Julin's analysis on his rapa data https://github.com/MaloofLab/BrapaNetworks, this time with batch effect corrected/removed. 
 
-### load libs
+### load libs 
 ```{r} 
 library(WGCNA) 
 library(tidyverse) 
 library(edgeR)
 library(DESeq2)
 library(magrittr) 
-library(gplots)
+library(gplots) 
 library(reshape2)
 library(sva) 
 options(stringsAsFactors = FALSE)    

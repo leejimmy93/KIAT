@@ -9,7 +9,83 @@ Goal of this script is to summarize the trait values, caculate heritability, as 
 
 ### growth trait 
 ```{r}
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
 
+height <- read.csv("~/414_growth_model/height/height.best.fitted.summary.csv")
+height %>% dim() # 501 11 
+height[,1:2] %>% head() 
+
+ID <- gsub("(r_ID__I)(\\[)([[:print:]]+)(,Intercept])", "\\3", height$X)[341:506] 
+
+### functions 
+coef_extract <- function(model_summary, ID){
+  coef_Hmax <- model_summary[grep("r_ID__Hmax", model_summary$X) ,"mean"]
+  coef_k <- model_summary[grep("r_ID__k", model_summary$X) ,"mean"] 
+  coef_I <- model_summary[grep("r_ID__I", model_summary$X) ,"mean"] 
+  intercept_Hmax <- model_summary[model_summary$X == "b_Hmax_Intercept", "mean"]
+  intercept_k <- model_summary[model_summary$X == "b_k_Intercept", "mean"]
+  intercept_I <- model_summary[model_summary$X == "b_I_Intercept", "mean"]
+
+  growth_model_trait <- data.frame(line_ID = ID,
+                            Hmax = coef_Hmax + intercept_Hmax,
+                            k = coef_k + intercept_k,
+                            I = coef_I + intercept_I
+                            )
+  return(growth_model_trait)
+}
+
+coef_extract_width <- function(model_summary, ID){
+  
+  model_summary <- width
+  
+  coef_Hmax <- model_summary[grep("r_ID__Hmax", model_summary$X) ,"mean"]
+  coef_k <- model_summary[grep("r_ID__k", model_summary$X) ,"mean"] 
+  coef_delta <- model_summary[grep("r_ID__delta", model_summary$X) ,"mean"] 
+  intercept_Hmax <- model_summary[model_summary$X == "b_Hmax_Intercept", "mean"]
+  intercept_k <- model_summary[model_summary$X == "b_k_Intercept", "mean"]
+  intercept_delta <- model_summary[model_summary$X == "b_delta_Intercept", "mean"]
+
+  growth_model_trait <- data.frame(line_ID = ID,
+                            Hmax = coef_Hmax + intercept_Hmax,
+                            k = coef_k + intercept_k,
+                            delta = coef_delta + intercept_delta
+                            )
+  return(growth_model_trait)
+}
+
+### load all data 
+leaf_number <- read.csv("~/414_growth_model/leaf_number/leaf.n.best.fitted.summary.csv")
+lobe_number <- read.csv("~/414_growth_model/lobe_number/lobe.n.best.fitted.summary.csv")
+width <- read.csv("~/414_growth_model/width/width.best.fitted.summary.csv")
+
+height <- coef_extract(height, ID = ID)
+leaf_number <- coef_extract(leaf_number, ID = ID)
+lobe_number <- coef_extract(lobe_number, ID = ID)
+width <- coef_extract_width(width, ID = ID) 
+
+colnames(height)[2:4] <- paste("height", colnames(height)[2:4], sep = "_")
+colnames(leaf_number)[2:4] <- paste("leaf_number", colnames(leaf_number)[2:4], sep = "_")
+colnames(lobe_number)[2:4] <- paste("lobe_number", colnames(lobe_number)[2:4], sep = "_")
+colnames(width)[2:4] <- paste("width", colnames(width)[2:4], sep = "_")
+
+growth_model_trait <- 
+height %>% 
+  left_join(leaf_number) %>% 
+  left_join(lobe_number) %>% 
+  left_join(width) 
+
+save(growth_model_trait, file = "~/F2/data/growth_model_trait.Rdata")
+
+p.growth_model_trait <- 
+growth_model_trait %>% melt() %>% 
+  ggplot() + 
+  geom_histogram(mapping = aes(value), bins = 15, fill = "white", color = "black") +
+  facet_wrap(~variable, scales = "free", ncol = 3, nrow = 4) + 
+  labs(x = "", y = "number of lines")
+
+ggsave(p.growth_model_trait, filename = "~/F2/for_paper/p.growth_model_trait.png", width = 7, height = 10)  
 ```
 
 ### summary of trait values 
@@ -108,6 +184,26 @@ pheatmap(as.matrix(t(scale(phefile))),
      legend = F
 )   
 dev.off()    
+
+### correlation for growth model trait 
+load("~/F2/data/growth_model_trait.Rdata")
+dim(growth_model_trait) # 166 13 
+growth_model_trait_cor <- round(cor(growth_model_trait[,2:13], use = "pairwise.complete.obs"), digits = 2) 
+# show pair of traits whose correlation are above 0.5 
+high.cor.pair(growth_model_trait_cor, threshold = 0.5)
+
+png(filename = "~/F2/for_paper/growth_model_trait_heatmap.png",width=8, height=4, units="in", res=300)
+par(mar = c(3, 3, 3, 3))
+pheatmap(as.matrix(t(scale(growth_model_trait[2:13]))),
+     scale="row",
+     clustering_method = "average", 
+     # cellheight = 10,
+     # cellwidth = 5,
+     border_color=NA,
+     fontsize_row = 6, 
+     legend = F
+)   
+dev.off()      
 ```
 
 ### appendix function for this script 
