@@ -1,0 +1,78 @@
+---
+title: "QTL_analysis_growth_model_trait"
+output: html_document
+---
+
+* Goal of this script is to do QTL analysis for growth model traits, including scanone, CIM, and scantwo 
+
+### make seperate phenotype data for QTL analysis 
+```{r}
+library(qtl)
+library(tidyverse)
+
+load("~/F2/data/growth_model_trait.Rdata")
+
+rownames(growth_model_trait) <- growth_model_trait$line_ID
+growth_model_trait <- growth_model_trait[,2:13]
+
+growth_model_trait <- as.data.frame(t(growth_model_trait)) 
+colnames(growth_model_trait)
+
+colnames(growth_model_trait) <- gsub("ID", "Sample_F2", colnames(growth_model_trait))
+
+write.csv(growth_model_trait, file = "~/F2/output/pheno/growth_model_trait.csv") # add id to the 1st colomn 
+```
+
+### scanone & CIM 
+```{r}
+# run the code below on whitney using 
+cross.F2 <- read.cross("csvsr", genfile =  "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
+                         phefile = "~/F2/output/pheno/growth_model_trait.csv",
+                         genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
+
+cross.F2$pheno %>% colnames() # for some reason, id is always read as a phenotype 
+
+cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?  
+cross.F2 <- calc.genoprob(cross.F2,step=1) 
+
+scanone_eQTL.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), 
+	         method = "imp", use = "all.obs") 
+
+scanone_eQTL.F2 %>% colnames()
+plot(scanone_eQTL.F2[,c(1,2,3)])
+
+set.seed(12345)  
+system.time(
+  permtest.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), method = "imp", n.perm = 1000)  
+)
+
+alphas <- seq(0.01, 0.10, by = 0.01) 
+lod.thrs <- summary(permtest.F2, alphas) 
+lod.thrs  
+
+save(scanone_growth_model_trait.F2, lod.thrs, "~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
+
+cim_growth_model_trait.F2 <- cim(cross.F2, n.marcovar=5, pheno.col = 2:ncol(cross.F2$pheno), method = "em")
+
+set.seed(12345)
+system.time(
+  permtest.F2.cim <- cim(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), n.marcovar=5, method = "em", n.perm = 1000)
+)
+
+alphas <- seq(0.01, 0.10, by = 0.01)
+lod.thrs.cim <- summary(permtest.F2.cim, alphas)
+lod.thrs.cim
+
+save(cim_growth_model_trait.F2, lod.thrs.cim, "~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
+```
+
+### scantwo (run on cluster maybe)
+```{r}
+
+```
+
+### get genes under scanone, later to combine with eQTL analysis result 
+```{r}
+
+```
+
