@@ -759,7 +759,8 @@ qtl_plot <- function(input,              # data frame input from scanone
     # increase strip title size
     theme(strip.text = element_text(face = "bold", size = 12)) +
     # use RcolorBrewer palette
-    scale_color_brewer(palette = "Set3") + ### default Set1 gave the best color combination 
+    scale_color_brewer(palette = "Set1") + ### default Set1 gave the best color combination  
+    # scale_color_brewer(palette = "Set3") + ### 
     # no plot 
     theme(legend.position = "bottom") + ### this can be changed 
     # Change plot labels

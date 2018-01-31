@@ -45,11 +45,18 @@ cross.F2$pheno$height_k %>% class()
 cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?  
 cross.F2 <- calc.genoprob(cross.F2,step=1) 
 
-scanone_growth_model_trait.F2 <- scanone(cross.F2, pheno.col = 1:12, 
-	         method = "imp", use = "all.obs") 
+# scanone_growth_model_trait.F2 <- scanone(cross.F2, pheno.col = 1:12, 
+# 	         method = "imp", use = "all.obs") 
 
-scanone_growth_model_trait.F2 %>% colnames()
-plot(scanone_growth_model_trait.F2[,c(1,2,3)])
+system.time(
+scanone_growth_model_trait.F2 <- 
+lapply(seq_along(cross.F2$pheno[1:12]), function(trait) {
+  print(trait)
+  scanone(cross.F2,pheno.col=trait,method="imp")
+}) 
+)
+
+names(scanone_growth_model_trait.F2) <- colnames(cross.F2$pheno[1:12]) 
 
 set.seed(12345)   
 system.time(
@@ -99,7 +106,68 @@ load("~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
 load("~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
 plot(cim_growth_model_trait.F2[[10]][,c(1,2,3)]) 
 
+# make a plot for each trait seperately 
+# make scanone & cim plot for each trait 
+qtl_all <- 
+  lapply(names(cim_growth_model_trait.F2), function(trait) {
+    qtl_plot(input = rbind(data.frame(cim_growth_model_trait.F2[[trait]], method = "cim"), 
+                       data.frame(scanone_growth_model_trait.F2[[trait]], method = "scanone")),
+         lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm[[trait]],
+                                  lod.thrs[5, trait])), 
+         rug = TRUE, 
+         title = trait
+         )  
+  })
 
+plots <- lapply(1:length(qtl_all), function(trait) qtl_all[[trait]]$plot)
+
+paths <- stringr::str_c(names(cim_growth_model_trait.F2), ".pdf") 
+paths
+pwalk(list(paths, plots), ggsave, path = "~/F2/output/growth_model/", width = 15, height = 7) # save on whitney
+
+### plot for the several traits which I have QTL for 
+growth_model_cim <- 
+qtl_plot(input = rbind(data.frame(cim_growth_model_trait.F2[["height_Hmax"]], method = "height_Hmax"), 
+                       data.frame(cim_growth_model_trait.F2[["leaf_number_k"]], method =  "leaf_number_k"),
+                       data.frame(cim_growth_model_trait.F2[["leaf_number_I"]], method =  "leaf_number_I"),  
+                       data.frame(cim_growth_model_trait.F2[["lobe_number_I"]], method =  "lobe_number_I")),  
+         chrs = c("A10", "C01", "C06"), 
+         # lod = c(cim.perm[["days_to_bolt"]]),
+         rug = TRUE, 
+         title = "growth model QTL")
+
+growth_model_cim$plot
+
+growth_model_scanone <- 
+qtl_plot(input = rbind(data.frame(scanone_growth_model_trait.F2[["height_Hmax"]], method = "height_Hmax"), 
+                       data.frame(scanone_growth_model_trait.F2[["leaf_number_k"]], method =  "leaf_number_k"),
+                       data.frame(scanone_growth_model_trait.F2[["leaf_number_I"]], method =  "leaf_number_I"),  
+                       data.frame(scanone_growth_model_trait.F2[["lobe_number_I"]], method =  "lobe_number_I")),  
+         chrs = c("A10", "C01", "C06"), 
+         # lod = c(cim.perm[["days_to_bolt"]]),
+         rug = TRUE, 
+         title = "growth model QTL")
+
+ggsave(growth_model_cim$plot, filename = "~/F2/output/growth_model/growth_model_cim.png", width = 7, height = 4) 
+ggsave(growth_model_scanone$plot, filename = "~/F2/output/growth_model/growth_model_scanone.png", width = 7, height = 4) 
+
+# get summary output for QTL result 
+cim.qtl.result <- 
+lapply(names(cim_growth_model_trait.F2), function(trait) {
+  as.numeric(unique(cim_growth_model_trait.F2[[trait]][(cim_growth_model_trait.F2[[trait]]$lod > cim.perm[[trait]]),]$chr))
+})
+
+im.qtl.result <- 
+lapply(names(scanone_growth_model_trait.F2), function(trait) {
+  as.numeric(unique(scanone_growth_model_trait.F2[[trait]][(scanone_growth_model_trait.F2[[trait]]$lod > lod.thrs[5, trait]),]$chr))
+})
+
+
+names(cim.qtl.result) <- names(cim_growth_model_trait.F2)
+names(im.qtl.result) <- names(scanone_growth_model_trait.F2) 
+unlist(cim.qtl.result)
+unlist(im.qtl.result)  
 
 ```
 
