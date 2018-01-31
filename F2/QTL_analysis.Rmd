@@ -217,7 +217,7 @@ lapply(seq_along(LG.f2.after.crossover$pheno), function(trait) {
 # here we use the interval mapping method "em" as this is how cim was originaly implmented.the n.marcovar= argument defines the maximum number of marker covariates to use.
 names(cim.qtl) <- colnames(LG.f2.after.crossover$pheno)
 
-sfInit(parallel = TRUE, cpus = parallel::detectCores()) 
+sfInit(parallel = TRUE, cpus = parallel::detectCores())  
 sfExport("LG.f2.after.crossover")
 sfLibrary(qtl)  
 

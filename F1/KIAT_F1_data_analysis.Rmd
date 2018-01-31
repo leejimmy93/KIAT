@@ -19,7 +19,7 @@ output: html_document
 
 # 6) reformat summary.all.txt file 
 setwd("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/")
-fastQC_summary <- read.delim("./fastQC_result/summary_all.txt", header = F)
+fastQC_summary <- read.delim("../fastQC_result/summary_all.txt", header = F)
 dim(fastQC_summary)
 head(fastQC_summary)
 tail(fastQC_summary)
@@ -304,7 +304,7 @@ p.DEGs_number_between_gt <- p.DEGs_number_between_gt + geom_bar(mapping = aes(fi
 p.DEGs_number_between_gt <- p.DEGs_number_between_gt + facet_grid(~tissue)
 p.DEGs_number_between_gt <- p.DEGs_number_between_gt + labs(y = "number of differentially expressed genes", x = "")
 
-p.DEGs_number_between_gt
+p.DEGs_number_between_gt 
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/figure/F1/DEGs_number_between_gt.png", width = 6, height = 4)
 
 colnames(fit.F1$design)

@@ -12,7 +12,7 @@ Title: Allelic specific expression
 
 # 5) filter to remove indel & keep biallelic SNPs only
 # https://github.com/leejimmy93/KIAT/blob/master/F1/filter_SNP_biallelic_QUAL.sh
-```
+``` 
 
 ### load libraries 
 ```{r}
@@ -293,7 +293,7 @@ F1.young.gene.Ae_ratio <-  F1.young.gene.Ae_ratio %>%
          Ae_F1_414.counts=Ae_ratio_414*total_F1_414.counts, # Ae count 
          Ae_F1_415.counts=Ae_ratio_415*total_F1_415.counts,
          SNP_ID=str_c(CHROM,POS,sep="_")) %>% # usage of str_c 
-  select(SNP_ID,gene_ID,ends_with("counts"))
+  dplyr::select(SNP_ID,gene_ID,ends_with("counts"))
 
 F1.young.gene.Ae_ratio %>% head()
 ```
@@ -303,13 +303,13 @@ Rearrange the data so that each line is for one SNP in one of the crosses
 Total.counts.long <- F1.young.gene.Ae_ratio %>% 
 gather(key="cross",value="total.counts",total_F1_414.counts,total_F1_415.counts) %>% # the usage of gather 
   mutate(cross=str_extract(cross,"F1_41[45]")) %>% # usage of str_extract()
-  select(-starts_with("Ae")) # usage of -starts_with()
+  dplyr::select(-starts_with("Ae")) # usage of -starts_with()
 Total.counts.long %>% head() 
 
 Ae.counts.long <- F1.young.gene.Ae_ratio %>%
   gather(key="cross",value="Ae.counts",Ae_F1_414.counts,Ae_F1_415.counts) %>%
     mutate(cross=str_extract(cross,"F1_41[45]")) %>%
-select(-starts_with("total"))
+dplyr::select(-starts_with("total"))
 Ae.counts.long %>% head()
 
 F1.counts.long <- full_join(Total.counts.long,Ae.counts.long) # full_join()
