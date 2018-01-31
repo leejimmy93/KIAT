@@ -242,6 +242,12 @@ View(trans_eQTL.qtl.combined.final[grep("lipid|fatty", trans_eQTL.qtl.combined.f
 # 4) figures for the two cis-eQTL gene 
 # BnaA08g11060D & BnaA08g11140D two cis-eQTL gene for fatty acid, need to deal with the color problem... more colors than a single palette can handel... 
 save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
+
+### check whether FLC is cis-regulator for some the traits 
+load("~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
+cis_eQTL.qtl.combined.final %>% 
+  filter(AGI == "AT5G10140") %>% 
+  View() # FLC is cis-regulator  
 ```
 
 ### make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position (omit this part for now because I need to plot genetic position VS physical postion but for some the LG I flipped the physical order, need to discuss this with Julin)

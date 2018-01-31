@@ -8,42 +8,59 @@ output: html_document
 ### make seperate phenotype data for QTL analysis 
 ```{r}
 library(qtl)
-library(tidyverse)
+library(tidyverse) 
 
 load("~/F2/data/growth_model_trait.Rdata")
 
-rownames(growth_model_trait) <- growth_model_trait$line_ID
-growth_model_trait <- growth_model_trait[,2:13]
+growth_model_trait$id <- growth_model_trait$line_ID
+growth_model_trait$id <- gsub("ID", "Sample_F2", growth_model_trait$id)
+growth_model_trait <- growth_model_trait[,2:14]  
 
 growth_model_trait <- as.data.frame(t(growth_model_trait)) 
-colnames(growth_model_trait)
 
-colnames(growth_model_trait) <- gsub("ID", "Sample_F2", colnames(growth_model_trait))
+# make pheno and geno data with matching sample ID 
+genofile <- read.csv("~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv")
+
+colnames(genofile)[4:169]
+as.character(unlist(growth_model_trait["id",]))
+
+growth_model_trait.2 <- growth_model_trait[,match(colnames(genofile)[4:169],as.character(unlist(growth_model_trait["id",])))]
+
+all(colnames(genofile)[4:169]==as.character(unlist(growth_model_trait.2["id",])))
 
 write.csv(growth_model_trait, file = "~/F2/output/pheno/growth_model_trait.csv") # add id to the 1st colomn 
+write.csv(growth_model_trait.2, file = "~/F2/output/pheno/growth_model_trait.2.csv") # modify to the right format for r/qtl 
 ```
 
 ### scanone & CIM 
 ```{r}
 # run the code below on whitney using 
 cross.F2 <- read.cross("csvsr", genfile =   "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
-                         phefile = "~/F2/output/pheno/growth_model_trait.csv",
+                         phefile = "~/F2/output/pheno/growth_model_trait.2.csv",
                          genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
 
 cross.F2$pheno %>% colnames() # for some reason, id is always read as a phenotype 
+cross.F2$pheno$height_k %>% class() 
 
 cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?  
 cross.F2 <- calc.genoprob(cross.F2,step=1) 
 
-scanone_eQTL.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), 
-	         method = "imp", use = "all.obs") 
+# scanone_growth_model_trait.F2 <- scanone(cross.F2, pheno.col = 1:12, 
+# 	         method = "imp", use = "all.obs") 
 
-scanone_eQTL.F2 %>% colnames()
-plot(scanone_eQTL.F2[,c(1,2,3)])
-
-set.seed(12345)  
 system.time(
-  permtest.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), method = "imp", n.perm = 1000)  
+scanone_growth_model_trait.F2 <- 
+lapply(seq_along(cross.F2$pheno[1:12]), function(trait) {
+  print(trait)
+  scanone(cross.F2,pheno.col=trait,method="imp")
+}) 
+)
+
+names(scanone_growth_model_trait.F2) <- colnames(cross.F2$pheno[1:12]) 
+
+set.seed(12345)   
+system.time(
+  permtest.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), method = "imp", n.perm = 1000)   
 )
 
 alphas <- seq(0.01, 0.10, by = 0.01) 
@@ -52,20 +69,107 @@ lod.thrs
 
 save(scanone_growth_model_trait.F2, lod.thrs, file =  "~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
 
-####### error for CIM, leave for later... 
-cim_growth_model_trait.F2 <- cim(cross.F2, n.marcovar=5, pheno.col = 2:ncol(cross.F2$pheno), method = "em")
+# cim was done within screen 
+cim_growth_model_trait.F2 <- 
+lapply(seq_along(cross.F2$pheno[1:12]), function(trait) {
+  print(trait)
+  cim(cross.F2, n.marcovar=5, pheno.col=trait,method="em")
+}) 
 
-set.seed(12345)
-system.time(
-  permtest.F2.cim <- cim(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), n.marcovar=5, method = "em", n.perm = 1000)
-)
+names(cim_growth_model_trait.F2) <- colnames(cross.F2$pheno[1:12])
 
-alphas <- seq(0.01, 0.10, by = 0.01)
-lod.thrs.cim <- summary(permtest.F2.cim, alphas)
-lod.thrs.cim
+sfInit(parallel = TRUE, cpus = 4)
+sfExport("cross.F2")
+sfLibrary(qtl)
 
-save(cim_growth_model_trait.F2, lod.thrs.cim, "~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
+cim.perm <-
+  sfLapply(seq_along(cross.F2$pheno[1:12]), function(trait){
+    message(trait) # message doesn't work in here either
+    tmp <- cim(cross.F2,
+               pheno.col = trait,
+               n.marcovar=5,
+               method="em",
+               n.perm=1000)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes almost 4 hours to finish
+
+sfStop()
+
+names(cim.perm) <- colnames(cross.F2$pheno[1:12]) 
+
+save(cim_growth_model_trait.F2, cim.perm, file = "~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
 ```
+
+### plot scanone & CIM result 
+```{r}
+load("~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
+load("~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
+plot(cim_growth_model_trait.F2[[10]][,c(1,2,3)]) 
+
+# make a plot for each trait seperately 
+# make scanone & cim plot for each trait 
+qtl_all <- 
+  lapply(names(cim_growth_model_trait.F2), function(trait) {
+    qtl_plot(input = rbind(data.frame(cim_growth_model_trait.F2[[trait]], method = "cim"), 
+                       data.frame(scanone_growth_model_trait.F2[[trait]], method = "scanone")),
+         lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm[[trait]],
+                                  lod.thrs[5, trait])), 
+         rug = TRUE, 
+         title = trait
+         )  
+  })
+
+plots <- lapply(1:length(qtl_all), function(trait) qtl_all[[trait]]$plot)
+
+paths <- stringr::str_c(names(cim_growth_model_trait.F2), ".pdf") 
+paths
+pwalk(list(paths, plots), ggsave, path = "~/F2/output/growth_model/", width = 15, height = 7) # save on whitney
+
+### plot for the several traits which I have QTL for 
+growth_model_cim <- 
+qtl_plot(input = rbind(data.frame(cim_growth_model_trait.F2[["height_Hmax"]], method = "height_Hmax"), 
+                       data.frame(cim_growth_model_trait.F2[["leaf_number_k"]], method =  "leaf_number_k"),
+                       data.frame(cim_growth_model_trait.F2[["leaf_number_I"]], method =  "leaf_number_I"),  
+                       data.frame(cim_growth_model_trait.F2[["lobe_number_I"]], method =  "lobe_number_I")),  
+         chrs = c("A10", "C01", "C06"), 
+         # lod = c(cim.perm[["days_to_bolt"]]),
+         rug = TRUE, 
+         title = "growth model QTL")
+
+growth_model_cim$plot
+
+growth_model_scanone <- 
+qtl_plot(input = rbind(data.frame(scanone_growth_model_trait.F2[["height_Hmax"]], method = "height_Hmax"), 
+                       data.frame(scanone_growth_model_trait.F2[["leaf_number_k"]], method =  "leaf_number_k"),
+                       data.frame(scanone_growth_model_trait.F2[["leaf_number_I"]], method =  "leaf_number_I"),  
+                       data.frame(scanone_growth_model_trait.F2[["lobe_number_I"]], method =  "lobe_number_I")),  
+         chrs = c("A10", "C01", "C06"), 
+         # lod = c(cim.perm[["days_to_bolt"]]),
+         rug = TRUE, 
+         title = "growth model QTL")
+
+ggsave(growth_model_cim$plot, filename = "~/F2/output/growth_model/growth_model_cim.png", width = 7, height = 4) 
+ggsave(growth_model_scanone$plot, filename = "~/F2/output/growth_model/growth_model_scanone.png", width = 7, height = 4) 
+
+# get summary output for QTL result 
+cim.qtl.result <- 
+lapply(names(cim_growth_model_trait.F2), function(trait) {
+  as.numeric(unique(cim_growth_model_trait.F2[[trait]][(cim_growth_model_trait.F2[[trait]]$lod > cim.perm[[trait]]),]$chr))
+})
+
+im.qtl.result <- 
+lapply(names(scanone_growth_model_trait.F2), function(trait) {
+  as.numeric(unique(scanone_growth_model_trait.F2[[trait]][(scanone_growth_model_trait.F2[[trait]]$lod > lod.thrs[5, trait]),]$chr))
+})
+
+
+names(cim.qtl.result) <- names(cim_growth_model_trait.F2)
+names(im.qtl.result) <- names(scanone_growth_model_trait.F2) 
+unlist(cim.qtl.result)
+unlist(im.qtl.result)   
+```
+
 
 ### scantwo (run on cluster maybe)
 ```{r}
@@ -73,6 +177,138 @@ save(cim_growth_model_trait.F2, lod.thrs.cim, "~/F2/output/growth_model/cim_grow
 ```
 
 ### get genes under scanone, later to combine with eQTL analysis result 
+```{r}
+load("~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
+
+threshold.95 <- tibble(perm.threshold = as.data.frame(lod.thrs[5,])[,1], 
+                       trait = rownames(as.data.frame(lod.thrs[5,])))
+threshold.95 
+
+scanone.qtl.2 <-  
+bind_cols(scanone_growth_model_trait.F2) %>% 
+  dplyr::select(chr, pos, starts_with("lod"))
+rownames(scanone.qtl.2) <- rownames(scanone_growth_model_trait.F2$height_Hmax)
+colnames(scanone.qtl.2)[3:14] <- names(scanone_growth_model_trait.F2)
+
+scanone.gather <- scanone.qtl.2 %>%
+  gather(key = trait, value = LOD, -chr, -pos) %>%
+  left_join(threshold.95)  
+
+scanone.gather %>% head() 
+
+# look for overlap, for each trait, find QTL border and look for genes under QTL peaks 
+sig.chrs <- scanone.gather %>% dplyr::filter(LOD > perm.threshold) %>%
+  group_by(trait,chr) %>%
+  dplyr::summarise(count = n())
+sig.chrs 
+
+# now for each significant chromosome/trait combo run bayesint
+bayesint.list <- apply(sig.chrs,1,function(hit) { # for every row("trait, chr, count") in eigengene module 
+    result <- bayesint(scanone.qtl.2[c("chr","pos",hit["trait"])],  
+                     chr=hit["chr"], 
+                     lodcolumn = 1, 
+                     expandtomarkers = TRUE 
+  )
+  colnames(result)[3] <- "LOD" 
+  result
+})  
+  
+names(bayesint.list) <- sig.chrs$trait
+
+bayesint.list <- lapply(bayesint.list,function(x)  
+                          x %>% 
+                          as.data.frame() %>%
+                          rownames_to_column(var="markername")  %>% # make rownames to column and use "markername" as the colname for the new colomn  
+                          mutate(chr=as.character(chr))
+) 
+
+bayesint.list 
+bayesint.list %>% length() # 4  
+
+bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine list into tibble 
+  dplyr::select(trait,chr,pos,markername,LOD) %>% 
+  separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
+  group_by(trait,chr) %>% 
+  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
+  #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
+  mutate(start=ifelse(start==end,max(0,start-20000),start), end=ifelse(start==end,end+20000,end))
+
+bayesint.result %>% dim() # 4 6  
+
+# annotate QTL  
+load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
+
+traitQTL.annotated <- lapply(1:nrow(bayesint.result),function(row) { # for each trait/module 
+  qtl <- bayesint.result[row,]  
+  results <- subset(BnapusAnnotation, chrom==qtl$chr &
+                    start >= qtl$start & # genes which fall into the QTL interval 
+                    end <= qtl$end)
+} 
+)  
+names(traitQTL.annotated) <- bayesint.result$trait 
+
+traitQTL.annotated <- bind_rows(traitQTL.annotated,.id="trait") %>% # combine list into data.frame 
+  mutate(chrom=as.character(chrom)) %>%
+  left_join(bayesint.result,by=c("trait","chrom"="chr")) #get eQTL LOD
+
+traitQTL.annotated <- 
+traitQTL.annotated %>% 
+  mutate(start = start.y, end = end.y) %>% 
+  dplyr::select(-start.x, -end.x, -start.y, -end.y, -min_eQTL_LOD, -max_eQTL_LOD)  
+
+growth_modelQTL.annotated <- traitQTL.annotated
+
+save(growth_modelQTL.annotated, file = "~/F2/output/growth_model/growth_modelQTL.annotated.Rdata") 
+
+growth_modelQTL.annotated %>% 
+  # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
+  filter(AGI == "AT5G10140") # cool, FLC gene is on A10   
+```
+
+### eQTL analysis on growth model result 
+
+```{r}
+load("~/F2/output/eQTL/cis_trans_result_new.Rdata") 
+
+cis_eQTL %>% dim() # 8512   11 
+trans_eQTL %>% dim() # 13869    11 
+
+cis_eQTL.qtl.combined <- inner_join(cis_eQTL,growth_modelQTL.annotated,by=c("gene_ID"="name")) 
+cis_eQTL.qtl.combined %>% head()    
+cis_eQTL.qtl.combined %>% dim() # 488   18 
+
+colnames(cis_eQTL.qtl.combined) 
+
+trans_eQTL.qtl.combined <- inner_join(trans_eQTL,growth_modelQTL.annotated,by=c("gene_ID"="name")) 
+trans_eQTL.qtl.combined %>% head()    
+trans_eQTL.qtl.combined %>% dim() # 265    18 
+
+load("~/Reference/B.napus/napus_GO_combined.Rdata")
+napus_GO_combined %>% head()
+
+colnames(cis_eQTL.qtl.combined) 
+
+cis_eQTL.qtl.combined.final <- 
+cis_eQTL.qtl.combined %>% 
+  left_join(napus_GO_combined) %>% 
+  mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
+  dplyr::select(-c(start.x, end.x, start.y, end.y)) 
+  
+trans_eQTL.qtl.combined.final <- 
+trans_eQTL.qtl.combined %>% 
+  left_join(napus_GO_combined) %>% 
+  mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
+  dplyr::select(-c(start.x, end.x, start.y, end.y)) 
+
+cis_eQTL.qtl.combined.final %>% 
+  filter(AGI == "AT5G10140") # cool, FLC gene is cis-regulator for height_Hmax and leaf_number_I 
+
+write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/cis_eQTL.qtl.combined.final.model.csv")
+
+write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/trans_eQTL.qtl.combined.final.model.csv") 
+```
+
+### Go enrichement of trans-eQTL for different traits 
 ```{r}
 
 ```

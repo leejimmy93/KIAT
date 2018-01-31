@@ -12,9 +12,9 @@ Goal of this project: to map QTL using the genetic map that I constructed from F
 library(tidyverse)
 library(qtl)
 library(snowfall)
-library(ggrepel) 
+library(ggrepel)  
 library(Biostrings)
-source("~/KIAT/function_BnRNAseq.R")   
+source("~/KIAT/function_BnRNAseq.R")    
 ```
 
 ### reformat file with geno and pheno info
@@ -981,6 +981,18 @@ traitQTL.annotated %>%
   dplyr::select(-start.x, -end.x, -start.y, -end.y, -min_eQTL_LOD, -max_eQTL_LOD) 
 
 save(traitQTL.annotated, file = "~/F2/output/QTL_analysis/traitQTL.annotated.Rdata") 
+```
+
+### check important genes
+```{r}
+load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata")
+traitQTL.annotated %>% 
+  filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
+  filter(AGI == "AT5G10140") # cool, FLC gene is on A10 
+
+traitQTL.annotated %>% 
+  # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
+  filter(AGI == "AT5G10140") # cool, FLC gene is on A10  
 ```
 
 ```{r}
