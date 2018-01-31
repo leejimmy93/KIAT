@@ -8,42 +8,52 @@ output: html_document
 ### make seperate phenotype data for QTL analysis 
 ```{r}
 library(qtl)
-library(tidyverse)
+library(tidyverse) 
 
 load("~/F2/data/growth_model_trait.Rdata")
 
-rownames(growth_model_trait) <- growth_model_trait$line_ID
-growth_model_trait <- growth_model_trait[,2:13]
+growth_model_trait$id <- growth_model_trait$line_ID
+growth_model_trait$id <- gsub("ID", "Sample_F2", growth_model_trait$id)
+growth_model_trait <- growth_model_trait[,2:14]  
 
 growth_model_trait <- as.data.frame(t(growth_model_trait)) 
-colnames(growth_model_trait)
 
-colnames(growth_model_trait) <- gsub("ID", "Sample_F2", colnames(growth_model_trait))
+# make pheno and geno data with matching sample ID 
+genofile <- read.csv("~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv")
+
+colnames(genofile)[4:169]
+as.character(unlist(growth_model_trait["id",]))
+
+growth_model_trait.2 <- growth_model_trait[,match(colnames(genofile)[4:169],as.character(unlist(growth_model_trait["id",])))]
+
+all(colnames(genofile)[4:169]==as.character(unlist(growth_model_trait.2["id",])))
 
 write.csv(growth_model_trait, file = "~/F2/output/pheno/growth_model_trait.csv") # add id to the 1st colomn 
+write.csv(growth_model_trait.2, file = "~/F2/output/pheno/growth_model_trait.2.csv") # modify to the right format for r/qtl 
 ```
 
 ### scanone & CIM 
 ```{r}
 # run the code below on whitney using 
 cross.F2 <- read.cross("csvsr", genfile =   "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
-                         phefile = "~/F2/output/pheno/growth_model_trait.csv",
+                         phefile = "~/F2/output/pheno/growth_model_trait.2.csv",
                          genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
 
 cross.F2$pheno %>% colnames() # for some reason, id is always read as a phenotype 
+cross.F2$pheno$height_k %>% class() 
 
 cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?  
 cross.F2 <- calc.genoprob(cross.F2,step=1) 
 
-scanone_eQTL.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), 
+scanone_growth_model_trait.F2 <- scanone(cross.F2, pheno.col = 1:12, 
 	         method = "imp", use = "all.obs") 
 
-scanone_eQTL.F2 %>% colnames()
-plot(scanone_eQTL.F2[,c(1,2,3)])
+scanone_growth_model_trait.F2 %>% colnames()
+plot(scanone_growth_model_trait.F2[,c(1,2,3)])
 
-set.seed(12345)  
+set.seed(12345)   
 system.time(
-  permtest.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), method = "imp", n.perm = 1000)  
+  permtest.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), method = "imp", n.perm = 1000)   
 )
 
 alphas <- seq(0.01, 0.10, by = 0.01) 
@@ -52,20 +62,47 @@ lod.thrs
 
 save(scanone_growth_model_trait.F2, lod.thrs, file =  "~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
 
-####### error for CIM, leave for later... 
-cim_growth_model_trait.F2 <- cim(cross.F2, n.marcovar=5, pheno.col = 2:ncol(cross.F2$pheno), method = "em")
+# cim was done within screen 
+cim_growth_model_trait.F2 <- 
+lapply(seq_along(cross.F2$pheno[1:12]), function(trait) {
+  print(trait)
+  cim(cross.F2, n.marcovar=5, pheno.col=trait,method="em")
+}) 
 
-set.seed(12345)
-system.time(
-  permtest.F2.cim <- cim(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), n.marcovar=5, method = "em", n.perm = 1000)
-)
+names(cim_growth_model_trait.F2) <- colnames(cross.F2$pheno[1:12])
 
-alphas <- seq(0.01, 0.10, by = 0.01)
-lod.thrs.cim <- summary(permtest.F2.cim, alphas)
-lod.thrs.cim
+sfInit(parallel = TRUE, cpus = 4)
+sfExport("cross.F2")
+sfLibrary(qtl)
 
-save(cim_growth_model_trait.F2, lod.thrs.cim, "~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
+cim.perm <-
+  sfLapply(seq_along(cross.F2$pheno[1:12]), function(trait){
+    message(trait) # message doesn't work in here either
+    tmp <- cim(cross.F2,
+               pheno.col = trait,
+               n.marcovar=5,
+               method="em",
+               n.perm=1000)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes almost 4 hours to finish
+
+sfStop()
+
+names(cim.perm) <- colnames(cross.F2$pheno[1:12]) 
+
+save(cim_growth_model_trait.F2, cim.perm, file = "~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
 ```
+
+### plot scanone & CIM result 
+```{r}
+load("~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
+load("~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
+plot(cim_growth_model_trait.F2[[10]][,c(1,2,3)]) 
+
+
+
+```
+
 
 ### scantwo (run on cluster maybe)
 ```{r}
