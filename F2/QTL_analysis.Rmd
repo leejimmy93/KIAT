@@ -883,7 +883,7 @@ plot.map(F2.map)
 summaryMap(F2.map) # 2884 
 
 F2.map <- sim.geno(F2.map,step=1,n.draws=32) # imputation  
-F2.map <- calc.genoprob(F2.map,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability? 
+F2.map <- calc.genoprob(F2.map,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability?  
 
 F2.map$pheno %>% colnames()
 # Erucic acid 

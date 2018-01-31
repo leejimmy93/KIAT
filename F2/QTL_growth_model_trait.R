@@ -24,7 +24,7 @@ alphas <- seq(0.01, 0.10, by = 0.01)
 lod.thrs <- summary(permtest.F2, alphas) 
 lod.thrs
 
-save(scanone_growth_model_trait.F2, lod.thrs, "~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
+save(scanone_growth_model_trait.F2, lod.thrs, file="~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
 
 cim_growth_model_trait.F2 <- cim(cross.F2, n.marcovar=5, pheno.col = 2:ncol(cross.F2$pheno), method = "em")  
 
@@ -37,7 +37,7 @@ alphas <- seq(0.01, 0.10, by = 0.01)
 lod.thrs.cim <- summary(permtest.F2.cim, alphas)
 lod.thrs.cim
 
-save(cim_growth_model_trait.F2, lod.thrs.cim, "~/F2/output/growth_model/cim_growth_model_trait.Rdata")
+save(cim_growth_model_trait.F2, lod.thrs.cim, file = "~/F2/output/growth_model/cim_growth_model_trait.Rdata")
 
 
 

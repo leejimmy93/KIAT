@@ -26,7 +26,7 @@ write.csv(growth_model_trait, file = "~/F2/output/pheno/growth_model_trait.csv")
 ### scanone & CIM 
 ```{r}
 # run the code below on whitney using 
-cross.F2 <- read.cross("csvsr", genfile =  "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
+cross.F2 <- read.cross("csvsr", genfile =   "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
                          phefile = "~/F2/output/pheno/growth_model_trait.csv",
                          genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
 
@@ -50,8 +50,9 @@ alphas <- seq(0.01, 0.10, by = 0.01)
 lod.thrs <- summary(permtest.F2, alphas) 
 lod.thrs  
 
-save(scanone_growth_model_trait.F2, lod.thrs, "~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
+save(scanone_growth_model_trait.F2, lod.thrs, file =  "~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
 
+####### error for CIM, leave for later... 
 cim_growth_model_trait.F2 <- cim(cross.F2, n.marcovar=5, pheno.col = 2:ncol(cross.F2$pheno), method = "em")
 
 set.seed(12345)
