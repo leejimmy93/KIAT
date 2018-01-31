@@ -983,6 +983,18 @@ traitQTL.annotated %>%
 save(traitQTL.annotated, file = "~/F2/output/QTL_analysis/traitQTL.annotated.Rdata") 
 ```
 
+### check important genes
+```{r}
+load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata")
+traitQTL.annotated %>% 
+  filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
+  filter(AGI == "AT5G10140") # cool, FLC gene is on A10 
+
+traitQTL.annotated %>% 
+  # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
+  filter(AGI == "AT5G10140") # cool, FLC gene is on A10  
+```
+
 ```{r}
 phefile = read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", stringsAsFactors = F, header = F) 
 phefile %>% dim()
