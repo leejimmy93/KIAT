@@ -201,6 +201,8 @@ dim(napus_GO_combined) # 54264     3
 # napus_GO_combined %>% head() %>% View()
 
 colnames(napus_GO_combined)[2:3] <- c("B.napus_GO_term", "GO_des")
+save(napus_GO_combined, file = "~/Reference/B.napus/napus_GO_combined.Rdata")
+
 colnames(cis_eQTL.qtl.combined)
 
 cis_eQTL.qtl.combined.final <- 

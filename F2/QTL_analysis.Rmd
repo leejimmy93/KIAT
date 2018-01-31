@@ -959,7 +959,7 @@ bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine
 
 bayesint.result %>% dim() # 28 6 
 
-# annotate eigenene QTL  
+# annotate QTL  
 load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
 
 traitQTL.annotated <- lapply(1:nrow(bayesint.result),function(row) { # for each trait/module 
