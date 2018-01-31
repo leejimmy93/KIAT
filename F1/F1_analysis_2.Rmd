@@ -22,7 +22,11 @@ source("~/KIAT/F1/helpler.R")
 
 #YOUNG
 ```{r}
+<<<<<<< HEAD
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output") 
+=======
 setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/")
+>>>>>>> e86ef920425bd59d810b1057aa9752967858fc5e
 
 # ./process_vcf.sh input.vcf input_modified.vcf # to make the right format of vcf file 
 F1.young <- read.vcfR("./project/output/F1_young_filtered.recode.vcf")  
