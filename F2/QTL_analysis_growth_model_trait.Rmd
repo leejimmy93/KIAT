@@ -310,6 +310,22 @@ write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/trans_
 
 ### Go enrichement of trans-eQTL for different traits 
 ```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/growth_model/eQTL.qtl.combined.final.model.Rdata")
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 
+dim(cis_eQTL.qtl.combined.final) # 488   18 
+dim(trans_eQTL.qtl.combined.final) #265   18
+
+trans_eQTL.qtl.combined.final %>% colnames()
+trans_eQTL.qtl.combined.final %>% head()
+
+GO_trans_eQTL <- 
+lapply(unique(trans_eQTL.qtl.combined.final$trait.y), function(trait) {
+  test <- trans_eQTL.qtl.combined.final$trait.x[trans_eQTL.qtl.combined.final$trait.y == trait]
+  tryCatch(
+    GOseq.Bn.ORA(test), error= function(e) NA)
+})
+
+names(GO_trans_eQTL) <- unique(trans_eQTL.qtl.combined.final$trait.y) # no enriched GO terms, probably due to those cis-like trans-eQTL's existence.     
 ```
 
