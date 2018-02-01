@@ -306,6 +306,8 @@ cis_eQTL.qtl.combined.final %>%
 write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/cis_eQTL.qtl.combined.final.model.csv")
 
 write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/trans_eQTL.qtl.combined.final.model.csv") 
+
+save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/eQTL.qtl.combined.final.model.Rdata")  
 ```
 
 ### Go enrichement of trans-eQTL for different traits 
