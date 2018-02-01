@@ -589,7 +589,18 @@ LG.f2.madmapper.after.crossover <- flip.order(LG.f2.madmapper.after.crossover, c
 LG.f2.madmapper.after.crossover <- flip.order(LG.f2.madmapper.after.crossover, chr = "C03")
 
 plotMap(LG.f2.madmapper.after.crossover)
-save(LG.f2.madmapper.after.crossover, file = "~/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.flipped.Rdata") 
-```
+save(LG.f2.madmapper.after.crossover, file = "~/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.flipped.Rdata")  
 
+### write out gen file 
+write.cross(LG.f2.madmapper.after.crossover, format = "csvsr", filestem = "~/F2/output/missing_rate_0.10/LG.f2.madmapper.final.flipped") 
+
+F2_geno_data_2_Ae_Ol_new <- 
+read.table("~/F2/output/missing_rate_0.10/F2_geno_data_2_Ae_Ol_new.txt")
+dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
+
+F2_map <- read.csv("~/F2/output/missing_rate_0.10/LG.f2.madmapper.final.flipped_gen.csv")
+colnames(F2_map)[4:169]  <- gsub("X", "Sample_F2_", colnames(F2_geno_data_2_Ae_Ol_new))
+colnames(F2_map) 
+write.csv(F2_map, file = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv")   
+``` 
 

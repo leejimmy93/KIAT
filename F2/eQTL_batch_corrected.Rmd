@@ -374,12 +374,6 @@ lapply(unique(trans_eQTL.qtl.combined.final$trait.y), function(trait) {
 names(GO_trans_eQTL) <- unique(trans_eQTL.qtl.combined.final$trait.y) # no enriched GO terms, probably due to those cis-like trans-eQTL's existence.    
 ```
 
-### flip LG to get a better plot 
-```{r}
-
-```
-
-
 
 
 
