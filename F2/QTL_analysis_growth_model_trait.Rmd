@@ -67,13 +67,13 @@ sfStop()
 
 names(cim.perm) <- colnames(cross.F2$pheno[1:12]) 
 
-save(cim_growth_model_trait.F2, cim.perm, file = "~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
+save(cim_growth_model_trait.F2, cim.perm, file = "~/F2/output/growth_model/cim_growth_model_trait_flipped.Rdata") 
 ```
 
 ### plot scanone & CIM result 
 ```{r}
-load("~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
-load("~/F2/output/growth_model/cim_growth_model_trait.Rdata") 
+load("~/F2/output/growth_model/scanone_growth_model_trait_flipped.Rdata")
+load("~/F2/output/growth_model/cim_growth_model_trait_flipped.Rdata") 
 plot(cim_growth_model_trait.F2[[10]][,c(1,2,3)]) 
 
 # make a plot for each trait seperately 
@@ -105,7 +105,7 @@ qtl_plot(input = rbind(data.frame(cim_growth_model_trait.F2[["height_Hmax"]], me
          chrs = c("A10", "C01", "C06"), 
          # lod = c(cim.perm[["days_to_bolt"]]),
          rug = TRUE, 
-         title = "growth model QTL")
+         title = "growth model QTL") 
 
 growth_model_cim$plot
 
@@ -141,14 +141,14 @@ unlist(im.qtl.result)
 ```
 
 
-### scantwo (run on cluster maybe)
+### scantwo (run on cluster)
 ```{r}
 
 ```
 
 ### get genes under scanone, later to combine with eQTL analysis result 
 ```{r}
-load("~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
+load("~/F2/output/growth_model/scanone_growth_model_trait_flipped.Rdata")
 
 threshold.95 <- tibble(perm.threshold = as.data.frame(lod.thrs[5,])[,1], 
                        trait = rownames(as.data.frame(lod.thrs[5,])))
@@ -161,7 +161,7 @@ rownames(scanone.qtl.2) <- rownames(scanone_growth_model_trait.F2$height_Hmax)
 colnames(scanone.qtl.2)[3:14] <- names(scanone_growth_model_trait.F2)
 
 scanone.gather <- scanone.qtl.2 %>%
-  gather(key = trait, value = LOD, -chr, -pos) %>%
+  gather(key = trait, value = LOD, -chr, -pos) %>% 
   left_join(threshold.95)  
 
 scanone.gather %>% head() 
@@ -228,7 +228,7 @@ traitQTL.annotated %>%
 
 growth_modelQTL.annotated <- traitQTL.annotated
 
-save(growth_modelQTL.annotated, file = "~/F2/output/growth_model/growth_modelQTL.annotated.Rdata") 
+save(growth_modelQTL.annotated, file = "~/F2/output/growth_model/growth_modelQTL.annotated.flipped.Rdata") 
 
 growth_modelQTL.annotated %>% 
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
@@ -238,20 +238,20 @@ growth_modelQTL.annotated %>%
 ### eQTL analysis on growth model result 
 
 ```{r}
-load("~/F2/output/eQTL/cis_trans_result_new.Rdata") 
+load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
 
-cis_eQTL %>% dim() # 8512   11 
-trans_eQTL %>% dim() # 13869    11 
+cis_eQTL %>% dim() # 8894   11 
+trans_eQTL %>% dim() # 17687    11 
 
 cis_eQTL.qtl.combined <- inner_join(cis_eQTL,growth_modelQTL.annotated,by=c("gene_ID"="name")) 
 cis_eQTL.qtl.combined %>% head()    
-cis_eQTL.qtl.combined %>% dim() # 488   18 
+cis_eQTL.qtl.combined %>% dim() # 460   18 
 
 colnames(cis_eQTL.qtl.combined) 
 
 trans_eQTL.qtl.combined <- inner_join(trans_eQTL,growth_modelQTL.annotated,by=c("gene_ID"="name")) 
 trans_eQTL.qtl.combined %>% head()    
-trans_eQTL.qtl.combined %>% dim() # 265    18 
+trans_eQTL.qtl.combined %>% dim() # 312    18 
 
 load("~/Reference/B.napus/napus_GO_combined.Rdata")
 napus_GO_combined %>% head()
@@ -273,11 +273,11 @@ trans_eQTL.qtl.combined %>%
 cis_eQTL.qtl.combined.final %>% 
   filter(AGI == "AT5G10140") # cool, FLC gene is cis-regulator for height_Hmax and leaf_number_I 
 
-write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/cis_eQTL.qtl.combined.final.model.csv")
+write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/cis_eQTL.qtl.combined.final.model.flipped.csv")
 
-write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/trans_eQTL.qtl.combined.final.model.csv") 
+write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/trans_eQTL.qtl.combined.final.model.flipped.csv") 
 
-save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/eQTL.qtl.combined.final.model.Rdata")  
+save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/output/growth_model/eQTL.qtl.combined.final.model.flipped.Rdata")  
 ```
 
 ### Go enrichement of trans-eQTL for different traits 
