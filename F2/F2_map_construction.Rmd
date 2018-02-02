@@ -608,7 +608,6 @@ write.csv(F2_map, file = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revis
 ``` 
 
 ### draw plot for paper 
->>>>>>> 088f1a36da73d1d89e7d20128db1a8c1824af92a
 ```{r}
 
 ```

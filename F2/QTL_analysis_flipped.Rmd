@@ -236,4 +236,4 @@ traitQTL.annotated %>%
 traitQTL.annotated %>% 
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
   filter(AGI == "AT5G10140") # cool, FLC gene is on A10    
-``` 
+```  
