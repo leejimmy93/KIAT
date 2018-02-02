@@ -570,6 +570,9 @@ F2.pheno <- F2.pheno[match(colnames(F2_map)[4:169], colnames(F2.pheno))]
 write.csv(F2.pheno, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2.pheno.csv")
 ```
 
+<<<<<<< HEAD
+### flip order for several LGs, for eQTL plotting purpose 
+=======
 ### flip order for several LGs
 ```{r}
 load("~/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.final.Rdata")
@@ -605,6 +608,7 @@ write.csv(F2_map, file = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revis
 ``` 
 
 ### draw plot for paper 
+>>>>>>> 088f1a36da73d1d89e7d20128db1a8c1824af92a
 ```{r}
 
 ```
