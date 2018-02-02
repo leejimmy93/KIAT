@@ -206,6 +206,50 @@ pheatmap(as.matrix(t(scale(growth_model_trait[2:13]))),
 dev.off()      
 ```
 
+### heatmap for correlation plot 
+```{r}
+library(WGCNA)
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
+phefile.growth_model <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/growth_model_trait.2.csv", header = F)
+
+phefile.growth_model <- as.data.frame(t(phefile.growth_model))
+colnames(phefile.growth_model) <- as.character(unlist(phefile.growth_model[1,]))
+phefile.growth_model <- phefile.growth_model[2:167,]
+
+phefile$id <- rownames(phefile)
+
+phefile.all <- 
+phefile.growth_model %>% 
+  left_join(phefile) 
+
+rownames(phefile.all) <- phefile.all$id
+
+phefile.all <- 
+phefile.all %>% 
+  dplyr::select(-id)  
+
+trait_cor <- round(cor(phefile.all, use = "pairwise.complete.obs"), digits = 2) 
+# show pair of traits whose correlation are above 0.5 
+high.cor.pair(trait_cor, threshold = 0.5)
+cor.P <- corPvalueStudent(trait_cor, 166)
+cor.sig <- trait_cor
+cor.sig[cor.P>0.05] <- NA 
+cor.sig
+
+png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=12, height=9, units="in", res=300)
+par(mar = c(3, 3, 3, 3))
+
+pheatmap(as.matrix(trait_cor),
+     clustering_method = "average", 
+     # cellheight = 10,
+     # cellwidth = 5,
+     border_color=NA,
+     fontsize_row = 6, 
+     legend = T
+)
+dev.off() 
+```
+
 ### appendix function for this script 
 ```{r}
 ### function to extract pair of traits with high correlation 

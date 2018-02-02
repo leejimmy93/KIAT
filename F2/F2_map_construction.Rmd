@@ -570,3 +570,8 @@ F2.pheno <- F2.pheno[match(colnames(F2_map)[4:169], colnames(F2.pheno))]
 write.csv(F2.pheno, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2.pheno.csv")
 ```
 
+### flip order for several LGs, for eQTL plotting purpose 
+```{r}
+
+```
+
