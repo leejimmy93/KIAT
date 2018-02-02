@@ -371,9 +371,8 @@ lapply(unique(trans_eQTL.qtl.combined.final$trait.y), function(trait) {
     GOseq.Bn.ORA(test), error= function(e) NA)
 })
 
-names(GO_trans_eQTL) <- unique(trans_eQTL.qtl.combined.final$trait.y) # no enriched GO terms, probably due to those cis-like trans-eQTL's existence.   
+names(GO_trans_eQTL) <- unique(trans_eQTL.qtl.combined.final$trait.y) # no enriched GO terms, probably due to those cis-like trans-eQTL's existence.    
 ```
-
 
 
 
