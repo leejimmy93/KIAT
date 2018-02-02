@@ -1001,7 +1001,7 @@ phefile %>% dim()
 
 phefile[phefile$V1 == "Behenic_acid",][,2:167] %>% as.numeric() %>% hist()
 phefile[phefile$V1 == "cis_11_Eicosenoic_acid",][,2:167] %>% as.numeric() %>% hist()
-phefile[phefile$V1 == "Palmitoliec_aicd",][,2:167] %>% as.numeric() %>% hist() 
+phefile[phefile$V1 == "Palmitoliec_aicd",][,2:167] %>% as.numeric() %>% hist()  
 ```
 
 
