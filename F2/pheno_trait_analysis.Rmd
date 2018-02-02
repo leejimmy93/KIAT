@@ -190,7 +190,7 @@ load("~/F2/data/growth_model_trait.Rdata")
 dim(growth_model_trait) # 166 13 
 growth_model_trait_cor <- round(cor(growth_model_trait[,2:13], use = "pairwise.complete.obs"), digits = 2) 
 # show pair of traits whose correlation are above 0.5 
-high.cor.pair(growth_model_trait_cor, threshold = 0.5)
+high.cor.pair(growth_model_trait_cor, threshold = 0.5) 
 
 png(filename = "~/F2/for_paper/growth_model_trait_heatmap.png",width=8, height=4, units="in", res=300)
 par(mar = c(3, 3, 3, 3))

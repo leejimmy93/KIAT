@@ -3,39 +3,12 @@ title: "QTL_analysis_growth_model_trait"
 output: html_document
 ---
 
-* Goal of this script is to do QTL analysis for growth model traits, including scanone, CIM, and scantwo 
-
-### make seperate phenotype data for QTL analysis 
-```{r}
-library(qtl)
-library(tidyverse) 
-
-load("~/F2/data/growth_model_trait.Rdata")
-
-growth_model_trait$id <- growth_model_trait$line_ID
-growth_model_trait$id <- gsub("ID", "Sample_F2", growth_model_trait$id)
-growth_model_trait <- growth_model_trait[,2:14]  
-
-growth_model_trait <- as.data.frame(t(growth_model_trait)) 
-
-# make pheno and geno data with matching sample ID 
-genofile <- read.csv("~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv")
-
-colnames(genofile)[4:169]
-as.character(unlist(growth_model_trait["id",]))
-
-growth_model_trait.2 <- growth_model_trait[,match(colnames(genofile)[4:169],as.character(unlist(growth_model_trait["id",])))]
-
-all(colnames(genofile)[4:169]==as.character(unlist(growth_model_trait.2["id",])))
-
-write.csv(growth_model_trait, file = "~/F2/output/pheno/growth_model_trait.csv") # add id to the 1st colomn 
-write.csv(growth_model_trait.2, file = "~/F2/output/pheno/growth_model_trait.2.csv") # modify to the right format for r/qtl 
-```
+### goal of this script is to run QTL analysis using gen data with order flipped for several LGs 
 
 ### scanone & CIM 
-```{r}
+```{r} 
 # run the code below on whitney using 
-cross.F2 <- read.cross("csvsr", genfile =   "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
+cross.F2 <- read.cross("csvsr", genfile =   "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv", 
                          phefile = "~/F2/output/pheno/growth_model_trait.2.csv",
                          genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
 
@@ -45,29 +18,26 @@ cross.F2$pheno$height_k %>% class()
 cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?  
 cross.F2 <- calc.genoprob(cross.F2,step=1) 
 
-# scanone_growth_model_trait.F2 <- scanone(cross.F2, pheno.col = 1:12, 
-# 	         method = "imp", use = "all.obs") 
-
 system.time(
 scanone_growth_model_trait.F2 <- 
 lapply(seq_along(cross.F2$pheno[1:12]), function(trait) {
   print(trait)
   scanone(cross.F2,pheno.col=trait,method="imp")
 }) 
-)
+) ####### 
 
 names(scanone_growth_model_trait.F2) <- colnames(cross.F2$pheno[1:12]) 
 
 set.seed(12345)   
 system.time(
-  permtest.F2 <- scanone(cross.F2, pheno.col = 2:ncol(cross.F2$pheno), method = "imp", n.perm = 1000)   
+  permtest.F2 <- scanone(cross.F2, pheno.col = 1:12, method = "imp", n.perm = 1000)   
 )
 
 alphas <- seq(0.01, 0.10, by = 0.01) 
 lod.thrs <- summary(permtest.F2, alphas) 
 lod.thrs  
 
-save(scanone_growth_model_trait.F2, lod.thrs, file =  "~/F2/output/growth_model/scanone_growth_model_trait.Rdata")
+save(scanone_growth_model_trait.F2, lod.thrs, file =  "~/F2/output/growth_model/scanone_growth_model_trait_flipped.Rdata")
 
 # cim was done within screen 
 cim_growth_model_trait.F2 <- 
@@ -78,7 +48,7 @@ lapply(seq_along(cross.F2$pheno[1:12]), function(trait) {
 
 names(cim_growth_model_trait.F2) <- colnames(cross.F2$pheno[1:12])
 
-sfInit(parallel = TRUE, cpus = 4)
+sfInit(parallel = TRUE, cpus = 1)
 sfExport("cross.F2")
 sfLibrary(qtl)
 
@@ -330,4 +300,3 @@ lapply(unique(trans_eQTL.qtl.combined.final$trait.y), function(trait) {
 
 names(GO_trans_eQTL) <- unique(trans_eQTL.qtl.combined.final$trait.y) # no enriched GO terms, probably due to those cis-like trans-eQTL's existence.     
 ```
-

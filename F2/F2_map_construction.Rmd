@@ -604,3 +604,8 @@ colnames(F2_map)
 write.csv(F2_map, file = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv")   
 ``` 
 
+### draw plot for paper 
+```{r}
+
+```
+
