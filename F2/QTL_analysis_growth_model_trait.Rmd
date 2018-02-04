@@ -300,8 +300,4 @@ lapply(unique(trans_eQTL.qtl.combined.final$trait.y), function(trait) {
 
 names(GO_trans_eQTL) <- unique(trans_eQTL.qtl.combined.final$trait.y) # no enriched GO terms, probably due to those cis-like trans-eQTL's existence.     
 ```
-<<<<<<< HEAD
 
-
-=======
->>>>>>> 088f1a36da73d1d89e7d20128db1a8c1824af92a

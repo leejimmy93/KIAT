@@ -132,8 +132,8 @@ dev.off()
 save(qtl.fit.final.Caprylic, file = "~/F2/output/scantwo/qtl.fit.final.Caprylic.Rdata")   
 ```
 
-### Erucic acid & Oleic acid 
-```{r}
+### Erucic acid & Oleic acid  
+```{r} 
 ######## start from here tonight...
 # Erucic acid 
 # permutation result for Erucic acid and Oleic acid import 

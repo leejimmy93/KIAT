@@ -78,6 +78,9 @@ lapply(seq_along(LG.f2.after.crossover$pheno)[1:43], function(trait) {
   print(trait)
   cim(LG.f2.after.crossover, n.marcovar=5, pheno.col=trait,method="em")
 })
+
+cim.qtl[["vaccenic_acid"]] 
+
 # here we use the interval mapping method "em" as this is how cim was originaly implmented.the n.marcovar= argument defines the maximum number of marker covariates to use.
 names(cim.qtl) <- colnames(LG.f2.after.crossover$pheno)[1:43]
 
@@ -96,7 +99,7 @@ cim.perm <-
     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
   }) # takes almost 4 hours to finish
 
-sfStop()
+sfStop() 
 
 names(cim.perm) <- colnames(LG.f2.after.crossover$pheno)[1:43]
 
@@ -237,3 +240,123 @@ traitQTL.annotated %>%
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
   filter(AGI == "AT5G10140") # cool, FLC gene is on A10    
 ```  
+
+### plot for paper 
+```{r}
+load("~/F2/output/QTL_analysis/cim.perm.43traits.flipped.Rdata")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.flipped.Rdata")
+load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits.flipped")
+load("~/F2/output/QTL_analysis/scanone.imp.43traits.flipped")
+
+cim.perm.all <- cim.perm
+cim.qtl.all <- cim.qtl
+scanone.perm.imp.all <- scanone.perm.imp
+scanone.imp.all <- scanone.imp
+
+load("~/F2/output/growth_model/scanone_growth_model_trait_flipped.Rdata")
+load("~/F2/output/growth_model/cim_growth_model_trait_flipped.Rdata") 
+
+cim.perm.all <- c(cim.perm.all, cim.perm)[c(1:15, 17, 21:55)] 
+cim.qtl.all <- c(cim.qtl.all, cim_growth_model_trait.F2)[c(1:15, 17, 21:55)]
+scanone.perm.imp.all <- c(scanone.perm.imp.all[1:43], as.list(lod.thrs[5,]))[c(1:15, 17, 21:55)] 
+scanone.imp.all <- c(scanone.imp.all, scanone_growth_model_trait.F2)[c(1:15, 17, 21:55)] 
+
+png("~/F2/output/QTL_analysis/figure/QTL_one_dim_flipped.png", width=30, height=30, units="in", res=300)
+par(mfrow=c(11,5))
+
+for (i in names(scanone.imp.all)){
+  plot(scanone.imp.all[[i]],bandcol="gray90", main=i)
+  abline(h=scanone.perm.imp.all[[i]],lty=2)
+}
+
+dev.off()  
+
+png("~/F2/output/QTL_analysis/figure/QTL_cim_flipped.png", width=30, height=30, units="in", res=300)
+par(mfrow=c(11,5))
+
+for (i in names(cim.qtl.all)){
+  plot(cim.qtl.all[[i]],bandcol="gray90", main=i)
+  abline(h=cim.perm.all[[i]],lty=2)
+}
+
+dev.off()  
+
+cim.qtl.all[["vaccenic_acid"]] 
+cim.perm.all[["vaccenic_acid"]] 
+
+oil_ID <- c("Palmitic_acid", "Stearic_acid", "Oleic_acid", "vaccenic_acid", "Linoleic_acid", "Arachidic_acid", "Linolenic_acid", "Erucic_acid", "cis_11_Eicosenoic_acid", "Behenic_acid")
+
+oil.plot <- list()
+for (i in oil_ID){
+  oil.plot[[i]] <- qtl_plot(input = rbind(data.frame(cim.qtl.all[[i]], method = "cim"), 
+                       data.frame(scanone.imp.all[[i]], method = "scanone")),
+         chrs = c("A08", "C03"), 
+         lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm.all[[i]],
+                                  scanone.perm.imp.all[[i]])), 
+         rug = TRUE, 
+         labels = NA, 
+         title = i) 
+}
+
+library(cowplot)
+get_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+legend <- get_legend(oil.plot[[1]]$plot)
+
+oil.plot.2 <-plot_grid(
+  oil.plot[[1]]$plot+theme(legend.position="none"),
+  oil.plot[[2]]$plot+theme(legend.position="none"), 
+  oil.plot[[3]]$plot+theme(legend.position="none"),
+  oil.plot[[4]]$plot+theme(legend.position="none"),
+  oil.plot[[5]]$plot+theme(legend.position="none"),
+  oil.plot[[6]]$plot+theme(legend.position="none"),
+  oil.plot[[7]]$plot+theme(legend.position="none"),
+  oil.plot[[8]]$plot+theme(legend.position="none"),
+  oil.plot[[9]]$plot+theme(legend.position="none"),
+  oil.plot[[10]]$plot+theme(legend.position="none"),
+  ncol=2, nrow = 5,labels=c("","","",""))  
+
+oil.plot.3 <- plot_grid(oil.plot.2, legend, rel_heights = c(45, 1), ncol = 1, nrow = 2)
+oil.plot.3 
+
+ggsave(oil.plot.3, filename = "~/F2/output/QTL_analysis/figure/oil.plot.3.png", width = 12, height = 12)
+
+growth_ID <- c("days_to_bolt", "days_to_flower", "leaf_number_2015_12_28", "leaf_number_2016_03_21", "lobe_number_2016_01_21", "root_weight_2016_05_13", "height_Hmax", "leaf_number_I", "lobe_number_I", "plant_height_2016_05_13") 
+               
+growth.plot <- list() 
+for (i in growth_ID){
+  growth.plot[[i]] <- qtl_plot(input = rbind(data.frame(cim.qtl.all[[i]], method = "cim"), 
+                       data.frame(scanone.imp.all[[i]], method = "scanone")),
+         chrs = c("A10", "C06"), 
+         lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm.all[[i]],
+                                  scanone.perm.imp.all[[i]])), 
+         rug = TRUE, 
+         labels = NA, 
+         title = i) 
+}   
+
+growth.plot.2 <-plot_grid( 
+  growth.plot[[1]]$plot+theme(legend.position="none"),
+  growth.plot[[2]]$plot+theme(legend.position="none"), 
+  growth.plot[[3]]$plot+theme(legend.position="none"),
+  growth.plot[[4]]$plot+theme(legend.position="none"),
+  growth.plot[[5]]$plot+theme(legend.position="none"), 
+  growth.plot[[6]]$plot+theme(legend.position="none"),
+  growth.plot[[7]]$plot+theme(legend.position="none"),
+  growth.plot[[8]]$plot+theme(legend.position="none"),
+  growth.plot[[9]]$plot+theme(legend.position="none"),
+  growth.plot[[10]]$plot+theme(legend.position="none"),
+  # legend, 
+  ncol=2, nrow = 5,labels=c("","","",""))  
+
+growth.plot.3 <- plot_grid(growth.plot.2, legend, rel_heights = c(45, 1), ncol = 1, nrow = 2)
+growth.plot.3 
+
+ggsave(growth.plot.3, filename = "~/F2/output/QTL_analysis/figure/growth.plot.3.png", width = 12, height = 12)
+``` 
+
