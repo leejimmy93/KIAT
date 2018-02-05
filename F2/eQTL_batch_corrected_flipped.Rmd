@@ -46,7 +46,7 @@ save(cross.F2, scanone_eQTL.F2, permtest.F2, lod.thrs, file = "~/F2/output/eQTL/
 load("~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData")
 scanone_eQTL.F2 %>% dim() # 4887 56182 
 
-scanone_eQTL.F2$chr <- as.character(scanone_eQTL.F2$chr)
+scanone_eQTL.F2$chr <- as.character(scanone_eQTL.F2$chr) 
 
 # get threshold 
 threshold.95 <- lod.thrs[5,] 
@@ -220,7 +220,55 @@ ggsave(p.cis_eQTL, filename = "~/F2/output/eQTL/figure/p.cis_eQTL.flipped.png", 
 ggsave(p.trans_eQTL, filename = "~/F2/output/eQTL/figure/p.trans_eQTL.flipped.png", height = 10, width = 10) 
 ```
 
- 
+### plot out cis-eQTL result for oil traits and growth traits 
+```{r}
+load("~/F2/output/QTL_analysis/cim.perm.43traits.flipped.Rdata")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.flipped.Rdata")
+load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits.flipped")
+load("~/F2/output/QTL_analysis/scanone.imp.43traits.flipped")
+
+load("~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData")
+scanone_eQTL.F2 %>% dim() # 4887 56182 
+
+cim.qtl[["BnaA08g11140D"]] <- scanone_eQTL.F2[,c("chr", "pos", "BnaA08g11140D")] 
+colnames(cim.qtl[["BnaA08g11140D"]])[3] <- "lod"
+
+cim.qtl[["BnaA08g11060D"]] <- scanone_eQTL.F2[,c("chr", "pos", "BnaA08g11060D")] 
+colnames(cim.qtl[["BnaA08g11060D"]])[3] <- "lod" 
+
+oil_eQTL <- 
+qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid"), 
+                       data.frame(cim.qtl[["Oleic_acid"]], method = "Oleic_acid"), 
+                       data.frame(cim.qtl[["BnaA08g11140D"]], method = "BnaA08g11140D"),
+                       data.frame(cim.qtl[["BnaA08g11060D"]], method = "BnaA08g11060D")),     
+         chrs = c("A08"), 
+         # lod = cim.perm[[1]], 
+         title = "cis-regulators for oil composition traits", 
+         rug = TRUE)   
+ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL.png", width = 5, height = 5) 
+# Lipid biosynthesis: Arabidopsis squalene synthase homolog  
+# FAE coding gene 
+
+load("~/F2/output/growth_model/scanone_growth_model_trait_flipped.Rdata")
+load("~/F2/output/growth_model/cim_growth_model_trait_flipped.Rdata") 
+
+cim_growth_model_trait.F2[["BnaA10g22080D"]] <- scanone_eQTL.F2[,c("chr", "pos", "BnaA10g22080D")] 
+colnames(cim_growth_model_trait.F2[["BnaA10g22080D"]])[3] <- "lod"
+
+growth_eQTL <- 
+qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_bolt"), 
+                       data.frame(cim.qtl[["days_to_flower"]], method = "days_to_flower"), 
+                       data.frame(cim_growth_model_trait.F2[["height_Hmax"]], method = "height_Hmax"), 
+                       data.frame(cim_growth_model_trait.F2[["leaf_number_I"]], method = "leaf_number_I"), 
+                       data.frame(cim_growth_model_trait.F2[["BnaA10g22080D"]], method = "BnaA10g22080D")),     
+         chrs = c("A10"), 
+         # lod = cim.perm[[1]], 
+         title = "cis-regulators for flowering and growth traits", 
+         rug = TRUE)   
+ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 6, height = 5) 
+# FLC gene  
+```
+
 
 
 
