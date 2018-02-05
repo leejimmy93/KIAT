@@ -42,7 +42,7 @@ sfStop()
 names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
 save(scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.perm.imp.43traits.flipped")
 
-# Erucic acid
+# Erucic acid 
 scanone.imp.Erucic <- scanone(LG.f2.after.crossover,pheno.col=15,method="imp") #
 plot(scanone.imp.Erucic,bandcol="gray90", main="Erucic_acid")
 abline(h=scanone.perm.imp[["Erucic_acid"]],lty=2) #add permuation threshold
@@ -359,4 +359,80 @@ growth.plot.3
 
 ggsave(growth.plot.3, filename = "~/F2/output/QTL_analysis/figure/growth.plot.3.png", width = 12, height = 12)
 ``` 
+
+### redo QTL analysis for several traits which don't follow normal distribution 
+```{r}
+### load data and run scanone & cim
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+plot.map(LG.f2.after.crossover)
+summaryMap(LG.f2.after.crossover) # 2884
+
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability?
+
+LG.f2.after.crossover$pheno %>% colnames() # Caprylic_acid, Myristic_acid, Heptadecanoic_acid, should try "2 part" model in scanone(), Survival_rate use log transformed data to get normality 
+
+scanone_Caprylic <- 
+scanone(LG.f2.after.crossover, pheno.col = "Caprylic_acid", method = "em", model = "2part", upper = F)
+
+##### run till here... 
+perm_Caprylic
+
+
+# permutation 
+perm_Caprylic <- 
+scanone(LG.f2.after.crossover, pheno.col = "Caprylic_acid", method = "em", model = "2part", upper = F, n.perm = 1000)
+
+scanone_Myristic <-
+scanone(LG.f2.after.crossover, pheno.col = "Myristic_acid", method = "em", model = "2part", upper = F)
+
+LG.f2.after.crossover$pheno$Heptadecanoic_acid_new <- ifelse(LG.f2.after.crossover$pheno$Heptadecanoic_acid == 0, 0, 1) 
+
+scanone_Heptadecanoic <-
+scanone(LG.f2.after.crossover, pheno.col = "Heptadecanoic_acid_new", method = "em", model = "binary") # binary
+
+test <-
+scanone(LG.f2.after.crossover, pheno.col = "", method = "em", model = "2part") # transformation 
+
+plot(scanone_Caprylic)
+plot(scanone_Myristic)
+plot(scanone_Heptadecanoic) # no significant loci 
+
+ggplot(LG.f2.after.crossover$pheno, aes(x = Survival_rate)) + geom_histogram(bins=15) + scale_x_log10() 
+min(LG.f2.after.crossover$pheno$Survival_rate, na.rm = T) 
+
+system.time(
+scanone.imp <-
+lapply(seq_along(LG.f2.after.crossover$pheno[1:43]), function(trait) {
+  print(trait)
+  scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
+})
+)
+names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)[1:43]
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
