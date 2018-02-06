@@ -1,27 +1,6 @@
----
-title: "F1 ASE Analysis with MBASED"
-author: Lynn Ly
-output: html_document
----
-
-Author comment
-File description comment, including purpose of program, inputs, and outputs
-source() and library() statements 
-Function definitions
-Executed statements, if applicable (e.g., print, plot)
-
-Purpose: This uses the MBASED package to analyze allele specific expression. 
-  Single sample analysis: Find genes that display allelic imbalance ie. not expressed 0.5/0.5. Default threshold: 0.7 
-  Two sample analysis: Find genes that display different ASE ratios between two samples. Doesn't matter what the actual ratios are, as long as they differ by over 0.2
-Inputs: Pre-filtered VCF file, simplified gff file with just ranges and feature name
-Outputs: major allele frequencies, frequency differences, list of genes displaying ASE
-
-```{r setup, include=FALSE}
 library(MBASED)
 library(tidyverse)
-```
 
-```{r AnnotateSNPs Function}
 AnnotateSNPs <- function(SNPdata, gff.mRNA){
   # Combines SNP/SNV loci with gene names
   #
@@ -53,9 +32,7 @@ AnnotateSNPs <- function(SNPdata, gff.mRNA){
   
   return(annotatedSNPdata)  
 }
-```
 
-```{r Analyzing Results Functions}
 SummarizeASEResults_1s <- function(MBASEDOutput) {
   # Output: geneOutputDF is an easier way to look at MAF and p-values at the same time
   geneOutputDF <- data.frame(
@@ -85,10 +62,6 @@ ExtractASE <- function(MBASEDOutput) {
                              results$locusOutput[ASEindexes, ])
   return(significantResults)
 }
-```
-
-```{r Single Sample Function}
-# Please change numSim to at least 1,000,000 for final analysis
 
 SingleSample <- function(annotatedData, mySNVs, genotype){
   # create RangedSummarizedExperiment object as input for runMBASED
@@ -105,24 +78,12 @@ SingleSample <- function(annotatedData, mySNVs, genotype){
   
   MBASEDOutput <- runMBASED(
     ASESummarizedExperiment = mySample,
-    numSim = 1000, 
+    numSim = 10000, 
     isPhased = FALSE)  
 
   return(MBASEDOutput) 
 } 
 
-MBASED.F1.414 <- SingleSample(annotatedData, mySNVs, genotype = "F1_414")
-save(MBASED.F1.414, file = "MBASED.F1.414.Rdata")
-MBASED.F1.415 <- SingleSample(annotatedData, mySNVs, genotype = "F1_415")
-save(MBASED.F1.414, file = "MBASED.F1.415.Rdata")
-MBASED.Ae <- SingleSample(annotatedData, mySNVs, genotype = "Ae")
-save(MBASED.F1.414, file = "MBASED.F1.Ae.Rdata")
-MBASED.Ol <- SingleSample(annotatedData, mySNVs, genotype = "Ol")
-save(MBASED.F1.414, file = "MBASED.F1.Ol.Rdata") 
-```
-
-```{r Data to use}
-# Change the following line if not using B. napus
 gff.mRNA <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/gff.mRNA")
 
 # Data to use
@@ -132,7 +93,6 @@ annotatedData <- AnnotateSNPs(SNPdata = F1.young.GQ.filtered, gff.mRNA = gff.mRN
   
 # Remove SNVs with no associated genes 
 annotatedData <- filter(annotatedData, !is.na(GeneID)) 
-  
 mySNVs <- GRanges(
   seqnames = annotatedData$CHROM,
   ranges = IRanges(start = annotatedData$POS, width = 1),
@@ -141,60 +101,8 @@ mySNVs <- GRanges(
   allele2 = annotatedData$ALT)
   
 names(mySNVs) <- annotatedData$GeneID 
-```
 
-In Progress: TwoSample analysis
-
-```{r Two Sample Function}
-TwoSample <- function(annotatedData, mySNVs, genotype1, genotype2){
-  RO1 <- paste(genotype1, "RO", sep = "_")
-  AO1 <- paste(genotype1, "AO", sep = "_")
-  RO2 <- paste(genotype2, "RO", sep = "_")
-  AO2 <- paste(genotype2, "AO", sep = "_")
-  
-  mySample <- SummarizedExperiment(
-    assays = list(lociAllele1Counts = matrix(c(annotatedData[, RO1], annotatedData[, RO2]), ncol = 2,
-                                             dimnames = list(names(mySNVs), c(genotype1, genotype2))),
-                                             
-                  lociAllele2Counts = matrix(c(annotatedData[, AO1], annotatedData[, AO2]), ncol = 2,
-                                            dimnames = list(names(mySNVs), c(genotype1, genotype2)))),
-    rowRanges=mySNVs)
-  
-  MBASEDOutput <- runMBASED(
-    ASESummarizedExperiment = mySample,
-    isPhased = FALSE,
-    numSim = 1 
-    #BPPARAM = SerialParam() # Default: No paralellization
-  )
-  
-  return(MBASEDOutput)
-}
-```
-
-```{r Run Two Sample}
-MBASED.F1.414.vs.F1.415 <- TwoSample(annotatedData, mySNVs, "F1_414", "F1_415")
-
-```
-
-```{r Analysis and Summary}
-load("MBASED.F1.414.Rdata")
-load("MBASED.F1.415.Rdata")
-load("MBASED.Ae.Rdata")
-load("MBASED.Ol.Rdata")
-
-sig.F1.414 <- ExtractASE(MBASED.F1.414)
-dim(sig.F1.414[[1]]) #1946 SNVs found to be in ASE
-summary(sig.F1.414[[2]])
-
-
-sig.F1.415 <- ExtractASE(MBASED.F1.415)
-dim(sig.F1.415[[1]]) #2164 SNVs found to be in ASE
-head(sig.F1.415[[2]]$GeneID)
-
-sig.Ae <- ExtractASE(MBASED.Ae)
-dim(sig.Ae[[1]]) #11995 SNVs found to be in ASE
-
-sig.Ol <- ExtractASE(MBASED.Ol)
-dim(sig.Ol[[1]]) #11990 SNVs found to be in ASE
-```
-
+system.time(
+MBASED.F1.414 <- SingleSample(annotatedData, mySNVs, genotype = "F1_414")
+)
+save(MBASED.F1.414, file = "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F1_SNP/ASE/MBASED.F1.414.Rdata")
