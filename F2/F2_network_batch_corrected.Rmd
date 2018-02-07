@@ -220,7 +220,7 @@ rownames(pheno.t) <- gsub("ID", "Sample_F2", rownames(pheno.t))
 blups.F2 <- 
 pheno.t[rownames(pheno.t) %in% MEs$line,] 
 
-blups.F2$line <- rownames(blups.F2.A)
+blups.F2$line <- rownames(blups.F2)
 MEs$line 
 
 # merge module & trait values 
@@ -245,8 +245,8 @@ blups.F2 <- blups.F2 %>% dplyr::select(-line)
 
 # plot it 
 # Will display correlations and their p-values
-png(filename = "~/F2/output/network_analysis/Module-trait_heatmap_F2_batch_corrected.png",width=20, height=16, units="in", res=300)
-par(mar = c(8, 5, 3, 3)); 
+png(filename = "~/F2/output/network_analysis/Module-trait_heatmap_F2_batch_corrected.png",width=30, height=16, units="in", res=300)
+par(mar = c(10, 13, 3, 2)); 
 # Display the correlation values within a heatmap plot
 labeledHeatmap(Matrix = blups.cor,
                yLabels = names(blups.F2),

@@ -7,6 +7,15 @@ output:
     keep_md: yes
 ---
 
+* Understanding of MBASED: 
+
+1) MBASED starts from heterozygous SNVs 
+
+2) it uses principles of meta-analysis to combine information across loci within a single unit of expression (here it is a gene), without relying on a priori knowledge of phased haplotypes. 
+
+3) the approach can use 
+presented here reduces to a (beta-)binomial test of difference between reads mapping to different haplotypes. 
+
 load lib
 ```{r}
 library(MBASED)
@@ -103,7 +112,7 @@ To illustrate the need for simulations, we show how the results are affected by 
 ##re-run analysis without simulations
 summarizeASEResults_1s(
    runMBASED(
-     ASESummarizedExperiment=mySample,
+     ASESummarizedExperiment=mySample, 
      isPhased = FALSE, 
      numSim = 0, 
      BPPARAM = SerialParam()

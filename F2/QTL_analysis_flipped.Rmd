@@ -8,11 +8,11 @@ output: html_document
 ```{r}
 ### load lib
 library(tidyverse)
-library(qtl)
+library(qtl) 
 library(snowfall)
 library(ggrepel)
 library(Biostrings)
-source("~/KIAT/function_BnRNAseq.R")
+source("~/KIAT/function_BnRNAseq.R") 
 
 ### load data and run scanone & cim
 LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
@@ -20,7 +20,8 @@ LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/L
                      genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
 
 plot.map(LG.f2.after.crossover)
-summaryMap(LG.f2.after.crossover) # 2884
+map.summary <- summaryMap(LG.f2.after.crossover) # 2884
+write.csv(map.summary, file = "~/F2/output/QTL_analysis/map.summary.csv")   
 
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability?
@@ -42,7 +43,7 @@ sfStop()
 names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
 save(scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.perm.imp.43traits.flipped")
 
-# Erucic acid
+# Erucic acid 
 scanone.imp.Erucic <- scanone(LG.f2.after.crossover,pheno.col=15,method="imp") #
 plot(scanone.imp.Erucic,bandcol="gray90", main="Erucic_acid")
 abline(h=scanone.perm.imp[["Erucic_acid"]],lty=2) #add permuation threshold
@@ -78,6 +79,9 @@ lapply(seq_along(LG.f2.after.crossover$pheno)[1:43], function(trait) {
   print(trait)
   cim(LG.f2.after.crossover, n.marcovar=5, pheno.col=trait,method="em")
 })
+
+cim.qtl[["vaccenic_acid"]] 
+
 # here we use the interval mapping method "em" as this is how cim was originaly implmented.the n.marcovar= argument defines the maximum number of marker covariates to use.
 names(cim.qtl) <- colnames(LG.f2.after.crossover$pheno)[1:43]
 
@@ -96,7 +100,7 @@ cim.perm <-
     summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
   }) # takes almost 4 hours to finish
 
-sfStop()
+sfStop() 
 
 names(cim.perm) <- colnames(LG.f2.after.crossover$pheno)[1:43]
 
@@ -229,11 +233,335 @@ save(traitQTL.annotated, file = "~/F2/output/QTL_analysis/traitQTL.annotated.fli
 ### check important genes
 ```{r}
 load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
+
 traitQTL.annotated %>% 
   filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
-  filter(AGI == "AT5G10140") # cool, FLC gene is on A10 
+  filter(AGI == "AT5G10140") # cool, FLC gene is on A10  
 
 traitQTL.annotated %>% 
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
   filter(AGI == "AT5G10140") # cool, FLC gene is on A10    
+```  
+
+### plot for paper 
+```{r}
+load("~/F2/output/QTL_analysis/cim.perm.43traits.flipped.Rdata")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.flipped.Rdata")
+load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits.flipped")
+load("~/F2/output/QTL_analysis/scanone.imp.43traits.flipped")
+
+cim.perm.all <- cim.perm
+cim.qtl.all <- cim.qtl
+scanone.perm.imp.all <- scanone.perm.imp
+scanone.imp.all <- scanone.imp
+
+load("~/F2/output/growth_model/scanone_growth_model_trait_flipped.Rdata")
+load("~/F2/output/growth_model/cim_growth_model_trait_flipped.Rdata") 
+
+cim.perm.all <- c(cim.perm.all, cim.perm)[c(1:15, 17, 21:55)] 
+cim.qtl.all <- c(cim.qtl.all, cim_growth_model_trait.F2)[c(1:15, 17, 21:55)]
+scanone.perm.imp.all <- c(scanone.perm.imp.all[1:43], as.list(lod.thrs[5,]))[c(1:15, 17, 21:55)] 
+scanone.imp.all <- c(scanone.imp.all, scanone_growth_model_trait.F2)[c(1:15, 17, 21:55)] 
+
+cim.qtl.all[["vaccenic_acid"]] <- cim.qtl.all$vaccenic_acid[[1]]
+cim.qtl.all[["vaccenic_acid"]] %>% class()
+save(cim.perm.all, cim.qtl.all, scanone.perm.imp.all, scanone.imp.all, file = "~/F2/output/QTL_analysis/QTL_result_all.Rdata")
+
+png("~/F2/output/QTL_analysis/figure/QTL_one_dim_flipped.png", width=30, height=30, units="in", res=300)
+par(mfrow=c(11,5))
+
+for (i in names(scanone.imp.all)){
+  plot(scanone.imp.all[[i]],bandcol="gray90", main=i)
+  abline(h=scanone.perm.imp.all[[i]],lty=2)
+}
+
+dev.off()  
+
+png("~/F2/output/QTL_analysis/figure/QTL_cim_flipped.png", width=30, height=30, units="in", res=300)
+par(mfrow=c(11,5))
+
+for (i in names(cim.qtl.all)){
+  plot(cim.qtl.all[[i]],bandcol="gray90", main=i)
+  abline(h=cim.perm.all[[i]],lty=2)
+}
+
+dev.off()  
+
+cim.qtl.all[["vaccenic_acid"]] 
+cim.perm.all[["vaccenic_acid"]] 
+
+oil_ID <- c("Palmitic_acid", "Stearic_acid", "Oleic_acid", "vaccenic_acid", "Linoleic_acid", "Arachidic_acid", "Linolenic_acid", "Erucic_acid", "cis_11_Eicosenoic_acid", "Behenic_acid")
+
+oil.plot <- list()
+for (i in oil_ID){
+  oil.plot[[i]] <- qtl_plot(input = rbind(data.frame(cim.qtl.all[[i]], method = "cim"), 
+                       data.frame(scanone.imp.all[[i]], method = "scanone")),
+         chrs = c("A08", "C03"), 
+         lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm.all[[i]],
+                                  scanone.perm.imp.all[[i]])), 
+         rug = TRUE, 
+         labels = NA, 
+         title = i) 
+}
+
+library(cowplot)
+get_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+legend <- get_legend(oil.plot[[1]]$plot)
+
+oil.plot.2 <-plot_grid(
+  oil.plot[[1]]$plot+theme(legend.position="none"),
+  oil.plot[[2]]$plot+theme(legend.position="none"), 
+  oil.plot[[3]]$plot+theme(legend.position="none"),
+  oil.plot[[4]]$plot+theme(legend.position="none"),
+  oil.plot[[5]]$plot+theme(legend.position="none"),
+  oil.plot[[6]]$plot+theme(legend.position="none"),
+  oil.plot[[7]]$plot+theme(legend.position="none"),
+  oil.plot[[8]]$plot+theme(legend.position="none"),
+  oil.plot[[9]]$plot+theme(legend.position="none"),
+  oil.plot[[10]]$plot+theme(legend.position="none"),
+  ncol=2, nrow = 5,labels=c("","","",""))  
+
+oil.plot.3 <- plot_grid(oil.plot.2, legend, rel_heights = c(45, 1), ncol = 1, nrow = 2)
+oil.plot.3 
+
+ggsave(oil.plot.3, filename = "~/F2/output/QTL_analysis/figure/oil.plot.3.png", width = 12, height = 12)
+
+growth_ID <- c("days_to_bolt", "days_to_flower", "leaf_number_2015_12_28", "leaf_number_2016_03_21", "lobe_number_2016_01_21", "root_weight_2016_05_13", "height_Hmax", "leaf_number_I", "lobe_number_I", "plant_height_2016_05_13") 
+               
+growth.plot <- list() 
+for (i in growth_ID){
+  growth.plot[[i]] <- qtl_plot(input = rbind(data.frame(cim.qtl.all[[i]], method = "cim"), 
+                       data.frame(scanone.imp.all[[i]], method = "scanone")),
+         chrs = c("A10", "C06"), 
+         lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm.all[[i]],
+                                  scanone.perm.imp.all[[i]])), 
+         rug = TRUE, 
+         labels = NA, 
+         title = i) 
+}   
+
+growth.plot.2 <-plot_grid( 
+  growth.plot[[1]]$plot+theme(legend.position="none"),
+  growth.plot[[2]]$plot+theme(legend.position="none"), 
+  growth.plot[[3]]$plot+theme(legend.position="none"),
+  growth.plot[[4]]$plot+theme(legend.position="none"),
+  growth.plot[[5]]$plot+theme(legend.position="none"), 
+  growth.plot[[6]]$plot+theme(legend.position="none"),
+  growth.plot[[7]]$plot+theme(legend.position="none"),
+  growth.plot[[8]]$plot+theme(legend.position="none"),
+  growth.plot[[9]]$plot+theme(legend.position="none"),
+  growth.plot[[10]]$plot+theme(legend.position="none"),
+  # legend, 
+  ncol=2, nrow = 5,labels=c("","","",""))  
+
+growth.plot.3 <- plot_grid(growth.plot.2, legend, rel_heights = c(45, 1), ncol = 1, nrow = 2)
+growth.plot.3 
+
+ggsave(growth.plot.3, filename = "~/F2/output/QTL_analysis/figure/growth.plot.3.png", width = 12, height = 12)
 ``` 
+
+### redo QTL analysis for several traits which don't follow normal distribution 
+```{r}
+### load data and run scanone & cim
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+plot.map(LG.f2.after.crossover)
+summaryMap(LG.f2.after.crossover) # 2884
+
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability?
+
+LG.f2.after.crossover$pheno %>% colnames() # Caprylic_acid, Myristic_acid, Heptadecanoic_acid, should try "2 part" model in scanone(), Survival_rate use log transformed data to get normality 
+
+scanone_Caprylic <- 
+scanone(LG.f2.after.crossover, pheno.col = "Caprylic_acid", method = "em", model = "2part", upper = F)
+
+test <- scanone(LG.f2.after.crossover, pheno.col = "Caprylic_acid", method = "imp", upper = F)
+
+# permutation 
+perm_Caprylic <- 
+scanone(LG.f2.after.crossover, pheno.col = "Caprylic_acid", method = "em", model = "2part", upper = F, n.perm = 1000)
+
+summary(perm_Caprylic)[1] 
+summary(perm_Caprylic, alpha = 0.05)
+
+scanone_Myristic <-
+scanone(LG.f2.after.crossover, pheno.col = "Myristic_acid", method = "em", model = "2part", upper = F)
+
+perm_Myristic <-
+scanone(LG.f2.after.crossover, pheno.col = "Myristic_acid", method = "em", model = "2part", upper = F, n.perm = 1000) 
+
+LG.f2.after.crossover$pheno$Heptadecanoic_acid_new <- ifelse(LG.f2.after.crossover$pheno$Heptadecanoic_acid == 0, 0, 1) 
+
+scanone_Heptadecanoic <-
+scanone(LG.f2.after.crossover, pheno.col = "Heptadecanoic_acid_new", method = "em", model = "binary") # binary
+
+perm_Heptadecanoic <-
+scanone(LG.f2.after.crossover, pheno.col = "Heptadecanoic_acid_new", method = "em", model = "binary", n.perm = 1000)
+
+perm_Heptadecanoic <- summary(perm_Heptadecanoic)[1] 
+perm_Myristic
+perm_Caprylic
+
+### survival rate, transformaion won't work because a lot of 0, is there any other model for survival rate? 
+hist(sqrt(LG.f2.after.crossover$pheno$Survival_rate)) 
+ggplot(LG.f2.after.crossover$pheno, aes(x = Survival_rate)) + geom_histogram(bins=15) + scale_x_log10() 
+min(LG.f2.after.crossover$pheno$Survival_rate, na.rm = T)  
+
+### 
+permtest.F2.new <- list()
+alphas <- seq(0.01, 0.10, by = 0.01) 
+lod.thrs <- summary(perm_Caprylic, alphas) 
+lod.thrs  
+
+plot(scanone_Heptadecanoic_new[,c(1,2,4)])
+scanone_Heptadecanoic_new %>% head()
+dev.off()
+
+### this needs more time... come back later ... 
+```
+
+### table to summarize QTL mapping result, make R square, additive effect... 
+```{r}
+load("~/F2/output/QTL_analysis/QTL_result_all.Rdata")
+
+scanone.perm.imp.all %>% length()
+scanone.imp.all %>% length() 
+
+### I will use scanone result as the QTL result for different traits 
+threshold.95 <- tibble(perm.threshold = bind_rows(scanone.perm.imp.all) %>% as.numeric(), 
+                       trait = colnames(bind_rows(scanone.perm.imp.all)))
+threshold.95
+
+scanone.qtl.2 <-  
+bind_cols(scanone.imp.all) %>% 
+  dplyr::select(chr, pos, starts_with("lod"))
+rownames(scanone.qtl.2) <- rownames(scanone.imp.all$Crude_oil_contents)
+colnames(scanone.qtl.2)[3:53] <- names(scanone.imp.all)
+
+scanone.gather <- scanone.qtl.2 %>%
+  gather(key = trait, value = LOD, -chr, -pos) %>%
+  left_join(threshold.95)
+
+scanone.gather %>% head() 
+
+# look for overlap, for each trait, find QTL border and look for genes under QTL peaks 
+sig.chrs <- scanone.gather %>% dplyr::filter(LOD > perm.threshold) %>%
+  group_by(trait,chr) %>%
+  dplyr::summarise(count = n())
+sig.chrs 
+
+# now for each significant chromosome/trait combo run bayesint
+bayesint.list <- apply(sig.chrs,1,function(hit) { # for every row("trait, chr, count") in eigengene module 
+    result <- bayesint(scanone.qtl.2[c("chr","pos",hit["trait"])],  
+                     chr=hit["chr"], 
+                     lodcolumn = 1, 
+                     expandtomarkers = TRUE 
+  )
+  colnames(result)[3] <- "LOD" 
+  result
+})  
+ 
+
+names(bayesint.list) <- sig.chrs$trait
+
+bayesint.list <- lapply(bayesint.list,function(x)  
+                          x %>% 
+                          as.data.frame() %>%
+                          rownames_to_column(var="markername")  %>% # make rownames to column and use "markername" as the colname for the new colomn  
+                          mutate(chr=as.character(chr))
+) 
+
+bayesint.list 
+bayesint.list %>% length() # 33 
+
+bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine list into tibble 
+  dplyr::select(trait,chr,pos,markername,LOD) %>% 
+  # separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
+  group_by(trait,chr) %>% 
+  dplyr::summarize(start=min(pos, na.rm = T),end=max(pos, na.rm = T),pos = median(pos, na.rm = T), LOD=max(LOD)) 
+  #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
+
+bayesint.result %>% dim() # 33 6 
+bayesint.result 
+
+bayesint.result.tmp <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine list into tibble 
+  dplyr::select(trait,chr,pos,markername,LOD) %>% 
+  # separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
+  group_by(trait,chr) 
+
+bayesint.result.tmp$index <- paste(bayesint.result.tmp$trait, bayesint.result.tmp$chr, bayesint.result.tmp$LOD)
+bayesint.result$index <- paste(bayesint.result$trait, bayesint.result$chr, bayesint.result$LOD)
+
+test <- 
+bayesint.result.tmp %>% 
+  anti_join(bayesint.result) %>% 
+  dplyr::select(trait, chr, markername) %>% 
+  mutate(index = paste(trait, chr, sep = "_")) 
+
+tmp <- c()
+tmp  
+
+for (i in seq_along(1:(nrow(test)/2))){
+  tmp[i] <- paste(test$markername[i*2-1], test$markername[i*2-0], sep = "-") 
+}
+
+bayesint.result$index <- tmp
+
+bayesint.result.paper <- 
+bayesint.result %>% 
+  unite(confidence_interval, start, end, sep = "-") %>% 
+  mutate(flanking_marker = index) %>% 
+  dplyr::select(-index) 
+
+### get QTL for crude oil content 
+bayesint(cim.qtl.all[["Crude_oil_contents"]], chr = "A03", expandtomarkers = T)
+#                 chr       pos       lod
+# chrA03_17859843 A03  93.50555 0.1145514
+# chrA03_18816407 A03  98.53770 7.0615071
+# chrA03_18998089 A03 100.90084 5.2894538
+
+save(bayesint.result.paper, file = "~/F2/output/QTL_analysis/bayesint.result.paper.Rdata") 
+write.csv(bayesint.result.paper, file = "~/F2/output/QTL_analysis/bayesint.result.paper.csv") 
+
+bayesint.result.paper
+pos <- c(98.53770, bayesint.result.paper[c(-13, -19, -27, -28, -29),]$pos)
+length(pos)
+
+### combine with file which have allele effect information 
+bayesint.result.paper.2 <- read.csv("~/F2/output/QTL_analysis/bayesint.result.paper.2.csv")
+bayesint.result.paper.2
+
+bayesint.result.paper.2$pos <- pos
+
+write.csv(bayesint.result.paper.2, file = "~/F2/output/QTL_analysis/bayesint.result.paper.3.csv") 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
