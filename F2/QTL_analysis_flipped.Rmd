@@ -8,11 +8,11 @@ output: html_document
 ```{r}
 ### load lib
 library(tidyverse)
-library(qtl)
+library(qtl) 
 library(snowfall)
 library(ggrepel)
 library(Biostrings)
-source("~/KIAT/function_BnRNAseq.R")
+source("~/KIAT/function_BnRNAseq.R") 
 
 ### load data and run scanone & cim
 LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
@@ -20,7 +20,8 @@ LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/L
                      genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
 
 plot.map(LG.f2.after.crossover)
-summaryMap(LG.f2.after.crossover) # 2884
+map.summary <- summaryMap(LG.f2.after.crossover) # 2884
+write.csv(map.summary, file = "~/F2/output/QTL_analysis/map.summary.csv")   
 
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability?
@@ -232,9 +233,10 @@ save(traitQTL.annotated, file = "~/F2/output/QTL_analysis/traitQTL.annotated.fli
 ### check important genes
 ```{r}
 load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
+
 traitQTL.annotated %>% 
   filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
-  filter(AGI == "AT5G10140") # cool, FLC gene is on A10 
+  filter(AGI == "AT5G10140") # cool, FLC gene is on A10  
 
 traitQTL.annotated %>% 
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
@@ -485,7 +487,7 @@ bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine
   dplyr::select(trait,chr,pos,markername,LOD) %>% 
   # separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
   group_by(trait,chr) %>% 
-  dplyr::summarize(start=min(pos, na.rm = T),end=max(pos, na.rm = T),LOD=max(LOD)) 
+  dplyr::summarize(start=min(pos, na.rm = T),end=max(pos, na.rm = T),pos = median(pos, na.rm = T), LOD=max(LOD)) 
   #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
 
 bayesint.result %>% dim() # 33 6 
@@ -528,11 +530,21 @@ bayesint(cim.qtl.all[["Crude_oil_contents"]], chr = "A03", expandtomarkers = T)
 # chrA03_18998089 A03 100.90084 5.2894538
 
 save(bayesint.result.paper, file = "~/F2/output/QTL_analysis/bayesint.result.paper.Rdata") 
-write.csv(bayesint.result.paper, file = "~/F2/output/QTL_analysis/bayesint.result.paper.csv")
+write.csv(bayesint.result.paper, file = "~/F2/output/QTL_analysis/bayesint.result.paper.csv") 
 
+bayesint.result.paper
+pos <- c(98.53770, bayesint.result.paper[c(-13, -19, -27, -28, -29),]$pos)
+length(pos)
 
+### combine with file which have allele effect information 
+bayesint.result.paper.2 <- read.csv("~/F2/output/QTL_analysis/bayesint.result.paper.2.csv")
+bayesint.result.paper.2
 
+bayesint.result.paper.2$pos <- pos
+
+write.csv(bayesint.result.paper.2, file = "~/F2/output/QTL_analysis/bayesint.result.paper.3.csv") 
 ```
+
 
 
 

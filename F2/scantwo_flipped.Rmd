@@ -13,7 +13,7 @@ library(tidyverse)
 ### load data 
 ```{r}
 # scantwo analysis on cluster 
-# /share/malooflab/Ruijuan/KIAT_cabernet/F2/scantwo_flipped
+# /share/malooflab/Ruijuan/KIAT_cabernet/F2/scantwo_flipped 
 
 # scp result to whitney 
 # QTL result 
@@ -274,7 +274,6 @@ summary(qtl.add.Palmitic) # no additional loci
 qtl.fit.final.Palmitic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine.Palmitic,formula = y ~ Q1 * Q2 ,get.ests=T) 
 summary(qtl.fit.final.Palmitic)  
 
-
 # Myristic
 scantwo_perm_Myristic <- do.call(c, scantwo_perm_Myristic_Palmitic)[,1]
 summary(scantwo_perm_Myristic)
@@ -515,6 +514,8 @@ summary(qtl.add.days_to_flower) # no additional loci
 qtl.fit.final.days_to_flower <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine.days_to_flower,formula = y ~ Q1 + Q2 ,get.ests=T) 
 summary(qtl.fit.final.days_to_flower)
 
+effectplot(LG.f2.after.crossover, mname1 = "A10@183.9", mname2 = "C06@67.3") 
+
 ### days_to_bolt
 scantwo_perm_days_to_bolt <- do.call(c, scantwo_perm_days_to_flower_days_to_bolt_bolting_to_flowering)[,2]
 summary(scantwo_perm_days_to_bolt)
@@ -525,7 +526,6 @@ summary(scantwo_perm_days_to_bolt)
 
 summary(scantwo.imp[["days_to_bolt"]],perm=scantwo_perm_days_to_bolt,alpha=.05,pval=T)  
 
-# load map and make Oleic acid as the only phenotype 
 LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
                      phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
                      genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
@@ -564,6 +564,8 @@ summary(qtl.refine2.days_to_bolt) # no additional loci
 
 qtl.fit2.days_to_bolt <- fitqtl(LG.f2.after.crossover,qtl=qtl.refine2.days_to_bolt,get.ests=T)
 summary(qtl.fit2.days_to_bolt)  
+
+effectplot(LG.f2.after.crossover, mname1 = "A10@176", mname2 = "C06@83")  
 ``` 
 
 ### cis_11_Eicosenoic_acid & Linolenic_acid 
@@ -768,6 +770,106 @@ qtl.fit.lobe_number_I <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.lobe_number
 
 #examine our model
 summary(qtl.fit.lobe_number_I)    
-effectplot(cross=LG.f2.after.crossover, mname1 = "A10@176")  
+effectplot(cross=LG.f2.after.crossover, mname1 = "A10@176")   
 ```
+
+### effect plot for flower traits 
+```{r}
+png("~/F2/output/QTL_analysis/figure/QTL_effect_flower.png", width=10, height=5, units="in", res=300)
+par(mfrow=c(1,2)) 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$days_to_flower)
+effectplot(LG.f2.after.crossover, mname1 = "A10@184", mname2 = "C06@82", ylab = "days_to_flower", main = "days_to_flower")  
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$days_to_bolt)
+effectplot(LG.f2.after.crossover, mname1 = "A10@176", mname2 = "C06@86", ylab = "days_to_bolt", main = "days_to_bolt") 
+
+dev.off() 
+```
+
+### effect plot 
+```{r}
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+png("~/F2/output/QTL_analysis/figure/QTL_effect.png", width=10, height=15, units="in", res=300)
+par(mfrow=c(5,2)) 
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Palmitic_acid)
+effectplot(LG.f2.after.crossover, mname1 = "A08@38.6", mname2 = "C03@173.9", ylab = "Palmitic_acid", main = "Palmitic_acid") 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Oleic_acid)
+effectplot(LG.f2.after.crossover, mname1 = "A08@37.6", mname2 = "C03@174.0", ylab = "Oleic_acid", main = "Oleic_acid") 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linoleic_acid)
+effectplot(LG.f2.after.crossover, mname1 = "A08@38.6", mname2 = "C03@158.0", ylab = "Linoleic_acid", main = "Linoleic_acid") 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linolenic_acid) 
+effectplot(LG.f2.after.crossover, mname1 = "A08@37.6", mname2 = "C03@174.0", ylab = "Linolenic_acid", main = "Linolenic_acid") 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$cis_11_Eicosenoic_acid)
+effectplot(LG.f2.after.crossover, mname1 = "A08@35.3", ylab = "cis_11_Eicosenoic_acid", main = "cis_11_Eicosenoic_acid") 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Stearic_acid)
+effectplot(LG.f2.after.crossover, mname1 = "A08@38.6", mname2 = "C03@172.0", ylab = "Stearic_acid", main = "Stearic_acid") 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$vaccenic_acid)
+effectplot(LG.f2.after.crossover, mname1 = "A08@40.0", mname2 = "C03@156.0", ylab = "vaccenic_acid", main = "vaccenic_acid") 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Arachidic_acid)
+effectplot(LG.f2.after.crossover, mname1 = "A08@31.9", ylab = "Arachidic_acid", main = "Arachidic_acid") 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Erucic_acid)
+effectplot(LG.f2.after.crossover, mname1 = "A08@37.6", mname2 = "C03@174.0", ylab = "Erucic_acid", main = "Erucic_acid") 
+
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Behenic_acid)
+effectplot(LG.f2.after.crossover, mname1 = "A08@38.0", mname2 = "C03@158.0", ylab = "Behenic_acid", main = "Behenic_acid") 
+
+dev.off() 
+``` 
 

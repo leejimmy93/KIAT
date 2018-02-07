@@ -8,7 +8,7 @@ library(qtl)
 library(tidyverse)
 ```
 
-### 2D scan
+### 2D scan 
 scanone and cim only evaluate the evidence for a QTL one location a time.  It is possible to instead scan two locations at once. This can be particularly advantageous in identifying QTL if there is epistasis. 
 
 ### load data 
