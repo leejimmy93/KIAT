@@ -5,7 +5,7 @@ output: html_document
 
 ### goal of this script is to run QTL analysis using gen data with order flipped for several LGs 
 
-### scanone & CIM 
+### scanone & CIM  
 ```{r} 
 # run the code below on whitney using 
 cross.F2 <- read.cross("csvsr", genfile =   "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv", 
@@ -238,7 +238,7 @@ growth_modelQTL.annotated %>%
 ### eQTL analysis on growth model result 
 
 ```{r}
-load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
+load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata")  
 
 cis_eQTL %>% dim() # 8894   11 
 trans_eQTL %>% dim() # 17687    11 

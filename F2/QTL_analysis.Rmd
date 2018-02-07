@@ -522,7 +522,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_flower"]], method = "days_to
          chrs = c("A10", "C06"), 
          # lod = c(cim.perm[["days_to_bolt"]]),
          rug = TRUE, 
-         title = "flower bolting related")
+         title = "flower bolting related") 
 
 flower_cim$plot
 ggsave(flower_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /flower_cim.png", width = 7, height = 4)
@@ -552,7 +552,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic
          rug = TRUE) 
 
 # ggsave(oil_cim$plot, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /oil_cim.png", width = 8, height = 5) 
-ggsave(oil_cim$plot, filename = "~/F2/output/QTL_analysis/figure/oil_cim.png", width = 8, height = 5)
+ggsave(oil_cim$plot, filename = "~/F2/output/QTL_analysis/figure/oil_cim.png", width = 8, height = 5) 
 
 # growth related  
 growth_cim <- 
@@ -696,7 +696,7 @@ writeXStringSet(SNP_qtl_seq[[3]], filepath = "~/Desktop/Brassica_project/KIAT_RN
 ```
 
 ### sanger sequencing PCR & CAPS PCR for the sequences above 
-use NCBI primer_BLAST for sanger sequening primer design (refer to https://github.com/leejimmy93/KIAT/blob/master/parent/KIAT_SNP.Rmd)
+use NCBI primer_BLAST for sanger sequening primer design (refer to https://github.com/leejimmy93/KIAT/blob/master/parent/KIAT_SNP.Rmd) 
 
 use apeE for caps primer design. 
 1) paste fasta seq to apeE window

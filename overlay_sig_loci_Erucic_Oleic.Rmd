@@ -3,9 +3,10 @@ title: "overlay_sig_loci_Erucic_Oleic"
 output: html_document
 ---
 
+* This script was made during thanksgiving 2017 before KIAT meeting 
 Purpose of this script is to 
 1) visualize how fatty acid biosynthesis and metabolic related genes overlay with the significant SNPs that I identified from QTL and GWAS analysis. 
-2) visualize how previous identified loci overlay with the significant SNPs and loci that I identified from GWAS and QTL analysis. 
+2) visualize how previous identified loci overlay with the significant SNPs and loci that I identified from GWAS and QTL analysis.   
 
 ### import lib
 ```{r}
@@ -460,7 +461,7 @@ marker_Fnp_two_loci
 library(ggrepel)
 set.seed(111)
 
-p.Erucic_acid_A08 <- 
+p.Erucic_acid_A08 <-  
 ggplot() + geom_point(mapping = aes(x = as.numeric(as.character(POS)), y = lod), data = SNP.Erucic[SNP.Erucic$CHROM=="A08",]) + geom_line(mapping = aes(x = as.numeric(as.character(POS)), y = lod, color = "blue"), data = QTL.Erucic[QTL.Erucic$CHROM=="A08",]) + geom_hline(yintercept = 5) + geom_hline(yintercept = 42, color = "red") +  geom_text_repel(aes(x=as.numeric(as.character(start)), y=0, label=name, color = "dark_blue"), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrA08",]) + labs(title = "Erucic_A08", x = "physical position") + theme(legend.position = "None")  + geom_segment(aes(x=as.numeric(as.character(start)), y = 0, xend = as.numeric(as.character(end)), yend = 0, color = "dark_blue"), arrow = arrow(length = unit(0.5, "cm")), data = genes.GWAS.df.2[genes.GWAS.df.2$CHROM=="chrA08",]) + geom_segment(aes(x=as.numeric(as.character(Start)), y = 0, xend = as.numeric(as.character(End)), yend = 0, color = "blue"), arrow = arrow(length = unit(0.5, "cm")), data = marker_Fnp_two_loci[marker_Fnp_two_loci$Chrom.=="chrA08",]) + geom_text_repel(aes(x=as.numeric(as.character(Start)), y=0, label=marker_ID, color = "blue"), data = marker_Fnp_two_loci[marker_Fnp_two_loci$Chrom.=="chrA08",])  
 # 42 is 95% CI  
 p.Erucic_acid_A08

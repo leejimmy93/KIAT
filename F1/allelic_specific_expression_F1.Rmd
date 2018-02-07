@@ -352,7 +352,7 @@ We want to test whether or not the to ratios are actually different
 ```{r}
 hyp1 <- hypothesis(brms1,"Intercept = (Intercept + crossF1_415)")
 hyp1
-plot(hyp1)
+plot(hyp1) 
 ```
 Snp as random effect?
 
