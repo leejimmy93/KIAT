@@ -4,17 +4,17 @@ author: Lynn Ly
 output: html_document
 ---
 
-Author comment
-File description comment, including purpose of program, inputs, and outputs
-source() and library() statements
-Function definitions
-Executed statements, if applicable (e.g., print, plot)
+Author comment  
+File description comment, including purpose of program, inputs, and outputs  
+source() and library() statements  
+Function definitions  
+Executed statements, if applicable (e.g., print, plot)  
 
-Purpose: This uses the MBASED package to analyze allele specific expression. 
-  Single sample analysis: Find genes that display allelic imbalance ie. not expressed 0.5/0.5. Default threshold: 0.7 
-  Two sample analysis: Find genes that display different ASE ratios between two samples. Doesn't matter what the actual ratios are, as long as they differ by over 0.2
-Inputs: Pre-filtered VCF file, simplified gff file with just ranges and feature name
-Outputs: major allele frequencies, frequency differences, list of genes displaying ASE
+Purpose: This uses the MBASED package to analyze allele specific expression.  
+  Single sample analysis: Find genes that display allelic imbalance ie. not expressed 0.5/0.5. Default threshold: 0.7   
+  Two sample analysis: Find genes that display different ASE ratios between two samples with the SAME HAPLOTYPE. Doesn't matter what the actual ratios are, as long as they differ by over 0.2  
+Inputs: Pre-filtered VCF file, simplified gff file with just ranges and feature name  
+Outputs: major allele frequencies, frequency differences, list of genes displaying ASE  
 
 ```{r setup, include=FALSE}
 library(MBASED)
@@ -64,7 +64,7 @@ SummarizeASEResults_1s <- function(MBASEDOutput) {
     pValueHeterogeneity = assays(MBASEDOutput)$pValueHeterogeneity[,1])
   
   lociOutputGR <- rowRanges(metadata(MBASEDOutput)$locusSpecificResults)
-  lociOutputGR$allele1IsMajor <-  assays(metadata(MBASEDOutput)$locusSpecificResults)$allele1IsMajor[,1]
+  lociOutputGR$allele1IsMajor <- assays(metadata(MBASEDOutput)$locusSpecificResults)$allele1IsMajor[,1]
   lociOutputGR$MAF <- assays(metadata(MBASEDOutput)$locusSpecificResults)$MAF[,1]
   lociOutputList <- split(lociOutputGR, factor(lociOutputGR$aseID, levels = unique(lociOutputGR$aseID)))
   return(list(geneOutput=geneOutputDF, locusOutput=lociOutputList))
@@ -78,7 +78,9 @@ ExtractASE <- function(MBASEDOutput) {
   
   results <- SummarizeASEResults_1s(MBASEDOutput)
 
-  ASEindexes <- results$geneOutput$pValueASE * 46577 < 0.05 & 
+  adjustedP <- p.adjust(results$geneOutput$pValueASE, method = "BH", n = length(results$geneOutput$pValueASE))
+  
+  ASEindexes <- adjustedP < 0.05 & 
     results$geneOutput$majorAlleleFrequency > 0.7
   
   significantResults <- list(results$geneOutput[ASEindexes, ], 
@@ -121,18 +123,25 @@ MBASED.Ol <- SingleSample(annotatedData, mySNVs, genotype = "Ol")
 save(MBASED.F1.414, file = "MBASED.F1.Ol.Rdata")
 ```
 
-```{r Data to use}
-# Change the following line if not using B. napus
+```{r Data Filtering}
 gff.mRNA <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/gff.mRNA")
 
-# Data to use
+# Data to use (basicallly, VCF data pre-filtered for quality)
 load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output/F1.young.GQ.filtered.Rdata")
 
 annotatedData <- AnnotateSNPs(SNPdata = F1.young.GQ.filtered, gff.mRNA = gff.mRNA)
   
 # Remove SNVs with no associated genes
 annotatedData <- filter(annotatedData, !is.na(GeneID))
-  
+
+# The following filters are applied to avoid spurious ASE calls.
+
+# Require at least 5 reads and at least 10% of all reads support each allele
+
+# Discard all SNVs within 10 bp of another called variant (if one read spans both SNVs, some independence assumptions are violated)
+
+# NOT AVAILABLE FOR B NAPUS. Discard all SNVs in highly repetitive genomic regions, which we defined as regions with sequence identity of > 95% to another genomic region based on selfChain Link track from UCSC genome browser. 
+
 mySNVs <- GRanges(
   seqnames = annotatedData$CHROM,
   ranges = IRanges(start = annotatedData$POS, width = 1),
@@ -143,7 +152,7 @@ mySNVs <- GRanges(
 names(mySNVs) <- annotatedData$GeneID
 ```
 
-In Progress: TwoSample analysis
+In Progress: TwoSample analysis  
 
 ```{r Two Sample Function}
 TwoSample <- function(annotatedData, mySNVs, genotype1, genotype2){
@@ -163,16 +172,29 @@ TwoSample <- function(annotatedData, mySNVs, genotype1, genotype2){
   MBASEDOutput <- runMBASED(
     ASESummarizedExperiment = mySample,
     isPhased = FALSE,
-    numSim = 0,
+    numSim = 10
     #BPPARAM = SerialParam() # Default: No paralellization
   )
   
   return(MBASEDOutput)
-}
+} 
+
 ```
 
 ```{r Run Two Sample}
-MBASED.F1.414.vs.F1.415 <- TwoSample(annotatedData, mySNVs, "F1_414", "F1_415")
+# Estimating two sample run time using smaller datasets
+annotatedData.trimmed <- annotatedData[400:600 ,]
+
+mySNVs.trimmed <- GRanges(
+  seqnames = annotatedData.trimmed$CHROM,
+  ranges = IRanges(start = annotatedData.trimmed$POS, width = 1),
+  aseID = as.vector(annotatedData.trimmed$GeneID),
+  allele1 = annotatedData.trimmed$REF,
+  allele2 = annotatedData.trimmed$ALT)
+
+time100.10 <- system.time(MBASED.F1.414.vs.F1.415 <- TwoSample(annotatedData.trimmed, mySNVs.trimmed, "F1_414", "F1_415"))
+
+# 100: 9 seconds
 
 ```
 
@@ -197,4 +219,3 @@ dim(sig.Ae[[1]]) #11995 SNVs found to be in ASE
 sig.Ol <- ExtractASE(MBASED.Ol)
 dim(sig.Ol[[1]]) #11990 SNVs found to be in ASE
 ```
-
