@@ -22,6 +22,7 @@ library(tidyverse)
 ```
 
 ```{r AnnotateSNPs Function}
+# Modified from Ruijuan's function in helpler.R
 AnnotateSNPs <- function(SNPdata, gff.mRNA){
   # Combines SNP/SNV loci with gene names
   #
@@ -73,11 +74,10 @@ SummarizeASEResults_1s <- function(MBASEDOutput) {
 ExtractASE <- function(MBASEDOutput) {
   # Extract only desired genes
   # Modify ASEindexes to vary the strictness of selection.
-  # TODO: Implement Benjamini-Hochberg correction (punish p-values based on rank)
-  # Currently using Bonferroni as a crude correction measure (punishes all p-values equally)
   
   results <- SummarizeASEResults_1s(MBASEDOutput)
 
+  # Apply Benjamini-Hochberg (fdr) correction for multiple testing
   adjustedP <- p.adjust(results$geneOutput$pValueASE, method = "BH", n = length(results$geneOutput$pValueASE))
   
   ASEindexes <- adjustedP < 0.05 & 
@@ -89,10 +89,10 @@ ExtractASE <- function(MBASEDOutput) {
 }
 ```
 
-```{r Single Sample Function}
+```{r Single and Two Sample Function}
 # Please change numSim to at least 1,000,000 for final analysis
 
-SingleSample <- function(annotatedData, mySNVs, genotype){
+SingleSample <- function(annotatedData, mySNVs, genotype, numSim = 0){
   # create RangedSummarizedExperiment object as input for runMBASED
   # then runMBASED
   
@@ -107,55 +107,13 @@ SingleSample <- function(annotatedData, mySNVs, genotype){
   
   MBASEDOutput <- runMBASED(
     ASESummarizedExperiment = mySample,
-    numSim = 1000,
-    isPhased = FALSE) 
+    numSim = numSim,
+    isPhased = TRUE) 
 
   return(MBASEDOutput)
 }
 
-MBASED.F1.414 <- SingleSample(annotatedData, mySNVs, genotype = "F1_414")
-save(MBASED.F1.414, file = "MBASED.F1.414.Rdata")
-MBASED.F1.415 <- SingleSample(annotatedData, mySNVs, genotype = "F1_415")
-save(MBASED.F1.414, file = "MBASED.F1.415.Rdata")
-MBASED.Ae <- SingleSample(annotatedData, mySNVs, genotype = "Ae")
-save(MBASED.F1.414, file = "MBASED.F1.Ae.Rdata")
-MBASED.Ol <- SingleSample(annotatedData, mySNVs, genotype = "Ol")
-save(MBASED.F1.414, file = "MBASED.F1.Ol.Rdata")
-```
-
-```{r Data Filtering}
-gff.mRNA <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/gff.mRNA")
-
-# Data to use (basicallly, VCF data pre-filtered for quality)
-load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output/F1.young.GQ.filtered.Rdata")
-
-annotatedData <- AnnotateSNPs(SNPdata = F1.young.GQ.filtered, gff.mRNA = gff.mRNA)
-  
-# Remove SNVs with no associated genes
-annotatedData <- filter(annotatedData, !is.na(GeneID))
-
-# The following filters are applied to avoid spurious ASE calls.
-
-# Require at least 5 reads and at least 10% of all reads support each allele
-
-# Discard all SNVs within 10 bp of another called variant (if one read spans both SNVs, some independence assumptions are violated)
-
-# NOT AVAILABLE FOR B NAPUS. Discard all SNVs in highly repetitive genomic regions, which we defined as regions with sequence identity of > 95% to another genomic region based on selfChain Link track from UCSC genome browser. 
-
-mySNVs <- GRanges(
-  seqnames = annotatedData$CHROM,
-  ranges = IRanges(start = annotatedData$POS, width = 1),
-  aseID = as.vector(annotatedData$GeneID),
-  allele1 = annotatedData$REF,
-  allele2 = annotatedData$ALT)
-  
-names(mySNVs) <- annotatedData$GeneID
-```
-
-In Progress: TwoSample analysis  
-
-```{r Two Sample Function}
-TwoSample <- function(annotatedData, mySNVs, genotype1, genotype2){
+TwoSample <- function(annotatedData, mySNVs, genotype1, genotype2, numSim = 0){
   RO1 <- paste(genotype1, "RO", sep = "_")
   AO1 <- paste(genotype1, "AO", sep = "_")
   RO2 <- paste(genotype2, "RO", sep = "_")
@@ -171,19 +129,141 @@ TwoSample <- function(annotatedData, mySNVs, genotype1, genotype2){
   
   MBASEDOutput <- runMBASED(
     ASESummarizedExperiment = mySample,
-    isPhased = FALSE,
-    numSim = 10
+    isPhased = TRUE,
+    numSim = numSim
     #BPPARAM = SerialParam() # Default: No paralellization
   )
   
   return(MBASEDOutput)
 } 
+```
+
+```{r Phasing Data}
+gff.mRNA <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/gff.mRNA")
+
+# Data to use (basicallly, VCF data pre-filtered for quality)
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output/F1.young.GQ.filtered.Rdata")
+
+inputVCF <- F1.young.GQ.filtered
+inputVCF.Ae <- inputVCF[inputVCF$Ae_GT == 1, ]
+inputVCF.Ol <- inputVCF[inputVCF$Ol_GT == 1, ]
+
+# Switch the Ref and Alt alleles, and change the counts accordingly
+colnames(inputVCF.Ol)[3:4] <- c("ALT", "REF")
+colnames(inputVCF.Ol)[17:24] <- c("Ae_AO", "Ol_AO", "F1_414_AO", "F1_415_AO",
+                                  "Ae_RO", "Ol_RO", "F1_414_RO", "F1_415_RO")
+
+phasedData.unordered <- rbind(inputVCF.Ae, inputVCF.Ol)
+
+attach(phasedData.unordered)
+phasedData <- phasedData.unordered[order(CHROM, POS), ]
+detach(phasedData.unordered)
+```
+
+```{r Filtering Functions}
+
+CoverageFilter <- function(vcf) {
+  # Modified from Ruijuan's function in helpler.R
+  # Require at least 10 reads and at least 10% of all reads support each allele
+  
+  totalReads <- vcf$F1_414_DP
+  alleles <- vcf[, c(19, 23)]
+  vcf.filtered <- vcf[which(apply(alleles / totalReads, 1, min) > .10), ]
+  
+  totalReads <- vcf.filtered$F1_415_DP
+  alleles <- vcf.filtered[, c(20, 24)]
+  vcf.filtered <- vcf.filtered[which(apply(alleles / totalReads, 1, min) > .10), ]
+  
+  return(vcf.filtered) 
+} 
+
+RangeFilter <- function(vcf) {
+  # Discard SNVs that are within 10 bp of another called SNV. 
+  # This is necessary because if one read spans both SNVs, then our counts are not independent. 
+  # There is probably a better way to do this...
+  
+  SNV.ranges <- GRanges(seqnames = Rle(SNPdata$CHROM), 
+                    ranges = IRanges(start = SNPdata$POS - 5, end = SNPdata$POS + 5),
+                    CHROM = SNPdata$CHROM,
+                    POS = SNPdata$POS)
+  
+  overlappedGenes <- mergeByOverlaps(SNV.ranges, SNV.ranges)
+  
+  # Get only the 10bp overlaps that were not with itself
+  actualOverlappedGenes <- overlappedGenes[which(overlappedGenes$POS != overlappedGenes$POS.1),]
+  
+  a <- as.data.frame(actualOverlappedGenes)[, c(8, 9, 17, 18)]
+  
+  # We don't want to get rid of all the SNVs though. We want to keep as many SNVs as possible that aren't overlapping. 
+  # idea for tmrw morning: combine chrom and pos. 
+  i <- 1
+  while(i <= nrow(a)) {
+    if (a$POS[i] %in% a$POS.1) {
+      a <- a[-i, ]
+    } else {
+    i <- i + 1
+    }
+  }
+
+  rangeFilteredData <- anti_join(SNPdata, as.data.frame(actualOverlappedGenes), by = c("CHROM", "POS"))
+}
+```
+
+
+```{r Annotating and Filtering Data}
+annotatedData <- AnnotateSNPs(SNPdata = phasedData, gff.mRNA = gff.mRNA)
+  
+# Remove SNVs with no associated genes
+annotatedData <- filter(annotatedData, !is.na(GeneID))
+dim(annotatedData)
+
+# The following filters are applied to avoid spurious ASE calls.
+
+# Require at least 5 reads and at least 10% of all reads support each allele
+annotatedData <- CoverageFilter(annotatedData)
+dim(annotatedData)
+
+# Discard all SNVs within 10 bp of another called variant (if one read spans both SNVs, some independence assumptions are violated)
+annotatedData <- RangeFilter(annotatedData)
+dim(annotatedData)
+
+# NOT AVAILABLE FOR B NAPUS. Discard all SNVs in highly repetitive genomic regions, which we defined as regions with sequence identity of > 95% to another genomic region based on selfChain Link track from UCSC genome browser.
+
+```
+```{r Estimate Overdispersion and Reference Allele Bias}
+# If our data presents any, we should include these metrics when creating mySNVs. 
+# Use the additional functions in MBASED
 
 ```
 
-```{r Run Two Sample}
+
+
+
+```{r Single Sample Analysis}
+mySNVs <- GRanges(
+  seqnames = annotatedData$CHROM,
+  ranges = IRanges(start = annotatedData$POS, width = 1),
+  aseID = as.vector(annotatedData$GeneID),
+  allele1 = annotatedData$REF,
+  allele2 = annotatedData$ALT)
+  
+names(mySNVs) <- annotatedData$GeneID
+
+MBASED.F1.414 <- SingleSample(annotatedData, mySNVs, genotype = "F1_414", numSim = 0)
+save(MBASED.F1.414, file = "MBASED.F1.414.Rdata")
+MBASED.F1.415 <- SingleSample(annotatedData, mySNVs, genotype = "F1_415", numSim = 0)
+save(MBASED.F1.414, file = "MBASED.F1.415.Rdata")
+MBASED.Ae <- SingleSample(annotatedData, mySNVs, genotype = "Ae", numSim = 0)
+save(MBASED.F1.414, file = "MBASED.F1.Ae.Rdata")
+MBASED.Ol <- SingleSample(annotatedData, mySNVs, genotype = "Ol", numSim = 0)
+save(MBASED.F1.414, file = "MBASED.F1.Ol.Rdata")
+```
+
+In Progress: Two Sample analysis  
+
+```{r Two Sample Analysis}
 # Estimating two sample run time using smaller datasets
-annotatedData.trimmed <- annotatedData[400:600 ,]
+annotatedData.trimmed <- annotatedData[1:500 ,]
 
 mySNVs.trimmed <- GRanges(
   seqnames = annotatedData.trimmed$CHROM,
@@ -194,6 +274,7 @@ mySNVs.trimmed <- GRanges(
 
 time100.10 <- system.time(MBASED.F1.414.vs.F1.415 <- TwoSample(annotatedData.trimmed, mySNVs.trimmed, "F1_414", "F1_415"))
 
+time100.10
 # 100: 9 seconds
 
 ```
@@ -207,7 +288,6 @@ load("MBASED.Ol.Rdata")
 sig.F1.414 <- ExtractASE(MBASED.F1.414)
 dim(sig.F1.414[[1]]) #1946 SNVs found to be in ASE
 summary(sig.F1.414[[2]])
-
 
 sig.F1.415 <- ExtractASE(MBASED.F1.415)
 dim(sig.F1.415[[1]]) #2164 SNVs found to be in ASE
