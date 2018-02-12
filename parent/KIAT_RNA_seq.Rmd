@@ -1158,10 +1158,12 @@ gt_gt.tissue.melt$logPvalue <- -log10(gt_gt.tissue.melt$value)
 
 # plot 
 pl.heatmap1 <- ggplot(data = gt_gt.tissue.melt)
-pl.heatmap1 <- pl.heatmap1 + geom_tile(color = "black", aes(x = factor(variable), y = Term, fill=logPvalue)) + scale_fill_gradient2(low=muted("green"), high=muted("magenta")) 
+pl.heatmap1 <- pl.heatmap1 + geom_tile(color = "black", aes(x = factor(variable), y = Term, fill=logPvalue)) + scale_fill_gradient2(low=muted("green"), high=("royalblue")) 
 pl.heatmap1 <- pl.heatmap1 + labs(y = "GO term", x="", title=" ") 
-pl.heatmap1 
+pl.heatmap1 <- pl.heatmap1 + theme_classic()
+pl.heatmap1  
 
+ggsave(pl.heatmap1, filename = "~/Desktop/F2_paper/pl.heatmap1.png", width = 7, height = 4)
 # young 
 DEgene.young.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young))
 DEgene.young.GO.ORA
@@ -2449,7 +2451,7 @@ colnames(DEGs_number_between_gt.melt.parent.2) <- c("tissue", "number", "DE")
 DEGs_number_between_gt.melt.parent.2
 
 # reorder: up 1st down 2nd 
-DEGs_number_between_gt.melt.parent.2$DE <- factor(DEGs_number_between_gt.melt.parent.2$DE, levels = c("up", "down"))
+DEGs_number_between_gt.melt.parent.2$DE <- factor(DEGs_number_between_gt.melt.parent.2$DE, levels = c("up", "down")) 
 
 DEGs_number_between_gt.melt.parent.2 <- DEGs_number_between_gt.melt.parent.2[order(DEGs_number_between_gt.melt.parent.2$DE),]
 DEGs_number_between_gt.melt.parent.2

@@ -2009,7 +2009,7 @@ length(intersect(vcf.GATK, vcf.freebayes)) # 63981
 
 # #### plot of venn diagram 
 library(gplots)
-library(VennDiagram)
+library(VennDiagram) 
 
 grid.newpage()
 venn.freebayes_GATK <-
@@ -2024,7 +2024,7 @@ save_plot("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/figure/venn
 data <- vcf.Ae.Ol.intersect.df.2
 
 # below the block of code should go into function... 
-chr_ID <- unique(data$CHROM)
+chr_ID <- unique(data$CHROM) 
 number.unique <- list() 
 
 for (chr in chr_ID) {
@@ -2075,11 +2075,11 @@ library(ggplot2)
 pl.SNP.main.2.unique <- ggplot(data = vcf.Ae.Ol.intersect.df.2.sorted)
 pl.SNP.main.2.unique <- pl.SNP.main.2.unique + geom_histogram(aes(x=POS, fill=subgenome), binwidth = 1000000) 
 pl.SNP.main.2.unique <- pl.SNP.main.2.unique + facet_grid(Chr_ID ~subgenome)
-pl.SNP.main.2.unique <- pl.SNP.main.2.unique + labs(list(title = "", x = "chromosome ID", y = "number of SNPs"))
-pl.SNP.main.2.unique <- pl.SNP.main.2.unique + theme(legend.position = "none")
-pl.SNP.main.2.unique 
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + labs(list(title = "", x = "physical position", y = "number of SNPs"))
+pl.SNP.main.2.unique <- pl.SNP.main.2.unique + theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + scale_fill_manual(values=c("red", "blue"))
+pl.SNP.main.2.unique  
 
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP.main.PerMb.png", width = 9, height = 7) 
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP.main.PerMb.png", width = 9, height = 7)  
 
 ######
 # library(ggplot2)
