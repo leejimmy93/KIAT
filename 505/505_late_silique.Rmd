@@ -3245,15 +3245,14 @@ Chrom_name <-
 Erucic_acid %>% 
   dplyr::select(Chromosome, Chrom_name) %>% 
   unique()
-Chrom_name
-=======
+Chrom_name 
 rep1$Name
 ```
 
 ### GWAS on all fatty acid composition and oil content 
 ```{r}
 fatty_acid_oil_new <- read.csv("~/505/data/phenotype/505_fatty_acid_20171128.csv")
-colnames(fatty_acid_oil_new)
+colnames(fatty_acid_oil_new) 
 
 pheno.505.fatty.acid <- 
 fatty_acid_oil_new %>% 
