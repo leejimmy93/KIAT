@@ -26,7 +26,7 @@ load("~/F2/output/vstMat.f2.Rdata")
 dim(vstMat.f2) # 56180   166 
 
 # follow Julin's script https://github.com/MaloofLab/BrapaNetworks/blob/master/ProcessCounts.Rmd 
-read_count_F2 <- read.table("~/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1)
+read_count_F2 <- read.table("~/F2/data/est.counts.F2.tsv.gz", header = T, row.names = 1) 
 dim(read_count_F2) # 101040    166
 
 # load in batch information 

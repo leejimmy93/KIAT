@@ -250,6 +250,110 @@ pheatmap(as.matrix(trait_cor),
 dev.off() 
 ```
 
+### phenotype traits for Da-Ae & Da-Ol-1
+get korean greenhouse data for Da-Ae & Da-Ol-1 from 505 dataset.  
+Da-Ae (K200) Da-Ol-1 (K201) 
+
+There is another dataset which contains more detailed growth traits, I need to talk to Julin on whether that should be included or not. 
+
+```{r}
+library(reshape2)
+pheno.505 <- read.csv("~/505/data/505_Phenotype_Bnapus_38_traits.csv")
+tmp.1 <- pheno.505[,c("PHENOTYPE", "ID_505_K200", "ID_505_K201")] 
+tmp.1 <- melt(tmp.1[grep("MG|field|Field", tmp.1$PHENOTYPE, invert = T),])
+tmp.1$PHENOTYPE
+tmp.1$class <- rep("growth_traits", nrow(tmp.1))
+tmp.1$class[grep("Oil|acid", tmp.1$PHENOTYPE)] <- rep("oil_traits", 6)
+
+pheno.505 %>% colnames()  
+fatty_acid_oil_new <- read.csv("~/505/data/phenotype/505_fatty_acid_20171128.csv")
+colnames(fatty_acid_oil_new) 
+
+pheno.505.fatty.acid <- 
+fatty_acid_oil_new %>% 
+  dplyr::select(Line.number:Erucic.acid..C22.1n9.) 
+
+colnames(pheno.505.fatty.acid)
+
+tmp.2 <- 
+pheno.505.fatty.acid %>% 
+  dplyr::filter(Line.number == "K200" | Line.number == "K201") 
+
+tmp.2 <- as.data.frame(t(tmp.2))   
+colnames(tmp.2) <- as.character(unlist(tmp.2[1,])) 
+tmp.2 <- tmp.2[-1,]
+rownames(tmp.2) <- gsub("([[:print:]]+)(..C)([[:print:]]+)", "\\1", rownames(tmp.2))
+
+rownames(tmp.2) <- gsub("\\.", "_", rownames(tmp.2))
+rownames(tmp.2)[1] <- "Oil_content"
+tmp.2$PHENOTYPE <- rownames(tmp.2)
+tmp.2 <- melt(tmp.2, id.vars = "PHENOTYPE")  
+tmp.2$class <- rep("oil_traits", nrow(tmp.2))
+
+pheno.parent <- rbind(tmp.1, tmp.2) 
+pheno.parent$variable <- gsub("ID_505_K200", "Da-Ae", pheno.parent$variable)
+pheno.parent$variable <- gsub("ID_505_K201", "Da-Ol-1", pheno.parent$variable)
+pheno.parent$variable <- gsub("K200", "Da-Ae", pheno.parent$variable)
+pheno.parent$variable <- gsub("K201", "Da-Ol-1", pheno.parent$variable)
+
+pheno.parent$value <- round(as.numeric(as.character(pheno.parent$value)), 2)
+pheno.parent %>% head()  
+
+pheno.parent$PHENOTYPE <- factor(pheno.parent$PHENOTYPE, levels = unique(pheno.parent[order(tolower(pheno.parent$PHENOTYPE)),]$PHENOTYPE))
+
+p.oil.traits <- 
+pheno.parent %>% 
+  dplyr::filter(class == "oil_traits") %>% 
+  dplyr::filter(PHENOTYPE != "Caprylic_acid" & 
+                PHENOTYPE != "Capric_acid" & 
+                PHENOTYPE != "Lauric_acid" & 
+                PHENOTYPE != "Pentadecanoic_acid" & 
+                PHENOTYPE != "Heptadecanoic_aci") %>% 
+  ggplot() + 
+  geom_bar(aes(x = variable, y = value, fill = variable), stat = "summary", fun.y = "mean", width = 0.5) + 
+  facet_wrap(~PHENOTYPE, scales = "free") + 
+  theme(axis.title = element_blank(), 
+        axis.text.x = element_blank()) + 
+  scale_fill_manual(values = alpha(c("blue", "red"), .8))
+
+p.growth.traits <-  
+pheno.parent %>% 
+  dplyr::filter(class == "growth_traits") %>% 
+  dplyr::filter(PHENOTYPE != "germ.rate_KR_GH") %>% 
+  ggplot() + 
+  geom_col(aes(x = variable, y = value, fill = variable), width = 0.5) + 
+  facet_wrap(~PHENOTYPE, scales = "free", nrow = 3) + 
+  theme(axis.title = element_blank(), 
+        axis.text.x = element_blank()) + 
+  scale_fill_manual(values = alpha(c("blue", "red1"), .8))
+
+library(cowplot) 
+
+plot.all.paper <-plot_grid(
+  p.oil.traits+theme(legend.position="none",axis.text.x=element_blank())+labs(title="oil traits", ylab = "percentage"),
+  p.growth.traits+theme(legend.position="bottom", legend.justification = 'center', axis.text.x=element_blank(),  legend.title = element_blank())+labs(title="growth traits", y="unit???"),
+  ncol=1, nrow = 2,labels=c("","")) 
+
+plot.all.paper 
+
+ggsave(plot.all.paper, filename = "~/F2/paper/p.parent.pheno.png", width = 15, height = 12)    
+
+### get the main of oil traits for two parents 
+pheno.parent.oil <- 
+pheno.parent %>% 
+  dplyr::filter(class == "oil_traits") %>% 
+  dplyr::filter(PHENOTYPE != "Capric_acid" & 
+                PHENOTYPE != "Lauric_acid" & 
+                PHENOTYPE != "Pentadecanoic_acid") 
+
+pheno.parent.oil <- 
+pheno.parent.oil %>% 
+  group_by(PHENOTYPE, variable) %>% 
+  summarise(mean = mean(value)) 
+
+
+```
+
 ### appendix function for this script 
 ```{r}
 ### function to extract pair of traits with high correlation 
@@ -277,4 +381,5 @@ high.cor.pair <- function(correlation, threshold){
   output  
 }      
 ```
+
 
