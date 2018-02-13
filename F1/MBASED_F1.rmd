@@ -92,7 +92,7 @@ ExtractASE <- function(MBASEDOutput) {
 ```{r Single and Two Sample Function}
 # Please change numSim to at least 1,000,000 for final analysis
 
-SingleSample <- function(annotatedData, mySNVs, genotype, numSim = 0){
+SingleSample <- function(annotatedData, mySNVs, genotype, numSim = 0, refBias = 0.5){
   # create RangedSummarizedExperiment object as input for runMBASED
   # then runMBASED
   
@@ -101,7 +101,10 @@ SingleSample <- function(annotatedData, mySNVs, genotype, numSim = 0){
   
   mySample <- SummarizedExperiment(
     assays = list(lociAllele1Counts = matrix(annotatedData[, RO], ncol = 1, dimnames = list(names(mySNVs), 'mySample')),
-                lociAllele2Counts = matrix(annotatedData[, AO], ncol = 1,  dimnames = list(names(mySNVs), 'mySample'))
+                lociAllele2Counts = matrix(annotatedData[, AO], ncol = 1,  dimnames = list(names(mySNVs), 'mySample')),
+                lociAllele1CountsNoASEProbs=matrix(annotatedData$refBias, 
+                                                   ncol=1, dimnames=list(names(mySNVs), 'mySample'))
+
                 ),
     rowRanges=mySNVs)
   
@@ -118,13 +121,18 @@ TwoSample <- function(annotatedData, mySNVs, genotype1, genotype2, numSim = 0){
   AO1 <- paste(genotype1, "AO", sep = "_")
   RO2 <- paste(genotype2, "RO", sep = "_")
   AO2 <- paste(genotype2, "AO", sep = "_")
+  RAB1 <- paste(genotype1, "refBias", sep = "_")
+  RAB2 <- paste(genotype2, "refBias", sep = "_")
   
   mySample <- SummarizedExperiment(
     assays = list(lociAllele1Counts = matrix(c(annotatedData[, RO1], annotatedData[, RO2]), ncol = 2,
                                              dimnames = list(names(mySNVs), c(genotype1, genotype2))),
                                              
                   lociAllele2Counts = matrix(c(annotatedData[, AO1], annotatedData[, AO2]), ncol = 2,
-                                            dimnames = list(names(mySNVs), c(genotype1, genotype2)))),
+                                            dimnames = list(names(mySNVs), c(genotype1, genotype2))),
+    
+                  lociAllele1CountsNoASEProbs = matrix(c(annotatedData[, RAB1], annotatedData[, RAB2]),
+                                                   ncol=2, dimnames=list(names(mySNVs), c(genotype1, genotype2)))),
     rowRanges=mySNVs)
   
   MBASEDOutput <- runMBASED(
@@ -136,28 +144,6 @@ TwoSample <- function(annotatedData, mySNVs, genotype1, genotype2, numSim = 0){
   
   return(MBASEDOutput)
 } 
-```
-
-```{r Phasing Data}
-gff.mRNA <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/gff.mRNA")
-
-# Data to use (basicallly, VCF data pre-filtered for quality)
-load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output/F1.young.GQ.filtered.Rdata")
-
-inputVCF <- F1.young.GQ.filtered
-inputVCF.Ae <- inputVCF[inputVCF$Ae_GT == 1, ]
-inputVCF.Ol <- inputVCF[inputVCF$Ol_GT == 1, ]
-
-# Switch the Ref and Alt alleles, and change the counts accordingly
-colnames(inputVCF.Ol)[3:4] <- c("ALT", "REF")
-colnames(inputVCF.Ol)[17:24] <- c("Ae_AO", "Ol_AO", "F1_414_AO", "F1_415_AO",
-                                  "Ae_RO", "Ol_RO", "F1_414_RO", "F1_415_RO")
-
-phasedData.unordered <- rbind(inputVCF.Ae, inputVCF.Ol)
-
-attach(phasedData.unordered)
-phasedData <- phasedData.unordered[order(CHROM, POS), ]
-detach(phasedData.unordered)
 ```
 
 ```{r Filtering Functions}
@@ -180,35 +166,97 @@ CoverageFilter <- function(vcf) {
 RangeFilter <- function(vcf) {
   # Discard SNVs that are within 10 bp of another called SNV. 
   # This is necessary because if one read spans both SNVs, then our counts are not independent. 
-  # There is probably a better way to do this...
+  # There may be a more elegant way to do this
   
-  SNV.ranges <- GRanges(seqnames = Rle(SNPdata$CHROM), 
-                    ranges = IRanges(start = SNPdata$POS - 5, end = SNPdata$POS + 5),
-                    CHROM = SNPdata$CHROM,
-                    POS = SNPdata$POS)
+  SNV.ranges <- GRanges(seqnames = Rle(vcf$CHROM), 
+                    ranges = IRanges(start = vcf$POS - 5, end = vcf$POS + 5),
+                    CHROM = vcf$CHROM,
+                    POS = vcf$POS)
   
   overlappedGenes <- mergeByOverlaps(SNV.ranges, SNV.ranges)
   
-  # Get only the 10bp overlaps that were not with itself
-  actualOverlappedGenes <- overlappedGenes[which(overlappedGenes$POS != overlappedGenes$POS.1),]
+  # Get only the 10bp overlaps that were not self-overlaps
+  overlappedGenes <- overlappedGenes[which(overlappedGenes$POS != overlappedGenes$POS.1),]
   
-  a <- as.data.frame(actualOverlappedGenes)[, c(8, 9, 17, 18)]
+  # Trim to just the relevant columns, CHROM and POS
+  overlappedGenes <- as.data.frame(overlappedGenes)[, c(8, 9, 17, 18)]
+  overlappedGenes <- mutate(overlappedGenes, SNV = paste(CHROM, POS), SNV_match = paste(CHROM.1, POS.1))
   
   # We don't want to get rid of all the SNVs though. We want to keep as many SNVs as possible that aren't overlapping. 
-  # idea for tmrw morning: combine chrom and pos. 
   i <- 1
-  while(i <= nrow(a)) {
-    if (a$POS[i] %in% a$POS.1) {
-      a <- a[-i, ]
+  while(i <= nrow(overlappedGenes)) {
+    if (overlappedGenes$SNV[i] %in% overlappedGenes$SNV_match) {
+      overlappedGenes <- overlappedGenes[-i, ]
     } else {
     i <- i + 1
     }
   }
 
-  rangeFilteredData <- anti_join(SNPdata, as.data.frame(actualOverlappedGenes), by = c("CHROM", "POS"))
+  rangeFilteredData <- anti_join(vcf, as.data.frame(overlappedGenes), by = c("CHROM", "POS"))
 }
 ```
 
+From Paper: We assumed that fref,SNV (0.5) is constant across all SNVs within a sample (global reference bias), and we estimated this value as  
+`Nref/Ntotal`  
+which is the ratio of all reference reads to total reads in the sample, after excluding the loci with the top 5% of read counts (trimmed for robustness)
+
+```{r Estimate Overdispersion and Reference Allele Bias}
+# If our data presents any, we should include these metrics when creating mySNVs. 
+# Use the additional functions in MBASED
+
+# Reference Allele Bias is sample-specific and should be recalculated for each sample. 
+CalcReferenceBias <- function(vcf, genotype) {
+  RO <- paste(genotype, "RO", sep = "_")
+  DP <- paste(genotype, "DP", sep = "_")
+  
+  cutoff <- 0.95 * nrow(vcf)
+  orderedRO <- sort(vcf[, RO])
+  orderedDP <- sort(vcf[, DP])
+  
+  Nref <- sum(head(orderedRO, cutoff))
+  Ntotal <- sum(head(orderedDP, cutoff))
+  
+  globalReferenceBias <- Nref / Ntotal
+  
+  return(globalReferenceBias)
+}
+
+# TODO: Figure out how to calculate dispersion
+CalcDispersion <- function(vcf, genotype) {
+  return(0)
+}
+```
+
+```{r Phasing Data}
+gff.mRNA <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/gff.mRNA")
+
+# Data to use (basically, VCF data pre-filtered for quality)
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output/F1.young.GQ.filtered.Rdata")
+
+inputVCF <- F1.young.GQ.filtered
+
+# Calculate the reference bias for each sample separately. 
+refBias414 <- CalcReferenceBias(inputVCF, "F1_414") # 0.5107107
+refBias415 <- CalcReferenceBias(inputVCF, "F1_415") # 0.5152294
+
+inputVCF.Ae <- inputVCF[inputVCF$Ae_GT == 1, ]
+inputVCF.Ae$F1_414_refBias <- refBias414
+inputVCF.Ae$F1_415_refBias <- refBias415
+inputVCF.Ol <- inputVCF[inputVCF$Ol_GT == 1, ]
+inputVCF.Ol$F1_414_refBias <- 1 - refBias414
+inputVCF.Ol$F1_415_refBias <- 1 - refBias415
+
+# Switch the Ref and Alt alleles, and change the counts accordingly
+colnames(inputVCF.Ol)[3:4] <- c("ALT", "REF")
+colnames(inputVCF.Ol)[17:24] <- c("Ae_AO", "Ol_AO", "F1_414_AO", "F1_415_AO",
+                                  "Ae_RO", "Ol_RO", "F1_414_RO", "F1_415_RO")
+
+phasedData.unordered <- rbind(inputVCF.Ae, inputVCF.Ol)
+
+attach(phasedData.unordered)
+phasedData <- phasedData.unordered[order(CHROM, POS), ]
+detach(phasedData.unordered)
+```
 
 ```{r Annotating and Filtering Data}
 annotatedData <- AnnotateSNPs(SNPdata = phasedData, gff.mRNA = gff.mRNA)
@@ -230,14 +278,6 @@ dim(annotatedData)
 # NOT AVAILABLE FOR B NAPUS. Discard all SNVs in highly repetitive genomic regions, which we defined as regions with sequence identity of > 95% to another genomic region based on selfChain Link track from UCSC genome browser.
 
 ```
-```{r Estimate Overdispersion and Reference Allele Bias}
-# If our data presents any, we should include these metrics when creating mySNVs. 
-# Use the additional functions in MBASED
-
-```
-
-
-
 
 ```{r Single Sample Analysis}
 mySNVs <- GRanges(
@@ -249,21 +289,15 @@ mySNVs <- GRanges(
   
 names(mySNVs) <- annotatedData$GeneID
 
-MBASED.F1.414 <- SingleSample(annotatedData, mySNVs, genotype = "F1_414", numSim = 0)
+MBASED.F1.414 <- SingleSample(annotatedData, mySNVs, genotype = "F1_414", numSim = 0, refBias = refBias414)
 save(MBASED.F1.414, file = "MBASED.F1.414.Rdata")
-MBASED.F1.415 <- SingleSample(annotatedData, mySNVs, genotype = "F1_415", numSim = 0)
+MBASED.F1.415 <- SingleSample(annotatedData, mySNVs, genotype = "F1_415", numSim = 0, refBias = refBias415)
 save(MBASED.F1.414, file = "MBASED.F1.415.Rdata")
-MBASED.Ae <- SingleSample(annotatedData, mySNVs, genotype = "Ae", numSim = 0)
-save(MBASED.F1.414, file = "MBASED.F1.Ae.Rdata")
-MBASED.Ol <- SingleSample(annotatedData, mySNVs, genotype = "Ol", numSim = 0)
-save(MBASED.F1.414, file = "MBASED.F1.Ol.Rdata")
 ```
-
-In Progress: Two Sample analysis  
 
 ```{r Two Sample Analysis}
 # Estimating two sample run time using smaller datasets
-annotatedData.trimmed <- annotatedData[1:500 ,]
+annotatedData.trimmed <- annotatedData[1:10000, ]
 
 mySNVs.trimmed <- GRanges(
   seqnames = annotatedData.trimmed$CHROM,
@@ -272,18 +306,34 @@ mySNVs.trimmed <- GRanges(
   allele1 = annotatedData.trimmed$REF,
   allele2 = annotatedData.trimmed$ALT)
 
-time100.10 <- system.time(MBASED.F1.414.vs.F1.415 <- TwoSample(annotatedData.trimmed, mySNVs.trimmed, "F1_414", "F1_415"))
+time100.10 <- system.time(MBASED.F1.414.vs.F1.415 <- TwoSample(annotatedData.trimmed, mySNVs.trimmed, "F1_414", "F1_415", numSim = 10))
 
-time100.10
-# 100: 9 seconds
+n = 1
+while(n <= 10) {
+  timeTaken <- rbind(timeTaken, c(system.time(TwoSample(annotatedData.trimmed, mySNVs.trimmed, "F1_414", "F1_415", numSim = n)), 10000, n))
+  n = n * 10
+  print(paste("Next: N =", n))
+}
+
+t <- as.data.frame(timeTaken)
+
+p <- ggplot(data = t[t$SNVs == 100, ], aes(y = sys.self, x= log(numSims))) +
+  geom_point(aes(color = "100")) +
+  geom_point(data = t[t$SNVs == 1000, ], aes(color = "1000")) + 
+  geom_point(data = t[t$SNVs ==5000, ], aes(color ="5000")) #+ 
+#  geom_point(data = t[t$SNVs == 10000, ], aes(color = "10000")) 
+
+p2 <- ggplot(data = t[t$SNVs == 100, ], aes(y = elapsed, x= log(numSims))) +
+  geom_point(aes(color = "100")) +
+  geom_point(data = t[t$SNVs == 1000, ], aes(color = "1000")) + 
+  geom_point(data = t[t$SNVs ==5000, ], aes(color ="5000")) + 
+  geom_point(data = t[t$SNVs == 10000, ], aes(color = "10000")) 
 
 ```
 
 ```{r Analysis and Summary}
 load("MBASED.F1.414.Rdata")
 load("MBASED.F1.415.Rdata")
-load("MBASED.Ae.Rdata")
-load("MBASED.Ol.Rdata")
 
 sig.F1.414 <- ExtractASE(MBASED.F1.414)
 dim(sig.F1.414[[1]]) #1946 SNVs found to be in ASE
@@ -292,10 +342,4 @@ summary(sig.F1.414[[2]])
 sig.F1.415 <- ExtractASE(MBASED.F1.415)
 dim(sig.F1.415[[1]]) #2164 SNVs found to be in ASE
 head(sig.F1.415[[2]]$GeneID)
-
-sig.Ae <- ExtractASE(MBASED.Ae)
-dim(sig.Ae[[1]]) #11995 SNVs found to be in ASE
-
-sig.Ol <- ExtractASE(MBASED.Ol)
-dim(sig.Ol[[1]]) #11990 SNVs found to be in ASE
 ```

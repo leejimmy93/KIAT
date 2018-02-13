@@ -1,0 +1,174 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(MBASED)
+library(tidyverse)
+library(VGAM)
+```
+
+```{r}
+load("annotatedData.Rdata")
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/mizukikadowaki/project/output/F1.young.GQ.filtered.Rdata")
+F1.414 <- F1.young.GQ.filtered
+F1.414 <- mutate(F1.414, MAF = F1_414_RO / F1_414_DP)
+```
+
+```{r}
+# log likelihood function
+ll <- function(alpha, beta) {
+  x <- F1.414$F1_414_RO
+  total <- F1.414$F1_414_DP
+  -sum(VGAM::dbetabinom.ab(x, total, alpha, beta, log = TRUE))
+}
+
+m <- mle(ll, start = list(alpha = 1, beta = 1), method = "L-BFGS-B", lower = c(0.0001, 0.0001))
+
+ab <- coef(m)
+
+alpha0 <- ab[1]
+beta0 <- ab[2]
+
+F1.414 %>%
+    ggplot() +
+    geom_histogram(aes(MAF, y = ..density..), binwidth = .02) +
+     stat_function(fun = function(x) dbeta(x, alpha0, beta0), color = "red",
+                size = 1) +
+    xlab("Major Allele Frequency (MAF)")
+```
+
+```{r}
+sim <- data.frame(a = c(alpha0, alpha0 + 10, alpha0 + 100),
+                  b = c(beta0, beta0 + 8, beta0 + 10)) %>%
+    group_by(a, b) %>%
+    do(data_frame(x = seq(0, 1, .001), y = dbeta(x, .$a, .$b))) %>%
+    mutate(Parameters = paste0("\u03B1 = ", a, ", \u03B2 = ", b)) %>%
+    ungroup %>%
+    mutate(Parameters = factor(Parameters, levels = unique(Parameters)))
+
+sim %>% ggplot(aes(x, y, color = Parameters)) + geom_line() +
+    xlim(0, 1) + ylab("Density of beta") +
+    xlab("Major Allele Frequency")
+```
+BETA BINOMIAL REGRESSION
+
+```{r}
+prior_mu = alpha0 / (alpha0 + beta0)
+
+eb <- F1.414 %>%
+  mutate(eb_estimate = (F1_414_RO + alpha0) / (F1_414_DP + alpha0 + beta0)) %>%
+  mutate(alpha1 = F1_414_RO + alpha0,
+  beta1 = F1_414_AO + beta0) %>%
+  arrange(desc(eb_estimate))
+
+ggplot(eb, aes(MAF, eb_estimate, color = F1_414_DP)) +
+  geom_hline(yintercept = alpha0 / (alpha0 + beta0), color = "red", lty = 2) +
+  geom_point() +
+  geom_abline(color = "red") +
+  scale_colour_gradient(trans = "log", breaks = 10 ^ (1:5)) +
+  xlab("Major Allele Frequency") +
+  ylab("Empirical Bayes MAF")
+
+```
+
+
+```{r}
+eb %>%
+  ggplot(aes(F1_414_DP, MAF)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_summary(fun.y = var, geom = "point", color = "blue") +
+  scale_x_log10()
+
+eb %>%
+  ggplot(aes(F1_414_DP, MAF)) +
+  stat_summary(fun.y = var, geom = "point") + 
+  scale_x_log10()
+```
+
+```{r}
+eb %>%
+  ggplot(aes(x = F1_414_DP, y = eb_estimate)) +
+  geom_point() +
+  scale_x_log10() +
+  geom_hline(color = "red", yintercept = prior_mu) +
+  #facet_wrap(~type) +
+  #ylab("average") +
+    geom_smooth(method = "lm")
+
+eb %>%
+  ggplot(aes(x = F1_414_DP, y = MAF)) +
+  geom_point() +
+  scale_x_log10() +
+  geom_hline(color = "red", yintercept = prior_mu) +
+  #facet_wrap(~type) +
+  #ylab("average") +
+    geom_smooth(method = "lm")
+```
+BETA BINOMIAL REGRESSION
+
+
+```{r}
+library(gamlss)
+library(broom)
+
+fit <- gamlss(cbind(F1_414_RO, F1_414_DP - F1_414_RO) ~ log(F1_414_DP),
+data = eb,
+family = BB(mu.link = "identity"))
+
+fit <- gamlss(cbind(F1_414_RO, F1_414_AO) ~ log(F1_414_DP),
+              data =  eb, 
+              family = BB(mu.link = "identity")) 
+
+td <- tidy(fit)
+td
+
+mu_0 <- td$estimate[1]
+mu_AB <- td$estimate[2]
+sigma <- exp(td$estimate[3])
+
+crossing(x = seq(0.1, .9, .01), AB = c(1, 10, 100, 1000, 10000)) %>%
+  mutate(density = dbeta(x, (mu_0 + mu_AB * log(AB)) / sigma,
+                         (1 - (mu_0 + mu_AB * log(AB))) / sigma)) %>%
+  mutate(AB = factor(AB)) %>%
+  ggplot(aes(x, density, color = AB, group = AB)) +
+  geom_line() +
+  xlab("Batting average") +
+  ylab("Prior density")
+```
+
+
+
+```{r Find Rho}
+
+muRho <- MBASED:::getMuRho(alpha0, beta0)
+
+# log likelihood function
+ll <- function(rho) {
+  x <- F1.414$F1_414_RO
+  total <- F1.414$F1_414_DP
+  mu <- F1.414$F1_414_refBias
+  -sum(VGAM::dbetabinom(x, total, mu, rho, log = TRUE))
+}
+
+m <- mle(ll, start = list(rho = 0), method = "L-BFGS-B", lower = c(0.000001), upper = c(0.999))
+
+ab <- coef(m)
+
+alpha0 <- ab[1]
+beta0 <- ab[2]
+
+F1.414 %>%
+    ggplot() +
+    geom_histogram(aes(average, y = ..density..), binwidth = .02) +
+     stat_function(fun = function(x) dbeta(x, alpha0, beta0), color = "red",
+                size = 1)
+
+```
+Calculate rho at one locus
+
+```{r}
+
+```
+
