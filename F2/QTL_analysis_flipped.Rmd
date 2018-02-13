@@ -273,7 +273,7 @@ par(mfrow=c(11,5))
 for (i in names(scanone.imp.all)){
   plot(scanone.imp.all[[i]],bandcol="gray90", main=i)
   abline(h=scanone.perm.imp.all[[i]],lty=2)
-}
+} 
 
 dev.off()  
 
@@ -364,6 +364,45 @@ growth.plot.3 <- plot_grid(growth.plot.2, legend, rel_heights = c(45, 1), ncol =
 growth.plot.3 
 
 ggsave(growth.plot.3, filename = "~/F2/output/QTL_analysis/figure/growth.plot.3.png", width = 12, height = 12)
+
+#### make scanone and CIM plot for each trait 
+load("~/F2/output/QTL_analysis/cim.perm.43traits.flipped.Rdata")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.flipped.Rdata")
+load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits.flipped")
+load("~/F2/output/QTL_analysis/scanone.imp.43traits.flipped")
+
+cim.perm.all <- cim.perm
+cim.qtl.all <- cim.qtl
+scanone.perm.imp.all <- scanone.perm.imp
+scanone.imp.all <- scanone.imp
+
+load("~/F2/output/growth_model/scanone_growth_model_trait_flipped.Rdata")
+load("~/F2/output/growth_model/cim_growth_model_trait_flipped.Rdata") 
+
+cim.perm.all <- c(cim.perm.all, cim.perm) 
+cim.qtl.all <- c(cim.qtl.all, cim_growth_model_trait.F2)
+scanone.perm.imp.all <- c(scanone.perm.imp.all[1:43], as.list(lod.thrs[5,]))
+scanone.imp.all <- c(scanone.imp.all, scanone_growth_model_trait.F2)
+
+save(cim.perm.all, cim.qtl.all, scanone.perm.imp.all, scanone.imp.all, file = "~/F2/output/QTL_analysis/QTL_result_all_all.Rdata") 
+
+qtl_all <-   
+  lapply(names(cim.qtl.all), function(trait) {
+    qtl_plot(input = rbind(data.frame(cim.qtl.all[[trait]], method = "cim"), 
+                       data.frame(scanone.imp.all[[trait]], method = "scanone")),
+         lod = data_frame(group = c("cim_threshold", "scanone_threshold"),
+                          lod = c(cim.perm.all[[trait]],
+                                  scanone.perm.imp.all[[trait]])), 
+         rug = TRUE, 
+         title = trait
+         )  
+  })
+
+plots <- lapply(1:length(qtl_all), function(trait) qtl_all[[trait]]$plot)
+
+paths <- stringr::str_c(names(cim.qtl.all), ".pdf") 
+paths 
+pwalk(list(paths, plots), ggsave, path = "~/F2/output/QTL_analysis/figure/", width = 15, height = 7) # save on whitney   
 ``` 
 
 ### redo QTL analysis for several traits which don't follow normal distribution 
