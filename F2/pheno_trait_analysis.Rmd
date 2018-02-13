@@ -130,15 +130,36 @@ rownames(trait_summary) <- colnames(phefile)
 trait_summary$missing_rate <- ifelse(is.na(trait_summary$missing_rate), 0, trait_summary$missing_rate)
 write.csv(trait_summary, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_summary.csv")
 
-p.trait <- 
-phefile %>% melt() %>% 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/pheno.parent.oil.Rdata")
+pheno.parent.oil$PHENOTYPE <- gsub("Oil_content", "Crude_oil_contents", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$PHENOTYPE <- gsub("Heptadecanoic_aci", "Heptadecanoic_acid", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$PHENOTYPE <- gsub("Palmitoliec_aicd", "Palmitoliec_acid", pheno.parent.oil$PHENOTYPE) 
+
+phefile_oil <- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight", colnames(phefile))]  
+
+png(filename = "~/Desktop/F2_paper/trait_oil.png",width=15, height=7, units="in", res=300)
+par(mfrow=c(4,6), mai = c(0.4, 0.4, 0.4, 0.2)) 
+
+for (i in colnames(phefile_oil)) {
+  hist(phefile_oil[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
+  abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ae"),]$mean, col = "red")
+  abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ol-1"),]$mean, col = "blue")
+  }
+
+dev.off() 
+
+
+phefile_growth<- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight", colnames(phefile), invert = T)] %>% melt() 
+phefile_growth$variable <- factor(phefile_growth$variable, levels =  unique(phefile_growth[order(tolower(phefile_growth$variable)),]$variable))
+
+p.trait_growth <- 
+  phefile_growth %>% 
   ggplot() + 
   geom_histogram(mapping = aes(value), bins = 15, fill = "white", color = "black") +
-  facet_wrap(~variable, scales = "free") + 
+  facet_wrap(~variable, scales = "free", ncol = 4) + 
   labs(x = "", y = "number of lines")
 
-p.trait 
-ggsave(p.trait, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/p.trait.png", width = 15, height = 10) 
+ggsave(p.trait_growth, filename = "~/Desktop/F2_paper/p.trait_growth.png", width = 10, height = 7) 
 save(phefile, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
 ```
 
@@ -166,7 +187,7 @@ write.csv(trait_cor, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_pape
 
 # heatmap 
 library(devtools)
-# install_github("raivokolde/pheatmap")
+# install_github("raivokolde/pheatmap") 
 library(pheatmap)
 library(RColorBrewer)
 rownames(phefile) <- gsub("(Sample_)([[:print:]]+)", "\\2", rownames(phefile))
@@ -228,7 +249,12 @@ phefile.all <-
 phefile.all %>% 
   dplyr::select(-id)  
 
-trait_cor <- round(cor(phefile.all, use = "pairwise.complete.obs"), digits = 2) 
+colnames(phefile.all) <- gsub("aicd", "acid", colnames(phefile.all))
+
+phefile.non_time_series <- 
+phefile.all[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|Hmax|I|k|delta", colnames(phefile.all))]  
+
+trait_cor <- round(cor(phefile.non_time_series, use = "pairwise.complete.obs"), digits = 2) 
 # show pair of traits whose correlation are above 0.5 
 high.cor.pair(trait_cor, threshold = 0.5)
 cor.P <- corPvalueStudent(trait_cor, 166)
@@ -236,7 +262,7 @@ cor.sig <- trait_cor
 cor.sig[cor.P>0.05] <- NA 
 cor.sig
 
-png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=12, height=9, units="in", res=300)
+png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=8, height=7, units="in", res=300)
 par(mar = c(3, 3, 3, 3))
 
 pheatmap(as.matrix(trait_cor),
@@ -247,7 +273,7 @@ pheatmap(as.matrix(trait_cor),
      fontsize_row = 6, 
      legend = T
 )
-dev.off() 
+dev.off()  
 ```
 
 ### phenotype traits for Da-Ae & Da-Ol-1
