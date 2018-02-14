@@ -105,6 +105,7 @@ bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine
 # mutate(start=ifelse(start==end,max(0,start-20000),start), end=ifelse(start==end,end+20000,end)) 
 
 bayesint.result %>% dim() # 26582     7 
+bayesint.result$trait %>% unique() %>% length()
 
 # get genome range 
 library(IRanges)
@@ -156,8 +157,8 @@ Also tried with lodint() to get QTL interval, no big difference compared to baye
 library(ggplot2) 
 load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
 
-cis_eQTL %>% dim() # 8894   11 
-trans_eQTL %>% dim() # 17687    11 
+cis_eQTL %>% dim() # 11710    12 
+trans_eQTL %>% dim() # 14871    12 
 
 cis_eQTL$class <- rep("cis", nrow(cis_eQTL)) 
 trans_eQTL$class <- rep("trans", nrow(trans_eQTL)) 
@@ -222,7 +223,21 @@ p.trans_eQTL
 ggsave(p.eQTL, filename = "~/F2/output/eQTL/figure/p.eQTL.flipped.png", height = 10, width = 10) 
 ggsave(p.cis_eQTL, filename = "~/F2/output/eQTL/figure/p.cis_eQTL.flipped.png", height = 10, width = 10)
 ggsave(p.trans_eQTL, filename = "~/F2/output/eQTL/figure/p.trans_eQTL.flipped.png", height = 10, width = 10) 
+
+### check to see the rate of different vs same subgenome trans-regulators 
+eQTL %>% colnames()
+eQTL$eQTL_subgenome <- gsub("(A|C)([[:digit:]]+)", "\\1", eQTL$eQTL_chr)
+eQTL$gene_subgenome <-  gsub("(A|C)([[:digit:]]+)", "\\1", eQTL$CHROM)
+
+sum(eQTL$eQTL_subgenome == eQTL$gene_subgenome) /nrow(eQTL) # 72% from the same subgenome 
+
+A_genes <- eQTL[eQTL$eQTL_subgenome == "A",] 
+sum(A_genes$eQTL_subgenome == A_genes$gene_subgenome) /nrow(A_genes) # 73% 
+
+C_genes <- eQTL[eQTL$eQTL_subgenome == "C",] 
+sum(C_genes$eQTL_subgenome == C_genes$gene_subgenome) /nrow(C_genes) # 70%  
 ```
+
 
 ### plot out cis-eQTL result for oil traits and growth traits 
 ```{r}
