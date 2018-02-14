@@ -611,19 +611,33 @@ write.csv(F2_map, file = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revis
 ```{r}
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.flipped.Rdata")
 
-png("~/Desktop/F2_paper/rf.png", width=8, height=8, units="in", res=300)
-plot.rf(LG.f2.madmapper.after.crossover, alternate.chrid = T) # the old genetic map 
+png("~/Desktop/F2_paper/rf.png", width=12, height=12, units="in", res=300)
+par(mar = c(5, 5, 5, 5))  
+plot.rf(LG.f2.madmapper.after.crossover, alternate.chrid = T, col.scheme = "redblue", main = "") # the old genetic map  
 dev.off()
 
 png("~/Desktop/F2_paper/map_after_crossover.png", width=8, height=8, units="in", res=300)
-plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
+plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T, main = "", xlab = "linkage groups") # genetic map comparison
 dev.off() 
 
-map_geno <- read.csv("~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv")
+## map summary 
+map.summary <- summaryMap(LG.f2.madmapper.after.crossover) 
+map.summary %>% dim() 
+map.summary[21, 1] <- sum(map.summary[1:10,1])
+map.summary[22, 1] <- sum(map.summary[11:19,1])
+map.summary[21, 2] <- sum(map.summary[1:10,2])
+map.summary[22, 2] <- sum(map.summary[11:19,2])
+map.summary[21, 3] <- mean(map.summary[1:10,3])
+map.summary[22, 3] <- mean(map.summary[11:19,3])
+map.summary[21, 4] <- max(map.summary[1:10,4])
+map.summary[22, 4] <- max(map.summary[11:19,4])
+map.summary
+
+map_geno <- read.csv("~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv") 
 
 map_geno <-
 map_geno %>% 
-  dplyr::select(id, X, X.1) 
+  dplyr::select(id, X, X.1)  
 
 map_geno$genetic_chr <- map_geno$X
 map_geno$genetic_pos <- map_geno$X.1

@@ -632,7 +632,7 @@ plots <- lapply(1:length(qtl_all), function(trait) qtl_all[[trait]]$plot)
 
 paths <- stringr::str_c(names(cim.qtl), ".pdf") 
 paths
-pwalk(list(paths, plots), ggsave, path = "~/F2/output/QTL_analysis/figure/", width = 15, height = 7) # save on whitney
+pwalk(list(paths, plots), ggsave, path = "~/F2/output/QTL_analysis/figure/", width = 15, height = 7) # save on whitney  
 
 pwalk(list(paths, plots), ggsave, path = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/figure /", width = 15, height = 7) # save on MAC 
 ``` 
