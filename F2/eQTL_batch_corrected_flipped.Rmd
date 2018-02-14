@@ -52,7 +52,7 @@ scanone_eQTL.F2$chr <- as.character(scanone_eQTL.F2$chr)
 threshold.95 <- lod.thrs[5,] 
 threshold.95 # 4.13 
 
-# get all eQTL based on this threshold  
+# get all eQTL based on this threshold   
 eQTL_sign <- 
 sapply(colnames(scanone_eQTL.F2), function(gene) {
   sum(scanone_eQTL.F2[,gene] > threshold.95) > 0 
@@ -99,8 +99,8 @@ bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine
   group_by(trait,chr) %>% 
   dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T), pos=median(pos, na.rm = T), min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
   #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
-  mutate(start=ifelse(start==end, start-20000,start), end=ifelse(start==end,end+20000,end)) 
-  # mutate(start=start-1000000, end=end+1000000) 
+  # mutate(start=ifelse(start==end, start-20000,start), end=ifelse(start==end,end+20000,end)) 
+  mutate(start=start-2000000, end=end+2000000) 
 # the original code (below) doesn't work correctly for some reason 
 # mutate(start=ifelse(start==end,max(0,start-20000),start), end=ifelse(start==end,end+20000,end)) 
 
@@ -145,12 +145,15 @@ bayesint.result.2 %>%
 save(cis_eQTL, trans_eQTL, file = "~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata")
 ```
 
+### determine cis- and trans- eQTL using lodint 
+Also tried with lodint() to get QTL interval, no big difference compared to bayesint() 
+
 ### make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position (omit this part for now because I need to plot genetic position VS physical postion but for some the LG I flipped the physical order, need to discuss this with Julin)
 
 * problem of this part: 1) flipped direction of genetic map VS physical map (flip it back and redo the analysis?); 2) many cis-like genes were identified as trans-eQTL because gene location is a little bit away from QTL loci (add 500kb flanking bp to the QTL loci?); 3) the cis-like distribution of trans-eQTL on homeologous chromosomes (the truth or misassembly?). 
 
 ```{r} 
-library(ggplot2)
+library(ggplot2) 
 load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
 
 cis_eQTL %>% dim() # 8894   11 
@@ -173,13 +176,14 @@ eQTL %>%
   ggplot() + 
   geom_point(aes(x = pos, y = start, color = class), size = 0.5) +
   facet_grid(eQTL_chr ~ CHROM, scales = "free", switch="both") + 
-  theme_classic() +
-  theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) +
+  theme_classic() + 
+  theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) + 
   theme(axis.text.x=element_blank(),
         axis.text.y=element_blank(), 
         axis.ticks.x=element_blank(),
         axis.ticks.y=element_blank()) + 
-  labs(x = "eQTL genetic position", y = "gene start")
+  labs(x = "eQTL genetic position", y = "gene start") + 
+  scale_color_manual(values=c("red", "royalblue"))  
 
 p.eQTL     
 
