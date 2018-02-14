@@ -19,6 +19,7 @@ Outputs: major allele frequencies, frequency differences, list of genes displayi
 ```{r setup, include=FALSE}
 library(MBASED)
 library(tidyverse)
+library(VGAM)
 ```
 
 ```{r AnnotateSNPs Function}
@@ -318,8 +319,8 @@ refBias415 <- CalcReferenceBias(inputVCF, "F1_415") # 0.5152294 unfiltered, 0.51
 dispersion414 <- CalcDispersion(inputVCF, "F1_414", refBias414)
 dispersion415 <- CalcDispersion(inputVCF, "F1_415", refBias415)
 
-inputVCF$disp414 <- dispersion414
-inputVCF$disp415 <- dispersion415
+inputVCF$F1_414_disp <- dispersion414
+inputVCF$F1_415_disp <- dispersion415
 
 # Now that necessary parameters have been calculated, phase the data so that all REF is from Da_Ae
 inputVCF.Ae <- inputVCF[inputVCF$Ae_GT == 1, ]
