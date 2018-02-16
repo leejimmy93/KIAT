@@ -93,18 +93,18 @@ bayesint.list <- lapply(bayesint.list,function(x)
                           mutate(chr=as.character(chr))
 ) 
 
-bayesint.result <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine list into tibble 
-  dplyr::select(trait,chr,pos,markername,LOD) %>%  
-  separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
-  group_by(trait,chr) %>% 
-  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T), pos=median(pos, na.rm = T), min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
+bayesint.result <- 
+as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine list into tibble 
+    dplyr::select(trait,chr,pos,markername,LOD) %>% 
+    separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
+    group_by(trait,chr) %>% 
+    dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T), pos=median(pos, na.rm = T), min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
   #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
   # mutate(start=ifelse(start==end, start-20000,start), end=ifelse(start==end,end+20000,end)) 
-  mutate(start=start-2000000, end=end+2000000) 
-# the original code (below) doesn't work correctly for some reason 
-# mutate(start=ifelse(start==end,max(0,start-20000),start), end=ifelse(start==end,end+20000,end)) 
+  mutate(start=ifelse(start-2000000>0, start-2000000, 0), end=end+2000000) 
+  
 
-bayesint.result %>% dim() # 26582     7 
+bayesint.result %>% dim() # 26581     7 
 
 # get genome range 
 library(IRanges)
@@ -136,7 +136,7 @@ bayesint.result.2 %>%
          (start >= eQTL_start & end <= eQTL_end) |
          (start < eQTL_end & end > eQTL_end)) 
 
-dim(cis_eQTL) # 8894   11 
+dim(cis_eQTL) # 11710   12 
 
 trans_eQTL <- 
 bayesint.result.2 %>% 
@@ -156,26 +156,28 @@ Also tried with lodint() to get QTL interval, no big difference compared to baye
 library(ggplot2) 
 load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
 
-cis_eQTL %>% dim() # 8894   11 
-trans_eQTL %>% dim() # 17687    11 
+cis_eQTL %>% dim() # 11710    12 
+trans_eQTL %>% dim() # 14871    12 
 
 cis_eQTL$class <- rep("cis", nrow(cis_eQTL)) 
 trans_eQTL$class <- rep("trans", nrow(trans_eQTL)) 
 
 # get only main chromosome stuff   
 eQTL <- rbind(cis_eQTL, trans_eQTL) 
-eQTL <- eQTL[grep("random", eQTL$CHROM, value = FALSE, invert = T),] 
+eQTL <- eQTL[grep("random", eQTL$CHROM, value = FALSE, invert = T),] # random scaffolds are exluced 
 eQTL$class <- factor(eQTL$class, levels = c("cis", "trans"))
 eQTL$CHROM <- gsub("(chr)([[:print:]]+)", "\\2", eQTL$CHROM)
 eQTL$eQTL_chr <- gsub("(chr)([[:print:]]+)", "\\2", eQTL$eQTL_chr)
-eQTL$eQTL_chr <- factor(eQTL$eQTL_chr, levels = c("C09", "C08", "C07", "C06", "C05", "C04", "C03", "C02", "C01", "A10", "A09", "A08", "A07", "A06", "A05", "A04", "A03", "A02", "A01"))
+eQTL$CHROM <- factor(eQTL$CHROM, levels = c("C09", "C08", "C07", "C06", "C05", "C04", "C03", "C02", "C01", "A10", "A09", "A08", "A07", "A06", "A05", "A04", "A03", "A02", "A01"))
+eQTL$eQTL_chr <- factor(eQTL$eQTL_chr, levels = c("A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09"))
+eQTL$CHROM <- factor(eQTL$CHROM, levels = c("A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09"))
 
 # plot out the stuff 
 p.eQTL <- 
 eQTL %>% 
   ggplot() + 
   geom_point(aes(x = pos, y = start, color = class), size = 0.5) +
-  facet_grid(eQTL_chr ~ CHROM, scales = "free", switch="both") + 
+  facet_grid(CHROM ~ eQTL_chr, switch = "both", scales = "free") + 
   theme_classic() + 
   theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) + 
   theme(axis.text.x=element_blank(),
@@ -185,9 +187,9 @@ eQTL %>%
   labs(x = "eQTL genetic position", y = "gene start") + 
   scale_color_manual(values=c("red", "royalblue"))  
 
-p.eQTL     
+p.eQTL      
 
-p.cis_eQTL <- 
+p.cis_eQTL <-  
 eQTL %>% 
   dplyr::filter(class == "cis") %>%
   ggplot() + 
@@ -201,13 +203,55 @@ eQTL %>%
         axis.ticks.y=element_blank()) + 
   labs(x = "eQTL genetic position", y = "gene start")
 
-p.cis_eQTL
+p.cis_eQTL  
 
 p.trans_eQTL <- 
 eQTL %>% 
   dplyr::filter(class == "trans") %>%
   ggplot() + 
-  geom_point(aes(x = pos, y = start), size = 0.5) +
+  geom_point(aes(x = pos, y = start), size = 0.5) + # x is genetic position of eQTL, y is physical start position of gene 
+  facet_grid(eQTL_chr ~ CHROM, scales = "free", switch="both") + 
+  theme_classic() +
+  theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(), 
+        axis.ticks.x=element_blank(),
+        axis.ticks.y=element_blank()) + 
+  labs(x = "eQTL genetic position", y = "gene start")   
+
+ggsave(p.eQTL, filename = "~/F2/output/eQTL/figure/p.eQTL.flipped.png", height = 10, width = 10) 
+ggsave(p.cis_eQTL, filename = "~/F2/output/eQTL/figure/p.cis_eQTL.flipped.png", height = 10, width = 10)
+ggsave(p.trans_eQTL, filename = "~/F2/output/eQTL/figure/p.trans_eQTL.flipped.png", height = 10, width = 10) 
+
+### check to see the rate of different vs same subgenome trans-regulators 
+eQTL %>% colnames()
+eQTL$eQTL_subgenome <- gsub("(A|C)([[:digit:]]+)", "\\1", eQTL$eQTL_chr)
+eQTL$gene_subgenome <-  gsub("(A|C)([[:digit:]]+)", "\\1", eQTL$CHROM)
+
+sum(eQTL$eQTL_subgenome == eQTL$gene_subgenome) /nrow(eQTL) # 72% from the same subgenome 
+
+A_genes <- eQTL[eQTL$eQTL_subgenome == "A",] 
+sum(A_genes$eQTL_subgenome == A_genes$gene_subgenome) /nrow(A_genes) # 73% 
+
+C_genes <- eQTL[eQTL$eQTL_subgenome == "C",] 
+sum(C_genes$eQTL_subgenome == C_genes$gene_subgenome) /nrow(C_genes) # 70%  
+
+### double check eQTL plot 
+eQTL %>% 
+  dplyr::filter(class == "trans") %>% 
+  group_by(eQTL_chr) %>% 
+  dplyr::summarise(start = max(start)) # start is gene start, end is gene end
+
+eQTL %>% 
+  dplyr::filter(class == "cis") %>% 
+  group_by(eQTL_chr) %>% 
+  dplyr::summarise(end = max(end)) # start is gene start, end is gene end
+
+p.test <- 
+eQTL %>% 
+  dplyr::filter(class == "trans" & eQTL_subgenome == "A" & gene_subgenome == "A") %>%
+  ggplot() + 
+  geom_point(aes(x = pos, y = start), size = 0.5) + # x is genetic position of eQTL, y is physical start position of gene 
   facet_grid(eQTL_chr ~ CHROM, scales = "free", switch="both") + 
   theme_classic() +
   theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) +
@@ -217,12 +261,30 @@ eQTL %>%
         axis.ticks.y=element_blank()) + 
   labs(x = "eQTL genetic position", y = "gene start") 
 
-p.trans_eQTL 
+p.test
 
-ggsave(p.eQTL, filename = "~/F2/output/eQTL/figure/p.eQTL.flipped.png", height = 10, width = 10) 
-ggsave(p.cis_eQTL, filename = "~/F2/output/eQTL/figure/p.cis_eQTL.flipped.png", height = 10, width = 10)
-ggsave(p.trans_eQTL, filename = "~/F2/output/eQTL/figure/p.trans_eQTL.flipped.png", height = 10, width = 10) 
+p.test.2 <- 
+eQTL %>% 
+  dplyr::filter(class == "trans" & eQTL_subgenome == "C" & gene_subgenome == "C") %>%
+  ggplot() + 
+  geom_point(aes(x = pos, y = start), size = 0.5) + # x is genetic position of eQTL, y is physical start position of gene 
+  facet_grid(eQTL_chr ~ CHROM, scales = "free", switch="both") + 
+  theme_classic() +
+  theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(), 
+        axis.ticks.x=element_blank(),
+        axis.ticks.y=element_blank()) + 
+  labs(x = "eQTL genetic position", y = "gene start") 
+
+p.test.2 
+
+eQTL %>% 
+  dplyr::filter(eQTL_chr == "C05") %>% 
+  group_by(CHROM) %>% 
+  dplyr::summarise(count = n()) # start is gene start, end is gene end  
 ```
+
 
 ### plot out cis-eQTL result for oil traits and growth traits 
 ```{r}
