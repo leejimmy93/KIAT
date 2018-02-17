@@ -6,7 +6,7 @@ output: html_document
 * Goal of this script is to analyze scantwo results for all phenotypes, including growth model result 
 
 ```{r}
-library(qtl)
+library(qtl) 
 library(tidyverse)
 ```
 

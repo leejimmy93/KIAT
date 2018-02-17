@@ -229,12 +229,12 @@ cim.gather %>% head()
 # look for overlap, for each trait, find QTL border and look for genes under QTL peaks 
 sig.chrs <- cim.gather %>% dplyr::filter(LOD > perm.threshold) %>%
   group_by(trait,chr) %>%
-  dplyr::summarise(count = n())
+  dplyr::summarise(count = n()) 
 sig.chrs 
 
 # now for each significant chromosome/trait combo run bayesint
 bayesint.list <- apply(sig.chrs,1,function(hit) { # for every row("trait, chr, count") in eigengene module 
-    result <- bayesint(scanone.qtl.2[c("chr","pos",hit["trait"])],  
+    result <- bayesint(cim.qtl.2[c("chr","pos",hit["trait"])],  
                      chr=hit["chr"], 
                      lodcolumn = 1, 
                      expandtomarkers = TRUE 
@@ -242,7 +242,6 @@ bayesint.list <- apply(sig.chrs,1,function(hit) { # for every row("trait, chr, c
   colnames(result)[3] <- "LOD" 
   result
 })  
- 
 
 names(bayesint.list) <- sig.chrs$trait
 
@@ -271,10 +270,21 @@ bayesint.result.scanone$model <- rep("scanone", nrow(bayesint.result.scanone))
 
 bayesint.result <- 
 bayesint.result.cim %>% 
-  full_join(bayesint.result.scanone) 
+  full_join(bayesint.result.scanone, by = c("trait", "chr")) 
 
-###### need to combine scanone & cim result using a smart way... 
-bayesint.result %>% dim() # 35 12  
+bayesint.result %>% dim()
+colnames(bayesint.result)
+
+for (i in 1:nrow(bayesint.result)){
+  if(is.na(bayesint.result[i, "start.x"])){
+    bayesint.result[i, c(3:7)] <- bayesint.result[i, c(8:12)]
+  }
+}
+
+bayesint.result <- bayesint.result[,1:7] 
+colnames(bayesint.result) <- gsub("\\.x$", "", colnames(bayesint.result)) 
+
+bayesint.result %>% dim() # 35 7
 
 # annotate QTL  
 load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
@@ -297,21 +307,18 @@ traitQTL.annotated %>%
   mutate(start = start.y, end = end.y) %>% 
   dplyr::select(-start.x, -end.x, -start.y, -end.y, -min_eQTL_LOD, -max_eQTL_LOD) 
 
-traitQTL.annotated.cim <- 
+traitQTL.annotated %>% dim() # 18647     9 
+
+## get GO term for each gene
+load("~/Reference/B.napus/napus_GO_combined.Rdata") # there is one colomn hiding... 
+
+colnames(traitQTL.annotated)[3] <- "gene_ID"
+
+traitQTL.annotated <- 
 traitQTL.annotated %>% 
-  dplyr::filter(model == "cim") 
+  left_join(napus_GO_combined) 
 
-traitQTL.annotated.cim %>% dim() 
-
-traitQTL.annotated.scanone <- 
-traitQTL.annotated %>% 
-  dplyr::filter(model == "scanone") 
-
-traitQTL.annotated.scanone %>% dim()  
-
-# how to stragetically combined cim and scanone result? 
-
-
+traitQTL.annotated %>% dim() #  18647    11 
 save(traitQTL.annotated, file =  "~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata") 
 ```
 
@@ -319,13 +326,33 @@ save(traitQTL.annotated, file =  "~/F2/output/QTL_analysis/traitQTL.annotated.fl
 ```{r}
 load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
 
+traitQTL.annotated %>% dim() #  18647    11 
 traitQTL.annotated %>% 
   filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
   filter(AGI == "AT5G10140") # cool, FLC gene is on A10  
 
 traitQTL.annotated %>% 
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
-  filter(AGI == "AT5G10140") # cool, FLC gene is on A10    
+  filter(AGI == "AT5G10140") # cool, FLC gene is on A10   
+
+traitQTL.annotated %>% 
+  # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
+  filter(AGI == "AT4G00650") # cool, FLC gene is on A10   
+
+traitQTL.annotated %>% 
+  # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
+  filter(AGI == "AT4G16280") # cool, FLC gene is on A10   
+
+traitQTL.annotated %>% 
+  # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
+  filter(AGI == "AT4G16845") # cool, FLC gene is on A10   
+
+traitQTL.annotated %>% 
+  filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
+  filter(chrom == "C06") %>% 
+  View() # cool, FLC gene is on A10   
+ 
+# besides FLC, don't see other obvious flowering related genes here 
 ```  
 
 ### plot for paper 

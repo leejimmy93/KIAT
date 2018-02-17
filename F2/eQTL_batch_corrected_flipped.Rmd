@@ -170,9 +170,8 @@ eQTL$CHROM <- gsub("(chr)([[:print:]]+)", "\\2", eQTL$CHROM)
 eQTL$eQTL_chr <- gsub("(chr)([[:print:]]+)", "\\2", eQTL$eQTL_chr)
 eQTL$CHROM <- factor(eQTL$CHROM, levels = c("C09", "C08", "C07", "C06", "C05", "C04", "C03", "C02", "C01", "A10", "A09", "A08", "A07", "A06", "A05", "A04", "A03", "A02", "A01"))
 eQTL$eQTL_chr <- factor(eQTL$eQTL_chr, levels = c("A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09"))
-eQTL$CHROM <- factor(eQTL$CHROM, levels = c("A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09"))
 
-# plot out the stuff 
+# plot out the stuff   
 p.eQTL <- 
 eQTL %>% 
   ggplot() + 
