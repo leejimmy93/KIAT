@@ -136,6 +136,20 @@ load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/pheno.parent.oil.Rdat
 pheno.parent.oil$PHENOTYPE <- gsub("Oil_content", "Crude_oil_contents", pheno.parent.oil$PHENOTYPE)
 pheno.parent.oil$PHENOTYPE <- gsub("Heptadecanoic_aci", "Heptadecanoic_acid", pheno.parent.oil$PHENOTYPE)
 pheno.parent.oil$PHENOTYPE <- gsub("Palmitoliec_aicd", "Palmitoliec_acid", pheno.parent.oil$PHENOTYPE) 
+pheno.parent.oil[32,] <- c("days_to_flower", "Da-Ae", "166")
+pheno.parent.oil[33,] <- c("days_to_flower", "Da-Ol-1", "105") 
+pheno.parent.oil[34,] <- c("days_to_bolt", "Da-Ae", "127")
+pheno.parent.oil[35,] <- c("days_to_bolt", "Da-Ol-1", "97")
+pheno.parent.oil[36,] <- c("bolting_to_flowering", "Da-Ae", "39")
+pheno.parent.oil[37,] <- c("bolting_to_flowering", "Da-Ol-1", "1")
+pheno.parent.oil[38,] <- c("plant_weight_2016_05_13", "Da-Ae", "127")
+pheno.parent.oil[39,] <- c("plant_weight_2016_05_13", "Da-Ol-1", "97")
+pheno.parent.oil[40,] <- c("root_weight_2016_05_13", "Da-Ae", "39")
+pheno.parent.oil[41,] <- c("root_weight_2016_05_13", "Da-Ol-1", "1")
+
+test <- test[,c(18, 19)]
+rownames(test) <- c("Da-Ol-1", "Da_Ae", "F1_136", "F1_137")
+
 
 phefile_oil <- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight", colnames(phefile))]  
 
@@ -148,8 +162,27 @@ for (i in colnames(phefile_oil)) {
   abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ol-1"),]$mean, col = "blue")
   }
 
-dev.off() 
+dev.off()  
 
+test <- read.csv("~/Desktop/test.csv")
+test <- test[c(4, 7, 11, 15),] 
+colnames(test) <- gsub("\\.", "_", colnames(test))
+colnames(test)
+colnames(test)[2:5] <- gsub("X","plant_height_", colnames(test)[2:5])
+colnames(test)[6:9] <- gsub("X","plant_width_", colnames(test)[6:9])
+colnames(test)[6:9] <- gsub("_1$","", colnames(test)[6:9])
+colnames(test)[10:13] <- gsub("X","lobe_number_", colnames(test)[10:13])
+colnames(test)[14:17] <- gsub("X","leaf_number_", colnames(test)[14:17])
+colnames(test)[14:17] <- gsub("_1$","", colnames(test)[14:17])
+colnames(test)[18] <- gsub("X","plant_weight_", colnames(test)[18])
+colnames(test)[19] <- gsub("X","root_weight_", colnames(test)[19])
+colnames(test)[19] <- gsub("_1$","", colnames(test)[19])
+colnames(test)[20] <- gsub("X","plant_height_", colnames(test)[20])
+colnames(test)[20] <- gsub("_2$","", colnames(test)[20])
+
+test
+
+test.melt <- test %>% melt() 
 
 phefile_growth<- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight", colnames(phefile), invert = T)] %>% melt() 
 phefile_growth$variable <- factor(phefile_growth$variable, levels =  unique(phefile_growth[order(tolower(phefile_growth$variable)),]$variable))
@@ -163,6 +196,21 @@ p.trait_growth <-
 
 ggsave(p.trait_growth, filename = "~/Desktop/F2_paper/p.trait_growth.png", width = 10, height = 7) 
 save(phefile, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
+
+phefile_growth_2 <- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|aicd", colnames(phefile), invert = T)]
+
+png(filename = "~/Desktop/F2_paper/trait_growth.png",width=15, height=7, units="in", res=300)
+par(mfrow=c(4,5), mai = c(0.4, 0.4, 0.4, 0.2)) 
+
+for (i in colnames(phefile_growth_2)) { 
+  hist(phefile_growth_2[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
+  abline(v = test.melt[(test.melt$variable == i & test.melt$X == "Da-Ae"),]$value, col = "red")
+  abline(v = test.melt[(test.melt$variable == i & test.melt$X == "Da-Ol-1"),]$value, col = "blue")
+  abline(v = test.melt[(test.melt$variable == i & test.melt$X == "F1_136"),]$value, col = "green", lty = 3)
+  abline(v = test.melt[(test.melt$variable == i & test.melt$X == "F1_137"),]$value, col = "purple", lty = 3)
+  }
+
+dev.off()     
 ```
 
 ### heritability 
@@ -209,7 +257,7 @@ pheatmap(as.matrix(t(scale(phefile))),
 dev.off()    
 
 ### correlation for growth model trait 
-load("~/F2/data/growth_model_trait.Rdata")
+load("~/F2/data/growth_model_trait.Rdata")  
 dim(growth_model_trait) # 166 13 
 growth_model_trait_cor <- round(cor(growth_model_trait[,2:13], use = "pairwise.complete.obs"), digits = 2) 
 # show pair of traits whose correlation are above 0.5 
@@ -406,8 +454,63 @@ high.cor.pair <- function(correlation, threshold){
     output[i,3] <- dup.cordinate.df[i,3]
   }
 
-  output  
+  output   
 }      
 ```
+
+### need to get the coefficient for parents & F1s 
+```{r}
+width <- read.csv("~/Desktop/F2_paper/width.added(indentical).best.fitted.summary.csv")
+lobe_number <- read.csv("~/Desktop/F2_paper/lobe.n.added(identical).best.fitted.summary.csv")
+height <- read.csv("~/Desktop/F2_paper/height.added(identical).best.fitted.summary.csv") 
+
+height %>% dim() # 501 11 
+height[,1:2] %>% head()  
+ID <- gsub("(r_ID__I)(\\[)([[:print:]]+)(,Intercept])", "\\3", height$X)[347:515] 
+
+height <- coef_extract(height, ID = ID) 
+lobe_number <- coef_extract(lobe_number, ID = ID)
+width <- coef_extract_width(width, ID = ID) 
+
+height <- height[c(1:3),]
+lobe_number <- lobe_number[c(1:3),]
+width <- width[c(1:3),]
+
+colnames(height)[2:4] <- paste("height", colnames(height)[2:4], sep = "_")
+colnames(lobe_number)[2:4] <- paste("lobe_number", colnames(lobe_number)[2:4], sep = "_")
+colnames(width)[2:4] <- paste("width", colnames(width)[2:4], sep = "_")
+
+height
+lobe_number
+width
+
+load("~/Desktop/growth_model_trait.Rdata")
+colnames(growth_model_trait)
+
+parent_model <- 
+height %>% 
+  left_join(lobe_number) %>% 
+  left_join(width)
+
+parent_model %>% dim()
+test.melt <- parent_model %>% melt()
+test.melt %>% head()
+
+growth_model_trait %>% dim()
+
+png(filename = "~/Desktop/F2_paper/model.png",width=15, height=7, units="in", res=300)
+par(mfrow=c(3,4), mai = c(0.4, 0.4, 0.4, 0.2)) 
+
+for (i in colnames(growth_model_trait)[2:13]) { 
+  hist(growth_model_trait[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
+  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "Da_Ae"),]$value, col = "red")
+  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "Da_Ol1"),]$value, col = "blue") 
+  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "F1"),]$value, col = "green", lty = 3)  
+  }
+
+dev.off()      
+```
+
+
 
 
