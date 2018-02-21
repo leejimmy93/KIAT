@@ -67,7 +67,7 @@ scanone.gather <-
 scanone_eQTL.F2 %>% 
   gather(key = trait, value = LOD, -chr, -pos) 
 
-sig.chrs <- scanone.gather %>% filter(LOD > threshold.95) %>%
+sig.chrs <- scanone.gather %>% filter(LOD > threshold.95) %>% 
   group_by(trait,chr) %>% 
   dplyr::summarise(count = n()) # this is to get the significant chr ID for each trait 
 
@@ -82,7 +82,7 @@ bayesint.list <- apply(sig.chrs,1,function(hit) { # for every row("trait, chr, c
   )
   colnames(result)[3] <- "LOD" 
   result
-}) 
+})  
 
 names(bayesint.list) <- sig.chrs$trait
 
@@ -90,8 +90,8 @@ bayesint.list <- lapply(bayesint.list,function(x)
                           x %>% 
                           as.data.frame() %>%
                           rownames_to_column(var="markername")  %>% # make rownames to column and use "markername" as the colname for the new colomn  
-                          mutate(chr=as.character(chr))
-) 
+                          mutate(chr=as.character(chr)) 
+)  
 
 bayesint.result <- 
 as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine list into tibble 
@@ -148,10 +148,6 @@ save(cis_eQTL, trans_eQTL, file = "~/F2/output/eQTL/cis_trans_result_new_flipped
 ### determine cis- and trans- eQTL using lodint 
 Also tried with lodint() to get QTL interval, no big difference compared to bayesint() 
 
-### make a plot of cis- and trans- eQTL, x-axis being eQTL physical position, y-axis being transcript start position (omit this part for now because I need to plot genetic position VS physical postion but for some the LG I flipped the physical order, need to discuss this with Julin)
-
-* problem of this part: 1) flipped direction of genetic map VS physical map (flip it back and redo the analysis?); 2) many cis-like genes were identified as trans-eQTL because gene location is a little bit away from QTL loci (add 500kb flanking bp to the QTL loci?); 3) the cis-like distribution of trans-eQTL on homeologous chromosomes (the truth or misassembly?). 
-
 ```{r} 
 library(ggplot2) 
 load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
@@ -160,7 +156,7 @@ cis_eQTL %>% dim() # 11710    12
 trans_eQTL %>% dim() # 14871    12 
 
 cis_eQTL$class <- rep("cis", nrow(cis_eQTL)) 
-trans_eQTL$class <- rep("trans", nrow(trans_eQTL)) 
+trans_eQTL$class <- rep("trans", nrow(trans_eQTL))  
 
 # get only main chromosome stuff   
 eQTL <- rbind(cis_eQTL, trans_eQTL) 
@@ -170,9 +166,8 @@ eQTL$CHROM <- gsub("(chr)([[:print:]]+)", "\\2", eQTL$CHROM)
 eQTL$eQTL_chr <- gsub("(chr)([[:print:]]+)", "\\2", eQTL$eQTL_chr)
 eQTL$CHROM <- factor(eQTL$CHROM, levels = c("C09", "C08", "C07", "C06", "C05", "C04", "C03", "C02", "C01", "A10", "A09", "A08", "A07", "A06", "A05", "A04", "A03", "A02", "A01"))
 eQTL$eQTL_chr <- factor(eQTL$eQTL_chr, levels = c("A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09"))
-eQTL$CHROM <- factor(eQTL$CHROM, levels = c("A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09"))
 
-# plot out the stuff 
+# plot out the stuff   
 p.eQTL <- 
 eQTL %>% 
   ggplot() + 
@@ -235,58 +230,87 @@ sum(A_genes$eQTL_subgenome == A_genes$gene_subgenome) /nrow(A_genes) # 73%
 
 C_genes <- eQTL[eQTL$eQTL_subgenome == "C",] 
 sum(C_genes$eQTL_subgenome == C_genes$gene_subgenome) /nrow(C_genes) # 70%  
-
-### double check eQTL plot 
-eQTL %>% 
-  dplyr::filter(class == "trans") %>% 
-  group_by(eQTL_chr) %>% 
-  dplyr::summarise(start = max(start)) # start is gene start, end is gene end
-
-eQTL %>% 
-  dplyr::filter(class == "cis") %>% 
-  group_by(eQTL_chr) %>% 
-  dplyr::summarise(end = max(end)) # start is gene start, end is gene end
-
-p.test <- 
-eQTL %>% 
-  dplyr::filter(class == "trans" & eQTL_subgenome == "A" & gene_subgenome == "A") %>%
-  ggplot() + 
-  geom_point(aes(x = pos, y = start), size = 0.5) + # x is genetic position of eQTL, y is physical start position of gene 
-  facet_grid(eQTL_chr ~ CHROM, scales = "free", switch="both") + 
-  theme_classic() +
-  theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) +
-  theme(axis.text.x=element_blank(),
-        axis.text.y=element_blank(), 
-        axis.ticks.x=element_blank(),
-        axis.ticks.y=element_blank()) + 
-  labs(x = "eQTL genetic position", y = "gene start") 
-
-p.test
-
-p.test.2 <- 
-eQTL %>% 
-  dplyr::filter(class == "trans" & eQTL_subgenome == "C" & gene_subgenome == "C") %>%
-  ggplot() + 
-  geom_point(aes(x = pos, y = start), size = 0.5) + # x is genetic position of eQTL, y is physical start position of gene 
-  facet_grid(eQTL_chr ~ CHROM, scales = "free", switch="both") + 
-  theme_classic() +
-  theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) +
-  theme(axis.text.x=element_blank(),
-        axis.text.y=element_blank(), 
-        axis.ticks.x=element_blank(),
-        axis.ticks.y=element_blank()) + 
-  labs(x = "eQTL genetic position", y = "gene start") 
-
-p.test.2 
-
-eQTL %>% 
-  dplyr::filter(eQTL_chr == "C05") %>% 
-  group_by(CHROM) %>% 
-  dplyr::summarise(count = n()) # start is gene start, end is gene end  
 ```
 
+### find overlaps between eQTL & trait QTL  
+```{r}
+# trait QTL using scanone result 
+load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
+load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
 
-### plot out cis-eQTL result for oil traits and growth traits 
+cis_eQTL %>% dim() #  11710    11  
+trans_eQTL %>% dim() # 14871    11  
+
+traitQTL.annotated %>% colnames() 
+
+cis_eQTL.qtl.combined <- inner_join(cis_eQTL,traitQTL.annotated,by="gene_ID") 
+cis_eQTL.qtl.combined %>% head()    
+cis_eQTL.qtl.combined %>% dim() # 2200   21 
+
+colnames(cis_eQTL.qtl.combined) 
+
+trans_eQTL.qtl.combined <- inner_join(trans_eQTL,traitQTL.annotated,by="gene_ID") 
+trans_eQTL.qtl.combined %>% head()    
+trans_eQTL.qtl.combined %>% dim() # 2110    21  
+  
+colnames(cis_eQTL.qtl.combined)
+
+cis_eQTL.qtl.combined.final <- 
+cis_eQTL.qtl.combined %>% 
+  mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
+  dplyr::select(-c(start.x, end.x, start.y, end.y)) 
+  
+trans_eQTL.qtl.combined.final <- 
+trans_eQTL.qtl.combined %>% 
+  mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
+  dplyr::select(-c(start.x, end.x, start.y, end.y)) 
+
+######## down to here 
+
+
+
+trans_eQTL.qtl.combined.final 
+write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")  
+
+write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/trans_eQTL.qtl.combined.final.csv") 
+
+test1 <- read.csv("~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")
+dim(test1)
+
+test2 <- read.csv("~/F2/output/eQTL/trans_eQTL.qtl.combined.final.csv")
+dim(test2)
+
+intersect(test2$gene_ID, trans_eQTL.qtl.combined.final$gene_ID) %>% unique() %>% length()
+
+
+### make some plot for several important genes 
+# the two FAE 
+
+# the two 
+### make some table & plot for several important genes 
+# 1) Fatty acid/flowering/growth related genes for cis-eQTL final list 
+View(cis_eQTL.qtl.combined.final[grep("lipid|fatty", cis_eQTL.qtl.combined.final$GO_des),])  
+
+# 2) transcription factor coding genes for cis-eQTL final list
+View(cis_eQTL.qtl.combined.final[grep("DNA|nucleotide|transcription", cis_eQTL.qtl.combined.final$GO_des),])  
+
+# 3) Fatty acid/flowering/growth related genes for trans-eQTL final list  
+View(trans_eQTL.qtl.combined.final[grep("lipid|fatty", trans_eQTL.qtl.combined.final$GO_des),])   
+
+# 4) figures for the two cis-eQTL gene 
+# BnaA08g11060D & BnaA08g11140D two cis-eQTL gene for fatty acid, need to deal with the color problem... more colors than a single palette can handel... 
+save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
+
+### check whether FLC is cis-regulator for some the traits 
+load("~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
+
+cis_eQTL.qtl.combined.final %>%  
+  filter(AGI == "AT5G10140") %>% 
+  View() # FLC is cis-regulator     
+```
+ 
+######## 
+plot out cis-eQTL result for oil traits and growth traits 
 ```{r}
 load("~/F2/output/QTL_analysis/cim.perm.43traits.flipped.Rdata")
 load("~/F2/output/QTL_analysis/cim.qtl.43traits.flipped.Rdata")
