@@ -493,8 +493,8 @@ pwalk(list(paths, plots), ggsave, path = "~/F2/output/QTL_analysis/figure/", wid
 ### redo QTL analysis for several traits which don't follow normal distribution 
 ```{r}
 ### load data and run scanone & cim
-LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
-                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2.pheno.csv",
                      genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
 
 plot.map(LG.f2.after.crossover)
@@ -508,49 +508,47 @@ LG.f2.after.crossover$pheno %>% colnames() # Caprylic_acid, Myristic_acid, Hepta
 scanone_Caprylic <- 
 scanone(LG.f2.after.crossover, pheno.col = "Caprylic_acid", method = "em", model = "2part", upper = F)
 
-test <- scanone(LG.f2.after.crossover, pheno.col = "Caprylic_acid", method = "imp", upper = F)
-
 # permutation 
 perm_Caprylic <- 
 scanone(LG.f2.after.crossover, pheno.col = "Caprylic_acid", method = "em", model = "2part", upper = F, n.perm = 1000)
 
-summary(perm_Caprylic)[1] 
+summary(perm_Caprylic)[1] # 5.632463 
 summary(perm_Caprylic, alpha = 0.05)
 
+plot(scanone_Caprylic,bandcol="gray90", main="Caprylic_acid")
+abline(h=summary(perm_Caprylic)[1],lty=2) #add permuation threshold
+
+### Myristic acid 
 scanone_Myristic <-
 scanone(LG.f2.after.crossover, pheno.col = "Myristic_acid", method = "em", model = "2part", upper = F)
 
 perm_Myristic <-
-scanone(LG.f2.after.crossover, pheno.col = "Myristic_acid", method = "em", model = "2part", upper = F, n.perm = 1000) 
+scanone(LG.f2.after.crossover, pheno.col = "Myristic_acid", method = "em", model = "2part", upper = F, n.perm = 1000) # upper=F to indicate that in the 2part model, phenotype is the smallest observed phenotype 
+summary(perm_Myristic)[1] 
+summary(perm_Myristic, alpha = 0.05)
 
-LG.f2.after.crossover$pheno$Heptadecanoic_acid_new <- ifelse(LG.f2.after.crossover$pheno$Heptadecanoic_acid == 0, 0, 1) 
+plot(scanone_Myristic,bandcol="gray90", main="Myristic_acid")
+abline(h=summary(perm_Myristic)[1],lty=2) #add permuation threshold # same result as identified from normal model 
 
-scanone_Heptadecanoic <-
-scanone(LG.f2.after.crossover, pheno.col = "Heptadecanoic_acid_new", method = "em", model = "binary") # binary
-
-perm_Heptadecanoic <-
-scanone(LG.f2.after.crossover, pheno.col = "Heptadecanoic_acid_new", method = "em", model = "binary", n.perm = 1000)
-
-perm_Heptadecanoic <- summary(perm_Heptadecanoic)[1] 
-perm_Myristic
-perm_Caprylic
+### Heptadecanoic_acid don't worry, to few data points 
 
 ### survival rate, transformaion won't work because a lot of 0, is there any other model for survival rate? 
 hist(sqrt(LG.f2.after.crossover$pheno$Survival_rate)) 
 ggplot(LG.f2.after.crossover$pheno, aes(x = Survival_rate)) + geom_histogram(bins=15) + scale_x_log10() 
 min(LG.f2.after.crossover$pheno$Survival_rate, na.rm = T)  
 
-### 
-permtest.F2.new <- list()
-alphas <- seq(0.01, 0.10, by = 0.01) 
-lod.thrs <- summary(perm_Caprylic, alphas) 
-lod.thrs  
+scanone_Survival_rate <-
+scanone(LG.f2.after.crossover, pheno.col = "Survival_rate", model = "np")
 
-plot(scanone_Heptadecanoic_new[,c(1,2,4)])
-scanone_Heptadecanoic_new %>% head()
-dev.off()
+perm_Survival_rate <-
+scanone(LG.f2.after.crossover, pheno.col = "Survival_rate", model = "np", n.perm = 1000) # upper=F to indicate that in the 2part model, phenotype is the smallest observed phenotype 
+summary(Survival_rate)[1] 
+summary(perm_Survival_rate, alpha = 0.05) 
 
-### this needs more time... come back later ... 
+plot(scanone_Survival_rate,bandcol="gray90", main="Myristic_acid")
+abline(h=summary(perm_Survival_rate)[1],lty=2) #add permuation threshold # same result as identified from normal model 
+
+save(scanone_Caprylic, scanone_Myristic, scanone_Survival_rate, perm_Caprylic, perm_Myristic, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/QTL_nonnormality.Rdata") 
 ```
 
 ### table to summarize QTL mapping result, make R square, additive effect... 
