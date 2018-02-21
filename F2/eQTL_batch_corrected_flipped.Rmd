@@ -67,7 +67,7 @@ scanone.gather <-
 scanone_eQTL.F2 %>% 
   gather(key = trait, value = LOD, -chr, -pos) 
 
-sig.chrs <- scanone.gather %>% filter(LOD > threshold.95) %>%
+sig.chrs <- scanone.gather %>% filter(LOD > threshold.95) %>% 
   group_by(trait,chr) %>% 
   dplyr::summarise(count = n()) # this is to get the significant chr ID for each trait 
 
@@ -82,7 +82,7 @@ bayesint.list <- apply(sig.chrs,1,function(hit) { # for every row("trait, chr, c
   )
   colnames(result)[3] <- "LOD" 
   result
-}) 
+})  
 
 names(bayesint.list) <- sig.chrs$trait
 
@@ -90,8 +90,8 @@ bayesint.list <- lapply(bayesint.list,function(x)
                           x %>% 
                           as.data.frame() %>%
                           rownames_to_column(var="markername")  %>% # make rownames to column and use "markername" as the colname for the new colomn  
-                          mutate(chr=as.character(chr))
-) 
+                          mutate(chr=as.character(chr)) 
+)  
 
 bayesint.result <- 
 as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # combine list into tibble 
@@ -156,7 +156,7 @@ cis_eQTL %>% dim() # 11710    12
 trans_eQTL %>% dim() # 14871    12 
 
 cis_eQTL$class <- rep("cis", nrow(cis_eQTL)) 
-trans_eQTL$class <- rep("trans", nrow(trans_eQTL)) 
+trans_eQTL$class <- rep("trans", nrow(trans_eQTL))  
 
 # get only main chromosome stuff   
 eQTL <- rbind(cis_eQTL, trans_eQTL) 
@@ -241,9 +241,7 @@ load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata")
 cis_eQTL %>% dim() #  11710    11  
 trans_eQTL %>% dim() # 14871    11  
 
-####### continue tomorrow... 
-traitQTL.annotated %>% colnames()
-
+traitQTL.annotated %>% colnames() 
 
 cis_eQTL.qtl.combined <- inner_join(cis_eQTL,traitQTL.annotated,by="gene_ID") 
 cis_eQTL.qtl.combined %>% head()    
@@ -271,12 +269,19 @@ trans_eQTL.qtl.combined %>%
 
 
 
-write.csv(cis_eQTL.qtl.combined.final, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/cis_eQTL.qtl.combined.final.csv")
-
 trans_eQTL.qtl.combined.final 
-write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv") 
+write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")  
 
 write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/trans_eQTL.qtl.combined.final.csv") 
+
+test1 <- read.csv("~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")
+dim(test1)
+
+test2 <- read.csv("~/F2/output/eQTL/trans_eQTL.qtl.combined.final.csv")
+dim(test2)
+
+intersect(test2$gene_ID, trans_eQTL.qtl.combined.final$gene_ID) %>% unique() %>% length()
+
 
 ### make some plot for several important genes 
 # the two FAE 
@@ -298,9 +303,10 @@ save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/ou
 
 ### check whether FLC is cis-regulator for some the traits 
 load("~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
-cis_eQTL.qtl.combined.final %>% 
+
+cis_eQTL.qtl.combined.final %>%  
   filter(AGI == "AT5G10140") %>% 
-  View() # FLC is cis-regulator  
+  View() # FLC is cis-regulator     
 ```
  
 ######## 

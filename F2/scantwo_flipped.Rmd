@@ -7,7 +7,7 @@ output: html_document
 
 ```{r}
 library(qtl) 
-library(tidyverse)
+library(tidyverse) 
 ```
 
 ### load data 
@@ -914,5 +914,5 @@ qtl.fit.plant_width <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.plant_width,f
 ### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
 
 #examine our model
-summary(qtl.fit.plant_width)   
-```
+summary(qtl.fit.plant_width)    
+``` 

@@ -10,9 +10,9 @@ output: html_document
 library(tidyverse)
 library(qtl) 
 library(snowfall)
-library(ggrepel)
-library(Biostrings)
-source("~/KIAT/function_BnRNAseq.R") 
+library(ggrepel) 
+library(Biostrings) 
+source("~/KIAT/function_BnRNAseq.R")  
 
 ### load data and run scanone & cim
 LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
@@ -321,6 +321,47 @@ traitQTL.annotated %>%
 traitQTL.annotated %>% dim() #  18647    11 
 save(traitQTL.annotated, file =  "~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata") 
 ```
+
+# discrepency between previous result & current QTL result, FLC gene not located in the interval for days_to_flower anymore 
+```{r}
+load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
+
+### current one 
+traitQTL.annotated %>% 
+  filter(trait == "days_to_flower") %>% 
+  dplyr::select(start, end, chrom) %>% 
+  unique() 
+#        start      end chrom
+# 1   15367151 15942430   A10
+# 130 25340726 32476288   C06
+
+traitQTL.annotated %>% 
+  filter(trait == "days_to_bolt") %>% 
+  dplyr::select(start, end, chrom)%>% 
+  unique()  
+
+#        start      end chrom
+# 1   14613931 15142872   A10
+# 134 22643132 31785732   C06
+
+traitQTL.annotated[which(traitQTL.annotated$AGI == "AT5G10140" ),]
+
+gff.mRNA[gff.mRNA$gene_ID == "BnaA10g22080D",] 
+#   CHROM    start      end       gene_ID
+#   chrA10 14998617 15003197 BnaA10g22080D
+
+######## previous one 
+load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata") 
+traitQTL.annotated %>% 
+  filter(trait == "days_to_flower") %>% 
+  dplyr::select(start, end, chrom) %>% 
+  unique() 
+
+#        start      end chrom
+#  14772310 15942430   A10
+#  25340726 32476288   C06
+```
+
 
 ### check important genes
 ```{r}
