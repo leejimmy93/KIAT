@@ -839,6 +839,40 @@ bayesint.result.paper.2
 write.csv(bayesint.result.paper.2, file = "~/F2/output/QTL_analysis/bayesint.result.paper.3.csv")  
 ```
 
+### synteny analysis 
+```{r}
+library(DECIPHER)
+
+fas <- c(Genome1="~/Desktop/Brassica_project/reference/seq1.fa",
+   Genome2="~/Desktop/Brassica_project/reference/seq2.fa",
+   Genome3="~/Desktop/Brassica_project/reference/seq3.fa")
+
+# specify where to create the new sequence database
+db <- "~/Desktop/"
+
+# load the sequences from the file in a loop
+for (i in seq_along(fas)) {
+   Seqs2DB(fas[i], "FASTA", db, names(fas[i]))
+}
+
+# map the syntenic regions between each genome pair
+synteny <- FindSynteny(db)
+
+# print a summary of the syntenic map (optional)
+synteny
+
+# view the syntenic regions (optional)
+pairs(synteny) # displays a dot plot of all pairs
+plot(synteny) # displays a bar plot of adjacent pairs
+
+# perform alignments of all pairs of genomes
+DNA <- AlignSynteny(synteny, db)
+
+# view the aligned syntenic blocks for each pair
+unlist(DNA[[1]]) # Genomes 1 and 2
+unlist(DNA[[2]]) # Genomes 1 and 3
+unlist(DNA[[3]]) # Genomes 2 and 3 
+```
 
 
 
