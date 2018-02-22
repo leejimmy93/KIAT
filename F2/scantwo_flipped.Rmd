@@ -31,10 +31,10 @@ length(scantwo.imp) # 15
 
 # scanone & CIM result 
 load("~/F2/output/QTL_analysis/QTL_result_all.Rdata")
-cim.perm.all %>% length()
-cim.qtl.all %>% length()
-scanone.perm.imp.all %>% length()
-scanone.imp.all %>% length()
+cim.perm.all %>% length() # 51
+cim.qtl.all %>% length() # 51
+scanone.perm.imp.all %>% length() # 51
+scanone.imp.all %>% length() # 51
 
 names(scantwo.imp) 
 ```
@@ -109,7 +109,7 @@ LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Erucic_
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
 
-qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(38, 179)) # Ruijuan: QTL with interactions
+qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(38, 179))  
 ### position from additive model if no interaction identified 
 
 qtlm.Erucic # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno(). 
@@ -226,7 +226,7 @@ summary(qtl.fit.Palmitoliec)
 effectplot(cross=LG.f2.after.crossover, mname1 = "C09@47")   
 ``` 
 
-### Palmnitic_acid & Myristic acid 
+### Palmitic_acid & Myristic acid 
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Myristic_Palmitic/"
 files <- list.files(path=path)
@@ -442,7 +442,7 @@ summary(scanone.imp.all[["Linoleic_acid"]])
 summary(cim.qtl.all[["Linoleic_acid"]])
 
 # object hold QTL of interest 
-qtlm.Linoleic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(38, 158))  
+qtlm.Linoleic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(38, 172))  
 qtlm.Linoleic
 qtl.fit.Linoleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linoleic,formula = y ~ Q1 + Q2 ,get.ests=T) 
 summary(qtl.fit.Linoleic)  
@@ -493,7 +493,7 @@ LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imp
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
 
 # object hold QTL of interest 
-qtlm.days_to_flower <- makeqtl(LG.f2.after.crossover,chr=c("A10", "C06"),pos=c(155, 83))  
+qtlm.days_to_flower <- makeqtl(LG.f2.after.crossover,chr=c("A10", "C06"),pos=c(184, 81))  
 qtlm.days_to_flower
 qtl.fit.days_to_flower <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.days_to_flower,formula = y ~ Q1 + Q2 ,get.ests=T) 
 summary(qtl.fit.days_to_flower) 
@@ -570,7 +570,7 @@ effectplot(LG.f2.after.crossover, mname1 = "A10@176", mname2 = "C06@83")
 
 ### cis_11_Eicosenoic_acid & Linolenic_acid 
 ```{r}
-path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/cis_11_Eicosenoic_Linolenic/"
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/cis_11_Eicosenoic_Linolenic/" 
 files <- list.files(path=path)
 setwd(path)
 scantwo_perm_cis_11_Eicosenoic_Linolenic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
@@ -627,22 +627,25 @@ qtl.fit.Linolenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formu
 summary(qtl.fit.Linolenic) 
 
 # drop one marker 
-qtlm.Linolenic <- dropfromqtl(qtlm.Linolenic,qtl.name="Q2")
+qtlm.Linolenic <- dropfromqtl(qtlm.Linolenic,qtl.name="Q1")
 qtlm.Linolenic
 qtl.fit.Linolenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formula = y ~ Q1 + Q2 + Q3 + Q2:Q3) 
+qtlm.Linolenic <- dropfromqtl(qtlm.Linolenic,qtl.name="Q1")
+qtlm.Linolenic
+qtl.fit.Linolenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Linolenic,formula = y ~ Q1 + Q2 + Q1:Q2) 
 summary(qtl.fit.Linolenic)
 
 # refine position 
 qtl.refine.Linolenic <- refineqtl(LG.f2.after.crossover,
                         qtl=qtlm.Linolenic,
-                        formula= y ~ Q1 + Q2 + Q3 + Q2:Q3)
+                        formula= y ~ Q1 + Q2 + Q1:Q2)
 
 # scan the genome for additional QTL 
 qtl.add.Linolenic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Linolenic)
 summary(qtl.add.Linolenic) # no additional loci
 
-qtl.fit.final.Linolenic <- fitqtl(LG.f2.after.crossover,qtl=qtl.refine.Linolenic, formula = y ~Q1 + Q2 + Q3 + Q2:Q3, get.ests = T)
-summary(qtl.fit.final.Linolenic)
+qtl.fit.final.Linolenic <- fitqtl(LG.f2.after.crossover,qtl=qtl.refine.Linolenic, formula = y ~Q1 + Q2 + Q1:Q2, get.ests = T)
+summary(qtl.fit.final.Linolenic) 
 ``` 
 
 ### Behenic 
@@ -660,7 +663,7 @@ summary(scantwo_perm_Behenic)
 # 10%  132 131 127 127 126 5.17
 
 summary(scantwo.imp[["Behenic_acid"]],perm=scantwo_perm_Behenic,alpha=.05,pval=T)
-### don't worry about multiple QTL, now just get loci effect  
+### no two loci satisify the criteria  
 LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
                      phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
                      genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
@@ -669,30 +672,13 @@ LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imp
 LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
 
 summary(scanone.imp.all[["Behenic_acid"]]) # A01: 60; A08: 38; C03: 158 
-summary(cim.qtl.all[["Behenic_acid"]])
+summary(cim.qtl.all[["Behenic_acid"]]) 
 
 # object hold QTL of interest 
-qtlm.Behenic <- makeqtl(LG.f2.after.crossover,chr=c("A01", "A08", "C03"),pos=c(60, 38, 158))  
+qtlm.Behenic <- makeqtl(LG.f2.after.crossover,chr=c("A01", "A08", "C03"),pos=c(60, 33, 175))  
 qtlm.Behenic
 qtl.fit.Behenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Behenic,formula = y ~ Q1 + Q2 + Q3,get.ests=T) 
-summary(qtl.fit.Behenic) 
-# two nearby loci with contrasting effect 
-
-# refine position
-qtl.refine.Behenic <- refineqtl(LG.f2.after.crossover,
-                        qtl=qtlm.Behenic,
-                        formula= y ~ Q1 + Q2 + Q3)
-
-# test for interaction 
-addint(LG.f2.after.crossover,qtl=qtl.refine.Behenic) # yes, interaction 
-
-# test for additional loci 
-qtl.add.Behenic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Behenic)
-summary(qtl.add.Behenic) # chrA08_2980704  A08  94.4 7.327 
-
-qtl.fit.final.Behenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine.Behenic,formula = y ~ Q1 + Q2 + Q3 + Q1:Q2 + Q2:Q3 + Q1:Q3 ,get.ests=T) 
-
-summary(qtl.fit.final.Behenic)  
+summary(qtl.fit.Behenic)   
 ``` 
 
 ### just estimate allele effect for growth model result 
@@ -916,3 +902,53 @@ qtl.fit.plant_width <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.plant_width,f
 #examine our model
 summary(qtl.fit.plant_width)    
 ``` 
+
+### other single day growth QTL result 
+```{r}
+### leaf_number_2015_12_28 
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$leaf_number_2015_12_28)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.leaf_number_2015_12_28 <- makeqtl(LG.f2.after.crossover,chr=c("A10"),pos=c(154)) # Ruijuan: QTL with interactions
+### position from additive model if no interaction identified 
+
+qtlm.leaf_number_2015_12_28 # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno(). 
+
+#make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
+qtl.fit.leaf_number_2015_12_28 <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.leaf_number_2015_12_28,formula = y ~ Q1, get.ests=T)
+### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
+
+#examine our model
+summary(qtl.fit.leaf_number_2015_12_28)   
+
+## leaf_number_2016_03_21 
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$leaf_number_2016_03_21)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.leaf_number_2016_03_21 <- makeqtl(LG.f2.after.crossover,chr=c("A10"),pos=c(179)) # Ruijuan: QTL with interactions
+### position from additive model if no interaction identified 
+
+qtlm.leaf_number_2016_03_21 # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno(). 
+
+#make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
+qtl.fit.leaf_number_2016_03_21 <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.leaf_number_2016_03_21,formula = y ~ Q1, get.ests=T)
+### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
+
+#examine our model
+summary(qtl.fit.leaf_number_2016_03_21)    
+
+
+
+```  
+
+
