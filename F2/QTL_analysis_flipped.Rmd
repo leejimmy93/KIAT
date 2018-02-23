@@ -850,6 +850,47 @@ bayesint.result.paper.2 <- read.csv("~/F2/output/QTL_analysis/bayesint.result.pa
 bayesint.result.paper.2   
 
 write.csv(bayesint.result.paper.2, file = "~/F2/output/QTL_analysis/bayesint.result.paper.3.csv")  
+
+### add physical position interval 
+load("~/F2/output/QTL_analysis/bayesint.list.scanone.cim.Rdata")
+length(bayesint.list.scanone) # 33
+length(bayesint.list.cim) # 26 
+
+bayesint.result.scanone <- as.tibble(bind_rows(bayesint.list.scanone,.id="trait")) %>% # combine list into tibble 
+  dplyr::select(trait,chr,pos,markername,LOD) %>% 
+  separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
+  group_by(trait,chr) %>% 
+  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD))
+
+bayesint.result.cim <- as.tibble(bind_rows(bayesint.list.cim,.id="trait")) %>% # combine list into tibble 
+  dplyr::select(trait,chr,pos,markername,LOD) %>% 
+  separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
+  group_by(trait,chr) %>% 
+  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD))
+
+bayesint.result.cim$model <- rep("cim", nrow(bayesint.result.cim))
+bayesint.result.scanone$model <- rep("scanone", nrow(bayesint.result.scanone))
+
+bayesint.result <- 
+bayesint.result.cim %>% 
+  full_join(bayesint.result.scanone, by = c("trait", "chr")) 
+
+bayesint.result %>% dim()
+colnames(bayesint.result)
+
+for (i in 1:nrow(bayesint.result)){
+  if(is.na(bayesint.result[i, "start.x"])){
+    bayesint.result[i, c(3:7)] <- bayesint.result[i, c(8:12)]
+  }
+}
+
+bayesint.result <- bayesint.result[,1:7] 
+colnames(bayesint.result) <- gsub("\\.x$", "", colnames(bayesint.result)) 
+
+bayesint.result %>% dim() # 35 7 
+bayesint.result %>% View()
+save(bayesint.result, file = "~/F2/for_paper/synteny_analysis/bayesint.result.pysical.Rdata") 
+
 ```
 
 
