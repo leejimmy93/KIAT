@@ -504,7 +504,7 @@ check result for fixed effect & mixed effect
 
 * gene imprinting, ie. genes inherited from one parent is methylated so that allele is not expressed or expressed at a very low level. 
 
-After checking the result, I realized that there are many genes which show different ASE between crosses but not differentialy expressed between crosses, or genes that are differentially expressed but not show ASE.   
+After checking the result (using script /share/malooflab/Ruijuan/KIAT_cabernet/F1/ASE_brms_mixed_analysis.R on cabernet), I realized that there are many genes which show different ASE between crosses but not differentialy expressed between crosses, or genes that are differentially expressed but not show ASE.   
 
 For genes that show DE but not different ASE, there can be several different reasons:
 
