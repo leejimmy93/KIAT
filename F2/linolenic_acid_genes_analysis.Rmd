@@ -28,7 +28,9 @@ library(GenomicRanges)
 library(GenomicFeatures)
 library("rtracklayer")
 
-F2_geno_data <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Final_SNP_Calls", header = T)
+
+# F2_geno_data <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Final_SNP_Calls", header = T)
+F2_geno_data <- read.table("~/F2/data/linolenic_acid/F2_Final_SNP_Calls", header = T)
 head(F2_geno_data) 
 dim(F2_geno_data) # 18226   172 
 
@@ -38,8 +40,9 @@ dim(F2_geno_data) # 18226   166
 colnames(F2_geno_data) <- gsub("([[:print:]]+)(\\.)([[:digit:]])", "\\3", colnames(F2_geno_data))
 
 # read parent data 
-Ae_Ol <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/vcf.Ae.Ol.intersect.final.csv", stringsAsFactors = F)
-Ae_Ol %>% dim()
+# Ae_Ol <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/vcf.Ae.Ol.intersect.final.csv", stringsAsFactors = F)
+Ae_Ol <- read.csv("~/F2/data/linolenic_acid/vcf.Ae.Ol.intersect.final.csv", stringsAsFactors = F)
+Ae_Ol %>% dim() #  59343     7 
 
 # left join to filter Ae_Ol SNP based on F2 genotypes
 Ae_Ol$index <- paste(Ae_Ol$CHROM, Ae_Ol$POS, sep = "_")
