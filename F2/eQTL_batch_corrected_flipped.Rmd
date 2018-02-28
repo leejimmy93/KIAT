@@ -361,8 +361,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_b
          # lod = cim.perm[[1]], 
          title = "cis-regulators for flowering and growth traits", 
          rug = TRUE)   
-ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 6, height = 5) 
-# FLC gene  
+ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 6, height = 5)  
 ```
 
 

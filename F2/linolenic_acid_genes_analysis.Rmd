@@ -23,6 +23,10 @@ To do this, I will
 ### load data and polarize according to parental information 
 ```{r}
 library(tidyverse) 
+library(IRanges)
+library(GenomicRanges)
+library(GenomicFeatures)
+library("rtracklayer")
 
 
 # F2_geno_data <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Final_SNP_Calls", header = T)
@@ -47,7 +51,7 @@ F2_geno_data_2_Ae_Ol <-
 left_join(F2_geno_data, Ae_Ol, by="index") %>% 
   dplyr::select(-(X:ALT)) 
 
-F2_geno_data_Ae_Ol <- as.matrix(F2_geno_data_Ae_Ol)  
+F2_geno_data_2_Ae_Ol <- as.matrix(F2_geno_data_2_Ae_Ol)  
 
 # reassign genotype according to parents genotypes
 F2_geno_data_2_Ae_Ol_new <- data.frame()
@@ -67,6 +71,162 @@ for (i in colnames(F2_geno_data_2_Ae_Ol)[1:166]) {
   }
 } 
 
+dim(F2_geno_data_2_Ae_Ol_new) # 18226   166
+rownames(F2_geno_data_2_Ae_Ol_new) <- F2_geno_data_2_Ae_Ol[,"index"]
+F2_geno_data_2_Ae_Ol_new[1:10, 1:10] 
+```
+
+### extract SNP in the QTL interval 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/linolenic_acid_analysis/bayesint.result.physical.Rdata")
+bayesint.result %>% dim() # 35 7 
+
+bayesint.result.Linolenic <- 
+bayesint.result %>% 
+  filter(trait == "Linolenic_acid") 
+
+A08.interval <- 
+bayesint.result.Linolenic %>% 
+  filter(chr == "A08") 
+
+C03.interval <- 
+bayesint.result.Linolenic %>% 
+  filter(chr == "C03") 
+
+dim(F2_geno_data_2_Ae_Ol_new) # 18226   166
+F2_geno_data_2_Ae_Ol_new$chr = gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\1", rownames(F2_geno_data_2_Ae_Ol_new))
+F2_geno_data_2_Ae_Ol_new$pos = gsub("([[:print:]]+)(_)([[:digit:]]+)", "\\3", rownames(F2_geno_data_2_Ae_Ol_new))
+
+F2_geno_data_2_Ae_Ol_new_interval <- 
+F2_geno_data_2_Ae_Ol_new %>% 
+  filter((chr == "chrA08" & as.numeric(pos) >=  A08.interval$start & as.numeric(pos) <= A08.interval$end) | (chr == "chrC03" & as.numeric(pos) >=  C03.interval$start & as.numeric(pos) <= C03.interval$end))
+  
+dim(F2_geno_data_2_Ae_Ol_new_interval) # 256 168 
+
+### get gene annotation, including AGI & GO description 
+gff.mRNA <- read.table("~/Desktop/Brassica_project/IGV_file/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+head(gff.mRNA) 
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+
+colnames(F2_geno_data_2_Ae_Ol_new_interval)[167] <- "CHROM"
+F2_geno_data_2_Ae_Ol_new_interval$pos <- as.numeric(F2_geno_data_2_Ae_Ol_new_interval$pos)
+
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
+SNP <- GRanges(seqnames = Rle(F2_geno_data_2_Ae_Ol_new_interval$CHROM), ranges = IRanges(start = F2_geno_data_2_Ae_Ol_new_interval$pos, end = F2_geno_data_2_Ae_Ol_new_interval$pos), ID = paste(F2_geno_data_2_Ae_Ol_new_interval$CHROM, F2_geno_data_2_Ae_Ol_new_interval$pos, sep = "_")) 
+
+SNP_gene <- mergeByOverlaps(SNP, genes)
+SNP_gene <- as.data.frame(SNP_gene)
+
+SNP_gene %>% dim() # 241 14 
+
+load("~/Desktop/Brassica_project/reference/BnapusAnnotation.Rdata")
+load("~/Desktop/Brassica_project/reference/napus_GO_combined.Rdata")
+BnapusAnnotation %>% dim()
+napus_GO_combined %>% dim()
+
+SNP_gene.annotated <- 
+SNP_gene %>% 
+  left_join(BnapusAnnotation, c("names" = "name")) %>% 
+  left_join(napus_GO_combined, c("names" = "gene_ID")) %>% 
+  dplyr::select(-c(SNP.width, SNP.strand, ID, genes.width, genes.strand, names, chrom, start, end))
+
+colnames(F2_geno_data_2_Ae_Ol_new_interval)
+colnames(SNP_gene.annotated)
+
+SNP_gene.annotated.linolenic <- 
+F2_geno_data_2_Ae_Ol_new_interval %>% 
+  left_join(SNP_gene.annotated, c("CHROM" = "SNP.seqnames", "pos" = "SNP.start" ))  
+```
+
+### check the pattern for several fatty acid genes firstly  
+(plot the linolenic acid level based on the genotype for the two genes, maybe check the erucic and oleic acid etc. level as well if such gene is found for linolenic acid) 
+```{r}
+SNP_gene.annotated.linolenic %>% dim() # 256 179 
+SNP_gene.annotated.linolenic %>% colnames()
+
+phefile = read.csv("~/Desktop/F2.pheno.csv", stringsAsFactors = F, row.names = 1, header = F) 
+phefile %>% dim() # 44 166 
+
+sum(SNP_gene.annotated.linolenic$AGI == "AT4G34520")
+sum(SNP_gene.annotated.linolenic$AGI == "AT4G34510")
+# no fatty acid genes have SNPs identified ... 
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaA08g11130D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaA08g11140D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaA08g12780D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaA08g12800D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaC03g65980D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaC03g66040D")
+
+SNP_gene.annotated.linolenic$AGI
+SNP_gene.annotated.linolenic$GO_des
+
+# do I really have SNPs in these genes between Da-Ae and Da-Ol-1? 
+Ae_Ol <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/vcf.Ae.Ol.intersect.final.csv", stringsAsFactors = F)
+Ae_Ol %>% dim()
+Ae_Ol %>% head()
+
+SNP_all <- GRanges(seqnames = Rle(Ae_Ol$CHROM), ranges = IRanges(start = Ae_Ol$POS, end = Ae_Ol$POS), ID = paste(Ae_Ol$CHROM, Ae_Ol$POS, sep = "_")) 
+
+SNP_gene_all <- mergeByOverlaps(SNP_all, genes)
+SNP_gene_all <- as.data.frame(SNP_gene_all)
+
+SNP_gene_all %>% dim() # 55520    14 
+
+SNP_gene.annotated.all <- 
+SNP_gene_all %>% 
+  left_join(BnapusAnnotation, c("names" = "name")) %>% 
+  left_join(napus_GO_combined, c("names" = "gene_ID")) %>% 
+  dplyr::select(-c(SNP_all.width, SNP_all.strand, ID, genes.width, genes.strand, names, chrom, start, end)) 
+
+SNP_gene.annotated.all %>% colnames()
+
+F2_geno_data_2_Ae_Ol_new_interval.all <- 
+SNP_gene.annotated.all %>% 
+  filter((SNP_all.seqnames == "chrA08" & as.numeric(SNP_all.start) >=  A08.interval$start & as.numeric(SNP_all.start) <= A08.interval$end) | (SNP_all.seqnames == "chrC03" & as.numeric(SNP_all.start) >=  C03.interval$start & as.numeric(SNP_all.start) <= C03.interval$end)) 
+
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaA08g11140D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaA08g11130D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaA08g11140D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaA08g12780D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaA08g12800D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaC03g65980D")
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaC03g66040D")
+
+sum(SNP_gene.annotated.linolenic$genes.names == "BnaC03g64390D")
+
+fatty_acid_genes <- c("BnaA08g11130D", "BnaA08g11140D", "BnaA08g12780D", "BnaA08g12800D", "BnaC03g65980D", "BnaC03g66040D", "BnaC03g67820D")
+
+fatty_acid_genes %in% as.character(SNP_gene.annotated.linolenic$genes.names)
+
+fatty_acid_genes[fatty_acid_genes %in% test$genes.names,]
+test[which(test$genes.names %in% fatty_acid_genes),] 
+
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
+unique(SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names)[unique(SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names) %in% as.character(SNP_gene.annotated.linolenic$genes.names)] 
+
+unique(SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names)[unique(SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names) %in% F2_geno_data_2_Ae_Ol_new_interval.all$genes.names]
+
+### we don't have allele information for the 3 FAD & 4 FAE genes in the two interval. can be that: 
+# 1) there is SNP in its promoter region that we could not capture from RNA-seq
+# 2) four genes on A08 interval that have SNPs between Da-Ae & Da-Ol-1, but not enough coverage in the F2 population, filtered due to too much missing data across taxa  
+# 3) structural variation (indel) that were not captured by our analysis (can redo the filtering step for parents and F2 population to capture indel variations to look for potential candidates).   
+```
+
+All the above thoughts are incorrect, because of genetic linkage, all genes in those two intervals, their allele combination should be the same. the figure attached 
+
+I am looking for genes which 
+1) fall into the two QTL interval for linolenic acid 
+2) has cis-eQTL 
+3) two homeologous pairs with opposite direction of allele effect 
+
+```{r}
+
 
 ```
+
+
+
+
 
