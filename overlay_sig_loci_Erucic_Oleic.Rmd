@@ -246,12 +246,12 @@ autoplot(gff.lipid_fatty_acid_genes.Erucic_Oleic, layout = "karyogram", aes(colo
 ### list fatty acid genes within 1Mb of the SNP loci boundary 
 ```{r}
 # genes under the significant loci 
-load("~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.2.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/2017_Nov_KIAT_report/SNP_gene_final_fxn.2.Rdata")
 View(SNP_gene_final_fxn.2) 
 
 # need to get genes within 1Mb of the significant loci 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/lipid_fatty_acid_genes.Rdata")
-load("~/Desktop/2017_Nov_KIAT_report/SNP.Erucic.Oleic.Unique.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/2017_Nov_KIAT_report/SNP.Erucic.Oleic.Unique.Rdata")
 
 lipid_fatty_acid_genes.3 <-
 gff.mRNA %>% 
@@ -297,7 +297,7 @@ colnames(SNP_gene_final_fxn)
 SNP_gene_final_fxn <- SNP_gene_final_fxn[,c("SNP.range.seqnames", "SNP.range.start", "SNP.range.end", "gff.lipid_fatty_acid_genes.start", "gff.lipid_fatty_acid_genes.end", "gff.lipid_fatty_acid_genes.names", "gff.lipid_fatty_acid_genes.GO", "ara_ID", "description")]
 
 View(SNP_gene_final_fxn)
-save(SNP_gene_final_fxn, file = "~/Desktop/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
+save(SNP_gene_final_fxn, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/2017_Nov_KIAT_report/SNP_gene_final_fxn.Rdata")
 ```
 
 ### check expression of these genes between Da-Ae and Da-Ol-1 

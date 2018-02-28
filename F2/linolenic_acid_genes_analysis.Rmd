@@ -214,6 +214,19 @@ unique(SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names)[unique(SNP_gene_fina
 # 3) structural variation (indel) that were not captured by our analysis (can redo the filtering step for parents and F2 population to capture indel variations to look for potential candidates).   
 ```
 
-All the above thoughts are incorrect, because of genetic linkage, all genes in those two intervals, their allele combination should be the same. 
+All the above thoughts are incorrect, because of genetic linkage, all genes in those two intervals, their allele combination should be the same. the figure attached 
+
+I am looking for genes which 
+1) fall into the two QTL interval for linolenic acid 
+2) has cis-eQTL 
+3) two homeologous pairs with opposite direction of allele effect 
+
+```{r}
+
+
+```
+
+
+
 
 
