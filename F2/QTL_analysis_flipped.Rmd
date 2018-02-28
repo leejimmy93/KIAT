@@ -16,7 +16,7 @@ source("~/KIAT/function_BnRNAseq.R")
 
 ### load data and run scanone & cim
 LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
-                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv", 
                      genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
 
 plot.map(LG.f2.after.crossover)
@@ -368,7 +368,7 @@ traitQTL.annotated %>%
 ```
 
 
-### check important genes
+### check important genes under QTL interval for different traits 
 ```{r}
 load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
 
@@ -398,7 +398,7 @@ traitQTL.annotated %>%
   filter(chrom == "C06") %>% 
   View() # cool, FLC gene is on A10   
  
-# besides FLC, don't see other obvious flowering related genes here 
+# besides FLC, don't see other obvious flowering related genes here  
 ```  
 
 ### plot for paper 
@@ -762,7 +762,7 @@ write.csv(bayesint.result.paper, file = "~/F2/output/QTL_analysis/bayesint.resul
 # ----------------------------------  
 #           df Type III SS   LOD  %var F value Pvalue(Chi2) Pvalue(F)    
 # A10@183.9  2        6080 7.533 16.53   18.72            0  4.96e-08 ***
-# C06@67.3   2        4264 5.444 11.59   13.13            0  5.26e-06 *** ####### need to change this pos
+# C06@67.3   2        4264 5.444 11.59   13.13            0  5.26e-06 *** ####### need to change this pos 
 # ---
 # Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 # 
