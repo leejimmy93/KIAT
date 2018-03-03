@@ -1,0 +1,216 @@
+---
+title: "trans_eQTL_hostpot"
+output: html_document
+---
+
+Purpose of this script is to identify trans-eQTL hotspot 
+
+### practice 
+```{r}
+library(qtlhot)
+
+ncross1 <- sim.null.cross(chr.len = rep(100, 4),
+n.mar = 51,
+n.ind = 100,
+type = "bc",
+n.pheno = 1000,
+latent.eff = 3,
+res.var = 1,
+init.seed = 123457)
+
+ncross1
+cross1 <- include.hotspots(cross = ncross1,
+hchr = c(2, 3, 4),
+hpos = c(25, 75, 50),
+hsize = c(100, 50, 20),
+Q.eff = 2,
+latent.eff = 3,
+lod.range.1 = c(2.5, 2.5),
+lod.range.2 = c(5, 8),
+lod.range.3 = c(10, 15),
+res.var = 1,
+n.phe = 1000,
+init.seed = 12345)
+
+cross1
+
+ncor1 <- cor(cross1$pheno)
+summary(ncor1[lower.tri(ncor1)])
+
+rm(ncor1)
+?rm
+
+set.seed(123)
+pt <- scanone(ncross1, method = "hk", n.perm = 1000)
+alphas <- seq(0.01, 0.10, by=0.01)
+lod.thrs <- summary(pt, alphas)
+lod.thrs
+
+lod.thr <- lod.thrs[5]
+lod.thr
+
+scan1 <- scanone(cross1, pheno.col = 1:1000, method = "hk")
+scan1 %>% dim() # 204 1002 
+
+high1 <- highlod(scan1, lod.thr = min(lod.thrs), drop.lod = 1.5)
+high1 %>% names()
+high1[[1]] %>% head(100) # LOD support interval for significant peaks for each trait 
+high1[[2]] %>% dim() # marker information 
+high1[[3]] # number of permutations 
+
+max(high1, lod.thr = lod.thrs) #  maximum hotspot size for each possible single trait threshold, max.N is the number of traits out of 1000 pheno traits  
+
+hots1 <- hotsize(high1, lod.thr = lod.thr) # for each genomic position, we count the number of traits that map to it with a LOD score equal or higher than the threshold in lod.thr.
+summary(hots1) # 
+
+plot(hots1, cex.lab = 1.5, cex.axis = 1.5) # plot the hotspot architecture inferred using the single trait permutation threshold 2.44 
+lod.thr # 2.44 
+
+# perform permutation tests to assess the statistical significance of the hotspots detected, hotperm uses NL & N method for permutation, Q method is implemented in ww.perm().  
+set.seed(12345) 
+hotperm1 <- hotperm(cross = cross1,
+n.quant = 300,  # The parameter n.quant sets the maximum hotspot size to be analyzed 
+n.perm = 100, # number of permutation 
+lod.thrs = lod.thrs, # vector of LOD thresholds 
+alpha.levels = alphas, # vector of significance levels  
+drop.lod = 1.5, # LOD drop amount for support intervals 
+verbose = FALSE) 
+?hotperm # conduct NL & N permutation test,  
+alphas 
+
+hotperm1 
+names(hotperm1)
+summary(hotperm1)
+
+hotperm1$max.N %>% dim() 
+# max.N element of the hotperm1 object stores the output of the N-method’s permutations and is given by a matrix with 100 rows representing the permutations, and 10 columns representing the QTL mapping thresholds
+hotperm1$max.N %>% head()
+
+hotperm1$max.lod.quant %>% dim() # 100 300 # 100 rows representing the permutations, and 300 columns representing the hotspot sizes analyzed
+hotperm1$max.lod.quant[1:10, 1:10] 
+
+quant1 <- quantile(hotperm1, 0.05, lod.thr = lod.thr)
+plot(high1, quant.level = quant1, sliding = TRUE)
+summary(hotperm1)
+
+hotsq1 <- hotsize(high1, lod = lod.thr, window = 5, quant.level = quant1)
+plot(hotsq1)
+summary(hotsq1)
+
+### example with uncorrelated phenotypes 
+ncross2 <- sim.null.cross(chr.len = rep(100,4),
+n.mar = 51,
+n.ind = 100,
+type = "bc",
+n.phe = 1000,
+latent.eff = 0,
+res.var = 1,
+init.seed = 123457)
+
+cross2 <- include.hotspots(cross = ncross2,
+hchr = c(2, 3, 4),
+hpos = c(25, 75, 50),
+hsize = c(100, 50, 20),
+Q.eff = 2,
+latent.eff = 0,
+lod.range.1 = c(2.5, 2.5),
+lod.range.2 = c(5, 8),
+lod.range.3 = c(10, 15),
+res.var = 1,
+n.phe = 1000,
+init.seed = 12345)
+
+ncor2 <- cor(cross2$pheno)
+summary(ncor2[lower.tri(ncor2)])
+
+rm(ncor2)
+scan2 <- scanone(cross2, pheno.col = 1:1000, method = "hk")
+high2 <- highlod(scan2, lod.thr = lod.thr, drop.lod = 1.5)
+
+hots2 <- hotsize(high2)
+plot(hots2, cex.lab = 1.5, cex.axis = 1.5)
+
+set.seed(12345)
+
+hotperm2 <- hotperm(cross = cross2,
+n.quant = 300,
+n.perm = 100,
+lod.thrs = lod.thrs,
+alpha.levels = alphas,
+drop.lod = 1.5,
+verbose = FALSE)
+
+quant2 <- quantile(hotperm2, 0.05, lod.thr = lod.thr)
+quant2
+
+plot(high2, lod.thr = lod.thr, quant.level = quant2, sliding = TRUE)
+plot(high2, quant.level = quant2)
+### still several points not very clear, especially how permutation works here... 
+``` 
+
+### using NL method for trans-eQTL hotspot identification 
+```{r}
+library(tidyverse)
+library(qtl)
+library(qtlhot)
+
+load("~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData")
+scanone_eQTL.F2 %>% dim() # 4887 56182 
+
+scanone_eQTL.F2[1:10, 1:10]
+
+### check correlation, later... 
+cross.F2
+lod.thrs
+alphas <- seq(0.01, 0.10, by=0.01)
+alphas <- alphas[5]
+alphas
+
+### LOD threshold level for e-trait
+lod.thr <- lod.thrs[5]
+lod.thr 
+
+### get only significant intervals for each e-trait, using LOD drop method 
+high1 <- highlod(scanone_eQTL.F2, lod.thr = min(lod.thrs), drop.lod = 1.5)
+max(high1, lod.thr = lod.thrs) # max number of e-trait fall into loci with different lod threshold 
+
+hots1 <- hotsize(high1, lod.thr = lod.thr) 
+summary(hots1) # for each genomic position, 
+
+plot(hots1, cex.lab = 1.5, cex.axis = 1.5) 
+
+### permutation to get the statistical significance # permutation takes time, tried to 
+set.seed(12345) 
+
+cross.F2$pheno <- cross.F2$pheno[,-1]
+
+system.time(
+hotperm1 <- hotperm(cross = cross.F2, 
+n.quant = 600,
+n.perm = 1,
+lod.thrs = lod.thr,
+alpha.levels = alphas,
+drop.lod = 1.5,
+verbose = FALSE)
+) 
+
+set.seed(2)
+hotperm2 <- hotperm(cross = cross.F2, 
+n.quant = ,
+n.perm = 1,
+lod.thrs = lod.thrs,
+alpha.levels = alphas,
+drop.lod = 1.5,
+verbose = FALSE) 
+
+quant1 <- quantile(hotperm1, 0.05, lod.thr = lod.thr)
+plot(high1, quant.level = quant1, sliding = TRUE)
+hotsq1 <- hotsize(high1, lod = lod.thr, window = 5, quant.level = quant1)
+plot(hotsq1)  
+
+test <- c(hotperm2, hotperm1)
+summary(hotperm2)
+
+
+```
+
