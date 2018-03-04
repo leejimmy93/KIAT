@@ -214,7 +214,7 @@ unique(SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names)[unique(SNP_gene_fina
 # 3) structural variation (indel) that were not captured by our analysis (can redo the filtering step for parents and F2 population to capture indel variations to look for potential candidates).   
 ```
 
-All the above thoughts are incorrect, because of genetic linkage, all genes in those two intervals, their allele combination should be the same. the figure attached 
+All the above thoughts are incorrect, because of genetic linkage, all genes in those two intervals, their allele combination should be the same. the jpg figure attached on github 
 
 I am looking for genes which 
 1) fall into the two QTL interval for linolenic acid 
@@ -222,8 +222,60 @@ I am looking for genes which
 3) two homeologous pairs with opposite direction of allele effect 
 
 ```{r}
+### genes which are cis-regulators for linolenic acid fall into the two loci and have cis-eQTL 
 
+cis_eQTL.qtl.combined.final <- read.csv("~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv", row.names = 1)
+cis_eQTL.qtl.combined.final %>% dim() # 2180 20 
 
+cis_eQTL.qtl.combined.final.linolenic <- 
+cis_eQTL.qtl.combined.final %>% 
+  dplyr::filter(trait.y == "Linolenic_acid") 
+
+dim(cis_eQTL.qtl.combined.final.linolenic) # 217 20 
+
+### find homeologous by extracting genes which have the same Arabidopsis hit in the two intervals 
+cis_eQTL.qtl.combined.final.linolenic %>% colnames()
+
+AGI_homeologous_hit <- 
+cis_eQTL.qtl.combined.final.linolenic %>% 
+  group_by(AGI, At_symbol) %>% 
+  summarise(count = n()) %>% 
+  filter(count > 1) %>% 
+  dplyr::select(AGI) %>% 
+  unlist() %>% 
+  as.character() 
+
+AGI_homeologous_hit <- AGI_homeologous_hit[!is.na(AGI_homeologous_hit)]
+ 
+cis_eQTL.qtl.combined.final.linolenic %>% colnames()
+
+cis_eQTL.qtl.combined.final.linolenic[cis_eQTL.qtl.combined.final.linolenic$AGI %in% AGI_homeologous_hit,] %>% 
+  dplyr::select(gene_ID, AGI, At_symbol) %>% 
+  View() 
+
+# do FA genes have QTL at all? the answer is only two FA related genes on A08 have eQTL 
+load("~/F2/for_paper/linolenic_acid/SNP_gene_final_fxn.Rdata")
+SNP_gene_final_fxn %>% dim() # 26 9 fatty acid genes under QTL interval 
+
+cis_eQTL.qtl.combined.final.linolenic[cis_eQTL.qtl.combined.final.linolenic$gene_ID %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names,] 
+
+# do these FA genes have detectable expression at all? almost all fatty acid related genes have detactable expression except for one FAE on C03.  
+load("~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData")
+scanone_eQTL.F2 %>% dim() # 4887 56182 
+colnames(scanone_eQTL.F2)[colnames(scanone_eQTL.F2) %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names] 
+
+# how about genes with trans-eQTL 
+load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
+
+cis_eQTL %>% dim() # 11384    12
+trans_eQTL %>% dim() # 15197    12  
+
+trans_eQTL %>% colnames()
+
+trans_eQTL[trans_eQTL$gene_ID %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names,] %>% View() 
+cis_eQTL[cis_eQTL$gene_ID %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names,] 
+
+### check SNP effect would be impossible either because none of the fatty acid related genes have SNPs in them. as I remmeber, only one gene has SNPs inside the RNA sequence.  
 ```
 
 

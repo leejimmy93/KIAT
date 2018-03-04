@@ -203,14 +203,16 @@ alpha.levels = alphas,
 drop.lod = 1.5,
 verbose = FALSE) 
 
+load("~/F2/output/eQTL/hotperm1.Rdata")
+hotperm1 
+
 quant1 <- quantile(hotperm1, 0.05, lod.thr = lod.thr)
 plot(high1, quant.level = quant1, sliding = TRUE)
 hotsq1 <- hotsize(high1, lod = lod.thr, window = 5, quant.level = quant1)
-plot(hotsq1)  
+plot(hotsq1)   
 
-test <- c(hotperm2, hotperm1)
-summary(hotperm2)
+summary(hotperm1)  
 
-
-```
+### BnaA08g11130D (FAE) & BnaC03g65980D (FAE) are regulated by A03 trans-eQTL hostpot, the two BnaA.FAE1 reported by other people   
+``` 
 
