@@ -129,88 +129,153 @@ as.data.frame(sapply(trait_summary, function(x)
    round(as.numeric(x), 2)))
 
 rownames(trait_summary) <- colnames(phefile)
-trait_summary$missing_rate <- ifelse(is.na(trait_summary$missing_rate), 0, trait_summary$missing_rate)
+trait_summary$missing_rate <- ifelse(is.na(trait_summary$missing_rate), 0, trait_summary$missing_rate) 
 write.csv(trait_summary, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_summary.csv")
+
+### add branch data into phefile 
+extra <- read.csv("~/Desktop/F2_paper/data/AdditionalF2Data_updated_20180222.csv")
+extra_F2 <- 
+extra %>% 
+  filter(Name == "F2")  
+
+extra_F2$Individual_.No. <- gsub("138-", "Sample_F2_", extra_F2$Individual_.No.)
+
+phefile$ID <- rownames(phefile) 
+
+phefile <- 
+phefile %>% 
+  left_join(extra_F2, c("ID" = "Individual_.No.")) %>% 
+  mutate(length_of_branch_5 = X5_length_of_branch,
+         length_of_branch_10 = X10_length_of_branch,
+         length_of_branch_15 = X15_length_of_branch) %>% 
+  dplyr::select(-(ID:X15_length_of_branch)) 
 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/pheno.parent.oil.Rdata")
 pheno.parent.oil$PHENOTYPE <- gsub("Oil_content", "Crude_oil_contents", pheno.parent.oil$PHENOTYPE)
 pheno.parent.oil$PHENOTYPE <- gsub("Heptadecanoic_aci", "Heptadecanoic_acid", pheno.parent.oil$PHENOTYPE)
 pheno.parent.oil$PHENOTYPE <- gsub("Palmitoliec_aicd", "Palmitoliec_acid", pheno.parent.oil$PHENOTYPE) 
-pheno.parent.oil[32,] <- c("days_to_flower", "Da-Ae", "166")
-pheno.parent.oil[33,] <- c("days_to_flower", "Da-Ol-1", "105") 
-pheno.parent.oil[34,] <- c("days_to_bolt", "Da-Ae", "127")
-pheno.parent.oil[35,] <- c("days_to_bolt", "Da-Ol-1", "97")
-pheno.parent.oil[36,] <- c("bolting_to_flowering", "Da-Ae", "39")
-pheno.parent.oil[37,] <- c("bolting_to_flowering", "Da-Ol-1", "1")
-pheno.parent.oil[38,] <- c("plant_weight_2016_05_13", "Da-Ae", "127")
-pheno.parent.oil[39,] <- c("plant_weight_2016_05_13", "Da-Ol-1", "97")
-pheno.parent.oil[40,] <- c("root_weight_2016_05_13", "Da-Ae", "39")
-pheno.parent.oil[41,] <- c("root_weight_2016_05_13", "Da-Ol-1", "1")
 
-test <- test[,c(18, 19)]
-rownames(test) <- c("Da-Ol-1", "Da_Ae", "F1_136", "F1_137")
+### 
+library(lubridate)
+flowering_data <- read.csv("~/Desktop/F2_paper/data/flowering_data.csv")
+colnames(flowering_data)[c(5,6)] <- c("bolting_date", "flowering_date")
 
+flowering_data <- 
+flowering_data %>%  
+  filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
+  group_by(Name) %>%
+  summarise(days_to_bolt = mean(ymd(bolting_date)-ymd(Day_of_sowing), na.rm = T), 
+            days_to_flower = mean(ymd(flowering_date)-ymd(Day_of_sowing), na.rm=T),
+            bolting_to_flowering = mean(ymd(flowering_date)-ymd(bolting_date), na.rm=T))  
 
-phefile_oil <- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight", colnames(phefile))]  
+extra_1 <- 
+extra %>% 
+  filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
+  group_by(Name) %>% 
+  summarise(plant_weight_2016_05_13 = mean(Plant_weight_2016_05_13, na.rm = T), 
+            root_weight_2016_05_13 = mean(Root_weight_2016_05_13, na.rm = T),
+            length_of_branch_5 = mean(X5_length_of_branch, na.rm = T), 
+            length_of_branch_10 = mean(X10_length_of_branch, na.rm = T),
+            length_of_branch_15 = mean(X15_length_of_branch, na.rm = T)) 
 
+library(reshape2)
+
+extra_2 <- 
+flowering_data %>% melt() %>%
+  rbind(melt(extra_1)) %>%
+  mutate(value = as.numeric(value))
+
+colnames(extra_2) <- c("variable", "PHENOTYPE", "mean")
+extra_2$variable <- gsub("Da-Ol1", "Da-Ol-1", extra_2$variable)
+
+pheno.parent.oil <-
+extra_2[,c(2,1,3)] %>% 
+  rbind(as.data.frame(pheno.parent.oil))  
+
+phefile_oil <- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|branch", colnames(phefile))]  
 png(filename = "~/Desktop/F2_paper/trait_oil.png",width=15, height=7, units="in", res=300)
 par(mfrow=c(4,6), mai = c(0.4, 0.4, 0.4, 0.2)) 
 
 for (i in colnames(phefile_oil)) {
   hist(phefile_oil[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
-  abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ae"),]$mean, col = "red")
-  abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ol-1"),]$mean, col = "blue")
-  }
-
-dev.off()  
-
-test <- read.csv("~/Desktop/test.csv")
-test <- test[c(4, 7, 11, 15),] 
-colnames(test) <- gsub("\\.", "_", colnames(test))
-colnames(test)
-colnames(test)[2:5] <- gsub("X","plant_height_", colnames(test)[2:5])
-colnames(test)[6:9] <- gsub("X","plant_width_", colnames(test)[6:9])
-colnames(test)[6:9] <- gsub("_1$","", colnames(test)[6:9])
-colnames(test)[10:13] <- gsub("X","lobe_number_", colnames(test)[10:13])
-colnames(test)[14:17] <- gsub("X","leaf_number_", colnames(test)[14:17])
-colnames(test)[14:17] <- gsub("_1$","", colnames(test)[14:17])
-colnames(test)[18] <- gsub("X","plant_weight_", colnames(test)[18])
-colnames(test)[19] <- gsub("X","root_weight_", colnames(test)[19])
-colnames(test)[19] <- gsub("_1$","", colnames(test)[19])
-colnames(test)[20] <- gsub("X","plant_height_", colnames(test)[20])
-colnames(test)[20] <- gsub("_2$","", colnames(test)[20])
-
-test
-
-test.melt <- test %>% melt() 
-
-phefile_growth<- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight", colnames(phefile), invert = T)] %>% melt() 
-phefile_growth$variable <- factor(phefile_growth$variable, levels =  unique(phefile_growth[order(tolower(phefile_growth$variable)),]$variable))
-
-p.trait_growth <- 
-  phefile_growth %>% 
-  ggplot() + 
-  geom_histogram(mapping = aes(value), bins = 15, fill = "white", color = "black") +
-  facet_wrap(~variable, scales = "free", ncol = 4) + 
-  labs(x = "", y = "number of lines")
-
-ggsave(p.trait_growth, filename = "~/Desktop/F2_paper/p.trait_growth.png", width = 10, height = 7) 
-save(phefile, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
-
-phefile_growth_2 <- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|aicd", colnames(phefile), invert = T)]
-
-png(filename = "~/Desktop/F2_paper/trait_growth.png",width=15, height=7, units="in", res=300)
-par(mfrow=c(4,5), mai = c(0.4, 0.4, 0.4, 0.2)) 
-
-for (i in colnames(phefile_growth_2)) { 
-  hist(phefile_growth_2[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
-  abline(v = test.melt[(test.melt$variable == i & test.melt$X == "Da-Ae"),]$value, col = "red")
-  abline(v = test.melt[(test.melt$variable == i & test.melt$X == "Da-Ol-1"),]$value, col = "blue")
-  abline(v = test.melt[(test.melt$variable == i & test.melt$X == "F1_136"),]$value, col = "green", lty = 3)
-  abline(v = test.melt[(test.melt$variable == i & test.melt$X == "F1_137"),]$value, col = "purple", lty = 3)
+  abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ae"),]$mean, col = "red", lwd = 2)
+  abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ol-1"),]$mean, col = "blue", lwd = 2) 
+  abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "F1"),]$mean, col = "purple", lty= 2, lwd= 2)
   }
 
 dev.off()     
+
+### raw data for growth traits 
+raw_growth <- read.csv("~/Desktop/F2_paper/data/raw_growth_traits.csv")  
+raw_growth %>% colnames()
+colnames(raw_growth)[3:6] <- gsub("X", "plant_height_",colnames(raw_growth)[3:6])
+colnames(raw_growth)[7:10] <- gsub("X", "plant_width_",colnames(raw_growth)[7:10])
+colnames(raw_growth)[11:14] <- gsub("X", "lobe_number_",colnames(raw_growth)[11:14])
+colnames(raw_growth)[15:18] <- gsub("X", "leaf_number_",colnames(raw_growth)[15:18])
+colnames(raw_growth)[19] <- gsub("X", "plant_height_",colnames(raw_growth)[19])
+
+colnames(raw_growth) <- gsub("([[:print:]]+)(\\.1$)", "\\1", colnames(raw_growth))
+raw_growth %>% colnames()
+
+raw_growth <- 
+raw_growth %>% 
+  filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
+  group_by(Name) %>% 
+  summarise(plant_height_2015.12.18 = mean(plant_height_2015.12.18, na.rm = T), 
+            plant_height_2016.01.20 = mean(plant_height_2016.01.20, na.rm = T),
+            plant_height_2016.02.17 = mean(plant_height_2016.02.17, na.rm = T), 
+            plant_height_2016.03.16 = mean(plant_height_2016.03.16, na.rm = T),
+            plant_width_2015.12.18 = mean(plant_width_2015.12.18, na.rm = T),
+            plant_width_2016.01.20 = mean(plant_width_2016.01.20, na.rm = T),
+            plant_width_2016.02.17 = mean(plant_width_2016.02.17, na.rm = T),
+            plant_width_2016.03.16 = mean(plant_width_2016.03.16, na.rm = T),
+            lobe_number_2015.12.28 = mean(lobe_number_2015.12.28, na.rm = T),
+            lobe_number_2016.01.21 = mean(lobe_number_2016.01.21, na.rm = T),
+            lobe_number_2016.03.21 = mean(lobe_number_2016.03.21, na.rm = T),
+            lobe_number_2016.02.18 = mean(lobe_number_2016.02.18, na.rm = T),
+            leaf_number_2015.12.28 = mean(leaf_number_2015.12.28, na.rm = T),
+            leaf_number_2016.01.21 = mean(leaf_number_2016.01.21, na.rm = T),
+            leaf_number_2016.02.18 = mean(leaf_number_2016.02.18, na.rm = T),
+            leaf_number_2016.03.21 = mean(leaf_number_2016.03.21, na.rm = T),
+            plant_height_2016.05.13 = mean(plant_height_2016.05.13, na.rm = T)
+            )  
+
+colnames(raw_growth) <- gsub("\\.", "_", colnames(raw_growth))
+raw_growth <- melt(raw_growth)
+colnames(raw_growth) <- c("variable", "PHENOTYPE", "mean")
+raw_growth$variable <- gsub("Da-Ol1", "Da-Ol-1", raw_growth$variable)
+
+phefile_growth_2 <- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|aicd|branch", colnames(phefile), invert = T)]
+
+reordered <- c("plant_height_2015_12_18", 
+               "lobe_number_2015_12_28", 
+               "leaf_number_2015_12_28", 
+               "plant_width_2015_12_18", 
+               "plant_height_2016_01_20",
+               "lobe_number_2016_01_21", 
+               "leaf_number_2016_01_21", 
+               "plant_width_2016_01_20", 
+               "plant_height_2016_02_17", 
+               "lobe_number_2016_02_18", 
+               "leaf_number_2016_02_18", 
+               "plant_width_2016_02_17", 
+               "plant_height_2016_03_16",
+               "lobe_number_2016_03_21", 
+               "leaf_number_2016_03_21",
+               "plant_width_2016_03_16",
+               "plant_height_2016_05_13")
+
+png(filename = "~/Desktop/F2_paper/trait_growth.png",width=15, height=7, units="in", res=300)
+par(mfrow=c(5,4), mai = c(0.4, 0.4, 0.4, 0.2)) 
+
+for (i in colnames(phefile_growth_2[,reordered])) { 
+  hist(phefile_growth_2[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
+  abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "Da-Ae"),]$mean, col = "red", lwd= 2)
+  abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "Da-Ol-1"),]$mean, col = "blue", lwd= 2)
+  abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "F1"),]$mean, col = "purple", lty = 2, lwd= 2)   
+  }
+
+dev.off()         
 ```
 
 ### heritability 
