@@ -355,6 +355,18 @@ gff.mRNA[gff.mRNA$gene_ID == "BnaA10g22080D",]
 #   CHROM    start      end       gene_ID
 #   chrA10 14998617 15003197 BnaA10g22080D
 
+gff.mRNA[gff.mRNA$gene_ID == "BnaA08g12780D",] # FAD
+#   CHROM    start      end       gene_ID
+#   chrA10 14998617 15003197 BnaA10g22080D
+
+gff.mRNA[gff.mRNA$gene_ID == "BnaA08g12800D",] # FAD
+#   CHROM    start      end       gene_ID
+#   chrA10 14998617 15003197 BnaA10g22080D
+
+gff.mRNA[gff.mRNA$gene_ID == "BnaC03g67820D",] # FAD
+#   CHROM    start      end       gene_ID
+#   chrA10 14998617 15003197 BnaA10g22080D
+
 ######## previous one 
 load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata") 
 traitQTL.annotated %>% 
@@ -702,7 +714,7 @@ for (i in seq_along(1:(nrow(test)/2))){
   tmp[i] <- paste(test$markername[i*2-1], test$markername[i*2-0], sep = "-") 
 }
 
-bayesint.result$index <- tmp
+bayesint.result$index <- tmp ##### 
 
 bayesint.result.cim <- 
 bayesint.result %>% 
@@ -846,12 +858,20 @@ write.csv(bayesint.result.paper, file = "~/F2/output/QTL_analysis/bayesint.resul
 ### linolenic acid, need to be more careful to analyze 
 
 ### combine with allele effect information 
-bayesint.result.paper.2 <- read.csv("~/F2/output/QTL_analysis/bayesint.result.paper.2.csv")
-bayesint.result.paper.2   
+bayesint.result.allele_effect <- read.csv("~/F2/output/QTL_analysis/bayesint.result.paper_allele_effect.csv")
+bayesint.result.allele_effect %>% dim()
+bayesint.result.paper %>% dim()
 
-write.csv(bayesint.result.paper.2, file = "~/F2/output/QTL_analysis/bayesint.result.paper.3.csv")  
+bayesint.result.paper.final <- 
+bayesint.result.paper %>%
+  left_join(bayesint.result.allele_effect, by = c("trait", "chr")) %>% 
+  mutate(model = model.x) %>%
+  dplyr::select(-model.x, -model.y, -X) 
 
-### add physical position interval 
+bayesint.result.paper.final %>% View()
+write.csv(bayesint.result.paper.final, file = "~/F2/output/QTL_analysis/bayesint.result.paper.final.csv")  
+
+### add physical position interval  
 load("~/F2/output/QTL_analysis/bayesint.list.scanone.cim.Rdata")
 length(bayesint.list.scanone) # 33
 length(bayesint.list.cim) # 26 
@@ -889,7 +909,15 @@ colnames(bayesint.result) <- gsub("\\.x$", "", colnames(bayesint.result))
 
 bayesint.result %>% dim() # 35 7 
 bayesint.result %>% View()
-save(bayesint.result, file = "~/F2/for_paper/synteny_analysis/bayesint.result.physical.Rdata")  
+save(bayesint.result, file = "~/F2/for_paper/synteny_analysis/bayesint.result.physical.Rdata") 
+
+bayesint.result.physical <-
+bayesint.result.paper.final %>% 
+  left_join(bayesint.result, by= c("trait", "chr")) %>% 
+  mutate(model = model.x) %>% 
+  dplyr::select(-min_eQTL_LOD, -max_eQTL_LOD, -model.y, -model.x) 
+  
+write.csv(bayesint.result.physical, file = "~/F2/output/QTL_analysis/bayesint.result.paper.physical.csv") 
 ```
 
 ### QTL analysis of branch data and new leaf K data 
@@ -989,9 +1017,9 @@ for (i in names(cim.qtl)){
 dev.off() 
 # more QTL found for cim method
 
-save(cim.qtl, file = "~/F2/output/QTL_analysis/cim.qtl.43traits.flipped.Rdata")
-save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.43traits.flipped.Rdata")  
-scanone.perm.imp ### leaf_K has new QTL identified 
+save(cim.qtl, file = "~/F2/output/QTL_analysis/cim.qtl.branch.flipped.Rdata")
+save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.branch.flipped.Rdata")  
+scanone.perm.imp ### leaf_K has new QTL identified  
 ```
 
 
