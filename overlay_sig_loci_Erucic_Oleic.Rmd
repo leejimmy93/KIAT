@@ -376,7 +376,7 @@ View(SNP_gene_final_fxn)
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/SNP.Erucic.Oleic.2.Rdata")
 SNP.Erucic.Oleic.2 %>% dim() # 235 
 
-SNP.Erucic.Oleic.known <- read.csv("~/Desktop/Erucic_Oleic_known_sig_loci.csv") 
+SNP.Erucic.Oleic.known <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/2017_Nov_KIAT_report/Erucic_Oleic_known_sig_loci.csv") 
 SNP.Erucic.Oleic.known$seq.method %>% unique() 
 
 colnames(SNP.Erucic.Oleic.known)
@@ -392,14 +392,14 @@ SNP.Erucic.Oleic.2$SNP_ID <- paste(SNP.Erucic.Oleic.2$CHROM, SNP.Erucic.Oleic.2$
 head(SNP.Erucic.Oleic.known)
 tail(SNP.Erucic.Oleic.known)
 dim(SNP.Erucic.Oleic.known)
-head(SNP.Erucic.Oleic.2)  
+head(SNP.Erucic.Oleic.2)   
 
 # no overlapping single SNPs 
 sum(SNP.Erucic.Oleic.2$SNP_ID %in% SNP.Erucic.Oleic.known$SNP_ID)
 
 SNP.Erucic.Oleic.all <- rbind(SNP.Erucic.Oleic.2, SNP.Erucic.Oleic.known)
 SNP.Erucic.Oleic.all$CHROM = gsub(" ", "", SNP.Erucic.Oleic.all$CHROM)
-SNP.Erucic.Oleic.all$CHROM
+SNP.Erucic.Oleic.all$CHROM 
 
 gff.Erucic_Oleic_all <- GRanges(seqnames = Rle(SNP.Erucic.Oleic.all$CHROM),ranges = IRanges(start = SNP.Erucic.Oleic.all$start, end = SNP.Erucic.Oleic.all$end), names = SNP.Erucic.Oleic.all$name) 
 
