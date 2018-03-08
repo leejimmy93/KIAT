@@ -232,7 +232,7 @@ C_genes <- eQTL[eQTL$eQTL_subgenome == "C",]
 sum(C_genes$eQTL_subgenome == C_genes$gene_subgenome) /nrow(C_genes) # 70%  
 ```
 
-### find overlaps between eQTL & trait QTL  
+### find overlaps between eQTL & trait QTL (need redo... )
 ```{r}
 # trait QTL using scanone result 
 load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
@@ -241,89 +241,11 @@ load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata")
 cis_eQTL %>% dim() #  11384    12  
 trans_eQTL %>% dim() # 15197    12   
 
-traitQTL.annotated %>% colnames() 
-
-### check trait QTL result 
+traitQTL.annotated %>% colnames()
 traitQTL.annotated %>% 
-    filter(gene_ID == "BnaA08g11130D") %>% 
-  View() # FAE1    
-
-traitQTL.annotated %>% 
-    filter(gene_ID == "BnaA08g11140D") %>%  
-  View() # KCS1 
-
-traitQTL.annotated %>% 
-    filter(gene_ID == "BnaC03g65980D") %>% 
-  View() # FAE1    
-
-traitQTL.annotated %>% 
-    filter(gene_ID == "BnaC03g66040D") %>% 
-  View() # KCS1  
-
-traitQTL.annotated %>% 
-    filter(gene_ID == "BnaC03g67820D") %>% 
-  View() # FAD6  
-
-traitQTL.annotated %>% 
-    filter(gene_ID == "BnaA08g12780D") %>% 
-  View() # FAD  
-
-traitQTL.annotated %>% 
-    filter(gene_ID == "BnaA08g12800D") %>% 
-  View() # FAD    
-
-traitQTL.annotated %>% 
-    filter(AGI == "AT4G30950") %>% 
-  View() # sequalene synthase  
-
-traitQTL.annotated %>% 
-    # traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
-    filter(trait == "Palmitic_acid") %>% 
-  View() # sequalene synthase 
-
-# traitQTL.annotated %>% 
-    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
-    filter(trait == "Stearic_acid") %>% 
-  View() # sequalene synthase 
-    
-# traitQTL.annotated %>% 
-    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
-    filter(trait == "Oleic_acid") %>% 
-  View() # sequalene synthase 
-
-# traitQTL.annotated %>% 
-    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
-    filter(trait == "Linoleic_acid") %>% 
-  View() # sequalene synthase 
-
-# traitQTL.annotated %>% 
-    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
-    filter(trait == "Linolenic_acid") %>% 
-  View() # sequalene synthase 
-            
-# traitQTL.annotated %>% 
-    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
-    filter(trait == "Arachidic_acid") %>% 
-  View() # sequalene synthase 
-
-# traitQTL.annotated %>% 
-    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
-    filter(trait == "Erucic_acid") %>% 
-  View() # sequalene synthase 
-    
-# traitQTL.annotated %>% 
-    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
-    filter(trait == "vaccenic_acid") %>% 
-  View() # sequalene synthase 
-        
-# traitQTL.annotated %>% 
-    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
-    filter(trait == "Behenic_acid") %>% 
-  View() # sequalene synthase 
-
-    
-traitQTL.annotated %>% colnames()  
-### 
+  group_by(trait, chrom) %>% 
+  dplyr::summarise(count = n()) %>% 
+  dim()
 
 cis_eQTL.qtl.combined <- inner_join(cis_eQTL,traitQTL.annotated,by="gene_ID") 
 cis_eQTL.qtl.combined %>% head()    
@@ -391,11 +313,27 @@ flowering_time_gene$Gene.number <- gsub("\\\xca", "", flowering_time_gene$Gene.n
 
 cis_eQTL.qtl.combined.final[cis_eQTL.qtl.combined.final$AGI %in% flowering_time_gene$Gene.number,] %>% 
   dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) %>%
-  View()
+  View() # no cis-flowering regulator under C06 
 
 # trans_eQTL.qtl.combined.final[trans_eQTL.qtl.combined.final$AGI %in% flowering_time_gene$Gene.number,] %>% 
 #   dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) %>%
-#   View()  
+#   View()      
+```
+ 
+### check cis-regulator result 
+```{r}
+cis_eQTL.qtl.combined.final <- read.csv(file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")   
+cis_eQTL.qtl.combined.final %>% dim()
+cis_eQTL.qtl.combined.final %>% colnames()
+cis_eQTL.qtl.combined.final$trait.y %>% unique()
+
+cis_eQTL.qtl.combined.final %>%  
+  filter(trait.y == "plant_width_2016_02_17") %>% 
+  View() # FLC is cis-regulator  
+
+cis_eQTL.qtl.combined.final %>%  
+  filter(AGI == "AT5G25620") %>% 
+  View() # FLC is cis-regulator   
 ```
  
 ######## 
