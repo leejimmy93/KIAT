@@ -152,11 +152,11 @@ Also tried with lodint() to get QTL interval, no big difference compared to baye
 library(ggplot2) 
 load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
 
-cis_eQTL %>% dim() # 11710    12 
-trans_eQTL %>% dim() # 14871    12 
+cis_eQTL %>% dim() # 11384    12
+trans_eQTL %>% dim() # 15197    12  
 
 cis_eQTL$class <- rep("cis", nrow(cis_eQTL)) 
-trans_eQTL$class <- rep("trans", nrow(trans_eQTL))  
+trans_eQTL$class <- rep("trans", nrow(trans_eQTL))   
 
 # get only main chromosome stuff   
 eQTL <- rbind(cis_eQTL, trans_eQTL) 
@@ -232,41 +232,46 @@ C_genes <- eQTL[eQTL$eQTL_subgenome == "C",]
 sum(C_genes$eQTL_subgenome == C_genes$gene_subgenome) /nrow(C_genes) # 70%  
 ```
 
-### find overlaps between eQTL & trait QTL  
+### find overlaps between eQTL & trait QTL (need redo... )
 ```{r}
 # trait QTL using scanone result 
 load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
 load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
 
-cis_eQTL %>% dim() #  11710    11  
-trans_eQTL %>% dim() # 14871    11  
+cis_eQTL %>% dim() #  11384    12  
+trans_eQTL %>% dim() # 15197    12   
 
-traitQTL.annotated %>% colnames() 
+traitQTL.annotated %>% colnames()
+traitQTL.annotated %>% 
+  group_by(trait, chrom) %>% 
+  dplyr::summarise(count = n()) %>% 
+  dim()
 
 cis_eQTL.qtl.combined <- inner_join(cis_eQTL,traitQTL.annotated,by="gene_ID") 
 cis_eQTL.qtl.combined %>% head()    
-cis_eQTL.qtl.combined %>% dim() # 2200   21 
+cis_eQTL.qtl.combined %>% dim() # 2180   22  
 
 colnames(cis_eQTL.qtl.combined) 
 
-trans_eQTL.qtl.combined <- inner_join(trans_eQTL,traitQTL.annotated,by="gene_ID") 
-trans_eQTL.qtl.combined %>% head()    
-trans_eQTL.qtl.combined %>% dim() # 2110    21  
-  
-colnames(cis_eQTL.qtl.combined)
+# how to find trans-eQTL, need to redo, this is incorrect!!! 
+# trans_eQTL.qtl.combined <- inner_join(trans_eQTL,traitQTL.annotated,by="gene_ID") 
+# trans_eQTL.qtl.combined %>% head()    
+# trans_eQTL.qtl.combined %>% dim() # 2110    21  
+#   
+# colnames(cis_eQTL.qtl.combined)
 
 cis_eQTL.qtl.combined.final <- 
 cis_eQTL.qtl.combined %>% 
   mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
   dplyr::select(-c(start.x, end.x, start.y, end.y)) 
   
-trans_eQTL.qtl.combined.final <- 
-trans_eQTL.qtl.combined %>% 
-  mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
-  dplyr::select(-c(start.x, end.x, start.y, end.y)) 
+# trans_eQTL.qtl.combined.final <- 
+# trans_eQTL.qtl.combined %>% 
+#   mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y) %>% 
+#   dplyr::select(-c(start.x, end.x, start.y, end.y)) 
 
-write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")  
-write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/trans_eQTL.qtl.combined.final.csv") 
+write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")   
+# write.csv(trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/trans_eQTL.qtl.combined.final.csv") 
 
 ### make some plot for several important genes 
 # the two FAE 
@@ -282,23 +287,23 @@ cis_eQTL.qtl.combined.final[grep("lipid|fatty", cis_eQTL.qtl.combined.final$GO_d
 View(cis_eQTL.qtl.combined.final[grep("DNA|nucleotide|transcription", cis_eQTL.qtl.combined.final$GO_des),])  
 
 # 3) Fatty acid/flowering/growth related genes for trans-eQTL final list
-trans_eQTL.qtl.combined.final[grep("lipid|fatty", trans_eQTL.qtl.combined.final$GO_des),] %>% 
-    dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) %>% 
-  View() 
-
-trans_eQTL.qtl.combined.final[grep("lipid|fatty", trans_eQTL.qtl.combined.final$GO_des),] %>% 
-  View() 
+# trans_eQTL.qtl.combined.final[grep("lipid|fatty", trans_eQTL.qtl.combined.final$GO_des),] %>% 
+#     dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) %>% 
+#   View() 
+# 
+# trans_eQTL.qtl.combined.final[grep("lipid|fatty", trans_eQTL.qtl.combined.final$GO_des),] %>% 
+#   View()  
 
 # 4) figures for the two cis-eQTL gene 
 # BnaA08g11060D & BnaA08g11140D two cis-eQTL gene for fatty acid, need to deal with the color problem... more colors than a single palette can handel... 
-save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata") 
+# save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata") 
 
 ### check whether FLC is cis-regulator for some the traits 
-load("~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
+# load("~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
 
 cis_eQTL.qtl.combined.final %>%  
   filter(AGI == "AT5G10140") %>% 
-  View() # FLC is cis-regulator  
+  View() # FLC is cis-regulator    
 
 #### other important flower genes under C06? 
 ### important flower related genes 
@@ -308,11 +313,27 @@ flowering_time_gene$Gene.number <- gsub("\\\xca", "", flowering_time_gene$Gene.n
 
 cis_eQTL.qtl.combined.final[cis_eQTL.qtl.combined.final$AGI %in% flowering_time_gene$Gene.number,] %>% 
   dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) %>%
-  View()
+  View() # no cis-flowering regulator under C06 
 
-trans_eQTL.qtl.combined.final[trans_eQTL.qtl.combined.final$AGI %in% flowering_time_gene$Gene.number,] %>% 
-  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) %>%
-  View() 
+# trans_eQTL.qtl.combined.final[trans_eQTL.qtl.combined.final$AGI %in% flowering_time_gene$Gene.number,] %>% 
+#   dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) %>%
+#   View()      
+```
+ 
+### check cis-regulator result 
+```{r}
+cis_eQTL.qtl.combined.final <- read.csv(file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")   
+cis_eQTL.qtl.combined.final %>% dim()
+cis_eQTL.qtl.combined.final %>% colnames()
+cis_eQTL.qtl.combined.final$trait.y %>% unique()
+
+cis_eQTL.qtl.combined.final %>%  
+  filter(trait.y == "plant_width_2016_02_17") %>% 
+  View() # FLC is cis-regulator  
+
+cis_eQTL.qtl.combined.final %>%  
+  filter(AGI == "AT5G25620") %>% 
+  View() # FLC is cis-regulator   
 ```
  
 ######## 
@@ -364,7 +385,23 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_b
 ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 6, height = 5)  
 ```
 
+### why FLC is disappearing for time_to_flowering trait 
+```{r}
+traitQTL.annotated %>% 
+  filter(trait == "days_to_flower") %>% 
+  dplyr::select(start, end, chrom) %>% 
+  unique()
 
+traitQTL.annotated %>% 
+  filter(trait == "days_to_bolt") %>% 
+  dplyr::select(start, end, chrom) %>% 
+  unique()
+
+gff.mRNA[gff.mRNA$gene_ID == "BnaA10g22080D",]
+
+cis_eQTL.qtl.combined.final[cis_eQTL.qtl.combined.final$gene_ID == "BnaA10g22080D",] %>% View() 
+traitQTL.annotated %>% View() 
+```
 
 
 

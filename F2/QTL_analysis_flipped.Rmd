@@ -294,6 +294,12 @@ bayesint.result %>% dim() # 35 7
 # annotate QTL  
 load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
 
+## where are the genes fkf for flowering time (Long et al. 2007) 
+BnapusAnnotation %>% colnames()
+BnapusAnnotation %>% 
+  filter(AGI == "AT1G68050") 
+###
+
 traitQTL.annotated <- lapply(1:nrow(bayesint.result),function(row) { # for each trait/module 
   qtl <- bayesint.result[row,]  
   results <- subset(BnapusAnnotation, chrom==qtl$chr &
@@ -355,6 +361,18 @@ gff.mRNA[gff.mRNA$gene_ID == "BnaA10g22080D",]
 #   CHROM    start      end       gene_ID
 #   chrA10 14998617 15003197 BnaA10g22080D
 
+gff.mRNA[gff.mRNA$gene_ID == "BnaA08g12780D",] # FAD
+#   CHROM    start      end       gene_ID
+#   chrA10 14998617 15003197 BnaA10g22080D
+
+gff.mRNA[gff.mRNA$gene_ID == "BnaA08g12800D",] # FAD
+#   CHROM    start      end       gene_ID
+#   chrA10 14998617 15003197 BnaA10g22080D
+
+gff.mRNA[gff.mRNA$gene_ID == "BnaC03g67820D",] # FAD
+#   CHROM    start      end       gene_ID
+#   chrA10 14998617 15003197 BnaA10g22080D 
+
 ######## previous one 
 load("~/F2/output/QTL_analysis/traitQTL.annotated.Rdata") 
 traitQTL.annotated %>% 
@@ -364,13 +382,19 @@ traitQTL.annotated %>%
 
 #        start      end chrom
 #  14772310 15942430   A10
-#  25340726 32476288   C06
+#  25340726 32476288   C06 
 ```
 
 
 ### check important genes under QTL interval for different traits 
 ```{r}
 load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
+
+traitQTL.annotated %>% colnames()
+traitQTL.annotated %>% 
+  group_by(trait, chrom) %>% 
+  dplyr::summarise(count = n()) %>% 
+  dim()
 
 traitQTL.annotated %>% dim() #  18647    11 
 traitQTL.annotated %>% 
@@ -379,19 +403,19 @@ traitQTL.annotated %>%
 
 traitQTL.annotated %>% 
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
-  filter(AGI == "AT5G10140") # cool, FLC gene is on A10   
+  filter(AGI == "AT5G10140") 
 
 traitQTL.annotated %>% 
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
-  filter(AGI == "AT4G00650") # cool, FLC gene is on A10   
+  filter(AGI == "AT4G00650") 
 
 traitQTL.annotated %>% 
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
-  filter(AGI == "AT4G16280") # cool, FLC gene is on A10   
+  filter(AGI == "AT4G16280") 
 
 traitQTL.annotated %>% 
   # filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
-  filter(AGI == "AT4G16845") # cool, FLC gene is on A10   
+  filter(AGI == "AT4G16845") 
 
 traitQTL.annotated %>% 
   filter(trait == "days_to_flower" | trait == "days_to_bolt") %>% 
@@ -399,7 +423,153 @@ traitQTL.annotated %>%
   View() # cool, FLC gene is on A10   
  
 # besides FLC, don't see other obvious flowering related genes here  
-```  
+
+### check trait QTL result 
+traitQTL.annotated %>% 
+    filter(gene_ID == "BnaA08g11130D") %>% 
+  View() # FAE1    
+
+traitQTL.annotated %>% 
+    filter(gene_ID == "BnaA08g11140D") %>%  
+  View() # KCS1 
+
+traitQTL.annotated %>% 
+    filter(gene_ID == "BnaC03g65980D") %>% 
+  View() # FAE1    
+
+traitQTL.annotated %>% 
+    filter(gene_ID == "BnaC03g66040D") %>% 
+  View() # KCS1  
+
+traitQTL.annotated %>% 
+    filter(gene_ID == "BnaC03g67820D") %>% 
+  View() # FAD6  
+
+traitQTL.annotated %>% 
+    filter(gene_ID == "BnaA08g12780D") %>% 
+  View() # FAD  
+
+traitQTL.annotated %>% 
+    filter(gene_ID == "BnaA08g12800D") %>% 
+  View() # FAD    
+
+traitQTL.annotated %>% 
+    filter(AGI == "AT1G68050") %>% 
+  View() # FAD   
+
+traitQTL.annotated %>% 
+    filter(AGI == "AT4G30950") %>% 
+  View() # sequalene synthase  
+
+traitQTL.annotated %>% 
+    # traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Palmitic_acid") %>% 
+  View() # sequalene synthase 
+
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Myristic_acid") %>% 
+  View() # sequalene synthase 
+
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Palmitoliec_aicd") %>% 
+  View() # sequalene synthase  
+ 
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Behenic_acid") %>% 
+  View() # sequalene synthase  
+    
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Stearic_acid") %>% 
+  View() # sequalene synthase 
+    
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Oleic_acid") %>% 
+  View() # sequalene synthase 
+
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Linoleic_acid") %>% 
+  View() # sequalene synthase 
+
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Linolenic_acid") %>% 
+  View() # sequalene synthase 
+            
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Arachidic_acid") %>% 
+  View() # sequalene synthase 
+
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Erucic_acid") %>% 
+  View() # sequalene synthase 
+    
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "vaccenic_acid") %>% 
+  View() # sequalene synthase 
+        
+# traitQTL.annotated %>% 
+    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Behenic_acid") %>% 
+  View() # sequalene synthase 
+    
+traitQTL.annotated %>% 
+#    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(trait == "Crude_oil_contents") %>% 
+  View() # sequalene synthase 
+
+traitQTL.annotated %>% 
+#    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(chrom == "C06" & trait == "days_to_bolt") %>% 
+  View() # sequalene synthase 
+
+plant_width <- 
+traitQTL.annotated %>% 
+#    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(chrom == "C02") 
+
+save(plant_width, file = "~/F2/for_paper/")
+
+traitQTL.annotated %>% 
+#    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    filter(chrom == "C02" & AGI == "AT4G19700") %>% 
+  View() # sequalene synthase  
+
+traitQTL.annotated %>% colnames()  
+traitQTL.annotated$trait %>% unique() 
+
+#### other important flower genes under C06? 
+### important flower related genes 
+flowering_time_gene <- read.csv("~/F2/for_paper/flowering_time/flowering_time_genes.csv")
+flowering_time_gene$Gene.number <- gsub("\\ ", "", flowering_time_gene$Gene.number)
+flowering_time_gene$Gene.number <- gsub("\\\xca", "", flowering_time_gene$Gene.number) 
+
+traitQTL.annotated[traitQTL.annotated$AGI %in% flowering_time_gene$Gene.number,] %>% 
+  filter(chrom == "C06") %>%
+  # dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) %>%
+  View() 
+
+flowering_time_gene %>% colnames()
+flowering_time_gene %>% 
+  filter(Gene.number == "AT1G69120")
+
+flowering_time_gene %>% 
+  filter(Gene.number == "AT1G69570")
+
+flowering_time_gene %>% 
+  filter(Gene.number == "AT1G65480")
+
+BnapusAnnotation %>% 
+  filter(AGI == "AT1G65480") 
+```
 
 ### plot for paper 
 ```{r}
@@ -702,7 +872,7 @@ for (i in seq_along(1:(nrow(test)/2))){
   tmp[i] <- paste(test$markername[i*2-1], test$markername[i*2-0], sep = "-") 
 }
 
-bayesint.result$index <- tmp
+bayesint.result$index <- tmp ##### 
 
 bayesint.result.cim <- 
 bayesint.result %>% 
@@ -846,12 +1016,20 @@ write.csv(bayesint.result.paper, file = "~/F2/output/QTL_analysis/bayesint.resul
 ### linolenic acid, need to be more careful to analyze 
 
 ### combine with allele effect information 
-bayesint.result.paper.2 <- read.csv("~/F2/output/QTL_analysis/bayesint.result.paper.2.csv")
-bayesint.result.paper.2   
+bayesint.result.allele_effect <- read.csv("~/F2/output/QTL_analysis/bayesint.result.paper_allele_effect.csv")
+bayesint.result.allele_effect %>% dim()
+bayesint.result.paper %>% dim()
 
-write.csv(bayesint.result.paper.2, file = "~/F2/output/QTL_analysis/bayesint.result.paper.3.csv")  
+bayesint.result.paper.final <- 
+bayesint.result.paper %>%
+  left_join(bayesint.result.allele_effect, by = c("trait", "chr")) %>% 
+  mutate(model = model.x) %>%
+  dplyr::select(-model.x, -model.y, -X) 
 
-### add physical position interval 
+bayesint.result.paper.final %>% View()
+write.csv(bayesint.result.paper.final, file = "~/F2/output/QTL_analysis/bayesint.result.paper.final.csv")  
+
+### add physical position interval  
 load("~/F2/output/QTL_analysis/bayesint.list.scanone.cim.Rdata")
 length(bayesint.list.scanone) # 33
 length(bayesint.list.cim) # 26 
@@ -889,7 +1067,117 @@ colnames(bayesint.result) <- gsub("\\.x$", "", colnames(bayesint.result))
 
 bayesint.result %>% dim() # 35 7 
 bayesint.result %>% View()
-save(bayesint.result, file = "~/F2/for_paper/synteny_analysis/bayesint.result.physical.Rdata")  
+save(bayesint.result, file = "~/F2/for_paper/synteny_analysis/bayesint.result.physical.Rdata") 
+
+bayesint.result.physical <-
+bayesint.result.paper.final %>% 
+  left_join(bayesint.result, by= c("trait", "chr")) %>% 
+  mutate(model = model.x) %>% 
+  dplyr::select(-min_eQTL_LOD, -max_eQTL_LOD, -model.y, -model.x) 
+  
+write.csv(bayesint.result.physical, file = "~/F2/output/QTL_analysis/bayesint.result.paper.physical.csv") 
+```
+
+### QTL analysis of branch data and new leaf K data 
+```{r}
+### load data and run scanone & cim
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/for_paper/branch_data/phefile.branch.csv", 
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+plot.map(LG.f2.after.crossover)
+map.summary <- summaryMap(LG.f2.after.crossover) # 2884
+
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability?
+
+sfInit(parallel = TRUE, cpus = 4)
+sfExport("LG.f2.after.crossover") 
+sfLibrary(qtl)
+
+system.time(
+scanone.perm.imp <-
+  sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
+    print(trait) # print doesn't work in here
+    tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000, n.cluster = 16)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes 40 mins to finish
+)
+sfStop()
+
+names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
+save(scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.perm.imp.branch.flipped")
+
+# Erucic acid 
+scanone.imp.Erucic <- scanone(LG.f2.after.crossover,pheno.col=5,method="imp") #
+plot(scanone.imp.Erucic,bandcol="gray90", main="Erucic_acid")
+
+system.time(
+scanone.imp <-
+lapply(seq_along(LG.f2.after.crossover$pheno[1:4]), function(trait) {
+  print(trait)
+  scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
+})
+)
+names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)[1:4]
+
+png("~/F2/for_paper/branch_data/QTL_one_dim_flipped.png", width=25, height=15, units="in", res=300)
+par(mfrow=c(1,4))
+
+for (i in names(scanone.imp)){
+  plot(scanone.imp[[i]],bandcol="gray90", main=i)
+  abline(h=scanone.perm.imp[[i]],lty=2)
+}
+
+dev.off()
+
+save(scanone.imp, file = "~/F2/output/QTL_analysis/scanone.imp.branch.flipped")
+
+cim.qtl <-
+lapply(seq_along(LG.f2.after.crossover$pheno)[1:4], function(trait) {
+  print(trait)
+  cim(LG.f2.after.crossover, n.marcovar=5, pheno.col=trait,method="em")
+})
+
+# here we use the interval mapping method "em" as this is how cim was originaly implmented.the n.marcovar= argument defines the maximum number of marker covariates to use.
+names(cim.qtl) <- colnames(LG.f2.after.crossover$pheno)[1:4]
+
+sfInit(parallel = TRUE, cpus = 4)
+sfExport("LG.f2.after.crossover")
+sfLibrary(qtl)
+
+cim.perm <-
+  sfLapply(seq_along(LG.f2.after.crossover$pheno)[1:4], function(trait){
+    message(trait) # message doesn't work in here either
+    tmp <- cim(LG.f2.after.crossover,
+               pheno.col = trait,
+               n.marcovar=5,
+               method="em",
+               n.perm=1000)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes almost 4 hours to finish
+
+sfStop() 
+
+names(cim.perm) <- colnames(LG.f2.after.crossover$pheno)[1:4]
+
+###### down to here... 
+
+# plot out result and save plot
+png("~/F2/output/QTL_analysis/figure/QTL_cim_1_flipped_branch.png", width=25, height=15, units="in", res=300)
+par(mfrow=c(1,4))
+
+for (i in names(cim.qtl)){
+  plot(cim.qtl[[i]],bandcol="gray90", main=i)
+  abline(h=cim.perm[[i]],lty=2) 
+} 
+
+dev.off() 
+# more QTL found for cim method
+
+save(cim.qtl, file = "~/F2/output/QTL_analysis/cim.qtl.branch.flipped.Rdata")
+save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.branch.flipped.Rdata")  
+scanone.perm.imp ### leaf_K has new QTL identified  
 ```
 
 

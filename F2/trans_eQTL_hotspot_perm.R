@@ -42,4 +42,4 @@ drop.lod = 1.5,
 verbose = FALSE)
 )   
 
-save(hotperm, "~/F2/output/eQTL/hotperm.Rdata")
+save(hotperm1, file = "~/F2/output/eQTL/hotperm1.Rdata")
