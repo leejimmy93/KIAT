@@ -529,13 +529,14 @@ traitQTL.annotated %>%
 traitQTL.annotated %>% 
 #    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
     filter(chrom == "C06" & trait == "days_to_bolt") %>% 
-  View() # sequalene synthase 
+  View() # sequalene synthase  
 
 plant_width <- 
 traitQTL.annotated %>% 
 #    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
     filter(chrom == "C02") 
 
+<<<<<<< HEAD
 save(plant_width, file = "~/F2/for_paper/")
 source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")  
 load("~/Desktop/plant_width.Rdata")
@@ -543,6 +544,9 @@ GOseq.Bn.ORA(plant_width$gene_ID) # no enriched GO term
 
 load("~/Desktop/cis_plant_width.Rdata")
 GOseq.Bn.ORA(cis_plant_width$gene_ID) # no enriched GO term  
+=======
+save(plant_width, file = "~/F2/for_paper/plant_width.Rdata") 
+>>>>>>> ebf1da51238d5779874fb4a82a8512eec9d24049
 
 traitQTL.annotated %>% 
 #    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
