@@ -537,6 +537,12 @@ traitQTL.annotated %>%
     filter(chrom == "C02") 
 
 save(plant_width, file = "~/F2/for_paper/")
+source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")  
+load("~/Desktop/plant_width.Rdata")
+GOseq.Bn.ORA(plant_width$gene_ID) # no enriched GO term 
+
+load("~/Desktop/cis_plant_width.Rdata")
+GOseq.Bn.ORA(cis_plant_width$gene_ID) # no enriched GO term  
 
 traitQTL.annotated %>% 
 #    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
