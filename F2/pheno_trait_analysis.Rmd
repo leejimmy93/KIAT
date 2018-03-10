@@ -9,15 +9,18 @@ Goal of this script is to summarize the trait values, caculate heritability, as 
 
 ### growth trait 
 ```{r}
-library(tidyverse)
+library(tidyverse) 
 library(ggplot2)
 library(reshape2)
 
-height <- read.csv("~/414_growth_model/height/height.best.fitted.summary.csv")
-height %>% dim() # 501 11 
+width <- read.csv("~/Desktop/F2_paper/data/width.added(indentical).best.fitted.summary.csv")
+lobe_number <- read.csv("~/Desktop/F2_paper/data/lobe.n.added(identical).best.fitted.summary.csv")
+height <- read.csv("~/Desktop/F2_paper/data/height.added(identical).best.fitted.summary.csv") 
+leaf_number <- read.csv("~/Desktop/F2_paper/data/leaf.n.added(identical).best.fitted.summary.csv") 
+height %>% dim() # 516 11 
 height[,1:2] %>% head() 
 
-ID <- gsub("(r_ID__I)(\\[)([[:print:]]+)(,Intercept])", "\\3", height$X)[341:506] 
+ID <- gsub("(r_ID__I)(\\[)([[:print:]]+)(,Intercept])", "\\3", height$X)[347:515] 
 
 ### functions 
 coef_extract <- function(model_summary, ID){
@@ -56,19 +59,25 @@ coef_extract_width <- function(model_summary, ID){
 }
 
 ### load all data 
-leaf_number <- read.csv("~/414_growth_model/leaf_number/leaf.n.best.fitted.summary.csv")
-lobe_number <- read.csv("~/414_growth_model/lobe_number/lobe.n.best.fitted.summary.csv")
-width <- read.csv("~/414_growth_model/width/width.best.fitted.summary.csv")
-
-height <- coef_extract(height, ID = ID)
-leaf_number <- coef_extract(leaf_number, ID = ID)
+height <- coef_extract(height, ID = ID) 
 lobe_number <- coef_extract(lobe_number, ID = ID)
-width <- coef_extract_width(width, ID = ID) 
+leaf_number <- coef_extract(leaf_number, ID = ID)
+width <- coef_extract_width(width, ID = ID)  
 
 colnames(height)[2:4] <- paste("height", colnames(height)[2:4], sep = "_")
-colnames(leaf_number)[2:4] <- paste("leaf_number", colnames(leaf_number)[2:4], sep = "_")
 colnames(lobe_number)[2:4] <- paste("lobe_number", colnames(lobe_number)[2:4], sep = "_")
+colnames(leaf_number)[2:4] <- paste("leaf_number", colnames(leaf_number)[2:4], sep = "_")
 colnames(width)[2:4] <- paste("width", colnames(width)[2:4], sep = "_")
+
+height_parent <- height[c(1:3),]
+lobe_number_parent <- lobe_number[c(1:3),]
+leaf_number_parent <- leaf_number[c(1:3),] 
+width_parent <- width[c(1:3),]
+
+height <- height[c(4:nrow(height)),]
+lobe_number <- lobe_number[c(4:nrow(lobe_number)),]
+leaf_number <- leaf_number[c(4:nrow(leaf_number)),] 
+width <- width[c(4:nrow(width)),]
 
 growth_model_trait <- 
 height %>% 
@@ -76,19 +85,33 @@ height %>%
   left_join(lobe_number) %>% 
   left_join(width) 
 
-save(growth_model_trait, file = "~/F2/data/growth_model_trait.Rdata")
+parent_model <- 
+height_parent %>% 
+  left_join(lobe_number_parent) %>%
+  left_join(leaf_number_parent) %>%
+  left_join(width_parent) 
 
-p.growth_model_trait <- 
-growth_model_trait %>% melt() %>% 
-  ggplot() + 
-  geom_histogram(mapping = aes(value), bins = 15, fill = "white", color = "black") +
-  facet_wrap(~variable, scales = "free", ncol = 3, nrow = 4) + 
-  labs(x = "", y = "number of lines")
+parent_model %>% dim() # 3 13
+test.melt <- parent_model %>% melt()
+test.melt %>% head()
 
-ggsave(p.growth_model_trait, filename = "~/F2/for_paper/p.growth_model_trait.png", width = 7, height = 10)  
+growth_model_trait %>% dim() # 166 13
+growth_model_trait$id <- gsub("ID", "Sample_F2", growth_model_trait$line_ID) 
+growth_model_trait <- growth_model_trait[,-1] 
+save(growth_model_trait, file = "~/Desktop/F2_paper/data/growth_model_trait.Rdata")
 
-save(growth_model_trait, file = "~/F2/output/growth_model_trait.Rdata")
-```
+png(filename = "~/Desktop/F2_paper/model.png",width=6, height=7, units="in", res=300)
+par(mfrow=c(4,3), mai = c(0.4, 0.4, 0.4, 0.2)) 
+
+for (i in colnames(growth_model_trait)[2:13]) { 
+  hist(growth_model_trait[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i, xlim = c(min(growth_model_trait[,i], test.melt[(test.melt$variable == i),]$value), max(growth_model_trait[,i], test.melt[(test.melt$variable == i),]$value))) 
+  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "Da_Ae"),]$value, col = "red", lwd = 2)
+  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "Da_Ol1"),]$value, col = "blue", lwd = 2) 
+  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "F1"),]$value, col = "purple", lty = 2, lwd = 2)  
+  } 
+ 
+dev.off()        
+```  
 
 ### summary of trait values 
 ```{r}
@@ -147,13 +170,11 @@ phefile %>%
   left_join(extra_F2, c("ID" = "Individual_.No.")) %>% 
   mutate(length_of_branch_5 = X5_length_of_branch,
          length_of_branch_10 = X10_length_of_branch,
-         length_of_branch_15 = X15_length_of_branch) %>% 
-  dplyr::select(-(ID:X15_length_of_branch)) 
+         length_of_branch_15 = X15_length_of_branch,
+         id = ID) %>% 
+  dplyr::select(-(Name:X15_length_of_branch), -ID) 
 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/pheno.parent.oil.Rdata")
-pheno.parent.oil$PHENOTYPE <- gsub("Oil_content", "Crude_oil_contents", pheno.parent.oil$PHENOTYPE)
-pheno.parent.oil$PHENOTYPE <- gsub("Heptadecanoic_aci", "Heptadecanoic_acid", pheno.parent.oil$PHENOTYPE)
-pheno.parent.oil$PHENOTYPE <- gsub("Palmitoliec_aicd", "Palmitoliec_acid", pheno.parent.oil$PHENOTYPE) 
+save(phefile, file = "~/Desktop/F2_paper/data/phefile.Rdata")
 
 ### 
 library(lubridate)
@@ -203,7 +224,7 @@ for (i in colnames(phefile_oil)) {
   abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "F1"),]$mean, col = "purple", lty= 2, lwd= 2)
   }
 
-dev.off()     
+dev.off()  
 
 ### raw data for growth traits 
 raw_growth <- read.csv("~/Desktop/F2_paper/data/raw_growth_traits.csv")  
@@ -265,7 +286,7 @@ reordered <- c("plant_height_2015_12_18",
                "plant_width_2016_03_16",
                "plant_height_2016_05_13")
 
-png(filename = "~/Desktop/F2_paper/trait_growth.png",width=15, height=7, units="in", res=300)
+png(filename = "~/Desktop/F2_paper/trait_growth.png",width=10, height=7, units="in", res=300)
 par(mfrow=c(5,4), mai = c(0.4, 0.4, 0.4, 0.2)) 
 
 for (i in colnames(phefile_growth_2[,reordered])) { 
@@ -324,7 +345,7 @@ dev.off()
 ### correlation for growth model trait 
 load("~/F2/data/growth_model_trait.Rdata")  
 dim(growth_model_trait) # 166 13 
-growth_model_trait_cor <- round(cor(growth_model_trait[,2:13], use = "pairwise.complete.obs"), digits = 2) 
+growth_model_trait_cor <- round(cor(growth_model_trait[,2:13], use = "pairwise.complete.obs"), digits = 2)  
 # show pair of traits whose correlation are above 0.5 
 high.cor.pair(growth_model_trait_cor, threshold = 0.5) 
 
@@ -345,14 +366,16 @@ dev.off()
 ### heatmap for correlation plot 
 ```{r}
 library(WGCNA)
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
-phefile.growth_model <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/growth_model_trait.2.csv", header = F)
+# load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/phefile.Rdata")
+load("~/Desktop/F2_paper/data/phefile.Rdata")  
+phefile %>% colnames()
+# phefile.growth_model <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/trait/growth_model_trait.2.csv", header = F) 
+load("~/Desktop/F2_paper/data/growth_model_trait.Rdata")
+phefile.growth_model <- growth_model_trait
 
-phefile.growth_model <- as.data.frame(t(phefile.growth_model))
-colnames(phefile.growth_model) <- as.character(unlist(phefile.growth_model[1,]))
-phefile.growth_model <- phefile.growth_model[2:167,]
-
-phefile$id <- rownames(phefile)
+# phefile.growth_model <- as.data.frame(t(phefile.growth_model))
+# colnames(phefile.growth_model) <- as.character(unlist(phefile.growth_model[1,]))
+# phefile.growth_model <- phefile.growth_model[2:167,]
 
 phefile.all <- 
 phefile.growth_model %>% 
@@ -367,12 +390,13 @@ phefile.all %>%
 colnames(phefile.all) <- gsub("aicd", "acid", colnames(phefile.all))
 
 phefile.non_time_series <- 
-phefile.all[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|Hmax|I|k|delta", colnames(phefile.all))]  
+phefile.all[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|Hmax|I|k|delta|branch", colnames(phefile.all))]  
+save(phefile.all, file = "~/Desktop/F2_paper/data/phefile.all.Rdata")
 
 trait_cor <- round(cor(phefile.non_time_series, use = "pairwise.complete.obs"), digits = 2) 
 # show pair of traits whose correlation are above 0.5 
 high.cor.pair(trait_cor, threshold = 0.5)
-cor.P <- corPvalueStudent(trait_cor, 166)
+cor.P <- corPvalueStudent(trait_cor, 166) 
 cor.sig <- trait_cor
 cor.sig[cor.P>0.05] <- NA 
 cor.sig
@@ -380,7 +404,7 @@ cor.sig
 png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=8, height=7, units="in", res=300)
 par(mar = c(3, 3, 3, 3))
 
-pheatmap(as.matrix(trait_cor),
+pheatmap(as.matrix(trait_cor),  
      clustering_method = "average", 
      # cellheight = 10,
      # cellwidth = 5,
@@ -388,7 +412,7 @@ pheatmap(as.matrix(trait_cor),
      fontsize_row = 6, 
      legend = T
 )
-dev.off()  
+dev.off()     
 ```
 
 ### phenotype traits for Da-Ae & Da-Ol-1
@@ -520,60 +544,21 @@ high.cor.pair <- function(correlation, threshold){
   }
 
   output   
-}      
+}       
 ```
 
-### need to get the coefficient for parents & F1s 
+### prepare phefile for QTL mapping 
 ```{r}
-width <- read.csv("~/Desktop/F2_paper/width.added(indentical).best.fitted.summary.csv")
-lobe_number <- read.csv("~/Desktop/F2_paper/lobe.n.added(identical).best.fitted.summary.csv")
-height <- read.csv("~/Desktop/F2_paper/height.added(identical).best.fitted.summary.csv") 
+load("~/Desktop/F2_paper/data/phefile.all.Rdata")
+phefile.all %>% colnames() 
 
-height %>% dim() # 501 11 
-height[,1:2] %>% head()  
-ID <- gsub("(r_ID__I)(\\[)([[:print:]]+)(,Intercept])", "\\3", height$X)[347:515] 
+phefile.branch <- 
+phefile.all %>% 
+  dplyr::select(leaf_number_k, length_of_branch_5, length_of_branch_10, length_of_branch_15, Erucic_acid) %>%
+  t() %>% 
+  as.data.frame()
 
-height <- coef_extract(height, ID = ID) 
-lobe_number <- coef_extract(lobe_number, ID = ID)
-width <- coef_extract_width(width, ID = ID) 
-
-height <- height[c(1:3),]
-lobe_number <- lobe_number[c(1:3),]
-width <- width[c(1:3),]
-
-colnames(height)[2:4] <- paste("height", colnames(height)[2:4], sep = "_")
-colnames(lobe_number)[2:4] <- paste("lobe_number", colnames(lobe_number)[2:4], sep = "_")
-colnames(width)[2:4] <- paste("width", colnames(width)[2:4], sep = "_")
-
-height
-lobe_number
-width
-
-load("~/Desktop/growth_model_trait.Rdata")
-colnames(growth_model_trait)
-
-parent_model <- 
-height %>% 
-  left_join(lobe_number) %>% 
-  left_join(width)
-
-parent_model %>% dim()
-test.melt <- parent_model %>% melt()
-test.melt %>% head()
-
-growth_model_trait %>% dim()
-
-png(filename = "~/Desktop/F2_paper/model.png",width=15, height=7, units="in", res=300)
-par(mfrow=c(3,4), mai = c(0.4, 0.4, 0.4, 0.2)) 
-
-for (i in colnames(growth_model_trait)[2:13]) { 
-  hist(growth_model_trait[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
-  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "Da_Ae"),]$value, col = "red")
-  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "Da_Ol1"),]$value, col = "blue") 
-  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "F1"),]$value, col = "green", lty = 3)  
-  }
-
-dev.off()      
+write.csv(phefile.branch, file = "~/Desktop/F2_paper/data/phefile.branch.csv") 
 ```
 
 

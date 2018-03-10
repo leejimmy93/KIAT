@@ -20,7 +20,7 @@ length(bias) # 101040
 # Bngo<-read.table("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Brassica_napus_GO",header=FALSE) # read Br_GO.txt in excel and save as csv
 # head(Bngo)
 # tail(Bngo)
-#
+# 
 # Bngo.list <- tapply(as.character(Bngo$V2),Bngo$V1,c)
 # head(Bngo.list)
 # save(Bngo.list,file="/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Bngo.list.Rdata") # this does not work ub goseq after updating R
@@ -37,12 +37,13 @@ length(bias) # 101040
 
 
 load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/Bngo.list.Rdata")
+
 GOseq.Bn.ORA<-function(genelist,padjust=0.05,ontology="BP") { # return GO enrichment table, padjus, padjust=0.05
   TF<-(names(bias) %in% genelist)*1
-  names(TF)<-names(bias)
-  #print(TF)
-  pwf<-nullp(TF,bias.data=bias)
-  #print(pwf$DEgenes)
+  names(TF)<-names(bias) 
+  #print(TF) 
+  pwf<-nullp(TF,bias.data=bias) 
+  #print(pwf$DEgenes) 
   GO.pval <- goseq(pwf,gene2cat=Bngo.list,use_genes_without_cat=TRUE) # format became different in new goseq version (021111). Does not work (042716)
   #GO.pval <- goseq(pwf,gene2cat=Brgo.DF3,use_genes_without_cat=TRUE) # format became different in new goseq version (021111)
 
@@ -69,7 +70,7 @@ GOseq.Bn.ORA<-function(genelist,padjust=0.05,ontology="BP") { # return GO enrich
     }
     return(enriched.GO)
   }
-}
+} 
 
 ### 2) expression profile graph drawing w/o annotation
 # expression profile graph, need to have voom transformed data
