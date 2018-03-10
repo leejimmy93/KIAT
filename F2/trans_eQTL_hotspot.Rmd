@@ -275,18 +275,21 @@ lapply(1:length(hotspots), function(i)
 
 length(trans_eQTL_genes_list) # 20 
 
-### BnaA08g11130D (FAE) & BnaC03g65980D (FAE) are regulated by A03 trans-eQTL hostpot, the two BnaA.FAE1 reported by other people      
+### BnaA08g11130D (FAE) & BnaC03g65980D (FAE) are regulated by A03 trans-eQTL hostpot, the two BnaA.FAE1 reported by other people       
 ```  
 
 ### GO enrichment of trans-eQTL hotspot regulated genes 
 ```{r}
+load("~/Desktop/F2_paper/data/trans_eQTL_genes_list.Rdata")
+source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")  
 
 GO_trans_eQTL <- 
-lapply(unique(trans_eQTL.qtl.combined.final$trait.y), function(trait) {
-  test <- trans_eQTL.qtl.combined.final$trait.x[trans_eQTL.qtl.combined.final$trait.y == trait]
+lapply(1:length(trans_eQTL_genes_list), function(i) {
   tryCatch(
-    GOseq.Bn.ORA(test), error= function(e) NA)
+    GOseq.Bn.ORA(trans_eQTL_genes_list[[i]]), error= function(e) NA)
 })
 
+GO_trans_eQTL 
+save(GO_trans_eQTL, file = "~/Desktop/F2_paper/data/GO_trans_eQTL.Rdata")
 ```
 
