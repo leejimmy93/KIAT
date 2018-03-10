@@ -327,9 +327,11 @@ cis_eQTL.qtl.combined.final %>% dim()
 cis_eQTL.qtl.combined.final %>% colnames()
 cis_eQTL.qtl.combined.final$trait.y %>% unique()
 
+cis_plant_width <- 
 cis_eQTL.qtl.combined.final %>%  
-  filter(trait.y == "plant_width_2016_02_17") %>% 
-  View() # FLC is cis-regulator  
+  filter(trait.y == "plant_width_2016_02_17") 
+#   View() # FLC is cis-regulator  
+save(cis_plant_width, file = "~/F2/for_paper/cis_plant_width.Rdata")
 
 cis_eQTL.qtl.combined.final %>%  
   filter(AGI == "AT5G25620") %>% 

@@ -529,14 +529,14 @@ traitQTL.annotated %>%
 traitQTL.annotated %>% 
 #    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
     filter(chrom == "C06" & trait == "days_to_bolt") %>% 
-  View() # sequalene synthase 
+  View() # sequalene synthase  
 
 plant_width <- 
 traitQTL.annotated %>% 
 #    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
     filter(chrom == "C02") 
 
-save(plant_width, file = "~/F2/for_paper/")
+save(plant_width, file = "~/F2/for_paper/plant_width.Rdata") 
 
 traitQTL.annotated %>% 
 #    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%

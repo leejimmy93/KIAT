@@ -9,18 +9,18 @@ Purpose of this script is to identify trans-eQTL hotspot
 ```{r}
 library(qtlhot)
 
-ncross1 <- sim.null.cross(chr.len = rep(100, 4),
+ncross1 <- sim.null.cross(chr.len = rep(100, 4), 
 n.mar = 51,
 n.ind = 100,
 type = "bc",
 n.pheno = 1000,
 latent.eff = 3,
 res.var = 1,
-init.seed = 123457)
+init.seed = 123457) 
 
 ncross1
 cross1 <- include.hotspots(cross = ncross1,
-hchr = c(2, 3, 4),
+hchr = c(2, 3, 4), 
 hpos = c(25, 75, 50),
 hsize = c(100, 50, 20),
 Q.eff = 2,
@@ -43,11 +43,11 @@ rm(ncor1)
 set.seed(123)
 pt <- scanone(ncross1, method = "hk", n.perm = 1000)
 alphas <- seq(0.01, 0.10, by=0.01)
-lod.thrs <- summary(pt, alphas)
+lod.thrs <- summary(pt, alphas) # get lod thrs from scanone result for different alpha 
 lod.thrs
 
 lod.thr <- lod.thrs[5]
-lod.thr
+lod.thr # 95% as the threhold 
 
 scan1 <- scanone(cross1, pheno.col = 1:1000, method = "hk")
 scan1 %>% dim() # 204 1002 
@@ -148,71 +148,145 @@ plot(high2, quant.level = quant2)
 ### still several points not very clear, especially how permutation works here... 
 ``` 
 
-### using NL method for trans-eQTL hotspot identification 
+### using N method for trans-eQTL hotspot identification 
 ```{r}
 library(tidyverse)
 library(qtl)
 library(qtlhot)
 
-load("~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData")
+load("~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData") 
 scanone_eQTL.F2 %>% dim() # 4887 56182 
 
 scanone_eQTL.F2[1:10, 1:10]
 
+### extract genes with trans-eQTL only 
+load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
+
+cis_eQTL %>% dim() # 11384    12
+trans_eQTL %>% dim() # 15197    12  
+
+# include genes with trans-eQTL only  
+cis_eQTL %>% head  
+cis_eQTL$gene_ID %>% unique() %>% length()
+trans_eQTL$gene_ID %>% unique() %>% length() # 13296 
+length(cis_eQTL$gene_ID[cis_eQTL$gene_ID %in% trans_eQTL$gene_ID]) # 1814 genes not only have cis-eQTL, but also have trans-eQTL 
+
+scanone_eQTL.F2.trans <- scanone_eQTL.F2[,(colnames(scanone_eQTL.F2) %in% c("chr", "pos", trans_eQTL$gene_ID))]
+cbind(pos, scanone_eQTL.F2.trans) %>% dim() 
+
+dim(scanone_eQTL.F2.trans) # 4887 13298
+scanone_eQTL.F2.trans[1:10, 1:10]
+scanone_eQTL.F2[1:10, 1:10]
 ### check correlation, later... 
 cross.F2
 lod.thrs
-alphas <- seq(0.01, 0.10, by=0.01)
-alphas <- alphas[5]
-alphas
+alphas <- seq(0.01, 0.10, by=0.01)  
 
-### LOD threshold level for e-trait
+### LOD threshold level for e-trait 
 lod.thr <- lod.thrs[5]
 lod.thr 
 
-### get only significant intervals for each e-trait, using LOD drop method 
-high1 <- highlod(scanone_eQTL.F2, lod.thr = min(lod.thrs), drop.lod = 1.5)
-max(high1, lod.thr = lod.thrs) # max number of e-trait fall into loci with different lod threshold 
+### get cross.F2 for trans-eQTL only 
+cross.F2$pheno <- cross.F2$pheno[,(colnames(cross.F2$pheno) %in% c(trans_eQTL$gene_ID))]
 
-hots1 <- hotsize(high1, lod.thr = lod.thr) 
-summary(hots1) # for each genomic position, 
+### get only significant intervals for each e-trait, using LOD drop method, understand the threhsold here 
+high1 <- highlod(scanone_eQTL.F2.trans, lod.thr = min(lod.thrs), drop.lod = 1.5) 
+max(high1, lod.thr = lod.thrs) # max number of e-trait fall into loci with different lod threshold   
 
+hots1 <- hotsize(high1, lod.thr = lod.thr)  
+summary(hots1) # for each genomic position 
+
+### permutation to get the statistical significance # permutation takes time, did this in screen 
+# trans_eQTL_hotspot_perm_trans.R 
+
+load("~/F2/output/eQTL/hotperm1.trans.Rdata")
+hotperm1.trans   
+
+png("~/F2/output/QTL_analysis/figure/trans_eQTL_hotspot.png", width=15, height=10, units="in", res=300) 
 plot(hots1, cex.lab = 1.5, cex.axis = 1.5) 
+abline(h = 129) 
+dev.off()
 
-### permutation to get the statistical significance # permutation takes time, tried to 
-set.seed(12345) 
+### how to get all the genetic pos with trans-eQTL hotspot? 
+hot_trans <- data.frame(chr = hots1$chr,
+                        pos = hots1$pos,
+                        max.N = hots1$max.N)
 
-cross.F2$pheno <- cross.F2$pheno[,-1]
+hot_trans <- 
+hot_trans %>% 
+  filter(max.N > 129) %>% 
+  mutate(eQTL_chr = chr) 
 
-system.time(
-hotperm1 <- hotperm(cross = cross.F2, 
-n.quant = 600,
-n.perm = 1,
-lod.thrs = lod.thr,
-alpha.levels = alphas,
-drop.lod = 1.5,
-verbose = FALSE)
-) 
+trans_eQTL %>% colnames()
+hot_trans
 
-set.seed(2)
-hotperm2 <- hotperm(cross = cross.F2, 
-n.quant = ,
-n.perm = 1,
-lod.thrs = lod.thrs,
-alpha.levels = alphas,
-drop.lod = 1.5,
-verbose = FALSE) 
+### hotspot 
+# A01: 128-129
+# A01: 160-164
+# A02: 0-9
+# A03: 17-25
+# A03: 36-38
+# A03: 43
+# A03: 49-64
+# A06: 122-124
+# A09: 17-19 
+# A10: 173-185
+# A10: 217-226
+# C01: 156-166
+# C02: 1-13
+# C02: 43-62
+# C03: 10-24
+# C04: 97
+# C08: 40-41
+# C08: 47-62
+# C09: 0-4
+# C09: 57-60 
 
-load("~/F2/output/eQTL/hotperm1.Rdata")
-hotperm1 
+hotspot <- data.frame(chr = c("A01", "A01", "A02", "A03", "A03", "A03", "A03", "A06", "A09", "A10", "A10", "C01", "C02", "C02", "C03", "C04", "C08", "C08", "C09", "C09"), 
+                      pos_min = c(128, 160, 0, 17, 36, 43, 49, 122, 17, 173, 217, 156, 1, 43, 10, 97, 40, 47, 0, 57), 
+                      pos_max = c(129, 164, 9, 25, 38, 43, 64, 124, 19, 185, 226, 166, 13, 62, 24, 97, 41, 62, 4, 60))
 
-quant1 <- quantile(hotperm1, 0.05, lod.thr = lod.thr)
-plot(high1, quant.level = quant1, sliding = TRUE)
-hotsq1 <- hotsize(high1, lod = lod.thr, window = 5, quant.level = quant1)
-plot(hotsq1)   
+hotspot$chr <- paste("chr", hotspot$chr, sep = "")  
+hotspot$hotspot_id <- rownames(hotspot)
 
-summary(hotperm1)  
+### GO enrichment of trans-eQTL hotspot regulated genes 
+hot_trans$eQTL_chr <- paste("chr", hot_trans$eQTL_chr, sep = "")
 
-### BnaA08g11130D (FAE) & BnaC03g65980D (FAE) are regulated by A03 trans-eQTL hostpot, the two BnaA.FAE1 reported by other people   
-``` 
+hot_trans %>% colnames()
+
+trans_eQTL_hot <- 
+trans_eQTL %>% 
+  semi_join(hot_trans, by = c("eQTL_chr", "pos")) 
+
+dim(trans_eQTL_hot) # 4221 12 
+
+trans_eQTL_genes <- GRanges(seqnames = Rle(trans_eQTL_hot$eQTL_chr),ranges = IRanges(start = trans_eQTL_hot$pos, end = trans_eQTL_hot$pos), names = trans_eQTL_hot$gene_ID)
+trans_eQTL_genes 
+
+hotspots <- 
+lapply(1:nrow(hotspot), function(i) {
+  GRanges(seqnames = Rle(hotspot$chr[i]), ranges = IRanges(start = hotspot$pos_min[i], end = hotspot$pos_max[i]), ID = hotspot$hotspot_id[i])
+})
+
+trans_eQTL_genes_list <- 
+lapply(1:length(hotspots), function(i) 
+  mergeByOverlaps(trans_eQTL_genes, hotspots[[i]])$names
+)
+
+length(trans_eQTL_genes_list) # 20 
+
+### BnaA08g11130D (FAE) & BnaC03g65980D (FAE) are regulated by A03 trans-eQTL hostpot, the two BnaA.FAE1 reported by other people      
+```  
+
+### GO enrichment of trans-eQTL hotspot regulated genes 
+```{r}
+
+GO_trans_eQTL <- 
+lapply(unique(trans_eQTL.qtl.combined.final$trait.y), function(trait) {
+  test <- trans_eQTL.qtl.combined.final$trait.x[trans_eQTL.qtl.combined.final$trait.y == trait]
+  tryCatch(
+    GOseq.Bn.ORA(test), error= function(e) NA)
+})
+
+```
 
