@@ -15,7 +15,7 @@ n.ind = 100,
 type = "bc",
 n.pheno = 1000,
 latent.eff = 3,
-res.var = 1,
+res.var = 1, 
 init.seed = 123457) 
 
 ncross1
@@ -273,12 +273,21 @@ lapply(1:length(hotspots), function(i)
   mergeByOverlaps(trans_eQTL_genes, hotspots[[i]])$names
 )
 
-length(trans_eQTL_genes_list) # 20 
+length(trans_eQTL_genes_list) # 20  
+names(trans_eQTL_genes_list) <- paste(hotspot$chr, hotspot$pos_min, hotspot$pos_max, sep = "_")
+
+trans_eQTL_genes_list$chrA03_49_64 
+
+BnapusAnnotation[BnapusAnnotation$name %in% trans_eQTL_genes_list$chrA03_49_64,] %>% View()
+
+trans_eQTL %>% 
+  filter(gene_ID == "BnaA08g11130D" | gene_ID == "BnaC03g65980D") %>%
+  View()
 
 ### BnaA08g11130D (FAE) & BnaC03g65980D (FAE) are regulated by A03 trans-eQTL hostpot, the two BnaA.FAE1 reported by other people       
 ```  
 
-### GO enrichment of trans-eQTL hotspot regulated genes 
+### GO enrichment of trans-eQTL hotspot regulated genes  
 ```{r}
 load("~/Desktop/F2_paper/data/trans_eQTL_genes_list.Rdata")
 source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")  
@@ -291,5 +300,11 @@ lapply(1:length(trans_eQTL_genes_list), function(i) {
 
 GO_trans_eQTL 
 save(GO_trans_eQTL, file = "~/Desktop/F2_paper/data/GO_trans_eQTL.Rdata")
+
+# check GO enrichment result 
+load("~/F2/for_paper/GO_trans_eQTL.Rdata")
+names(GO_trans_eQTL) <- paste(hotspot$chr, hotspot$pos_min, hotspot$pos_max, sep = "_")
+GO_trans_eQTL$chrA03_49_64
+
 ```
 
