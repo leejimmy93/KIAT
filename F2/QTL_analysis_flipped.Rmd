@@ -11,8 +11,8 @@ library(tidyverse)
 library(qtl) 
 library(snowfall)
 library(ggrepel) 
-library(Biostrings) 
-source("~/KIAT/function_BnRNAseq.R")  
+library(Biostrings)   
+source("~/KIAT/function_BnRNAseq.R")   
 
 ### load data and run scanone & cim
 LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
@@ -329,8 +329,9 @@ traitQTL.annotated <-
 traitQTL.annotated %>% 
   left_join(napus_GO_combined) 
 
-traitQTL.annotated %>% dim() #  18647    11 
+traitQTL.annotated %>% dim() #  18647    13 
 save(traitQTL.annotated, file =  "~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata") 
+write.csv(traitQTL.annotated, file = "~/F2/for_paper/traitQTL.annotated.csv") 
 ```
 
 # discrepency between previous result & current QTL result, FLC gene not located in the interval for days_to_flower anymore 
@@ -1187,7 +1188,7 @@ dev.off()
 
 save(cim.qtl, file = "~/F2/output/QTL_analysis/cim.qtl.branch.flipped.Rdata")
 save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.branch.flipped.Rdata")  
-scanone.perm.imp ### leaf_K has new QTL identified  
+scanone.perm.imp ### leaf_K has new QTL identified     
 ```
 
 

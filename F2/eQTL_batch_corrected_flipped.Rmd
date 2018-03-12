@@ -319,7 +319,9 @@ cis_eQTL.qtl.combined.final[grep("lipid|fatty", cis_eQTL.qtl.combined.final$GO_d
     dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) 
 
 # 2) transcription factor coding genes for cis-eQTL final list
-View(cis_eQTL.qtl.combined.final[grep("DNA|nucleotide|transcription", cis_eQTL.qtl.combined.final$GO_des),])  
+cis_eQTL.qtl.combined.final_TF <- 
+cis_eQTL.qtl.combined.final[grep("DNA|nucleotide|transcription", cis_eQTL.qtl.combined.final$GO_des),] %>% 
+  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) 
 
 # 3) Fatty acid/flowering/growth related genes for trans-eQTL final list
 trans_candidate.final_fatty_acid <- 
@@ -353,6 +355,7 @@ trans_candidate.final[trans_candidate.final$AGI %in% flowering_time_gene$Gene.nu
 
 write.csv(cis_eQTL.qtl.combined.final_fatty_acid, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_fatty_acid.csv")
 write.csv(cis_eQTL.qtl.combined.final_flowering, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_flowering.csv")
+write.csv(cis_eQTL.qtl.combined.final_TF, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_TF.csv")
 
 write.csv(trans_candidate.final_fatty_acid, file = "~/F2/output/eQTL/trans_candidate.final_fatty_acid.csv")
 write.csv(trans_candidate.final_flowering, file =  "~/F2/output/eQTL/trans_candidate.final_flowering.csv")  
@@ -394,10 +397,10 @@ cim.qtl[["BnaA08g11060D"]] <- scanone_eQTL.F2[,c("chr", "pos", "BnaA08g11060D")]
 colnames(cim.qtl[["BnaA08g11060D"]])[3] <- "lod" 
 
 oil_eQTL <- 
-qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid"), 
-                       data.frame(cim.qtl[["Oleic_acid"]], method = "Oleic_acid"), 
-                       data.frame(cim.qtl[["BnaA08g11140D"]], method = "BnaA08g11140D"),
-                       data.frame(cim.qtl[["BnaA08g11060D"]], method = "BnaA08g11060D")),     
+qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid", group = "QTL"), 
+                       data.frame(cim.qtl[["Oleic_acid"]], method = "Oleic_acid", group = "QTL"), 
+                       data.frame(cim.qtl[["BnaA08g11140D"]], method = "BnaA08g11140D", group = "eQTL"),
+                       data.frame(cim.qtl[["BnaA08g11060D"]], method = "BnaA08g11060D", group = "eQTL")),     
          chrs = c("A08"), 
          # lod = cim.perm[[1]], 
          title = "cis-regulators for oil composition traits", 
@@ -413,15 +416,18 @@ cim_growth_model_trait.F2[["BnaA10g22080D"]] <- scanone_eQTL.F2[,c("chr", "pos",
 colnames(cim_growth_model_trait.F2[["BnaA10g22080D"]])[3] <- "lod"
 
 growth_eQTL <- 
-qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_bolt"), 
-                       data.frame(cim.qtl[["days_to_flower"]], method = "days_to_flower"), 
-                       data.frame(cim_growth_model_trait.F2[["height_Hmax"]], method = "height_Hmax"), 
-                       data.frame(cim_growth_model_trait.F2[["leaf_number_I"]], method = "leaf_number_I"), 
-                       data.frame(cim_growth_model_trait.F2[["BnaA10g22080D"]], method = "BnaA10g22080D")),     
+qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_bolt", group = "QTL"), 
+                       data.frame(cim.qtl[["days_to_flower"]], method = "days_to_flower", group = "QTL"), 
+                       data.frame(cim_growth_model_trait.F2[["height_Hmax"]], method = "height_Hmax", group = "QTL"), 
+                       data.frame(cim_growth_model_trait.F2[["leaf_number_I"]], method = "leaf_number_I", group = "QTL"), 
+                       data.frame(cim_growth_model_trait.F2[["BnaA10g22080D"]], method = "BnaA10g22080D", group = "eQTL"),     
+                       data.frame(cim.qtl[["root_weight_2016_05_13"]], method = "root_weight_2016_05_13", group = "QTL")), 
+                       
          chrs = c("A10"), 
          # lod = cim.perm[[1]], 
          title = "cis-regulators for flowering and growth traits", 
-         rug = TRUE)   
+         rug = TRUE)     
+
 ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 6, height = 5)  
 ```
 

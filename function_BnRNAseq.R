@@ -728,11 +728,11 @@ qtl_plot <- function(input,              # data frame input from scanone
     
     # if input has column method but not group, plot line and color by method
     if (!is.null(input$method) & is.null(input$group)) geom_line(aes(color = method), size = 1, alpha = 0.6)
-  } + {
+} + {
     
     # if input has column group but not method, plot line and color by group
     if (!is.null(input$group) & is.null(input$method)) geom_line(aes(color = group), size = 1, alpha = 0.6)
-  } + {
+  } + { 
     
     # if input has columns method and group, plot line and color by method & linetype by group
     if (!is.null(input$group) & !is.null(input$method)) geom_line(aes(color = method, linetype = group), size = 1, alpha = 0.6)
@@ -740,8 +740,7 @@ qtl_plot <- function(input,              # data frame input from scanone
     
     # set linetype, if input has columns method and group
     if (!is.null(input$group) & !is.null(input$method)) scale_linetype_manual(values = c("solid", "twodash", "dotted"))
-  } + {
-    
+  } + { 
     # if input has neither columns method nor group, plot black line
     if (is.null(input$group) & is.null(input$method)) geom_line(size = 1, alpha = 0.6)
   } + {
@@ -756,7 +755,7 @@ qtl_plot <- function(input,              # data frame input from scanone
     # facet by chromosome
     facet_wrap(~ chr, ncol = ncol, scales = "free_x") +
     # minimal plotting theme
-    theme_minimal() +
+    theme(panel.background = element_blank()) +
     # increase strip title size
     theme(strip.text = element_text(face = "bold", size = 12)) +
     # use RcolorBrewer palette
