@@ -9,7 +9,7 @@ Goal of this script is to build networks for B.napus F2 RNAseq data using WGCNA,
 ```{r} 
 library(WGCNA) 
 library(tidyverse) 
-library(edgeR)
+library(edgeR) 
 library(DESeq2)
 library(magrittr) 
 library(gplots) 

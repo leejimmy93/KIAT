@@ -658,7 +658,7 @@ map_geno %>%
         axis.ticks.y=element_blank()) + 
   labs(x = "genetic position", y = "physical position")
 
-# p.genetic_vs_physical_A05 <- 
+p.genetic_vs_physical_A05 <- 
 map_geno %>% 
   filter(map_geno$genetic_chr == "A05") %>% 
   ggplot() + 
@@ -670,7 +670,7 @@ map_geno %>%
         #axis.text.y=element_blank(), 
         # axis.ticks.x=element_blank(),
         # axis.ticks.y=element_blank()) + 
-  labs(x = "genetic position", y = "physical position")
+  labs(x = "genetic position", y = "physical position") 
 
 ggsave(p.genetic_vs_physical_A05, filename = "~/F2/output/p.genetic_vs_physical_A05.png", height = 5, width = 5) 
 ``` 

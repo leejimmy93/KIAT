@@ -377,6 +377,47 @@ save(cis_plant_width, file = "~/F2/for_paper/cis_plant_width.Rdata")
 cis_eQTL.qtl.combined.final %>%  
   filter(AGI == "AT5G25620") %>% 
   View() # FLC is cis-regulator   
+
+cis_eQTL.qtl.combined.final %>%  
+  filter(AGI == "AT3G11170") %>% 
+  View() # FAD7 
+
+cis_eQTL.qtl.combined.final %>%  
+  filter(AGI == "AT5G05580") %>% 
+  View() # FAD7 
+
+trans_eQTL.qtl.combined.final %>% dim()
+
+trans_eQTL.qtl.combined.final %>%  
+  filter(AGI == "AT3G11170") %>% 
+  View() # FAD7 
+
+trans_eQTL.qtl.combined.final %>%  
+  filter(AGI == "AT5G05580") %>% 
+  View() # FAD8 
+
+traitQTL.annotated %>% colnames()
+
+traitQTL.annotated %>%  
+  filter(AGI == "AT5G05580") %>% 
+  View() # FAD8 
+
+traitQTL.annotated %>%  
+  filter(AGI == "AT3G11170") %>% 
+  View() # FAD8  
+
+BnapusAnnotation %>%  
+  filter(AGI == "AT3G11170") %>% 
+  View() # FAD8  
+
+BnapusAnnotation %>%  
+  filter(AGI == "AT3G12120") %>% 
+  View() # FAD8  
+
+BnapusAnnotation %>%  
+  filter(AGI == "AT3G12120") %>% 
+  View() # FAD8  
+
 ```
  
 ######## 
@@ -441,7 +482,7 @@ traitQTL.annotated %>%
 traitQTL.annotated %>% 
   filter(trait == "days_to_bolt") %>% 
   dplyr::select(start, end, chrom) %>% 
-  unique()
+  unique() 
 
 gff.mRNA[gff.mRNA$gene_ID == "BnaA10g22080D",]
 
