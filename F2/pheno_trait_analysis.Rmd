@@ -118,7 +118,7 @@ dev.off()
 phefile = read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/F2.pheno.csv", stringsAsFactors = F, row.names = 1, header = F) 
 phefile %>% dim() # 166 44 
 
-phefile <- as.data.frame(t(phefile))  
+phefile <- as.data.frame(t(phefile))   
 
 colnames(phefile)
 rname <- phefile$id %>% as.character()
@@ -148,7 +148,7 @@ trait_summary %>%
   dplyr::select(mean, median, max, min, missing_rate)  
 
 trait_summary <- 
-as.data.frame(sapply(trait_summary, function(x) 
+as.data.frame(sapply(trait_summary, function(x)  
    round(as.numeric(x), 2)))
 
 rownames(trait_summary) <- colnames(phefile)
@@ -218,13 +218,13 @@ png(filename = "~/Desktop/F2_paper/trait_oil.png",width=15, height=7, units="in"
 par(mfrow=c(4,6), mai = c(0.4, 0.4, 0.4, 0.2)) 
 
 for (i in colnames(phefile_oil)) {
-  hist(phefile_oil[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
+  hist(phefile_oil[,i], breaks = , col = "grey", border = "black", xlab = "", ylab = "", main = i)
   abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ae"),]$mean, col = "red", lwd = 2)
   abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ol-1"),]$mean, col = "blue", lwd = 2) 
   abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "F1"),]$mean, col = "purple", lty= 2, lwd= 2)
   }
 
-dev.off()  
+dev.off()   
 
 ### raw data for growth traits 
 raw_growth <- read.csv("~/Desktop/F2_paper/data/raw_growth_traits.csv")  

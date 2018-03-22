@@ -102,7 +102,7 @@ write.csv(fastQC_summary_wide, file = "fastQC_summary_wide.csv")
 # calculate mapping ratio for Da-Ae & Da-Ol, plotting 
 ```{r}
 # mapping result
-sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/parent_summary_corrected.csv")
+sample_des <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/parent/parent_summary_corrected.csv")
 head(sample_des)
 
 mapping_result <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/data/mapping/Star_Stats.tab", header = T)
@@ -114,6 +114,19 @@ mapping_result$Sample
 
 parents_stats <- merge(sample_des, mapping_result, by="SampleID")
 head(parents_stats)
+
+### make table for paper 
+parents_stats_final <- 
+parents_stats %>% 
+  mutate(genotype = Cultivar, tissue = Stage) %>% 
+  dplyr::select(SampleID, genotype, tissue, TotalReads, Q20_MoreBasesRate, Percent_Unique_Mapped, Percent_Multi_Mapped, Percent_Unmapped_Too_Short, Percent_Unmapped_Other) 
+
+parents_stats_final$Q20_MoreBasesRate <- as.character(parents_stats_final$Q20_MoreBasesRate)
+parents_stats_final$Q20_MoreBasesRate[9:27] <- as.numeric(gsub("%", "", parents_stats_final$Q20_MoreBasesRate[9:27]))
+parents_stats_final$Q20_MoreBasesRate[1:8] <- as.numeric(parents_stats_final$Q20_MoreBasesRate[1:8]) * 100
+parents_stats_final %>% View() 
+
+write.csv(parents_stats_final, file = "~/Desktop/F2_paper/supplementary/parents_stats_final.csv")
 
 # number of total reads 
 library(ggplot2) 
@@ -1134,7 +1147,14 @@ expression.pattern.Bn.parent.with.annot(ID, fatty.acid.genes.annotation)
 source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.new.Rdata")
 
-# gt effect 
+"BnaA08g12780D" %in% rownames(DEgene.new.gt) # FAD 
+"BnaC03g67820D" %in% rownames(DEgene.new.gt) # FAD
+"BnaA08g11140D" %in% rownames(DEgene.new.gt) # 
+"BnaA08g11060D" %in% rownames(DEgene.new.gt) # squalene synthase 
+"BnaA08g11130D" %in% rownames(DEgene.new.gt) # FAE
+"BnaC03g65980D" %in% rownames(DEgene.new.gt) # FAE
+
+# gt effect  
 DEgene.GO.ORA.gt <- GOseq.Bn.ORA(rownames(DEgene.new.gt))
 class(DEgene.GO.ORA.gt)
 DEgene.GO.ORA.gt$Term  
