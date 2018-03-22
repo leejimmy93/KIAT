@@ -79,111 +79,6 @@ summary(qtl.fit.oil_content)
 effectplot(cross=LG.f2.after.crossover, mname1 = "A03@98")  
 ```
 
-### Erucic & Oleic 
-```{r}
-path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Erucic_Oleic"
-files <- list.files(path=path)
-setwd(path)
-scantwo_perm_Erucic_Oleic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
-
-# permutation data check 
-scantwo_perm_Erucic_Oleic.t <- transpose(scantwo_perm_Erucic_Oleic) 
-scantwo_perm_Erucic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[2]])
-summary(scantwo_perm_Erucic)
-
-summary(scantwo.imp[["Erucic_acid"]], thresholds = c(10.28, 8.08, 6.99, 7.30, 4.33)) # signal for just additive 
-
-# review previous result 
-### load scanone/cim/scantwo result
-summary(scanone.imp.all[["Erucic_acid"]]) # 37.6 & 174
-summary(cim.qtl.all[["Erucic_acid"]]) # 38.9 & 173
-summary(scantwo.imp[["Erucic_acid"]],perm=scantwo_perm_Erucic,alpha=.05,pval=T) # 38 & 179 
-
-# load LG 
-#create an object to hold QTL of interest
-LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
-                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
-                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
-
-LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Erucic_acid)
-LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
-LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
-
-qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(38, 179))  
-### position from additive model if no interaction identified 
-
-qtlm.Erucic # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno(). 
-
-#make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
-qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1 + Q2, get.ests=T)
-### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
-
-#examine our model
-summary(qtl.fit.Erucic)  
-
-#we can now ask if all qtls are at their most likely positions
-#this also provides a nice map
-qtl.refine.Erucic <- refineqtl(LG.f2.after.crossover,
-                        qtl=qtlm.Erucic,
-                        formula= y ~ Q1 + Q2)
-#you can see from the LOD scores that the new model is not much better than the old model.  Nevertheless we can keep this as our new model
-
-#we can test for interactions specifically among these loci
-addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
-qtl.add.Erucic <- addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic) # evidence for interactions
-summary(qtl.add.Erucic)
-
-# scan the genome for additional QTL to add to this model 
-qtl.add.Erucic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
-summary(qtl.add.Erucic) # no additional QTL 
-
-# refine position
-qtl.refine2.Erucic <- refineqtl(LG.f2.after.crossover,
-                        qtl=qtlm.Erucic,
-                        formula= y ~ Q1 * Q2) 
-
-qtl.refine2.Erucic
-# final
-qtl.fit.final.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine2.Erucic, get.ests=T, formula = y ~ Q1 * Q2)
-summary(qtl.fit.final.Erucic)   
-
-### Oleic acid 
-# permutation result 
-scantwo_perm_Oleic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[1]])
-summary(scantwo_perm_Oleic)
-
-# look for siginificant loci 
-summary(scantwo.imp[["Oleic_acid"]], thresholds = c(12.3, 9.45, 7.95, 7.37, 4.98)) 
-summary(scantwo.imp[["Oleic_acid"]],perm=scantwo_perm_Oleic,alpha=.05,pval=T)
-
-# load map and make Oleic acid as the only phenotype 
-LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
-                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
-                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
-
-LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Oleic_acid)
-LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
-LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
-
-# object hold QTL of interest 
-qtlm.Oleic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(38, 179))  
-qtlm.Oleic
-qtl.fit.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Oleic,formula = y ~ Q1 * Q2 ,get.ests=T) 
-summary(qtl.fit.Oleic) 
-
-# refine position
-qtl.refine.Oleic <- refineqtl(LG.f2.after.crossover,
-                        qtl=qtlm.Oleic,
-                        formula= y ~ Q1 * Q2)
-
-# scan the genome for additional QTL 
-qtl.add.Oleic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Oleic)
-summary(qtl.add.Oleic) # no additional loci 
-
-qtl.fit.final.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine.Oleic,formula = y ~ Q1 * Q2 ,get.ests=T) 
-summary(qtl.fit.final.Oleic) 
-```
-
 ### Palmitoliec_aicd 
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Palmitoliec_Heptadecanoic/"
@@ -946,9 +841,140 @@ qtl.fit.leaf_number_2016_03_21 <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.le
 
 #examine our model
 summary(qtl.fit.leaf_number_2016_03_21)    
-
-
-
 ```  
+
+### Erucic & Oleic 
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/output/scantwo/Erucic_Oleic"
+files <- list.files(path=path)
+setwd(path)
+scantwo_perm_Erucic_Oleic <- sapply(files, function(x) mget(load(x)), simplify = TRUE) 
+
+# permutation data check 
+scantwo_perm_Erucic_Oleic.t <- transpose(scantwo_perm_Erucic_Oleic) 
+scantwo_perm_Erucic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[2]])
+summary(scantwo_perm_Erucic)
+
+summary(scantwo.imp[["Erucic_acid"]], thresholds = c(10.28, 8.08, 6.99, 7.30, 4.33)) # signal for just additive 
+
+# review previous result 
+### load scanone/cim/scantwo result
+summary(scanone.imp.all[["Erucic_acid"]]) # 37.6 & 174
+summary(cim.qtl.all[["Erucic_acid"]]) # 38.9 & 173
+summary(scantwo.imp[["Erucic_acid"]],perm=scantwo_perm_Erucic,alpha=.05,pval=T) # 38 & 179 
+
+# load LG 
+#create an object to hold QTL of interest
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Erucic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+qtlm.Erucic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(38, 179))  
+### position from additive model if no interaction identified 
+
+qtlm.Erucic # n.gen is "number of possible genotypes for each chromosome", if F2, n.gen = 3 when doing sim.geno(). 
+
+#make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
+qtl.fit.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Erucic,formula = y ~ Q1 + Q2, get.ests=T)
+### Ruijuan: fv1 - av1 indicate interaction, very small here... ??? 
+
+#examine our model
+summary(qtl.fit.Erucic)  
+
+#we can now ask if all qtls are at their most likely positions
+#this also provides a nice map
+qtl.refine.Erucic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Erucic,
+                        formula= y ~ Q1 + Q2)
+#you can see from the LOD scores that the new model is not much better than the old model.  Nevertheless we can keep this as our new model
+
+#we can test for interactions specifically among these loci
+addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
+qtl.add.Erucic <- addint(LG.f2.after.crossover,qtl=qtl.refine.Erucic) # evidence for interactions
+summary(qtl.add.Erucic)
+
+# scan the genome for additional QTL to add to this model 
+qtl.add.Erucic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Erucic)
+summary(qtl.add.Erucic) # no additional QTL 
+
+# refine position
+qtl.refine2.Erucic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Erucic,
+                        formula= y ~ Q1 * Q2) 
+
+qtl.refine2.Erucic
+# final
+qtl.fit.final.Erucic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine2.Erucic, get.ests=T, formula = y ~ Q1 * Q2)
+summary(qtl.fit.final.Erucic)   
+
+### more check 
+# while other poeple all find FAE to be the gene responsible for erucic acid content, I excluded thoese two genes, and found them to be controlled by a trans-eQTL hotspot on A03. Now I want to see 
+# 1) whether adding genotype info of A03 loci info can increase the R2 of erucic acid 
+# 2) whether adding expression of the two FAE1 genes can increase the R2 of erucic acid
+
+# based on eQTL analysis result, that loci is A03@61  
+qtl.fit.final.Erucic.FAE <- addtoqtl(LG.f2.after.crossover, qtl.refine2.Erucic, chr = "A03", pos = 61)
+summary(qtl.fit.final.Erucic.FAE)
+
+qtl.refine2.Erucic.FAE <- refineqtl(LG.f2.after.crossover,qtl=qtl.fit.final.Erucic.FAE,
+                              formula = y ~ Q1 + Q2 + Q3 + Q1:Q3 + Q1:Q2 + Q2:Q3)
+
+
+summary(qtl.refine2.Erucic.FAE)
+
+qtl.fit.final.Erucic.FAE <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine2.Erucic.FAE, get.ests=T, formula = y ~ Q1 + Q2 + Q3 + Q1:Q2 + Q2:Q3 + Q3:Q1)
+summary(qtl.fit.final.Erucic.FAE)   # somewhat suggested FAE is also important? 
+
+### Oleic acid 
+# permutation result 
+scantwo_perm_Oleic <- do.call(c, scantwo_perm_Erucic_Oleic.t[[1]])
+summary(scantwo_perm_Oleic)
+
+# look for siginificant loci 
+summary(scantwo.imp[["Oleic_acid"]], thresholds = c(12.3, 9.45, 7.95, 7.37, 4.98)) 
+summary(scantwo.imp[["Oleic_acid"]],perm=scantwo_perm_Oleic,alpha=.05,pval=T)
+
+# load map and make Oleic acid as the only phenotype 
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Oleic_acid)
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate probability 
+
+# object hold QTL of interest 
+qtlm.Oleic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(38, 179))  
+qtlm.Oleic
+qtl.fit.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.Oleic,formula = y ~ Q1 * Q2 ,get.ests=T) 
+summary(qtl.fit.Oleic) 
+
+# refine position
+qtl.refine.Oleic <- refineqtl(LG.f2.after.crossover,
+                        qtl=qtlm.Oleic,
+                        formula= y ~ Q1 * Q2)
+
+# scan the genome for additional QTL 
+qtl.add.Oleic <- addqtl(LG.f2.after.crossover,qtl=qtl.refine.Oleic)
+summary(qtl.add.Oleic) # no additional loci 
+
+qtl.fit.final.Oleic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtl.refine.Oleic,formula = y ~ Q1 * Q2 ,get.ests=T) 
+summary(qtl.fit.final.Oleic) 
+
+
+
+
+
+
+```
+
+
+
+
+
 
 

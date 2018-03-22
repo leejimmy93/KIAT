@@ -11,8 +11,8 @@ library(tidyverse)
 library(qtl) 
 library(snowfall)
 library(ggrepel) 
-library(Biostrings) 
-source("~/KIAT/function_BnRNAseq.R")  
+library(Biostrings)   
+source("~/KIAT/function_BnRNAseq.R")   
 
 ### load data and run scanone & cim
 LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
@@ -147,7 +147,7 @@ unlist(im.qtl.result)
 ```{r} 
 load("~/F2/output/QTL_analysis/QTL_result_all.Rdata")
 
-scanone.perm.imp.all %>% length()
+scanone.perm.imp.all %>% length() # 51 
 scanone.imp.all %>% length() 
 cim.perm.all %>% length()
 cim.qtl.all %>% length()
@@ -203,11 +203,11 @@ bayesint.result.scanone <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% #
   dplyr::select(trait,chr,pos,markername,LOD) %>% 
   separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
   group_by(trait,chr) %>% 
-  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
+  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD), genetic_start=min(pos, na.rm = T), genetic_end=max(pos, na.rm = T)) %>% 
   #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
   mutate(start=ifelse(start==end,max(0,start-20000),start), end=ifelse(start==end,end+20000,end))
 
-bayesint.result.scanone %>% dim() # 33 6 
+bayesint.result.scanone %>% dim() # 33 8 
 
 ### cim
 threshold.95 <- tibble(perm.threshold = bind_rows(cim.perm.all) %>% as.numeric(), 
@@ -253,7 +253,7 @@ bayesint.list <- lapply(bayesint.list,function(x)
 ) 
 
 bayesint.list 
-bayesint.list %>% length() # 26
+bayesint.list %>% length() # 26 
 
 # save bayesint result for later 
 bayesint.list.cim <- bayesint.list
@@ -264,11 +264,11 @@ bayesint.result.cim <- as.tibble(bind_rows(bayesint.list,.id="trait")) %>% # com
   dplyr::select(trait,chr,pos,markername,LOD) %>% 
   separate(markername,into=c("chr1","Mbp"),sep="_", convert=TRUE) %>% 
   group_by(trait,chr) %>% 
-  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD)) %>% 
+  dplyr::summarize(start=min(Mbp, na.rm = T),end=max(Mbp, na.rm = T),min_eQTL_LOD=min(LOD),max_eQTL_LOD=max(LOD), genetic_start=min(pos, na.rm = T), genetic_end=max(pos, na.rm = T)) %>% 
   #for the high QTL peaks the interval width is 0.  That is overly precise and need to widen those.
   mutate(start=ifelse(start==end,max(0,start-20000),start), end=ifelse(start==end,end+20000,end))
 
-bayesint.result.cim %>% dim() # 26 6  
+bayesint.result.cim %>% dim() # 26 8
 
 bayesint.result.cim$model <- rep("cim", nrow(bayesint.result.cim))
 bayesint.result.scanone$model <- rep("scanone", nrow(bayesint.result.scanone))
@@ -277,21 +277,21 @@ bayesint.result <-
 bayesint.result.cim %>% 
   full_join(bayesint.result.scanone, by = c("trait", "chr")) 
 
-bayesint.result %>% dim()
+bayesint.result %>% dim() # 35 16 
 colnames(bayesint.result)
 
 for (i in 1:nrow(bayesint.result)){
   if(is.na(bayesint.result[i, "start.x"])){
-    bayesint.result[i, c(3:7)] <- bayesint.result[i, c(8:12)]
+    bayesint.result[i, c(3:9)] <- bayesint.result[i, c(10:16)]
   }
 }
 
-bayesint.result <- bayesint.result[,1:7] 
+bayesint.result <- bayesint.result[,1:9] 
 colnames(bayesint.result) <- gsub("\\.x$", "", colnames(bayesint.result)) 
 
-bayesint.result %>% dim() # 35 7
+bayesint.result %>% dim() # 35 9 
 
-# annotate QTL  
+# annotate QTL   
 load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
 
 ## where are the genes fkf for flowering time (Long et al. 2007) 
@@ -318,7 +318,7 @@ traitQTL.annotated %>%
   mutate(start = start.y, end = end.y) %>% 
   dplyr::select(-start.x, -end.x, -start.y, -end.y, -min_eQTL_LOD, -max_eQTL_LOD) 
 
-traitQTL.annotated %>% dim() # 18647     9 
+traitQTL.annotated %>% dim() # 18647     11
 
 ## get GO term for each gene
 load("~/Reference/B.napus/napus_GO_combined.Rdata") # there is one colomn hiding... 
@@ -329,8 +329,9 @@ traitQTL.annotated <-
 traitQTL.annotated %>% 
   left_join(napus_GO_combined) 
 
-traitQTL.annotated %>% dim() #  18647    11 
+traitQTL.annotated %>% dim() #  18647    13 
 save(traitQTL.annotated, file =  "~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata") 
+write.csv(traitQTL.annotated, file = "~/F2/for_paper/traitQTL.annotated.csv") 
 ```
 
 # discrepency between previous result & current QTL result, FLC gene not located in the interval for days_to_flower anymore 
@@ -1187,7 +1188,7 @@ dev.off()
 
 save(cim.qtl, file = "~/F2/output/QTL_analysis/cim.qtl.branch.flipped.Rdata")
 save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.branch.flipped.Rdata")  
-scanone.perm.imp ### leaf_K has new QTL identified  
+scanone.perm.imp ### leaf_K has new QTL identified     
 ```
 
 
