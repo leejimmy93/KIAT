@@ -147,11 +147,13 @@ for (i in colnames(F2_geno_data_2_Ae_Ol)[1:166]) {
 
 rownames(F2_geno_data_2_Ae_Ol_new) <- F2_geno_data_2_Ae_Ol[,"index"]
 dim(F2_geno_data_2_Ae_Ol_new) # 3443 166  
+
+save(F2_geno_data_2_Ae_Ol_new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.Rdata")
 write.table(F2_geno_data_2_Ae_Ol_new, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new_5556.txt")
 
 # change file format in linux 
 # cat F2_geno_data_2_Ae_Ol_new.txt | sed 's/"//g' | awk '{first = $1; $1 = ""; print $0}' | sed 's/ //g' > tmp
-# tail -3443 tmp > tmp.1 
+# tail -3443 tmp > tmp.1  
 
 write.table(rownames(F2_geno_data_2_Ae_Ol_new), file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/marker_info.txt" )
 # cat marker_info.txt | awk '{print "*"$2}' | tail -3334 | sed 's/"//g' > marker_info_reform.txt
@@ -268,9 +270,9 @@ write.map(LG.f2, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmap
 The reason I need to get it to R/qtl format is because double crossover function works well with that format. 
 ```{r}
 ## all markers on A & C 
-LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")
+LG.f2.madmapper <- read.cross("mm", file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_for_one_map_final.txt", mapfile = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map") 
 
-summary(LG.f2.madmapper) # 2013 
+summary(LG.f2.madmapper) # 2013  
 plotMap(LG.f2.madmapper) 
 totmar(LG.f2.madmapper)  
 
@@ -656,7 +658,7 @@ map_geno %>%
         axis.text.y=element_blank(), 
         axis.ticks.x=element_blank(),
         axis.ticks.y=element_blank()) + 
-  labs(x = "genetic position", y = "physical position")
+  labs(x = "genetic position", y = "physical position") 
 
 p.genetic_vs_physical_A05 <- 
 map_geno %>% 
