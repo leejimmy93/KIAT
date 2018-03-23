@@ -19,7 +19,7 @@ LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/L
                      phefile = "~/F2/data/QTL_analysis/F2.pheno.csv", 
                      genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
 
-plot.map(LG.f2.after.crossover)
+plot.map(LG.f2.after.crossover) 
 map.summary <- summaryMap(LG.f2.after.crossover) # 2884
 write.csv(map.summary, file = "~/F2/output/QTL_analysis/map.summary.csv")   
 

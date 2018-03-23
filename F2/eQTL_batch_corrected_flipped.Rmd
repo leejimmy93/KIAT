@@ -38,7 +38,7 @@ alphas <- seq(0.01, 0.10, by = 0.01)
 lod.thrs <- summary(permtest.F2, alphas) 
 lod.thrs   
 
-save(cross.F2, scanone_eQTL.F2, permtest.F2, lod.thrs, file = "~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData")  
+save(cross.F2, scanone_eQTL.F2, permtest.F2, lod.thrs, file = "~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData")   
 ``` 
 
 ### determine cis- and trans- eQTL 
@@ -415,7 +415,7 @@ BnapusAnnotation %>%
   View() # FAD8  
 
 BnapusAnnotation %>%  
-  filter(AGI == "AT3G12120") %>% 
+  filter(AGI == "AT2G29980") %>% 
   View() # FAD8  
 
 ```
