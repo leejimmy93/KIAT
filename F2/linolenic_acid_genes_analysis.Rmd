@@ -239,7 +239,7 @@ cis_eQTL.qtl.combined.final.linolenic %>% colnames()
 AGI_homeologous_hit <- 
 cis_eQTL.qtl.combined.final.linolenic %>% 
   group_by(AGI, At_symbol) %>% 
-  summarise(count = n()) %>% 
+  dplyr::summarise(count = n()) %>% 
   filter(count > 1) %>% 
   dplyr::select(AGI) %>% 
   unlist() %>% 
@@ -267,6 +267,22 @@ names(test) <- homolog_pair[homolog_pair$AGI %in% Ara_ID_homolog,]$gene_ID
 allele_effect_result <- sapply(names(test), function(gene) test[[gene]]$ests[2,1])
 allele_effect_result ## all possible genes have positive allele effect from Da-Ol-1 
 
+# check the allele effect for all genes? not filtering for homeologous pair
+test.all <-   
+lapply(cis_eQTL.qtl.combined.final.linolenic$gene_ID %>% as.character(), function(gene) {
+  allele.effect(gene)
+}
+)   
+
+########## run till here for all 217 genes 
+# next, check result to see whether there are negative effect  
+names(test.all) <- cis_eQTL.qtl.combined.final.linolenic$gene_ID
+
+allele_effect_result <- sapply(names(test.all), function(gene) test.all[[gene]]$ests[2,1])
+allele_effect_result ## all possible genes have positive allele effect from Da-Ol-1 
+
+### further exploration... 
+
 # do FA genes have QTL at all? the answer is only two FA related genes on A08 have eQTL 
 load("~/F2/for_paper/linolenic_acid/SNP_gene_final_fxn.Rdata")
 SNP_gene_final_fxn %>% dim() # 26 9 fatty acid genes under QTL interval 
@@ -289,7 +305,7 @@ trans_eQTL %>% colnames()
 trans_eQTL[trans_eQTL$gene_ID %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names,] %>% View() 
 cis_eQTL[cis_eQTL$gene_ID %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names,] 
 
-### check SNP  would be impossible either because none of the fatty acid related genes have SNPs in them. as I remmeber, only one gene has SNPs inside the RNA sequence.  
+### check SNP would be impossible either because none of the fatty acid related genes have SNPs in them. as I remmeber, only one gene has SNPs inside the RNA sequence.  
 
 ### allele effect of the three fatty acid synthesis genes and one FAD genes on A08 
 ```
@@ -322,7 +338,6 @@ F2_geno_data %>%
   filter((CHROM == "chrA08" & as.numeric(POS) >=  (A08.interval$start - 1000000) & as.numeric(POS) <= (A08.interval$end + 1000000)) | (CHROM == "chrC03" & as.numeric(POS) >=  (C03.interval$start - 1000000) & as.numeric(POS) <= (C03.interval$end + 1000000)))
   
 dim(F2_geno_data_interval) # 404 168  
-F2_geno_data_interval %>% View()  
 F2_geno_data_interval %>% colnames()
 
 F2_geno_data_interval_linolenic <- 
@@ -365,18 +380,24 @@ SNP_gene_df <- as.data.frame(SNP_gene)
 SNP_gene_df %>% dim()
 
 SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
-SNP_gene_final %>% View()
 
 F2_geno_data_interval_linolenic$SNP.ID <- paste(F2_geno_data_interval_linolenic$CHROM, F2_geno_data_interval_linolenic$POS, sep = "_")
 
-F2_geno_data_interval_linolenic_final 
+SNP_interval_linolenic <- 
 F2_geno_data_interval_linolenic %>% 
   left_join(SNP_gene_final) 
 
+# add annotation to these genes 
+load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
+load("~/Reference/B.napus/napus_GO_combined.Rdata")
 
+SNP_interval_linolenic %>% 
+  left_join()
+
+write.csv(SNP_interval_linolenic, file = "~/F2/for_paper/linolenic_acid/SNP_interval_linolenic.csv")  
 ```
 
-### appendix function 
+### appendix function  
 ```{r}
 ### need a function to get allele effect 
 load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 

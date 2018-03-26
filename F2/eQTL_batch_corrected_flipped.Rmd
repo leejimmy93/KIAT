@@ -231,6 +231,11 @@ sum(A_genes$eQTL_subgenome == A_genes$gene_subgenome) /nrow(A_genes) # 73%
 
 C_genes <- eQTL[eQTL$eQTL_subgenome == "C",] 
 sum(C_genes$eQTL_subgenome == C_genes$gene_subgenome) /nrow(C_genes) # 70%  
+
+# number of eQTL on A & C subgenome 
+eQTL[eQTL$eQTL_subgenome == "A",] %>% nrow() /nrow(eQTL) 
+eQTL[eQTL$eQTL_subgenome == "C",] %>% nrow() /nrow(eQTL)
+
 ```
 
 ### find overlaps between cis-eQTL & trait QTL  

@@ -975,7 +975,7 @@ summary(qtl.fit.final.Oleic)
 ```
 
 ### more check 
-while other poeple all find FAE to be the gene responsible for erucic acid content, I excluded thoese two genes, and found them to be controlled by a trans-eQTL hotspot on A03. Now I want to see 
+while other poeple all find FAE to be the gene responsible for erucic acid content, I found them to be controlled by a trans-eQTL hotspot on A03. Now I want to see 
 1) whether adding genotype info of A03 loci info can increase the R2 of erucic acid 
 2) whether adding expression of the two FAE1 genes can increase the R2 of erucic acid
 
@@ -1016,20 +1016,26 @@ geno %>%
   left_join(expression) %>%
   left_join(pheno) 
 
-FAE1_data$chrA03_12781099 <- relevel(FAE1_data$chrA03_12781099, ref = "A") 
-FAE1_data$chrA08_10120555 <- relevel(FAE1_data$chrA08_10120555, ref = "A") 
-FAE1_data$chrC03_53442609 <- relevel(FAE1_data$chrC03_53442609, ref = "A") 
-summary(FAE1_data)
-
 FAE1_data <- data.frame(sapply(FAE1_data, function(x) sub("-",NA,x)))
+FAE1_data <- data.frame(sapply(FAE1_data, function(x) sub("A",-1,x)))
+FAE1_data <- data.frame(sapply(FAE1_data, function(x) sub("B",1,x)))
+FAE1_data <- data.frame(sapply(FAE1_data, function(x) sub("H",0,x)))
 FAE1_data$BnaC03g65980D <- as.numeric(FAE1_data$BnaC03g65980D)
 FAE1_data$BnaA08g11130D <- as.numeric(FAE1_data$BnaA08g11130D)
+FAE1_data$chrA03_12781099 <- as.numeric(as.character(FAE1_data$chrA03_12781099))
+FAE1_data$chrA08_10120555 <- as.numeric(as.character(FAE1_data$chrA08_10120555))
+FAE1_data$chrC03_53442609 <- as.numeric(as.character(FAE1_data$chrC03_53442609))
 FAE1_data$Erucic_acid <- as.numeric(FAE1_data$Erucic_acid)
+summary(FAE1_data)
+
+# FAE1_data$chrA03_12781099 <- relevel(FAE1_data$chrA03_12781099, ref = "A") 
+# FAE1_data$chrA08_10120555 <- relevel(FAE1_data$chrA08_10120555, ref = "A") 
+# FAE1_data$chrC03_53442609 <- relevel(FAE1_data$chrC03_53442609, ref = "A") 
 summary(FAE1_data)
 
 FAE1 <- brm(Erucic_acid ~ chrC03_53442609 * chrA08_10120555,
             data = FAE1_data, 
-            prior = set_prior("normal(0,10)",class="b"))  # mean of 0 and sd of 10
+            prior = set_prior("normal(0,50)",class="b"))  # mean of 0 and sd of 10
 
 summary(FAE1)
 # plot(FAE1,ask=FALSE) 
