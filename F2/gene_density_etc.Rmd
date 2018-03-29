@@ -1,0 +1,65 @@
+---
+title: "gene_density"
+output: html_document
+---
+
+Purpose of this script is to check several things that needs to be answered for the F2 paper 
+
+1) gene density across the genome 
+
+https://bernatgel.github.io/karyoploter_tutorial//Examples/GeneDensity/GeneDensity.html
+
+practice 
+
+```{r}
+source("https://bioconductor.org/biocLite.R")
+biocLite("TxDb.Hsapiens.UCSC.hg19.knownGene")
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+all.genes <- genes(txdb)
+head(all.genes)
+
+library(karyoploteR)
+kp <- plotKaryotype(genome="hg19")
+kpPlotDensity(kp, all.genes)
+kp <- plotKaryotype(genome="hg19", plot.type=4, ideogram.plotter = NULL, labels.plotter = NULL)
+kpAddCytobandsAsLine(kp)
+kpAddChromosomeNames(kp, srt=45)
+kpPlotDensity(kp, all.genes)
+pp <- getDefaultPlotParams(plot.type = 4)
+pp$data1inmargin <- 0
+pp$bottommargin <- 20
+
+kp <- plotKaryotype(genome="hg19", plot.type=4, ideogram.plotter = NULL,
+                    labels.plotter = NULL, plot.params = pp,
+                    main="Gene Density")
+kpAddCytobandsAsLine(kp)
+kpAddChromosomeNames(kp, srt=45)
+kpPlotDensity(kp, all.genes, window.size = 10e6, col="#ddaacc")
+
+### sushi is another package for geome wide data visualization 
+library('Sushi')
+```
+
+my data using a simple histogram for this 
+
+```{r}
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+colnames(gff.mRNA) <- c("chrom", "start", "end", "gene_ID")
+gff.mRNA$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", gff.mRNA$chrom)
+
+gff.mRNA.main <- gff.mRNA[grep("random", gff.mRNA$chrom, invert = T),]
+gff.mRNA.main$chrom <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", gff.mRNA.main$chrom)
+dim(gff.mRNA.main) 
+
+gene_density <- 
+gff.mRNA.main %>% 
+  ggplot() + 
+  geom_histogram(aes(x=start, fill=subgenome), binwidth = 1000000) + 
+  facet_grid(chrom ~subgenome) + 
+  theme_bw() + 
+  labs(x = "gene start position", y = "number of genes") 
+
+ggsave(gene_density, filename = "~/F2/for_paper/gene_density.png", height = 8, width = 12)  
+```
+

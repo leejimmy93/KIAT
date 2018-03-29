@@ -1191,6 +1191,127 @@ save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.branch.flipped.Rdata")
 scanone.perm.imp ### leaf_K has new QTL identified     
 ```
 
+visualize QTL result from the two major loci 
+```{r}
+load("~/F2/output/QTL_analysis/QTL_result_all.Rdata")
+scanone.perm.imp.all %>% length() # 51 
+scanone.imp.all %>% length() 
+cim.perm.all %>% length()
+cim.qtl.all %>% length()
+
+names(scanone.imp.all) 
+
+# extract scanone result for 
+load("~/F2/for_paper/synteny_analysis/bayesint.result.physical.Rdata")
+
+bayesint.result_scanone <- 
+bayesint.result %>% 
+  filter(model == "scanone")  
+
+bayesint.result_scanone
+scanone_result <- list()
+
+for (i in 1:nrow(bayesint.result_scanone)) {
+  trait <- bayesint.result_scanone$trait[i] 
+  chr1 <- bayesint.result_scanone$chr[i] 
+  tmp <- scanone.imp.all[[trait]] 
+  scanone_result[[i]] <- tmp %>% filter(chr == chr1) 
+}
+
+names(scanone_result) <- bayesint.result_scanone$trait
+
+bayesint.result_cim <- 
+bayesint.result %>% 
+  filter(model == "cim")  
+
+bayesint.result_cim
+cim_result <- list()
+
+for (i in 1:nrow(bayesint.result_cim)) {
+  trait <- bayesint.result_cim$trait[i] 
+  chr1 <- bayesint.result_cim$chr[i] 
+  tmp <- cim.qtl.all[[trait]] 
+  cim_result[[i]] <- tmp %>% filter(chr == chr1) 
+}
+
+names(cim_result) <- bayesint.result_cim$trait
+cim_result[[1]] 
+
+# combine result and plot 
+# add model label 
+for(i in 1:length(scanone_result)){
+  scanone_result[[i]]$model <- rep("scanone", nrow(scanone_result[[i]]))
+  scanone_result[[i]]$trait <- rep(names(scanone_result)[i], nrow(scanone_result[[i]]))
+}
+
+for(i in 1:length(cim_result)){
+  cim_result[[i]]$model <- rep("cim", nrow(cim_result[[i]]))
+  cim_result[[i]]$trait <- rep(names(cim_result)[i], nrow(cim_result[[i]]))
+}
+
+scanone <- 
+lapply(1:length(scanone_result), function(i) {
+  tmp <- scanone_result[[i]] %>% 
+    filter(chr == "A08" | chr == "C03")
+  if(nrow(tmp) > 0){
+    tmp
+  }
+})
+
+cim <- 
+lapply(1:length(cim_result), function(i) {
+  tmp <- cim_result[[i]] %>% 
+    filter(chr == "A08" | chr == "C03")
+    if(nrow(tmp) > 0){
+    tmp
+    }
+})
+
+final_FA <- do.call(rbind, plyr::compact(c(scanone, cim))) 
+
+# p.final_FA <-
+final_FA %>% 
+  ggplot() +
+  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=log10(lod))) +  scale_fill_gradient2(low=("green"), high=("magenta")) +
+  facet_grid(trait~chr, scales = "free") + 
+  labs(y = "", x="genetic position", title="Fatty acid major QTL") + 
+  theme_bw() +
+  theme(axis.text.x=element_blank(), strip.text.y = element_blank(), plot.title = element_text(hjust = 0.5))   
+
+# flower etc. 
+scanone_2 <- 
+lapply(1:length(scanone_result), function(i) {
+  tmp <- scanone_result[[i]] %>% 
+    filter(chr == "A10" | chr == "C06")
+  if(nrow(tmp) > 0){
+    tmp
+  }
+})
+
+cim_2 <- 
+lapply(1:length(cim_result), function(i) {
+  tmp <- cim_result[[i]] %>% 
+    filter(chr == "A10" | chr == "C06")
+    if(nrow(tmp) > 0){
+    tmp
+    }
+})
+
+final_flower_etc <- do.call(rbind, plyr::compact(c(scanone_2, cim_2))) 
+
+# p.flower_etc <-
+final_flower_etc %>%  
+  filter(trait != "Myristic_acid") %>% 
+  ggplot() +
+  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=lod, linetype = model)) + scale_fill_gradient2(low=("green"), high=("magenta")) +
+  facet_grid(trait~chr, scales = "free") + 
+  labs(y = "", x="genetic position", title="flowering time and growth-related traits major QTL") + 
+  theme_bw() +
+  theme(axis.text.x=element_blank(), strip.text.y = element_blank(), plot.title = element_text(hjust = 0.5)) 
+
+ggsave(p.flower_etc, filename = "~/F2/for_paper/flower_etc.png", height = 3, width = 9)
+ggsave(p.final_FA, filename = "~/F2/for_paper/FA.png", height = 3, width = 9) 
+```
 
 
 

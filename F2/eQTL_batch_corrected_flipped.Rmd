@@ -38,7 +38,7 @@ alphas <- seq(0.01, 0.10, by = 0.01)
 lod.thrs <- summary(permtest.F2, alphas) 
 lod.thrs   
 
-save(cross.F2, scanone_eQTL.F2, permtest.F2, lod.thrs, file = "~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData")   
+save(cross.F2, scanone_eQTL.F2, permtest.F2, lod.thrs, file = "~/F2/output/eQTL/scanone-eqtl_F2_flipped.RData")    
 ``` 
 
 ### determine cis- and trans- eQTL 
@@ -154,6 +154,12 @@ load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata")
 
 cis_eQTL %>% dim() # 11384    15
 trans_eQTL %>% dim() # 15197    15  
+
+### FAD6
+cis_eQTL %>% 
+  filter(gene_ID == "BnaA08g12780D") %>% 
+  View()
+###
 
 cis_eQTL$class <- rep("cis", nrow(cis_eQTL)) 
 trans_eQTL$class <- rep("trans", nrow(trans_eQTL))   
@@ -493,6 +499,15 @@ gff.mRNA[gff.mRNA$gene_ID == "BnaA10g22080D",]
 
 cis_eQTL.qtl.combined.final[cis_eQTL.qtl.combined.final$gene_ID == "BnaA10g22080D",] %>% View() 
 traitQTL.annotated %>% View() 
+```
+
+# tmp 
+```{r}
+trans_eQTL %>% 
+  colnames()
+
+cis_eQTL %>% 
+  filter(gene_ID == "BnaA10g22080D") 
 ```
 
 
