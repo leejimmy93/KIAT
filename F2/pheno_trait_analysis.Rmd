@@ -406,9 +406,7 @@ dev.off()
 
 ### phenotype traits for Da-Ae & Da-Ol-1
 get korean greenhouse data for Da-Ae & Da-Ol-1 from 505 dataset.  
-Da-Ae (K200) Da-Ol-1 (K201) 
-
-There is another dataset which contains more detailed growth traits, I need to talk to Julin on whether that should be included or not. 
+Da-Ae (K200) Da-Ol-1 (K201)  
 
 ```{r}
 library(reshape2)
@@ -444,6 +442,67 @@ tmp.2$PHENOTYPE <- rownames(tmp.2)
 tmp.2 <- melt(tmp.2, id.vars = "PHENOTYPE")  
 tmp.2$class <- rep("oil_traits", nrow(tmp.2))
 
+### heritability 
+
+# heritability is formally defined as the proportion of phenotypic variation (VP) that is due to variation in genetic values (VG); Broad-sense heritability, defined as H2 = VG/VP, captures the proportion of phenotypic variation due to genetic values that may include effects due to dominance and epistasis; On the other hand, narrow-sense heritability, h2 = VA/VP, captures only that proportion of genetic variation that is due to additive genetic values (VA).  
+
+library(lme4)
+library(lmerTest)
+
+# I see that Julin have repliates so that heritability can be caculated after fitting a linear model with fixed and random effect, with line effect as random effect. Then using VarCorr() function I can get the amount of variance due to line and the total amount of variance, then H2 can be calculated by deviding the 1st by the 2nd value. However, here I don't have replicates, so how to calculate this???  
+
+# I only have Erucic, oleic and oil content from multiple years, so will consider that 
+
+tmp.1.1 <- # data from 2016-2017 summarized by Julin 
+tmp.1 %>% 
+  filter(PHENOTYPE == "Erucic_acid" | PHENOTYPE == "Oil_content" | PHENOTYPE == "Oleic_acid") 
+
+tmp.2.1 <- # data from 2017-2018 
+tmp.2 %>% 
+  filter(PHENOTYPE == "Erucic_acid" | PHENOTYPE == "Oil_content" | PHENOTYPE == "Oleic_acid") 
+
+tmp.1.1$year <- rep("2016", nrow(tmp.1.1))
+tmp.2.1$year <- rep("2017", nrow(tmp.2.1))
+
+pheno.parent.H2 <- rbind(tmp.1.1, tmp.2.1) 
+pheno.parent.H2$variable <- gsub("ID_505_K200", "Da-Ae", pheno.parent.H2$variable)
+pheno.parent.H2$variable <- gsub("ID_505_K201", "Da-Ol-1", pheno.parent.H2$variable)
+pheno.parent.H2$variable <- gsub("K200", "Da-Ae", pheno.parent.H2$variable)
+pheno.parent.H2$variable <- gsub("K201", "Da-Ol-1", pheno.parent.H2$variable)
+
+colnames(pheno.parent.H2)[2] <- "genotype"
+
+### erucic 
+test <- 
+pheno.parent.H2 %>% 
+  filter(PHENOTYPE == "Erucic_acid" & genotype == "Da-Ae")
+
+test
+var(test$value) # VE
+
+phefile <- read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", header = F, row.names = 1)
+phefile.t <- phefile %>% t() %>% as.data.frame() 
+var(phefile.t$Erucic_acid) # VP
+
+# H2 
+(var(phefile.t$Erucic_acid) - var(test$value))/var(phefile.t$Erucic_acid)
+
+# oil content 
+test <- 
+pheno.parent.H2 %>% 
+  filter(PHENOTYPE == "Oil_content" & genotype == "Da-Ae")
+
+test
+var(test$value) # VE  
+
+phefile <- read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", header = F, row.names = 1)
+phefile.t <- phefile %>% t() %>% as.data.frame() 
+var(phefile.t$Crude_oil_contents) # VP
+
+# H2 
+(var(phefile.t$Crude_oil_contents) - var(test$value))/var(phefile.t$Crude_oil_contents) 
+
+########## 
 pheno.parent <- rbind(tmp.1, tmp.2) 
 pheno.parent$variable <- gsub("ID_505_K200", "Da-Ae", pheno.parent$variable)
 pheno.parent$variable <- gsub("ID_505_K201", "Da-Ol-1", pheno.parent$variable)

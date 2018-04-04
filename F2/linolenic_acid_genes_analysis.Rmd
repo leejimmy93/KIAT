@@ -28,7 +28,6 @@ library(GenomicRanges)
 library(GenomicFeatures)
 library("rtracklayer")
 
-
 # F2_geno_data <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Final_SNP_Calls", header = T)
 F2_geno_data <- read.table("~/F2/data/linolenic_acid/F2_Final_SNP_Calls", header = T)
 head(F2_geno_data) 
@@ -239,7 +238,7 @@ cis_eQTL.qtl.combined.final.linolenic %>% colnames()
 AGI_homeologous_hit <- 
 cis_eQTL.qtl.combined.final.linolenic %>% 
   group_by(AGI, At_symbol) %>% 
-  summarise(count = n()) %>% 
+  dplyr::summarise(count = n()) %>% 
   filter(count > 1) %>% 
   dplyr::select(AGI) %>% 
   unlist() %>% 
@@ -267,6 +266,32 @@ names(test) <- homolog_pair[homolog_pair$AGI %in% Ara_ID_homolog,]$gene_ID
 allele_effect_result <- sapply(names(test), function(gene) test[[gene]]$ests[2,1])
 allele_effect_result ## all possible genes have positive allele effect from Da-Ol-1 
 
+# check the allele effect for all genes? not filtering for homeologous pair, using /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/F2/linolenic_cis_eQTL.R 
+
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/for_paper/linolenic_acid/cis_eQTL_effect.Rdata")
+cis_eQTL_effect %>% length()
+# next, check result to see whether there are negative effect  
+names(cis_eQTL_effect) <- cis_eQTL.qtl.combined.final.linolenic$gene_ID
+
+allele_effect_result <- sapply(names(cis_eQTL_effect), function(gene) cis_eQTL_effect[[gene]]$ests[2,1])
+allele_effect_result <- allele_effect_result %>% as.data.frame() ## all possible genes have positive allele effect from Da-Ol-1 
+allele_effect_result$names <- rownames(allele_effect_result) 
+colnames(allele_effect_result)[1] <- "cis_effect"
+
+# add annotation for these genes, Ara homolog & B.napus GO annotation 
+load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
+load("~/Reference/B.napus/napus_GO_combined.Rdata")
+
+allele_effect_result %>% 
+  left_join(BnapusAnnotation, c("names" = "name")) %>% 
+  left_join(napus_GO_combined, c("names" = "gene_ID")) %>%
+  View() 
+
+colnames(napus_GO_combined)  # dosen't seem to have good candidates 
+
+
+### further exploration... 
+
 # do FA genes have QTL at all? the answer is only two FA related genes on A08 have eQTL 
 load("~/F2/for_paper/linolenic_acid/SNP_gene_final_fxn.Rdata")
 SNP_gene_final_fxn %>% dim() # 26 9 fatty acid genes under QTL interval 
@@ -289,7 +314,7 @@ trans_eQTL %>% colnames()
 trans_eQTL[trans_eQTL$gene_ID %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names,] %>% View() 
 cis_eQTL[cis_eQTL$gene_ID %in% SNP_gene_final_fxn$gff.lipid_fatty_acid_genes.names,] 
 
-### check SNP  would be impossible either because none of the fatty acid related genes have SNPs in them. as I remmeber, only one gene has SNPs inside the RNA sequence.  
+### check SNP would be impossible either because none of the fatty acid related genes have SNPs in them. as I remmeber, only one gene has SNPs inside the RNA sequence.  
 
 ### allele effect of the three fatty acid synthesis genes and one FAD genes on A08 
 ```
@@ -322,7 +347,6 @@ F2_geno_data %>%
   filter((CHROM == "chrA08" & as.numeric(POS) >=  (A08.interval$start - 1000000) & as.numeric(POS) <= (A08.interval$end + 1000000)) | (CHROM == "chrC03" & as.numeric(POS) >=  (C03.interval$start - 1000000) & as.numeric(POS) <= (C03.interval$end + 1000000)))
   
 dim(F2_geno_data_interval) # 404 168  
-F2_geno_data_interval %>% View()  
 F2_geno_data_interval %>% colnames()
 
 F2_geno_data_interval_linolenic <- 
@@ -353,7 +377,7 @@ head(gff.mRNA)
 colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
 
 genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
-genes
+genes 
 
 SNP <- GRanges(seqnames = Rle(F2_geno_data_interval_linolenic$CHROM), ranges = IRanges(start = F2_geno_data_interval_linolenic$POS, end = F2_geno_data_interval_linolenic$POS), ID = paste(F2_geno_data_interval_linolenic$CHROM, F2_geno_data_interval_linolenic$POS, sep = "_"))
 SNP
@@ -365,18 +389,176 @@ SNP_gene_df <- as.data.frame(SNP_gene)
 SNP_gene_df %>% dim()
 
 SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
-SNP_gene_final %>% View()
 
 F2_geno_data_interval_linolenic$SNP.ID <- paste(F2_geno_data_interval_linolenic$CHROM, F2_geno_data_interval_linolenic$POS, sep = "_")
 
-F2_geno_data_interval_linolenic_final 
+SNP_interval_linolenic <- 
 F2_geno_data_interval_linolenic %>% 
   left_join(SNP_gene_final) 
+
+write.csv(SNP_interval_linolenic, file = "~/F2/for_paper/linolenic_acid/SNP_interval_linolenic.csv")  
+
+# send this SNP_interval_linolenic file to John, so that John can do provean analysis on these genes to see whether there are deleterious mutation on homeologous genes 
+
+# deleterious_genes.txt is the names of the 22 genes which had a variation that scored -2.0 or less. On Provean's site they consider for human anything less than -2.5 to be a deleterious change
+
+deleterious_genes <- read.table("~/F2/for_paper/linolenic_acid/deleterious_genes.txt")
+colnames(deleterious_genes) <- "names"
+
+# add annotation to these genes 
+load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
+load("~/Reference/B.napus/napus_GO_combined.Rdata")
+
+deleterious_genes %>% 
+  left_join(BnapusAnnotation, c("names" = "name")) %>% 
+  left_join(napus_GO_combined, c("names" = "gene_ID")) %>%
+  View() 
+
+colnames(napus_GO_combined)  # dosen't seem to have good candidates 
+```
+
+While there was no good candidate from either expression or SNP analysis, I think I might should have used the SNPs between Da-Ae and Da-Ol-1, dosn't consider whether they have good coverage in the F2s.
+```{r}
+Ae_Ol <- read.csv("~/F2/for_paper/linolenic_acid/vcf.Ae.Ol.intersect.2.csv", header = T, row.names = 1)
+head(Ae_Ol) 
+dim(Ae_Ol) # 63981     6  
+
+load("~/F2/for_paper/synteny_analysis/bayesint.result.physical.Rdata")
+bayesint.result %>% dim() # 35 7 
+
+bayesint.result.Linolenic <- 
+bayesint.result %>% 
+  filter(trait == "Linolenic_acid") 
+
+A08.interval <- 
+bayesint.result.Linolenic %>% 
+  filter(chr == "A08") 
+
+C03.interval <- 
+bayesint.result.Linolenic %>% 
+  filter(chr == "C03") 
+
+F2_geno_data_interval <- 
+Ae_Ol %>% 
+  filter((CHROM == "chrA08" & as.numeric(POS) >=  (A08.interval$start - 1000000) & as.numeric(POS) <= (A08.interval$end + 1000000)) | (CHROM == "chrC03" & as.numeric(POS) >=  (C03.interval$start - 1000000) & as.numeric(POS) <= (C03.interval$end + 1000000)))
+  
+dim(F2_geno_data_interval) # 1472 6  
+F2_geno_data_interval %>% colnames()
+
+F2_geno_data_interval_linolenic <- 
+F2_geno_data_interval %>% 
+  dplyr::select(CHROM, POS, REF, ALT, Ae.gt, Ol.gt) 
+
+write.csv(F2_geno_data_interval_linolenic, file = "~/F2/for_paper/linolenic_acid/F2_geno_data_interval_linolenic_2.csv")
+
+# cat F2_geno_data_interval_linolenic_2.csv | sed 's/"//g' | sed 's/,/ /g' | awk '{print $2 "_" $3}' | sed 's/chr/S/g' | tail -1472 > significant_SNP_2
+
+# cat Ae_Ol_modified_SNPonly_biallelic.recode.ann.vcf | grep -v "#" | awk '{print $0,  $1 "_" $2}' > Ae_Ol_modified_SNPonly_biallelic.recode.ann.modified.vcf
+
+# cat significant_SNP_2 | sed 's/S//g' | awk '{print "chr" $0}' > significant_SNP
+
+# grep -f significant_SNP /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/freebayes/Ae_Ol_modified_SNPonly_biallelic.recode.ann.modified.vcf | awk '{print $1 "|" $2 "|" $4 "|" $5 "|" $8}' | awk 'BEGIN{FS="|"}{print $1, $2, $3, $4, $6}' > significant_SNP_annotation
+
+sig_SNP_ann <- read_table2("~/F2/for_paper/linolenic_acid/significant_SNP_annotation", col_names=F)
+head(sig_SNP_ann)  
+dim(sig_SNP_ann)
+colnames(sig_SNP_ann) <- c("CHROM", "POS", "REF", "ALT", "mutation_type")
+
+unique(sig_SNP_ann$mutation_type)                          
+
+F2_geno_data_interval_linolenic <- 
+F2_geno_data_interval_linolenic %>% 
+  left_join(sig_SNP_ann)  
+
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+head(gff.mRNA) 
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
+genes 
+
+SNP <- GRanges(seqnames = Rle(F2_geno_data_interval_linolenic$CHROM), ranges = IRanges(start = F2_geno_data_interval_linolenic$POS, end = F2_geno_data_interval_linolenic$POS), ID = paste(F2_geno_data_interval_linolenic$CHROM, F2_geno_data_interval_linolenic$POS, sep = "_"))
+SNP
+
+SNP_gene <- mergeByOverlaps(SNP, genes) # warning message here. look out!!!!!! 
+SNP_gene
+
+SNP_gene_df <- as.data.frame(SNP_gene)
+SNP_gene_df %>% dim()
+
+SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
+
+F2_geno_data_interval_linolenic$SNP.ID <- paste(F2_geno_data_interval_linolenic$CHROM, F2_geno_data_interval_linolenic$POS, sep = "_")
+
+SNP_interval_linolenic <- 
+F2_geno_data_interval_linolenic %>% 
+  left_join(SNP_gene_final) 
+dim(SNP_interval_linolenic) # 1472 
+
+load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
+load("~/Reference/B.napus/napus_GO_combined.Rdata")
+
+homeo_AGI <- 
+SNP_interval_linolenic %>% 
+  left_join(BnapusAnnotation, c("names" = "name")) %>% 
+  left_join(napus_GO_combined, c("names" = "gene_ID")) %>%
+  dplyr::select(CHROM, AGI) %>% 
+  unique() %>% 
+  group_by(AGI) %>% 
+  count(count = n()) %>% 
+  filter(count == 2) %>%
+  dplyr::select(AGI) %>% 
+  unlist() %>% 
+  as.character()
+
+homeo_AGI <- homeo_AGI[!is.na(homeo_AGI)]
+
+SNP_interval_linolenic_annotated <-   
+SNP_interval_linolenic %>% 
+  left_join(BnapusAnnotation, c("names" = "name")) %>% 
+  left_join(napus_GO_combined, c("names" = "gene_ID")) 
+
+candidate_linolenic <- 
+SNP_interval_linolenic_annotated[SNP_interval_linolenic_annotated$AGI %in% as.character(unlist(homeo_AGI)),] 
+
+write.csv(candidate_linolenic, file = "~/F2/for_paper/linolenic_acid/candidate_linolenic.csv")
+write.csv(SNP_interval_linolenic_annotated, file = "~/F2/for_paper/linolenic_acid/SNP_interval_linolenic_2_annotated.csv")   
+
+SNP_interval_linolenic_annotated[SNP_interval_linolenic_annotated$AGI %in% as.character(unlist(homeo_AGI)),] %>% 
+  dplyr::select(CHROM, mutation_type, SNP.ID, names, AGI, At_symbol) %>% 
+  View()
+
+SNP_interval_linolenic_annotated %>% 
+  filter(names == "BnaA08g11130D") # FAE1
+
+SNP_interval_linolenic_annotated %>% 
+  filter(names == "BnaC03g65980D") # FAE1
+
+SNP_interval_linolenic_annotated %>% 
+  filter(names == "BnaA08g11060D") # SQS
+
+SNP_interval_linolenic_annotated %>% 
+  filter(names == "BnaA08g11140D") # KCS17
+
+SNP_interval_linolenic_annotated %>% 
+  filter(names == "BnaA08g12780D") # FAD6 
+
+SNP_interval_linolenic_annotated %>% 
+  filter(names == "BnaA08g27750D") # KCS2
+
+SNP_interval_linolenic_annotated %>% 
+  filter(names == "BnaA08g12800D") # FAD6 
+
+# John run PROVEAN on the list of SNPs that I sent to him, 
+provean.result <- read.table("~/F2/for_paper/linolenic_acid/provean_results.txt")
+candidate_linolenic %>% 
+  filter(names == "BnaA08g10160D")
 
 
 ```
 
-### appendix function 
+### appendix function  
 ```{r}
 ### need a function to get allele effect 
 load("~/F2/output/eQTL/cis_trans_result_new_flipped.Rdata") 
@@ -393,12 +575,10 @@ allele.effect <- function(gene_ID){
   chr = cis_eQTL[cis_eQTL$gene_ID == gene_ID,]$eQTL_chr
   chr = gsub("chr", "", chr)
   pos = cis_eQTL[cis_eQTL$gene_ID == gene_ID,]$pos
-  qtlm <- makeqtl(cross.F2,chr=chr,pos=pos) # Ruijuan: QTL with interactions
+  qtlm <- makeqtl(cross.F2,chr=chr,pos=pos)  
 
-#make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
   qtl.fit <- fitqtl(cross=cross.F2,qtl=qtlm,formula = y ~ Q1, get.ests=T)
 
-#examine our model
   summary(qtl.fit)    
 } 
 ```
