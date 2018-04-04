@@ -116,6 +116,7 @@ parents_stats <- merge(sample_des, mapping_result, by="SampleID")
 head(parents_stats)
 
 ### make table for paper 
+# parent
 parents_stats_final <- 
 parents_stats %>% 
   mutate(genotype = Cultivar, tissue = Stage) %>% 
@@ -127,6 +128,21 @@ parents_stats_final$Q20_MoreBasesRate[1:8] <- as.numeric(parents_stats_final$Q20
 parents_stats_final %>% View() 
 
 write.csv(parents_stats_final, file = "~/Desktop/F2_paper/supplementary/parents_stats_final.csv")
+
+# F2 
+mapping_result_F2_AB <- read.table("~/Desktop/F2_paper/data/Star_Stats_AB.tab", header = T) 
+mapping_result_F2_AB$Sample <- gsub("138-", "F2_", mapping_result_F2_AB$Sample)   
+mapping_result_F2_AB$Sample <- gsub(".paired", "", mapping_result_F2_AB$Sample)   
+
+mapping_result_F2_C <- read.table("~/Desktop/F2_paper/data/Star_Stats_C.tab", header = T) 
+mapping_result_F2_C$Sample <- gsub("Sample_", "Sample_F2_", mapping_result_F2_C$Sample)   
+
+colnames(mapping_result_F2_AB)
+mapping_result_F2 <- 
+rbind(mapping_result_F2_AB, mapping_result_F2_C) %>% 
+  mutate(TotalReads = Number_Input_Reads) %>% 
+  dplyr::select(Sample, TotalReads, Percent_Unique_Mapped, Percent_Multi_Mapped, Percent_Unmapped_Too_Short, Percent_Unmapped_Other)  
+write.csv(mapping_result_F2, file = "~/Desktop/F2_paper/supplementary/mapping_result_F2.csv")
 
 # number of total reads 
 library(ggplot2) 
