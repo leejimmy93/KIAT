@@ -266,20 +266,29 @@ names(test) <- homolog_pair[homolog_pair$AGI %in% Ara_ID_homolog,]$gene_ID
 allele_effect_result <- sapply(names(test), function(gene) test[[gene]]$ests[2,1])
 allele_effect_result ## all possible genes have positive allele effect from Da-Ol-1 
 
-# check the allele effect for all genes? not filtering for homeologous pair
-system.time(
-test.all <-   
-lapply(cis_eQTL.qtl.combined.final.linolenic$gene_ID %>% as.character(), function(gene) {
-  allele.effect(gene)
-}
-))
+# check the allele effect for all genes? not filtering for homeologous pair, using /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/F2/linolenic_cis_eQTL.R 
 
-########## run till here for all 217 genes 
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/for_paper/linolenic_acid/cis_eQTL_effect.Rdata")
+cis_eQTL_effect %>% length()
 # next, check result to see whether there are negative effect  
-names(test.all) <- cis_eQTL.qtl.combined.final.linolenic$gene_ID
+names(cis_eQTL_effect) <- cis_eQTL.qtl.combined.final.linolenic$gene_ID
 
-allele_effect_result <- sapply(names(test.all), function(gene) test.all[[gene]]$ests[2,1])
-allele_effect_result ## all possible genes have positive allele effect from Da-Ol-1 
+allele_effect_result <- sapply(names(cis_eQTL_effect), function(gene) cis_eQTL_effect[[gene]]$ests[2,1])
+allele_effect_result <- allele_effect_result %>% as.data.frame() ## all possible genes have positive allele effect from Da-Ol-1 
+allele_effect_result$names <- rownames(allele_effect_result) 
+colnames(allele_effect_result)[1] <- "cis_effect"
+
+# add annotation for these genes, Ara homolog & B.napus GO annotation 
+load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
+load("~/Reference/B.napus/napus_GO_combined.Rdata")
+
+allele_effect_result %>% 
+  left_join(BnapusAnnotation, c("names" = "name")) %>% 
+  left_join(napus_GO_combined, c("names" = "gene_ID")) %>%
+  View() 
+
+colnames(napus_GO_combined)  # dosen't seem to have good candidates 
+
 
 ### further exploration... 
 
@@ -540,6 +549,13 @@ SNP_interval_linolenic_annotated %>%
 
 SNP_interval_linolenic_annotated %>% 
   filter(names == "BnaA08g12800D") # FAD6 
+
+# John run PROVEAN on the list of SNPs that I sent to him, 
+provean.result <- read.table("~/F2/for_paper/linolenic_acid/provean_results.txt")
+candidate_linolenic %>% 
+  filter(names == "BnaA08g10160D")
+
+
 ```
 
 ### appendix function  
@@ -559,12 +575,10 @@ allele.effect <- function(gene_ID){
   chr = cis_eQTL[cis_eQTL$gene_ID == gene_ID,]$eQTL_chr
   chr = gsub("chr", "", chr)
   pos = cis_eQTL[cis_eQTL$gene_ID == gene_ID,]$pos
-  qtlm <- makeqtl(cross.F2,chr=chr,pos=pos) # Ruijuan: QTL with interactions
+  qtlm <- makeqtl(cross.F2,chr=chr,pos=pos)  
 
-#make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
   qtl.fit <- fitqtl(cross=cross.F2,qtl=qtlm,formula = y ~ Q1, get.ests=T)
 
-#examine our model
   summary(qtl.fit)    
 } 
 ```
