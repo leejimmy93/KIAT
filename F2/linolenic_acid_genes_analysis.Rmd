@@ -555,6 +555,11 @@ provean.result <- read.table("~/F2/for_paper/linolenic_acid/provean_results.txt"
 candidate_linolenic %>% 
   filter(names == "BnaA08g10160D")
 
+provean.result <- read.csv("~/Desktop/F2_paper/data/candidate_linolenic.csv")
+provean.result %>% colnames()
+provean.result %>% 
+  dplyr::select(names, AGI, At_symbol, mutation_type, GO_des:X.4) %>% 
+  View()  
 
 ```
 

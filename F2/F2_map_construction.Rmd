@@ -19,7 +19,7 @@ library(ggplot2)
 library(reshape) 
 library(tidyverse) 
 library("qtl") 
-library(snowfall)
+library(snowfall) 
 ```
 
 ### import & format data
@@ -188,7 +188,6 @@ http://cgpdb.ucdavis.edu/XLinkage/MadMapper/#Part_2
 
 check madmapper output (export *.tree.clust file to Excel, and decide which SNP belong to which LG based on tree value) /Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/F2_geno_data_m_loc_mmout.x_tree_clust.xlsx 
 
-### get linkage group from madmapper generated tree.clust file 
 ```{r}
 madmapper.result <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/F2_geno_data_m_loc_mmout.x_tree_clust.csv", header = F)
 
