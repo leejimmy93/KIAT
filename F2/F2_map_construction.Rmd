@@ -19,7 +19,7 @@ library(ggplot2)
 library(reshape) 
 library(tidyverse) 
 library("qtl") 
-library(snowfall)
+library(snowfall) 
 ```
 
 ### import & format data
@@ -188,7 +188,6 @@ http://cgpdb.ucdavis.edu/XLinkage/MadMapper/#Part_2
 
 check madmapper output (export *.tree.clust file to Excel, and decide which SNP belong to which LG based on tree value) /Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/F2_geno_data_m_loc_mmout.x_tree_clust.xlsx 
 
-### get linkage group from madmapper generated tree.clust file 
 ```{r}
 madmapper.result <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/F2_geno_data_m_loc_mmout.x_tree_clust.csv", header = F)
 
@@ -263,7 +262,7 @@ for (i in c(1, 2, 3, 4, 6, 8, 9, 10, 12)){
 # remove null LGs 
 LG.f2 = LG.f2[-which(sapply(LG.f2, is.null))] 
 draw.map(LG.f2, names= F, grid=F, cex.mrk=0.5, cex.grp=0.75, horizontal=T)  
-write.map(LG.f2, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map") 
+write.map(LG.f2, "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.map")  
 ```
 
 # R/qtl package to plot LOD & rf headmap to check marker order & assignment to LG correctness 
@@ -620,10 +619,10 @@ dev.off()
 
 png("~/Desktop/F2_paper/map_after_crossover.png", width=8, height=8, units="in", res=300)
 plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T, main = "", xlab = "linkage groups") # genetic map comparison
-dev.off() 
+dev.off()   
 
 ## map summary 
-map.summary <- summaryMap(LG.f2.madmapper.after.crossover) 
+map.summary <- summaryMap(LG.f2.madmapper.after.crossover)  
 map.summary %>% dim() 
 map.summary[21, 1] <- sum(map.summary[1:10,1])
 map.summary[22, 1] <- sum(map.summary[11:19,1])
@@ -676,4 +675,101 @@ map_geno %>%
 
 ggsave(p.genetic_vs_physical_A05, filename = "~/F2/output/p.genetic_vs_physical_A05.png", height = 5, width = 5) 
 ``` 
+
+### refine the map again, see whether removing markers with segregation distortion helps shorten the length
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/LG.f2.madmapper.after.crossover.flipped.Rdata")
+summary(LG.f2.madmapper.after.crossover) 
+
+gt <- geno.table(LG.f2.madmapper.after.crossover)
+
+# remove markers with a lot of missing data, these missing data are from double crossover  
+mar2drop <- rownames(gt[ gt$missing > 27,]) 
+length(mar2drop)/2013 
+LG.f2.madmapper.after.crossover.2 <- drop.markers(LG.f2.madmapper.after.crossover, mar2drop)
+summaryMap(LG.f2.madmapper.after.crossover.2) 
+plotMap(LG.f2.madmapper.after.crossover.2)   
+# doesn't help 
+
+# segregation distortion 
+mar2drop <- rownames(gt[ gt$P.value < 1e-2,]) # there are quite several markers showing segregation distortion
+
+length(mar2drop) # 397 
+length(mar2drop)/2013 
+
+mar2drop.count <- 
+gt[ gt$P.value < 1e-2,] %>% 
+  group_by(chr) %>% 
+  dplyr::summarise(count =n()) %>% 
+  mutate(count_drop = count) %>% 
+  dplyr::select(-count)
+
+# total.count <-
+gt %>% 
+  group_by(chr) %>% 
+  dplyr::summarise(count = n()) %>% 
+  left_join(mar2drop.count) %>% 
+  mutate(ratio = count_drop / count) %>% 
+  ggplot(aes(chr, ratio)) +
+  geom_col() 
+
+LG.f2.madmapper.after.crossover.2 <- drop.markers(LG.f2.madmapper.after.crossover, mar2drop)
+summaryMap(LG.f2.madmapper.after.crossover.2) 
+plotMap(LG.f2.madmapper.after.crossover.2)      
+
+test <- LG.f2.madmapper.after.crossover.2$geno$A05$map %>% as.data.frame() 
+test$physical <- gsub("([[:print:]]+)(_)([[:print:]]+)","\\3",rownames(test))
+colnames(test)[1] <- "genetic"
+
+test %>% 
+  ggplot() + 
+  geom_point(aes(x = genetic, y = as.numeric(as.character(physical))))  
+```
+
+check SNP distribution before filtered by F2 taxa coverage 
+```{r}
+F2_geno_data <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/F2_Final_SNP_Calls", header = T)
+head(F2_geno_data) 
+dim(F2_geno_data) # 18226   172 
+
+rownames(F2_geno_data) <- paste(F2_geno_data$CHROM, F2_geno_data$POS, sep = "_")
+F2_geno_data <- F2_geno_data[, -c(1:6)]
+dim(F2_geno_data) # 18226   166 
+colnames(F2_geno_data) <- gsub("([[:print:]]+)(\\.)([[:digit:]])", "\\3", colnames(F2_geno_data))
+F2_geno_data$chrom <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\3", rownames(F2_geno_data))
+F2_geno_data$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\2", rownames(F2_geno_data))
+F2_geno_data$pos <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\5", rownames(F2_geno_data))
+
+# gene_density <- 
+F2_geno_data %>% 
+  mutate(pos1 = as.numeric(pos)) %>% 
+  dplyr::select(chrom, subgenome, pos1) %>% 
+  ggplot() + 
+  geom_histogram(aes(x=pos1, fill=subgenome), binwidth = 1000000) + 
+  facet_grid(chrom ~subgenome) + 
+  theme_bw() + 
+  labs(x = "gene start position", y = "number of genes") 
+
+# after filter by F2 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
+dim(F2_geno_data_2) # 3443 166
+F2_geno_data_2 %>% rownames()
+F2_geno_data_2$chrom <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\3", rownames(F2_geno_data_2))
+F2_geno_data_2$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\2", rownames(F2_geno_data_2))
+F2_geno_data_2$pos <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\5", rownames(F2_geno_data_2))
+
+F2_geno_data_2 %>% 
+  mutate(pos1 = as.numeric(pos)) %>% 
+  dplyr::select(chrom, subgenome, pos1) %>% 
+  ggplot() + 
+  geom_histogram(aes(x=pos1, fill=subgenome), binwidth = 1000000) + 
+  facet_grid(chrom ~subgenome) + 
+  theme_bw() + 
+  labs(x = "gene start position", y = "number of genes")  
+
+test <- 
+sapply(1:length(LG.f2), function(i) 
+ LG.f2[[i]]$seq.num %>% length)
+sum(test) 
+```
 

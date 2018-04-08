@@ -1031,7 +1031,7 @@ allele.ratio.Ae.het
 allele.ratio
 
 # ggsave(allele.ratio.Ae.het, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio_Ae_het.png", height = 8, width = 11)
-# ggsave(allele.ratio, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio.png", height = 8, width = 11)
+# ggsave(allele.ratio, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/allele_ratio.png", height = 8, width = 11) 
 
 # very similar to what we see from the review paper... 
 
@@ -2584,11 +2584,10 @@ return(vcf.reform)
   } 
 
 #########
-
 R500_IMB211.reform <- SNP.freebayes.reformat(vcf = R500_IMB211, vcf.header = header)
 dim(R500_IMB211.reform) # 145556     18    
 table(R500_IMB211.reform$R500_gt) 
-table(R500_IMB211.reform$IMB211_gt)    
+table(R500_IMB211.reform$IMB211_gt)     
 
 ######## 
 # MAF distribution for heterzygous call 
@@ -2600,6 +2599,15 @@ hist(R500_IMB211.reform$MAF_R500)
 # hist(R500_IMB211.reform[R500_IMB211.reform$R500_gt=="0/1",]$R500_allele_ratio)
 hist(R500_IMB211.reform[R500_IMB211.reform$R500_gt=="0/1",]$MAF_R500)
 ``` 
+
+# for paper 
+```{r}
+vcf.Ae.Ol.intersect.2 <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/vcf.Ae.Ol.intersect.2.csv", row.names = 1)
+dim(vcf.Ae.Ol.intersect.2) 
+colnames(vcf.Ae.Ol.intersect.2)
+
+
+```
 
 
 

@@ -564,7 +564,7 @@ pheno.parent.oil %>%
   group_by(PHENOTYPE, variable) %>% 
   summarise(mean = mean(value)) 
 
-
+save(pheno.parent.oil, file = "~/Desktop/F2_paper/data/pheno.parent.oil.Rdata")
 ```
 
 ### appendix function for this script 

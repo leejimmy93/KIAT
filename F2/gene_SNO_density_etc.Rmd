@@ -3,7 +3,7 @@ title: "gene_density"
 output: html_document
 ---
 
-Purpose of this script is to check several things that needs to be answered for the F2 paper 
+Purpose of this script is to check several things that needs to be answered for the F2 paper: gene density, SNP density, etc. 
 
 1) gene density across the genome 
 
@@ -63,6 +63,43 @@ gff.mRNA.main %>%
 ggsave(gene_density, filename = "~/F2/for_paper/gene_density.png", height = 8, width = 12)  
 ```
 
-###
+### distribution of SNPs
+1) SNP density for the 3443 SNPs 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2.Rdata")
+dim(F2_geno_data_2) # 3443 166
 
-distribution of SNP across 
+F2_geno_data_2 %>% dim() 
+rownames(F2_geno_data_2) 
+
+F2_geno_data_2$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\2", rownames(F2_geno_data_2)) 
+
+F2_geno_data_2$chrom <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\3", rownames(F2_geno_data_2))
+F2_geno_data_2$POS <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\5", rownames(F2_geno_data_2)) %>% as.numeric()
+
+F2_geno_data_2 %>% 
+  dplyr::select(subgenome, chrom, POS) 
+
+class(F2_geno_data_2$subgenome)
+class(F2_geno_data_2$chrom)
+
+F2_geno_data_2 %>% 
+  ggplot() + 
+  geom_histogram(aes(x=POS, fill=subgenome), binwidth = 1000000) + 
+  facet_grid(chrom ~subgenome) + 
+  theme_bw() + 
+  labs(x = "gene start position", y = "number of genes") 
+
+F2_geno_data_2 %>% 
+  dplyr::filter(chrom == "05" & subgenome == "C") %>% 
+  dplyr::select(POS)
+
+F2_geno_data_2 %>% 
+  dplyr::filter(chrom == "08" & subgenome == "C") %>% 
+  dplyr::select(POS) 
+```
+
+
+
+
+
