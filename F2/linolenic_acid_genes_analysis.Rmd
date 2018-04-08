@@ -8,7 +8,7 @@ output: html_document
 Purpose of this script is to find genes (or maybe fatty acid related genes) whose allelic pattern match the linolenic acid content level (the interaction plot). 
 
 based on the information from the interaction plot, I am looking for genes 
-1) fall into the two major QTL interval on A08 and C03
+1) fall into the two major QTL interval on A08 and C03 
 2) have SNPs in them 
 3) when both genes are homozygous identical as either parent, the linolenic acid level is very low; when both genes are heterzygous, the linolenic acid level is medium, when one gene is homozygous identical as one parent, whereas the other gene is homozygous identical as the other parent, the linolenic acid level is the highest. 
 
@@ -285,7 +285,7 @@ load("~/Reference/B.napus/napus_GO_combined.Rdata")
 allele_effect_result %>% 
   left_join(BnapusAnnotation, c("names" = "name")) %>% 
   left_join(napus_GO_combined, c("names" = "gene_ID")) %>%
-  View() 
+  View()  
 
 colnames(napus_GO_combined)  # dosen't seem to have good candidates 
 
