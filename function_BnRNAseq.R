@@ -762,7 +762,7 @@ qtl_plot <- function(input,              # data frame input from scanone
     scale_color_brewer(palette = "Set1") + ### default Set1 gave the best color combination  
     # scale_color_brewer(palette = "Set3") + ### 
     # no plot 
-    theme(legend.position = "bottom") + ### this can be changed 
+    theme(legend.position = "bottom") + ### this can be changed or , axis.text.x=element_blank() for making supplementary figures
     # Change plot labels
     labs(x = "Chromosome",
          y = "LOD",

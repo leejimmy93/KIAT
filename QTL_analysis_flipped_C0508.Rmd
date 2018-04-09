@@ -1,0 +1,288 @@
+---
+title: "QTL_analysis_flipped_C0508"
+output: html_document
+---
+
+### purpose of this script is to finish QTL analysis with C05 and C08 modified  
+
+```{r}
+### load lib
+library(tidyverse)
+library(qtl) 
+library(snowfall)
+library(Biostrings)   
+source("~/KIAT/function_BnRNAseq.R")   
+
+### load data and run scanone & cim
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped_C05C08.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv", 
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+plot.map(LG.f2.after.crossover) 
+map.summary <- summaryMap(LG.f2.after.crossover) # 2024 2929.9 
+write.csv(map.summary, file = "~/F2/output/QTL_analysis/map.summary.csv")   
+
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) # calculate the probability of the true underlying genotypes given the observed multipoint marker data --> for each imputed data, give a probability?
+
+sfInit(parallel = TRUE, cpus = 4)
+sfExport("LG.f2.after.crossover") 
+sfLibrary(qtl)
+
+system.time(
+scanone.perm.imp <-
+  sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
+    print(trait) # print doesn't work in here
+    tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000, n.cluster = 16)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes 40 mins to finish
+)
+sfStop()
+
+names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
+save(scanone.perm.imp, file = "~/F2/output/QTL_analysis/scanone.perm.imp.43traits.C05C08.flipped")
+
+# Erucic acid 
+scanone.imp.Erucic <- scanone(LG.f2.after.crossover,pheno.col=15,method="imp") #
+plot(scanone.imp.Erucic,bandcol="gray90", main="Erucic_acid")
+abline(h=scanone.perm.imp[["Erucic_acid"]],lty=2) #add permuation threshold
+
+# Oleic acid
+scanone.imp.Oleic <- scanone(LG.f2.after.crossover,pheno.col=8,method="imp") #
+plot(scanone.imp.Oleic,bandcol="gray90", main="Oleic_acid")
+abline(h=scanone.perm.imp[["Oleic_acid"]],lty=2) #add permuation threshold
+
+system.time(
+scanone.imp <-
+lapply(seq_along(LG.f2.after.crossover$pheno[1:43]), function(trait) {
+  print(trait)
+  scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
+})
+)
+names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)[1:43]
+
+png("~/F2/output/QTL_analysis/figure/QTL_one_dim_flipped.png", width=25, height=15, units="in", res=300)
+par(mfrow=c(6,7))
+
+for (i in names(scanone.imp)){
+  plot(scanone.imp[[i]],bandcol="gray90", main=i)
+  abline(h=scanone.perm.imp[[i]],lty=2)
+}
+
+dev.off()
+
+save(scanone.imp, file = "~/F2/output/QTL_analysis/scanone.imp.43traits.C05C08.flipped")
+
+cim.qtl <-
+lapply(seq_along(LG.f2.after.crossover$pheno)[1:43], function(trait) {
+  print(trait)
+  cim(LG.f2.after.crossover, n.marcovar=5, pheno.col=trait,method="em")
+})
+
+cim.qtl[["vaccenic_acid"]] 
+
+# here we use the interval mapping method "em" as this is how cim was originaly implmented.the n.marcovar= argument defines the maximum number of marker covariates to use.
+names(cim.qtl) <- colnames(LG.f2.after.crossover$pheno)[1:43]
+
+sfInit(parallel = TRUE, cpus = 4)
+sfExport("LG.f2.after.crossover")
+sfLibrary(qtl)
+
+cim.perm <-
+  sfLapply(seq_along(LG.f2.after.crossover$pheno)[1:43], function(trait){
+    message(trait) # message doesn't work in here either
+    tmp <- cim(LG.f2.after.crossover,
+               pheno.col = trait,
+               n.marcovar=5,
+               method="em",
+               n.perm=1000)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes almost 4 hours to finish
+
+sfStop() 
+
+names(cim.perm) <- colnames(LG.f2.after.crossover$pheno)[1:43]
+
+# plot out result and save plot
+png("~/F2/output/QTL_analysis/figure/QTL_cim_1_flipped.png", width=25, height=15, units="in", res=300)
+par(mfrow=c(6,7))
+
+for (i in names(cim.qtl)){
+  plot(cim.qtl[[i]],bandcol="gray90", main=i)
+  abline(h=cim.perm[[i]],lty=2)
+}
+
+dev.off()
+# more QTL found for cim method
+
+save(cim.qtl, file = "~/F2/output/QTL_analysis/cim.qtl.43traits.flipped.C05C08.Rdata")
+save(cim.perm, file = "~/F2/output/QTL_analysis/cim.perm.43traits.flipped.C05C08.Rdata")  
+```
+
+### need a script to tell me which LG has significant QTL for different traits 
+```{r}
+load("~/F2/output/QTL_analysis/cim.perm.43traits.flipped.C05C08.Rdata")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.flipped.C05C08.Rdata")
+load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits.C05C08.flipped")
+load("~/F2/output/QTL_analysis/scanone.imp.43traits.C05C08.flipped")
+
+cim.qtl.result <- 
+lapply(names(cim.qtl), function(trait) {
+  as.numeric(unique(cim.qtl[[trait]][(cim.qtl[[trait]]$lod > cim.perm[[trait]]),]$chr))
+})
+
+im.qtl.result <- 
+lapply(names(scanone.imp), function(trait) {
+  as.numeric(unique(scanone.imp[[trait]][(scanone.imp[[trait]]$lod > scanone.perm.imp[[trait]]),]$chr))
+})
+
+names(cim.qtl.result) <- names(cim.qtl)
+names(im.qtl.result) <- names(scanone.imp) 
+unlist(cim.qtl.result)
+unlist(im.qtl.result)  
+``` 
+
+### also do QTL analysis for growth model data & branch data  
+```{r}
+# branch data 
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped_C05C08.csv",
+                     phefile = "~/F2/for_paper/branch_data/phefile.branch.csv", 
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
+
+plot.map(LG.f2.after.crossover)
+
+LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation
+LG.f2.after.crossover <- calc.genoprob(LG.f2.after.crossover,step=1) 
+
+sfInit(parallel = TRUE, cpus = 4)
+sfExport("LG.f2.after.crossover") 
+sfLibrary(qtl)
+
+system.time(
+scanone.perm.imp <-
+  sfLapply(seq_along(LG.f2.after.crossover$pheno), function(trait){
+    print(trait) # print doesn't work in here
+    tmp <-scanone(LG.f2.after.crossover,pheno.col = trait, method="imp",n.perm=1000, n.cluster = 16)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes 40 mins to finish
+)
+sfStop()
+
+names(scanone.perm.imp) <- colnames(LG.f2.after.crossover$pheno)
+
+system.time(
+scanone.imp <-
+lapply(seq_along(LG.f2.after.crossover$pheno[1:4]), function(trait) {
+  print(trait)
+  scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
+})
+)
+names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)[1:4]
+
+png("~/F2/for_paper/branch_data/QTL_one_dim_flipped.png", width=25, height=15, units="in", res=300)
+par(mfrow=c(1,4))
+
+for (i in names(scanone.imp)){
+  plot(scanone.imp[[i]],bandcol="gray90", main=i)
+  abline(h=scanone.perm.imp[[i]],lty=2)
+}
+
+dev.off() # no QTL 
+
+# growth model 
+cross.F2 <- read.cross("csvsr", genfile ="~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped_C05C08.csv", 
+                         phefile = "~/F2/output/pheno/growth_model_trait.2.csv",
+                         genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
+
+cross.F2$pheno %>% colnames() # for some reason, id is always read as a phenotype 
+cross.F2$pheno$height_k %>% class() 
+
+cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?  
+cross.F2 <- calc.genoprob(cross.F2,step=1) 
+
+system.time(
+scanone_growth_model_trait.F2 <- 
+lapply(seq_along(cross.F2$pheno[1:12]), function(trait) {
+  print(trait)
+  scanone(cross.F2,pheno.col=trait,method="imp")
+}) 
+) 
+
+names(scanone_growth_model_trait.F2) <- colnames(cross.F2$pheno[1:12]) 
+
+set.seed(12345)   
+system.time(
+  permtest.F2 <- scanone(cross.F2, pheno.col = 1:12, method = "imp", n.perm = 1000)   
+)
+
+alphas <- seq(0.01, 0.10, by = 0.01) 
+lod.thrs <- summary(permtest.F2, alphas) 
+lod.thrs  
+
+save(scanone_growth_model_trait.F2, lod.thrs, file =  "~/F2/output/growth_model/scanone_growth_model_trait_flipped.C05C08.Rdata")
+
+# cim was done within screen 
+cim_growth_model_trait.F2 <- 
+lapply(seq_along(cross.F2$pheno[1:12]), function(trait) {
+  print(trait)
+  cim(cross.F2, n.marcovar=5, pheno.col=trait,method="em")
+}) 
+
+names(cim_growth_model_trait.F2) <- colnames(cross.F2$pheno[1:12])
+
+sfInit(parallel = TRUE, cpus = 1)
+sfExport("cross.F2")
+sfLibrary(qtl)
+
+cim.perm <-
+  sfLapply(seq_along(cross.F2$pheno[1:12]), function(trait){
+    message(trait) # message doesn't work in here either
+    tmp <- cim(cross.F2,
+               pheno.col = trait,
+               n.marcovar=5,
+               method="em",
+               n.perm=1000)
+    summary(tmp)[1] # #keep the 95th percentile for future use.This corresponds to p <0.05
+  }) # takes almost 4 hours to finish
+
+sfStop()
+
+names(cim.perm) <- colnames(cross.F2$pheno[1:12]) 
+
+save(cim_growth_model_trait.F2, cim.perm, file = "~/F2/output/growth_model/cim_growth_model_trait.C05C08.Rdata") 
+
+# combine growth model and raw data QTL results 
+load("~/F2/output/QTL_analysis/cim.perm.43traits.flipped.C05C08.Rdata")
+load("~/F2/output/QTL_analysis/cim.qtl.43traits.flipped.C05C08.Rdata")
+load("~/F2/output/QTL_analysis/scanone.perm.imp.43traits.C05C08.flipped")
+load("~/F2/output/QTL_analysis/scanone.imp.43traits.C05C08.flipped")
+
+cim.perm.all <- cim.perm
+cim.qtl.all <- cim.qtl
+scanone.perm.imp.all <- scanone.perm.imp
+scanone.imp.all <- scanone.imp
+
+load("~/F2/output/growth_model/scanone_growth_model_trait_flipped.C05C08.Rdata")
+load("~/F2/output/growth_model/cim_growth_model_trait.C05C08.Rdata") 
+
+cim.perm.all <- c(cim.perm.all, cim.perm)[c(1:15, 17, 21:55)] 
+cim.qtl.all <- c(cim.qtl.all, cim_growth_model_trait.F2)[c(1:15, 17, 21:55)]
+scanone.perm.imp.all <- c(scanone.perm.imp.all[1:43], as.list(lod.thrs[5,]))[c(1:15, 17, 21:55)] 
+scanone.imp.all <- c(scanone.imp.all, scanone_growth_model_trait.F2)[c(1:15, 17, 21:55)] 
+
+cim.qtl.all[["vaccenic_acid"]] %>% class() 
+save(cim.perm.all, cim.qtl.all, scanone.perm.imp.all, scanone.imp.all, file = "~/F2/output/QTL_analysis/QTL_result_all.C05C08.Rdata") 
+```
+
+### get genes under QTL for different traits, use cim result, if there is no cim result, using scanone result
+
+QTL result did not change much, so keep the original results for main figure but use these data to plot the summpementary QTL plot. 
+
+```{r} 
+load("~/F2/output/QTL_analysis/QTL_result_all.C05C08.Rdata")
+
+scanone.perm.imp.all %>% length() # 51 
+scanone.imp.all %>% length() 
+cim.perm.all %>% length()
+cim.qtl.all %>% length()  
+```

@@ -2,7 +2,7 @@ library(qtl)
 library(tidyverse)
 library(snowfall)
 
-cross.F2 <- read.cross("csvsr", genfile =  "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised.csv", 
+cross.F2 <- read.cross("csvsr", genfile =  "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped_C05C08.csv", 
                          phefile = "~/F2/output/pheno/growth_model_trait.2.csv",
                          genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
 
@@ -41,7 +41,7 @@ sfStop()
 
 names(cim.perm) <- colnames(cross.F2$pheno[1:12])
 
-save(cim_growth_model_trait.F2, cim.perm, file = "~/F2/output/growth_model/cim_growth_model_trait.Rdata")
+save(cim_growth_model_trait.F2, cim.perm, file = "~/F2/output/growth_model/cim_growth_model_trait.C05C08.Rdata")
 
 
 

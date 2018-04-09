@@ -604,7 +604,7 @@ phefile.branch <-
 phefile.all %>% 
   dplyr::select(leaf_number_k, length_of_branch_5, length_of_branch_10, length_of_branch_15, Erucic_acid) %>%
   t() %>% 
-  as.data.frame()
+  as.data.frame() 
 
 write.csv(phefile.branch, file = "~/Desktop/F2_paper/data/phefile.branch.csv") 
 ```
