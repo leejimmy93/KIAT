@@ -8,7 +8,7 @@ output: html_document
 ### scanone & CIM  
 ```{r} 
 # run the code below on whitney using 
-cross.F2 <- read.cross("csvsr", genfile =   "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv", 
+cross.F2 <- read.cross("csvsr", genfile ="~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv", 
                          phefile = "~/F2/output/pheno/growth_model_trait.2.csv",
                          genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
 
