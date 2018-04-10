@@ -8,7 +8,7 @@ output: html_document
 Purpose of this script is to find genes (or maybe fatty acid related genes) whose allelic pattern match the linolenic acid content level (the interaction plot). 
 
 based on the information from the interaction plot, I am looking for genes 
-1) fall into the two major QTL interval on A08 and C03
+1) fall into the two major QTL interval on A08 and C03 
 2) have SNPs in them 
 3) when both genes are homozygous identical as either parent, the linolenic acid level is very low; when both genes are heterzygous, the linolenic acid level is medium, when one gene is homozygous identical as one parent, whereas the other gene is homozygous identical as the other parent, the linolenic acid level is the highest. 
 
@@ -232,6 +232,23 @@ cis_eQTL.qtl.combined.final %>%
 
 dim(cis_eQTL.qtl.combined.final.linolenic) # 217 20 
 
+### find homeologous by reprocal blast 
+linolenic_acid_test_gene_eQTL <- cis_eQTL.qtl.combined.final.linolenic$gene_ID %>% unique()
+write.csv(linolenic_acid_test_gene_eQTL, file = "~/F2/for_paper/linolenic_acid/linolenic_acid_test_gene_eQTL.csv")
+
+# below on linux 
+# cat linolenic_acid_test_gene_eQTL.csv | awk 'BEGIN{FS=","}{print $2}' | sed 's/"//g' | grep "BnaA" > A08_test_genes_ID_2
+# cat linolenic_acid_test_gene_eQTL.csv | awk 'BEGIN{FS=","}{print $2}' | sed 's/"//g' | grep "BnaC" > C03_test_genes_ID_2
+
+# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' A08_test_genes_ID_2 /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa > A08_test_genes_2.fa
+
+# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' C03_test_genes_ID_2 /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa > C03_test_genes_2.fa
+
+# makeblastdb -in A08_test_genes_2.fa -input_type fasta -dbtype nucl -out A08_test_genes_2
+# makeblastdb -in C03_test_genes_2.fa -input_type fasta -dbtype nucl -out C03_test_genes_2
+
+# ./reciprocal_blast.sh get reciprocal blast result, no new gene pairs compared to using just AGI blast hit 
+
 ### find homeologous by extracting genes which have the same Arabidopsis hit in the two intervals 
 cis_eQTL.qtl.combined.final.linolenic %>% colnames() 
 
@@ -250,7 +267,7 @@ cis_eQTL.qtl.combined.final.linolenic %>% colnames()
 
 homolog_pair <- 
 cis_eQTL.qtl.combined.final.linolenic[cis_eQTL.qtl.combined.final.linolenic$AGI %in% AGI_homeologous_hit,] %>% 
-  dplyr::select(gene_ID, AGI, At_symbol, GO_des)
+  dplyr::select(gene_ID, AGI, At_symbol, GO_des) 
 
 ### check allele effect for the genes which satisfy the model requirement 
 Ara_ID_homolog <- c("AT4G18570", "AT4G19110", "AT4G19120", "AT4G19160", "AT4G19185", "AT4G20890", "AT4G21450") 
@@ -277,6 +294,7 @@ allele_effect_result <- sapply(names(cis_eQTL_effect), function(gene) cis_eQTL_e
 allele_effect_result <- allele_effect_result %>% as.data.frame() ## all possible genes have positive allele effect from Da-Ol-1 
 allele_effect_result$names <- rownames(allele_effect_result) 
 colnames(allele_effect_result)[1] <- "cis_effect"
+allele_effect_result 
 
 # add annotation for these genes, Ara homolog & B.napus GO annotation 
 load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
@@ -285,10 +303,10 @@ load("~/Reference/B.napus/napus_GO_combined.Rdata")
 allele_effect_result %>% 
   left_join(BnapusAnnotation, c("names" = "name")) %>% 
   left_join(napus_GO_combined, c("names" = "gene_ID")) %>%
-  View() 
+  View()  
 
 colnames(napus_GO_combined)  # dosen't seem to have good candidates 
-
+save(allele_effect_result, file = "~/F2/for_paper/linolenic_acid/allele_effect_result.Rdata")
 
 ### further exploration... 
 
@@ -496,6 +514,7 @@ F2_geno_data_interval_linolenic %>%
   left_join(SNP_gene_final) 
 dim(SNP_interval_linolenic) # 1472 
 
+save(SNP_interval_linolenic, file = "~/F2/for_paper/linolenic_acid/SNP_interval_linolenic.Rdata")
 load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
 load("~/Reference/B.napus/napus_GO_combined.Rdata")
 
@@ -559,7 +578,62 @@ provean.result <- read.csv("~/Desktop/F2_paper/data/candidate_linolenic.csv")
 provean.result %>% colnames()
 provean.result %>% 
   dplyr::select(names, AGI, At_symbol, mutation_type, GO_des:X.4) %>% 
+<<<<<<< HEAD
   View()    
+=======
+  View()  
+
+# we are worried that using Arabidopsis blast hit to find homeologou might not be the best method, so I will use reciprocal blast to look for homeologs on A08 and C03 for linolenic acid QTL region 
+
+load("~/F2/for_paper/linolenic_acid/SNP_interval_linolenic.Rdata")
+linolenic_acid_test_gene <- SNP_interval_linolenic$names %>% unique() 
+write.csv(linolenic_acid_test_gene, file = "~/F2/for_paper/linolenic_acid/linolenic_acid_test_gene.csv")
+
+# below on linux 
+# cat linolenic_acid_test_gene.csv | awk 'BEGIN{FS=","}{print $2}' | sed 's/"//g' | grep "BnaA" > A08_test_genes_ID
+# cat linolenic_acid_test_gene.csv | awk 'BEGIN{FS=","}{print $2}' | sed 's/"//g' | grep "BnaC" > C03_test_genes_ID
+
+# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' A08_test_genes_ID /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa > A08_test_genes.fa
+
+# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' C03_test_genes_ID /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa > C03_test_genes.fa
+
+# makeblastdb -in A08_test_genes.fa -input_type fasta -dbtype nucl -out A08_test_genes
+# makeblastdb -in C03_test_genes.fa -input_type fasta -dbtype nucl -out C03_test_genes
+
+# ./reciprocal_blast.sh get reciprocal blast result 
+blast_result <- read.delim(file = "~/F2/for_paper/linolenic_acid/reciprocal.blast", header = F)
+blast_result
+
+homeo_blast <- 
+  c(as.character(blast_result$V1), as.character(blast_result$V2))
+
+homeo_blast <- 
+  homeo_blast[!(homeo_blast %in% (candidate_linolenic$names %>% unique()))] 
+
+candidate_linolenic_2genes <- 
+SNP_interval_linolenic_annotated[SNP_interval_linolenic_annotated$names %in% homeo_blast,] 
+
+write.csv(candidate_linolenic_2genes, file = "~/F2/for_paper/linolenic_acid/candidate_linolenic_2genes.csv") 
+```
+
+# look for linolenic acid candidate genes by combining expression/eQTL and SNP/provean data 
+
+```{r}
+load("~/F2/for_paper/linolenic_acid/allele_effect_result.Rdata")
+allele_effect_result
+
+blast_result <- read.delim(file = "~/F2/for_paper/linolenic_acid/reciprocal.blast_eQTL", header = F)
+blast_result
+
+homeo_blast <- 
+  c(as.character(blast_result$V1), as.character(blast_result$V2))
+
+homeo_blast
+cis_eQTL_linolenic <- allele_effect_result[allele_effect_result$names %in% homeo_blast,]
+
+# combine with SNP result to look for potential candidates ... 
+
+>>>>>>> 6f90f3a26bd4b76785fc075f390a6fb06c47647f
 ```
 
 ### appendix function  
