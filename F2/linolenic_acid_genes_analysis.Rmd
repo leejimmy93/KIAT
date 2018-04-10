@@ -559,8 +559,7 @@ provean.result <- read.csv("~/Desktop/F2_paper/data/candidate_linolenic.csv")
 provean.result %>% colnames()
 provean.result %>% 
   dplyr::select(names, AGI, At_symbol, mutation_type, GO_des:X.4) %>% 
-  View()  
-
+  View()    
 ```
 
 ### appendix function  

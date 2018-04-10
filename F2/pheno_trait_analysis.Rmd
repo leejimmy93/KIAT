@@ -199,7 +199,7 @@ extra %>%
             length_of_branch_10 = mean(X10_length_of_branch, na.rm = T),
             length_of_branch_15 = mean(X15_length_of_branch, na.rm = T)) 
 
-library(reshape2)
+library(reshape2) 
 
 extra_2 <- 
 flowering_data %>% melt() %>%
