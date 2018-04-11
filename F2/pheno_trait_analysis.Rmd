@@ -121,7 +121,7 @@ phefile %>% dim() # 166 44
 phefile <- as.data.frame(t(phefile))   
 
 colnames(phefile)
-rname <- phefile$id %>% as.character()
+rname <- phefile$id %>% as.character() 
 
 phefile <- 
 phefile %>% 
@@ -508,34 +508,6 @@ pheno.parent.oil %>%
 save(pheno.parent.oil, file = "~/Desktop/F2_paper/data/pheno.parent.oil.Rdata")
 ```
 
-### appendix function for this script 
-```{r}
-### function to extract pair of traits with high correlation 
-high.cor.pair <- function(correlation, threshold){ 
-
-  dup.cordinate <- 
-    which(abs(correlation) >= threshold & lower.tri(correlation), arr.ind = T, useNames = F) 
-  cor.value <- 
-    correlation[which(abs(correlation) >= threshold & lower.tri(correlation), 
-                      arr.ind = T, useNames = F)] 
-
-  # dup.number <- length(unique(c(dup.cordinate[,1], dup.cordinate[,2])))
-  dup.cordinate.df <- as.data.frame(dup.cordinate)
-  dup.cordinate.df$V3 <- cor.value
-  sample.ID <- colnames(correlation) 
-
-  # extract duplicate pair information based on their coordicate
-  output <- data.frame(matrix(nrow = nrow(dup.cordinate.df), ncol = 3))
-  for (i in 1:nrow(dup.cordinate.df)){ 
-    output[i,1] <- sample.ID[dup.cordinate.df[i,1]]
-    output[i,2] <- sample.ID[dup.cordinate.df[i,2]]
-    output[i,3] <- dup.cordinate.df[i,3]
-  }
-
-  output   
-}       
-```
-
 ### prepare phefile for QTL mapping 
 ```{r}
 load("~/Desktop/F2_paper/data/phefile.all.Rdata")
@@ -609,11 +581,156 @@ sum(as.data.frame(VarCorr(lme.2))$vcov)
 var(as.numeric(as.character(phefile.t$Crude_oil_contents))) 
 # understand how to get heritability for this dataset 
 
-# flowering time, growth, and branch data 
+# flowering time 
+library(lubridate)
+flowering_data <- read.csv("~/Desktop/F2_paper/data/flowering_data.csv")
+colnames(flowering_data)[c(5,6)] <- c("bolting_date", "flowering_date")
 
+flowering_data_parent <- 
+flowering_data %>%  
+  filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
+  group_by(Name) %>%
+  mutate(days_to_bolt = ymd(bolting_date)-ymd(Day_of_sowing), 
+          days_to_flower = ymd(flowering_date)-ymd(Day_of_sowing),
+          bolting_to_flowering = ymd(flowering_date)-ymd(bolting_date)) %>% 
+  dplyr::select(Name, Individual_.No., days_to_bolt, days_to_flower, bolting_to_flowering) %>% 
+  melt() %>% 
+  mutate(value = as.numeric(value))
 
+# plant weight, root weight, and branch data 
+weight_root_branch_parent <- 
+extra %>% 
+  filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
+  group_by(Name) %>% 
+  mutate(plant_weight_2016_05_13 = Plant_weight_2016_05_13, 
+            root_weight_2016_05_13 = Root_weight_2016_05_13,
+            length_of_branch_5 = X5_length_of_branch, 
+            length_of_branch_10 = X10_length_of_branch,
+            length_of_branch_15 = X15_length_of_branch) %>% 
+  dplyr::select(-starts_with("X"), -Plant_weight_2016_05_13, -Root_weight_2016_05_13) %>% 
+  melt() %>% 
+  mutate(value = as.numeric(value)) 
 
+# raw growth data 
+raw_growth <- read.csv("~/Desktop/F2_paper/data/raw_growth_traits.csv")  
+raw_growth %>% colnames()
+colnames(raw_growth)[3:6] <- gsub("X", "plant_height_",colnames(raw_growth)[3:6])
+colnames(raw_growth)[7:10] <- gsub("X", "plant_width_",colnames(raw_growth)[7:10])
+colnames(raw_growth)[11:14] <- gsub("X", "lobe_number_",colnames(raw_growth)[11:14])
+colnames(raw_growth)[15:18] <- gsub("X", "leaf_number_",colnames(raw_growth)[15:18])
+colnames(raw_growth)[19] <- gsub("X", "plant_height_",colnames(raw_growth)[19])
+
+colnames(raw_growth) <- gsub("([[:print:]]+)(\\.1$)", "\\1", colnames(raw_growth))
+raw_growth %>% colnames()
+
+raw_growth_parent <- 
+raw_growth <- 
+raw_growth %>% 
+  filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
+  group_by(Name) %>% 
+  melt() %>% 
+  mutate(value = as.numeric(value))
+
+raw_growth_parent$variable <- gsub("\\.", "_", raw_growth_parent$variable)
+raw_growth_parent$Name <- gsub("Da-Ol1", "Da-Ol-1", raw_growth_parent$Name)
+
+# combine all parental data 
+flowering_data_parent %>% colnames()
+weight_root_branch_parent %>% colnames()
+raw_growth_parent %>% colnames()
+
+final_parent_no_oil <- 
+flowering_data_parent %>%
+  rbind(weight_root_branch_parent) %>% 
+  rbind(raw_growth_parent) 
+
+colnames(final_parent_no_oil) <- c("genotype", "rep_ID", "PHENOTYPE", "value")
+
+# oil trait 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/heritability/pheno.parent.H2.Rdata")
+pheno.parent.oil <- 
+pheno.parent.H2 %>% 
+  dplyr::select(-class) 
+
+pheno.parent.oil <- pheno.parent.oil[,c("genotype", "year", "PHENOTYPE", "value")]
+colnames(pheno.parent.oil)[2] <- "rep_ID"
+pheno.parent.oil$PHENOTYPE 
+pheno.parent.oil$PHENOTYPE <- gsub("Oil_content", "Crude_oil_contents", pheno.parent.oil$PHENOTYPE)
+
+final_parent <- 
+  final_parent_no_oil %>% 
+  rbind(pheno.parent.oil)
+
+# test for one trait 
+test <- 
+final_parent_no_oil %>% 
+  filter(PHENOTYPE == "days_to_bolt")
+
+lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
+summary(lme) 
+var <- as.data.frame(VarCorr(lme)) 
+var$vcov[2] # residual is the environmental effect   
+
+## calculate VarE
+VarE <- 
+sapply(unique(final_parent$PHENOTYPE), function(i) {
+  test <- final_parent %>% 
+  filter(PHENOTYPE == i)
+  
+  lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
+  var <- as.data.frame(VarCorr(lme)) 
+  var$vcov[2]
+})
+
+VarE <- data.frame(row.names = unique(final_parent$PHENOTYPE),
+                   VarE = VarE)
+VarE
+
+dim(VarE)
+
+## collect F2 data and calculate variance 
+load("~/Desktop/F2_paper/data/phefile.all.Rdata")
+phefile.all %>% colnames() 
+
+VarP <- 
+sapply(colnames(phefile.all), function(i) var(phefile.all[[i]], na.rm = T)) %>% 
+  as.data.frame()
+
+colnames(VarP) <- "VarP" 
+
+dim(VarP) 
+
+merge(VarE, VarP, by = 0) %>% 
+  mutate(heritability = (VarP - VarE)/VarP) %>% 
+  arrange(desc(heritability))     
+```  
+
+### appendix function for this script 
+```{r}
+### function to extract pair of traits with high correlation 
+high.cor.pair <- function(correlation, threshold){ 
+
+  dup.cordinate <- 
+    which(abs(correlation) >= threshold & lower.tri(correlation), arr.ind = T, useNames = F) 
+  cor.value <- 
+    correlation[which(abs(correlation) >= threshold & lower.tri(correlation), 
+                      arr.ind = T, useNames = F)] 
+
+  # dup.number <- length(unique(c(dup.cordinate[,1], dup.cordinate[,2])))
+  dup.cordinate.df <- as.data.frame(dup.cordinate)
+  dup.cordinate.df$V3 <- cor.value
+  sample.ID <- colnames(correlation) 
+
+  # extract duplicate pair information based on their coordicate
+  output <- data.frame(matrix(nrow = nrow(dup.cordinate.df), ncol = 3))
+  for (i in 1:nrow(dup.cordinate.df)){ 
+    output[i,1] <- sample.ID[dup.cordinate.df[i,1]]
+    output[i,2] <- sample.ID[dup.cordinate.df[i,2]]
+    output[i,3] <- dup.cordinate.df[i,3]
+  }
+
+  output   
+}       
 ``` 
-
 
 
