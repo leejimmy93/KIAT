@@ -527,7 +527,6 @@ write.csv(phefile.branch, file = "~/Desktop/F2_paper/data/phefile.branch.csv")
 heritability is formally defined as the proportion of phenotypic variation (VP) that is due to variation in genetic values (VG); Broad-sense heritability, defined as H2 = VG/VP, captures the proportion of phenotypic variation due to genetic values that may include effects due to dominance and epistasis; On the other hand, narrow-sense heritability, h2 = VA/VP, captures only that proportion of genetic variation that is due to additive genetic values (VA).  
 
 ```{r}
-
 library(lme4)
 library(lmerTest)
 
@@ -647,19 +646,36 @@ flowering_data_parent %>%
 colnames(final_parent_no_oil) <- c("genotype", "rep_ID", "PHENOTYPE", "value")
 
 # oil trait 
-load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/heritability/pheno.parent.H2.Rdata")
-pheno.parent.oil <- 
-pheno.parent.H2 %>% 
-  dplyr::select(-class) 
+pheno.parent.oil <- read.csv("~/Desktop/F2_paper/data/FA_Da-ae_Da-ol.csv", header = T, as.is = T)
+colnames(pheno.parent.oil) <- as.character(pheno.parent.oil[1,])
+pheno.parent.oil <- pheno.parent.oil[-1,] 
 
-pheno.parent.oil <- pheno.parent.oil[,c("genotype", "year", "PHENOTYPE", "value")]
-colnames(pheno.parent.oil)[2] <- "rep_ID"
-pheno.parent.oil$PHENOTYPE 
-pheno.parent.oil$PHENOTYPE <- gsub("Oil_content", "Crude_oil_contents", pheno.parent.oil$PHENOTYPE)
+colnames(pheno.parent.oil) <- gsub("([[:print:]]+)(\\()([[:print:]]+)", "\\1", colnames(pheno.parent.oil))
+colnames(pheno.parent.oil) <- gsub("\\ ", "\\_", colnames(pheno.parent.oil))  
+colnames(pheno.parent.oil) <- gsub("\\_$", "", colnames(pheno.parent.oil))
+colnames(pheno.parent.oil)[2] <- "Name"
+pheno.parent.oil[1,2] <- "Da-ae"
+pheno.parent.oil[,5:22] <- sapply(colnames(pheno.parent.oil)[5:22], function(i) as.numeric(pheno.parent.oil[,i])) 
+pheno.parent.oil
+
+pheno.parent.oil <- 
+pheno.parent.oil %>% 
+  filter(Name == "Da-ol1" | Name == "Da-ae" | Name == "F1") %>% 
+  group_by(Name) %>% 
+  melt() %>% 
+  mutate(genotype = Name, rep_ID = Date_of_analysis, PHENOTYPE = variable) %>% 
+  dplyr::select(genotype, rep_ID, PHENOTYPE, value) %>% 
+  mutate(value = as.numeric(value)) 
+
+pheno.parent.oil$PHENOTYPE <- gsub("oil_content", "Crude_oil_contents", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$PHENOTYPE <- gsub("cis-11-Eicosenoic_acid", "cis_11_Eicosenoic_acid", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$PHENOTYPE <- gsub("Palmitoliec_aicd", "Palmitoliec_acid", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$genotype <- gsub("Da-ae", "Da-Ae", pheno.parent.oil$genotype)
+pheno.parent.oil$genotype <- gsub("Da-ol1", "Da-Ol-1", pheno.parent.oil$genotype) 
 
 final_parent <- 
   final_parent_no_oil %>% 
-  rbind(pheno.parent.oil)
+  rbind(pheno.parent.oil) 
 
 # test for one trait 
 test <- 
@@ -669,13 +685,15 @@ final_parent_no_oil %>%
 lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
 summary(lme) 
 var <- as.data.frame(VarCorr(lme)) 
-var$vcov[2] # residual is the environmental effect   
+var$vcov[2] 
+var$vcov[1]/sum(var$vcov) 
+# residual is the environmental effect  
 
 ## calculate VarE
 VarE <- 
 sapply(unique(final_parent$PHENOTYPE), function(i) {
   test <- final_parent %>% 
-  filter(PHENOTYPE == i)
+  filter(PHENOTYPE == i) 
   
   lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
   var <- as.data.frame(VarCorr(lme)) 
@@ -686,7 +704,7 @@ VarE <- data.frame(row.names = unique(final_parent$PHENOTYPE),
                    VarE = VarE)
 VarE
 
-dim(VarE)
+dim(VarE) # 43 
 
 ## collect F2 data and calculate variance 
 load("~/Desktop/F2_paper/data/phefile.all.Rdata")
@@ -700,9 +718,43 @@ colnames(VarP) <- "VarP"
 
 dim(VarP) 
 
+heritability <- 
 merge(VarE, VarP, by = 0) %>% 
   mutate(heritability = (VarP - VarE)/VarP) %>% 
-  arrange(desc(heritability))     
+  arrange(desc(heritability)) 
+
+# second method, use parental data only to calculate heritability 
+heritability_2 <- 
+sapply(unique(final_parent$PHENOTYPE), function(i) {
+  test <- final_parent %>% 
+  filter(PHENOTYPE == i) 
+  
+  lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
+  var <- as.data.frame(VarCorr(lme)) 
+  var$vcov[1]/sum(var$vcov) 
+  
+})
+
+heritability_2 <- data.frame(Row.names = unique(final_parent$PHENOTYPE),
+                   heritability_2 = heritability_2)
+heritability_2
+
+heritability %>% 
+  left_join(heritability_2) %>% 
+  mutate(cor = cor(heritability, heritability_2))
+  arrange(desc(heritability_2)) 
+
+library(ggrepel)
+set.seed(111) 
+
+heritability_all %>% 
+  dplyr::filter(Row.names != "Heptadecanoic_acid") %>% 
+  ggplot(aes(x = heritability, y = heritability_2)) + 
+  geom_point() + 
+  geom_text_repel(aes(label = Row.names)) + 
+  geom_abline(a = 0, b = 1) 
+  
+heritability_all   
 ```  
 
 ### appendix function for this script 
