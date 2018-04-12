@@ -154,6 +154,7 @@ expression.pattern.Bn.parent.with.annot <- function(ID, annotation){
   return(p)
 }
 
+
 # expression profile graph, need to have voom transformed data
 expression.pattern.Bn.parent <- function(ID){
   rownames(ID) <- ID$V1

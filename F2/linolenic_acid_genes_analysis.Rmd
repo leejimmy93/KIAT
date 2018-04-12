@@ -578,9 +578,6 @@ provean.result <- read.csv("~/Desktop/F2_paper/data/candidate_linolenic.csv")
 provean.result %>% colnames()
 provean.result %>% 
   dplyr::select(names, AGI, At_symbol, mutation_type, GO_des:X.4) %>% 
-<<<<<<< HEAD
-  View()    
-=======
   View()  
 
 # we are worried that using Arabidopsis blast hit to find homeologou might not be the best method, so I will use reciprocal blast to look for homeologs on A08 and C03 for linolenic acid QTL region 
@@ -632,8 +629,6 @@ homeo_blast
 cis_eQTL_linolenic <- allele_effect_result[allele_effect_result$names %in% homeo_blast,]
 
 # combine with SNP result to look for potential candidates ... 
-
->>>>>>> 6f90f3a26bd4b76785fc075f390a6fb06c47647f
 ```
 
 ### appendix function  
@@ -658,7 +653,7 @@ allele.effect <- function(gene_ID){
   qtl.fit <- fitqtl(cross=cross.F2,qtl=qtlm,formula = y ~ Q1, get.ests=T)
 
   summary(qtl.fit)    
-} 
+}  
 ```
 
 

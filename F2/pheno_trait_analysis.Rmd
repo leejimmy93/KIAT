@@ -529,56 +529,9 @@ heritability is formally defined as the proportion of phenotypic variation (VP) 
 ```{r}
 library(lme4)
 library(lmerTest)
+library(reshape2)
 
 # I see that Julin have repliates so that heritability can be caculated after fitting a linear model with fixed and random effect, with line effect as random effect. Then using VarCorr() function I can get the amount of variance due to line and the total amount of variance, then H2 can be calculated by deviding the 1st by the 2nd value. However, here I don't have replicates, so how to calculate this???  
-
-# I only have Erucic, oleic and oil content from multiple years, so will consider that 
-load("~/F2/for_paper/heritability/parental_oil.Rdata")
-tmp.1.1 <- # data from 2016-2017 summarized by Julin 
-tmp.1 %>% 
-  filter(PHENOTYPE == "Erucic_acid" | PHENOTYPE == "Oil_content" | PHENOTYPE == "Oleic_acid") 
-
-tmp.2.1 <- # data from 2017-2018 
-tmp.2 %>% 
-  filter(PHENOTYPE == "Erucic_acid" | PHENOTYPE == "Oil_content" | PHENOTYPE == "Oleic_acid") 
-
-tmp.1.1$year <- rep("2016", nrow(tmp.1.1))
-tmp.2.1$year <- rep("2017", nrow(tmp.2.1))
-
-pheno.parent.H2 <- rbind(tmp.1.1, tmp.2.1) 
-pheno.parent.H2$variable <- gsub("ID_505_K200", "Da-Ae", pheno.parent.H2$variable)
-pheno.parent.H2$variable <- gsub("ID_505_K201", "Da-Ol-1", pheno.parent.H2$variable)
-pheno.parent.H2$variable <- gsub("K200", "Da-Ae", pheno.parent.H2$variable)
-pheno.parent.H2$variable <- gsub("K201", "Da-Ol-1", pheno.parent.H2$variable)
-
-colnames(pheno.parent.H2)[2] <- "genotype"
-
-### erucic 
-test <- 
-pheno.parent.H2 %>% 
-  filter(PHENOTYPE == "Oil_content")
-
-test
-lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
-summary(lme) 
-var <- as.data.frame(VarCorr(lme)) 
-var # residual is the environmental effect  
-
-lme2 <- lmer(as.numeric(value) ~ (1|genotype),data=test)
-summary(lme) 
-var <- as.data.frame(VarCorr(lme)) 
-var # residual is the environmental effect  
-
-phefile <- read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", header = F, row.names = 1)
-phefile.t <- phefile %>% t() %>% as.data.frame() 
-
-lme.2 <- lmer(as.numeric(as.character(Oleic_acid)) ~ (1|as.character(id)), data = phefile.t, control=lmerControl(check.nobs.vs.nlev = "ignore",check.nobs.vs.rankZ = "ignore", check.nobs.vs.nRE="ignore")) 
-
-sum(as.data.frame(VarCorr(lme.2))$vcov) 
-
-# oil content 
-var(as.numeric(as.character(phefile.t$Crude_oil_contents))) 
-# understand how to get heritability for this dataset 
 
 # flowering time 
 library(lubridate)
@@ -597,6 +550,8 @@ flowering_data %>%
   mutate(value = as.numeric(value))
 
 # plant weight, root weight, and branch data 
+extra <- read.csv("~/Desktop/F2_paper/data/AdditionalF2Data_updated_20180222.csv")
+
 weight_root_branch_parent <- 
 extra %>% 
   filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
@@ -739,9 +694,10 @@ heritability_2 <- data.frame(Row.names = unique(final_parent$PHENOTYPE),
                    heritability_2 = heritability_2)
 heritability_2
 
+heritability_all <- 
 heritability %>% 
   left_join(heritability_2) %>% 
-  mutate(cor = cor(heritability, heritability_2))
+  mutate(cor = cor(heritability, heritability_2)) %>% 
   arrange(desc(heritability_2)) 
 
 library(ggrepel)
