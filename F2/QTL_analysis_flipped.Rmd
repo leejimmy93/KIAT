@@ -537,8 +537,6 @@ traitQTL.annotated %>%
 #    traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
     filter(chrom == "C02") 
 
-<<<<<<< HEAD 
-save(plant_width, file = "~/F2/for_paper/")
 source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")  
 load("~/Desktop/plant_width.Rdata")
 GOseq.Bn.ORA(plant_width$gene_ID) # no enriched GO term 
@@ -1298,7 +1296,7 @@ lapply(1:length(scanone_result), function(i) {
 })
 
 cim_2 <- 
-lapply(1:length(cim_result), function(i) {
+lapply(1:length(cim_result), function(i) { 
   tmp <- cim_result[[i]] %>% 
     filter(chr == "A10" | chr == "C06")
     if(nrow(tmp) > 0){
@@ -1322,7 +1320,16 @@ ggsave(p.flower_etc, filename = "~/F2/for_paper/flower_etc.png", height = 3, wid
 ggsave(p.final_FA, filename = "~/F2/for_paper/FA.png", height = 3, width = 9) 
 ```
 
+### get SNP information for genes underneath the QTL interval, those with missense & stop gained mutation  
 
+```{r}
+load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
+traitQTL.annotated %>% colnames()
+
+
+
+
+```
 
 
 

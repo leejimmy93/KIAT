@@ -22,7 +22,7 @@ height[,1:2] %>% head()
 
 ID <- gsub("(r_ID__I)(\\[)([[:print:]]+)(,Intercept])", "\\3", height$X)[347:515] 
 
-### functions 
+### functions  
 coef_extract <- function(model_summary, ID){
   coef_Hmax <- model_summary[grep("r_ID__Hmax", model_summary$X) ,"mean"]
   coef_k <- model_summary[grep("r_ID__k", model_summary$X) ,"mean"] 
@@ -603,12 +603,13 @@ phefile.t <- phefile %>% t() %>% as.data.frame()
 
 lme.2 <- lmer(as.numeric(as.character(Oleic_acid)) ~ (1|as.character(id)), data = phefile.t, control=lmerControl(check.nobs.vs.nlev = "ignore",check.nobs.vs.rankZ = "ignore", check.nobs.vs.nRE="ignore")) 
 
-sum(as.data.frame(VarCorr(lme.2))$vcov) 
+sum(as.data.frame(VarCorr(lme.2))$vcov)  
 
 # oil content 
 var(as.numeric(as.character(phefile.t$Crude_oil_contents))) 
 # understand how to get heritability for this dataset 
 
+save(pheno.parent.H2, file = "~/F2/for_paper/heritability/pheno.parent.H2.Rdata")
 # flowering time, growth, and branch data 
 
 
