@@ -121,7 +121,7 @@ phefile %>% dim() # 166 44
 phefile <- as.data.frame(t(phefile))   
 
 colnames(phefile)
-rname <- phefile$id %>% as.character()
+rname <- phefile$id %>% as.character() 
 
 phefile <- 
 phefile %>% 
@@ -199,7 +199,7 @@ extra %>%
             length_of_branch_10 = mean(X10_length_of_branch, na.rm = T),
             length_of_branch_15 = mean(X15_length_of_branch, na.rm = T)) 
 
-library(reshape2)
+library(reshape2) 
 
 extra_2 <- 
 flowering_data %>% melt() %>%
@@ -508,6 +508,220 @@ pheno.parent.oil %>%
 save(pheno.parent.oil, file = "~/Desktop/F2_paper/data/pheno.parent.oil.Rdata")
 ```
 
+### prepare phefile for QTL mapping 
+```{r}
+load("~/Desktop/F2_paper/data/phefile.all.Rdata")
+phefile.all %>% colnames() 
+
+phefile.branch <- 
+phefile.all %>% 
+  dplyr::select(leaf_number_k, length_of_branch_5, length_of_branch_10, length_of_branch_15, Erucic_acid) %>%
+  t() %>% 
+  as.data.frame() 
+
+write.csv(phefile.branch, file = "~/Desktop/F2_paper/data/phefile.branch.csv") 
+```
+
+### heritability 
+
+heritability is formally defined as the proportion of phenotypic variation (VP) that is due to variation in genetic values (VG); Broad-sense heritability, defined as H2 = VG/VP, captures the proportion of phenotypic variation due to genetic values that may include effects due to dominance and epistasis; On the other hand, narrow-sense heritability, h2 = VA/VP, captures only that proportion of genetic variation that is due to additive genetic values (VA).  
+
+```{r}
+library(lme4)
+library(lmerTest)
+library(reshape2)
+
+# I see that Julin have repliates so that heritability can be caculated after fitting a linear model with fixed and random effect, with line effect as random effect. Then using VarCorr() function I can get the amount of variance due to line and the total amount of variance, then H2 can be calculated by deviding the 1st by the 2nd value. However, here I don't have replicates, so how to calculate this???  
+
+# flowering time 
+library(lubridate)
+flowering_data <- read.csv("~/Desktop/F2_paper/data/flowering_data.csv")
+colnames(flowering_data)[c(5,6)] <- c("bolting_date", "flowering_date")
+
+flowering_data_parent <- 
+flowering_data %>%  
+  filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
+  group_by(Name) %>%
+  mutate(days_to_bolt = ymd(bolting_date)-ymd(Day_of_sowing), 
+          days_to_flower = ymd(flowering_date)-ymd(Day_of_sowing),
+          bolting_to_flowering = ymd(flowering_date)-ymd(bolting_date)) %>% 
+  dplyr::select(Name, Individual_.No., days_to_bolt, days_to_flower, bolting_to_flowering) %>% 
+  melt() %>% 
+  mutate(value = as.numeric(value))
+
+# plant weight, root weight, and branch data 
+extra <- read.csv("~/Desktop/F2_paper/data/AdditionalF2Data_updated_20180222.csv")
+
+weight_root_branch_parent <- 
+extra %>% 
+  filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
+  group_by(Name) %>% 
+  mutate(plant_weight_2016_05_13 = Plant_weight_2016_05_13, 
+            root_weight_2016_05_13 = Root_weight_2016_05_13,
+            length_of_branch_5 = X5_length_of_branch, 
+            length_of_branch_10 = X10_length_of_branch,
+            length_of_branch_15 = X15_length_of_branch) %>% 
+  dplyr::select(-starts_with("X"), -Plant_weight_2016_05_13, -Root_weight_2016_05_13) %>% 
+  melt() %>% 
+  mutate(value = as.numeric(value)) 
+
+# raw growth data 
+raw_growth <- read.csv("~/Desktop/F2_paper/data/raw_growth_traits.csv")  
+raw_growth %>% colnames()
+colnames(raw_growth)[3:6] <- gsub("X", "plant_height_",colnames(raw_growth)[3:6])
+colnames(raw_growth)[7:10] <- gsub("X", "plant_width_",colnames(raw_growth)[7:10])
+colnames(raw_growth)[11:14] <- gsub("X", "lobe_number_",colnames(raw_growth)[11:14])
+colnames(raw_growth)[15:18] <- gsub("X", "leaf_number_",colnames(raw_growth)[15:18])
+colnames(raw_growth)[19] <- gsub("X", "plant_height_",colnames(raw_growth)[19])
+
+colnames(raw_growth) <- gsub("([[:print:]]+)(\\.1$)", "\\1", colnames(raw_growth))
+raw_growth %>% colnames()
+
+raw_growth_parent <- 
+raw_growth <- 
+raw_growth %>% 
+  filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
+  group_by(Name) %>% 
+  melt() %>% 
+  mutate(value = as.numeric(value))
+
+raw_growth_parent$variable <- gsub("\\.", "_", raw_growth_parent$variable)
+raw_growth_parent$Name <- gsub("Da-Ol1", "Da-Ol-1", raw_growth_parent$Name)
+
+# combine all parental data 
+flowering_data_parent %>% colnames()
+weight_root_branch_parent %>% colnames()
+raw_growth_parent %>% colnames()
+
+final_parent_no_oil <- 
+flowering_data_parent %>%
+  rbind(weight_root_branch_parent) %>% 
+  rbind(raw_growth_parent) 
+
+colnames(final_parent_no_oil) <- c("genotype", "rep_ID", "PHENOTYPE", "value")
+
+# oil trait 
+pheno.parent.oil <- read.csv("~/Desktop/F2_paper/data/FA_Da-ae_Da-ol.csv", header = T, as.is = T)
+colnames(pheno.parent.oil) <- as.character(pheno.parent.oil[1,])
+pheno.parent.oil <- pheno.parent.oil[-1,] 
+
+colnames(pheno.parent.oil) <- gsub("([[:print:]]+)(\\()([[:print:]]+)", "\\1", colnames(pheno.parent.oil))
+colnames(pheno.parent.oil) <- gsub("\\ ", "\\_", colnames(pheno.parent.oil))  
+colnames(pheno.parent.oil) <- gsub("\\_$", "", colnames(pheno.parent.oil))
+colnames(pheno.parent.oil)[2] <- "Name"
+pheno.parent.oil[1,2] <- "Da-ae"
+pheno.parent.oil[,5:22] <- sapply(colnames(pheno.parent.oil)[5:22], function(i) as.numeric(pheno.parent.oil[,i])) 
+pheno.parent.oil
+
+pheno.parent.oil <- 
+pheno.parent.oil %>% 
+  filter(Name == "Da-ol1" | Name == "Da-ae" | Name == "F1") %>% 
+  group_by(Name) %>% 
+  melt() %>% 
+  mutate(genotype = Name, rep_ID = Date_of_analysis, PHENOTYPE = variable) %>% 
+  dplyr::select(genotype, rep_ID, PHENOTYPE, value) %>% 
+  mutate(value = as.numeric(value)) 
+
+pheno.parent.oil$PHENOTYPE <- gsub("oil_content", "Crude_oil_contents", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$PHENOTYPE <- gsub("cis-11-Eicosenoic_acid", "cis_11_Eicosenoic_acid", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$PHENOTYPE <- gsub("Palmitoliec_aicd", "Palmitoliec_acid", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$genotype <- gsub("Da-ae", "Da-Ae", pheno.parent.oil$genotype)
+pheno.parent.oil$genotype <- gsub("Da-ol1", "Da-Ol-1", pheno.parent.oil$genotype) 
+
+final_parent <- 
+  final_parent_no_oil %>% 
+  rbind(pheno.parent.oil) 
+
+# test for one trait 
+test <- 
+final_parent_no_oil %>% 
+  filter(PHENOTYPE == "days_to_bolt")
+
+lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
+summary(lme) 
+var <- as.data.frame(VarCorr(lme)) 
+var$vcov[2] 
+var$vcov[1]/sum(var$vcov) 
+# residual is the environmental effect  
+
+## calculate VarE
+VarE <- 
+sapply(unique(final_parent$PHENOTYPE), function(i) {
+  test <- final_parent %>% 
+  filter(PHENOTYPE == i) 
+  
+  lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
+  var <- as.data.frame(VarCorr(lme)) 
+  var$vcov[2]
+})
+
+VarE <- data.frame(row.names = unique(final_parent$PHENOTYPE),
+                   VarE = VarE)
+VarE
+
+dim(VarE) # 43 
+
+## collect F2 data and calculate variance 
+load("~/Desktop/F2_paper/data/phefile.all.Rdata")
+phefile.all %>% colnames() 
+
+<<<<<<< HEAD
+sum(as.data.frame(VarCorr(lme.2))$vcov)  
+=======
+VarP <- 
+sapply(colnames(phefile.all), function(i) var(phefile.all[[i]], na.rm = T)) %>% 
+  as.data.frame()
+>>>>>>> 152f1dad7bc0e940ed36caeff7351591ea292edb
+
+colnames(VarP) <- "VarP" 
+
+<<<<<<< HEAD
+save(pheno.parent.H2, file = "~/F2/for_paper/heritability/pheno.parent.H2.Rdata")
+# flowering time, growth, and branch data 
+=======
+dim(VarP) 
+>>>>>>> 152f1dad7bc0e940ed36caeff7351591ea292edb
+
+heritability <- 
+merge(VarE, VarP, by = 0) %>% 
+  mutate(heritability = (VarP - VarE)/VarP) %>% 
+  arrange(desc(heritability)) 
+
+# second method, use parental data only to calculate heritability 
+heritability_2 <- 
+sapply(unique(final_parent$PHENOTYPE), function(i) {
+  test <- final_parent %>% 
+  filter(PHENOTYPE == i) 
+  
+  lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
+  var <- as.data.frame(VarCorr(lme)) 
+  var$vcov[1]/sum(var$vcov) 
+  
+})
+
+heritability_2 <- data.frame(Row.names = unique(final_parent$PHENOTYPE),
+                   heritability_2 = heritability_2)
+heritability_2
+
+heritability_all <- 
+heritability %>% 
+  left_join(heritability_2) %>% 
+  mutate(cor = cor(heritability, heritability_2)) %>% 
+  arrange(desc(heritability_2)) 
+
+library(ggrepel)
+set.seed(111) 
+
+heritability_all %>% 
+  dplyr::filter(Row.names != "Heptadecanoic_acid") %>% 
+  ggplot(aes(x = heritability, y = heritability_2)) + 
+  geom_point() + 
+  geom_text_repel(aes(label = Row.names)) + 
+  geom_abline(a = 0, b = 1) 
+  
+heritability_all   
+```  
+
 ### appendix function for this script 
 ```{r}
 ### function to extract pair of traits with high correlation 
@@ -534,87 +748,6 @@ high.cor.pair <- function(correlation, threshold){
 
   output   
 }       
-```
-
-### prepare phefile for QTL mapping 
-```{r}
-load("~/Desktop/F2_paper/data/phefile.all.Rdata")
-phefile.all %>% colnames() 
-
-phefile.branch <- 
-phefile.all %>% 
-  dplyr::select(leaf_number_k, length_of_branch_5, length_of_branch_10, length_of_branch_15, Erucic_acid) %>%
-  t() %>% 
-  as.data.frame() 
-
-write.csv(phefile.branch, file = "~/Desktop/F2_paper/data/phefile.branch.csv") 
-```
-
-### heritability 
-
-heritability is formally defined as the proportion of phenotypic variation (VP) that is due to variation in genetic values (VG); Broad-sense heritability, defined as H2 = VG/VP, captures the proportion of phenotypic variation due to genetic values that may include effects due to dominance and epistasis; On the other hand, narrow-sense heritability, h2 = VA/VP, captures only that proportion of genetic variation that is due to additive genetic values (VA).  
-
-```{r}
-
-library(lme4)
-library(lmerTest)
-
-# I see that Julin have repliates so that heritability can be caculated after fitting a linear model with fixed and random effect, with line effect as random effect. Then using VarCorr() function I can get the amount of variance due to line and the total amount of variance, then H2 can be calculated by deviding the 1st by the 2nd value. However, here I don't have replicates, so how to calculate this???  
-
-# I only have Erucic, oleic and oil content from multiple years, so will consider that 
-load("~/F2/for_paper/heritability/parental_oil.Rdata")
-tmp.1.1 <- # data from 2016-2017 summarized by Julin 
-tmp.1 %>% 
-  filter(PHENOTYPE == "Erucic_acid" | PHENOTYPE == "Oil_content" | PHENOTYPE == "Oleic_acid") 
-
-tmp.2.1 <- # data from 2017-2018 
-tmp.2 %>% 
-  filter(PHENOTYPE == "Erucic_acid" | PHENOTYPE == "Oil_content" | PHENOTYPE == "Oleic_acid") 
-
-tmp.1.1$year <- rep("2016", nrow(tmp.1.1))
-tmp.2.1$year <- rep("2017", nrow(tmp.2.1))
-
-pheno.parent.H2 <- rbind(tmp.1.1, tmp.2.1) 
-pheno.parent.H2$variable <- gsub("ID_505_K200", "Da-Ae", pheno.parent.H2$variable)
-pheno.parent.H2$variable <- gsub("ID_505_K201", "Da-Ol-1", pheno.parent.H2$variable)
-pheno.parent.H2$variable <- gsub("K200", "Da-Ae", pheno.parent.H2$variable)
-pheno.parent.H2$variable <- gsub("K201", "Da-Ol-1", pheno.parent.H2$variable)
-
-colnames(pheno.parent.H2)[2] <- "genotype"
-
-### erucic 
-test <- 
-pheno.parent.H2 %>% 
-  filter(PHENOTYPE == "Oil_content")
-
-test
-lme <- lmer(as.numeric(value) ~ (1|genotype),data=test)
-summary(lme) 
-var <- as.data.frame(VarCorr(lme)) 
-var # residual is the environmental effect  
-
-lme2 <- lmer(as.numeric(value) ~ (1|genotype),data=test)
-summary(lme) 
-var <- as.data.frame(VarCorr(lme)) 
-var # residual is the environmental effect  
-
-phefile <- read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", header = F, row.names = 1)
-phefile.t <- phefile %>% t() %>% as.data.frame() 
-
-lme.2 <- lmer(as.numeric(as.character(Oleic_acid)) ~ (1|as.character(id)), data = phefile.t, control=lmerControl(check.nobs.vs.nlev = "ignore",check.nobs.vs.rankZ = "ignore", check.nobs.vs.nRE="ignore")) 
-
-sum(as.data.frame(VarCorr(lme.2))$vcov)  
-
-# oil content 
-var(as.numeric(as.character(phefile.t$Crude_oil_contents))) 
-# understand how to get heritability for this dataset 
-
-save(pheno.parent.H2, file = "~/F2/for_paper/heritability/pheno.parent.H2.Rdata")
-# flowering time, growth, and branch data 
-
-
-
 ``` 
-
 
 

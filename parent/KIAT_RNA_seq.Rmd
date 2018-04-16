@@ -2775,8 +2775,7 @@ pl.mapping.rate.3 <- ggplot(data = sample_summary_3_summary)
 pl.mapping.rate.3 <- pl.mapping.rate.3 + geom_bar(aes(x=Cultivar, y=mean, fill=Cultivar), stat = "identity")
 pl.mapping.rate.3 <- pl.mapping.rate.3 + geom_errorbar(aes(x=Cultivar, ymin=min, ymax=max))
 pl.mapping.rate.3 
-ggsave(pl.mapping.rate.3, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/figure/mapping_rate_Da_Ol.png", width = 5, height = 5)
-
+ggsave(pl.mapping.rate.3, filename = "~/Desktop/Brassica_project/KIAT_RNA_seq/figure/mapping_rate_Da_Ol.png", width = 5, height = 5) 
 ```
 
 # check kallisto mapping rate from previous run back in August
@@ -3005,6 +3004,31 @@ tmp3 <- read.csv("~/Desktop/test.csv")
 tmp3$folder2 <- paste("Cabernet:/share/malooflab/Ruijuan/parent_assembly/cufflinks", tmp3$folder, "cufflink_output", sep = "/")
 tmp3$folder2
 write.csv(tmp3, file = "~/Desktop/test.csv")
+
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.pairwise.gt.Rdata")
+load("~/Desktop/F2_paper/data/cis_eQTL_linolenic.Rdata")
+
+DEgene.young[rownames(DEgene.young) %in% cis_eQTL_linolenic$names,]
+DEgene.bolting[rownames(DEgene.bolting) %in% cis_eQTL_linolenic$names,]
+DEgene.flowering[rownames(DEgene.flowering) %in% cis_eQTL_linolenic$names,]
+DEgene.early.silique[rownames(DEgene.early.silique) %in% cis_eQTL_linolenic$names,]
+DEgene.late.silique[rownames(DEgene.late.silique) %in% cis_eQTL_linolenic$names,] 
+
+library(reshape2)
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.Rdata")
+
+expression.pattern.Bn.parent(cis_eQTL_linolenic$names)
+cis_eQTL_linolenic$names
+
+cis_eQTL_linolenic <- as.data.frame(cis_eQTL_linolenic$names)
+colnames(cis_eQTL_linolenic) <- "V1"
+rownames(cis_eQTL_linolenic) <- cis_eQTL_linolenic$V1 
+
+data.melt.reshape %>% filter(tissue == "late-silique")  %>% 
+  ggplot() + 
+  geom_bar(aes(x = gt, y = mean), stat = "identity") + 
+  facet_wrap(~geneID) + 
+  geom_errorbar(mapping=aes(x=gt,ymin=min,ymax=max, width=0.25)) 
 ```
 
 

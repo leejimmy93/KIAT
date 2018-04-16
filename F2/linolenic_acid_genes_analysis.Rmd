@@ -641,9 +641,12 @@ cis_eQTL_linolenic %>%
   View() 
 
 # combine with SNP result to look for potential candidates ... 
+<<<<<<< HEAD
 
 blast_result_SNP <- read.delim(file = "~/F2/for_paper/linolenic_acid/reciprocal.blast", header = F)
 blast_result_SNP 
+=======
+>>>>>>> 152f1dad7bc0e940ed36caeff7351591ea292edb
 ```
 
 ### appendix function  
@@ -668,7 +671,7 @@ allele.effect <- function(gene_ID){
   qtl.fit <- fitqtl(cross=cross.F2,qtl=qtlm,formula = y ~ Q1, get.ests=T)
 
   summary(qtl.fit)    
-} 
+}  
 ```
 
 
