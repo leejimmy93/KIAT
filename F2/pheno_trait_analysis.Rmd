@@ -575,7 +575,7 @@ colnames(raw_growth)[15:18] <- gsub("X", "leaf_number_",colnames(raw_growth)[15:
 colnames(raw_growth)[19] <- gsub("X", "plant_height_",colnames(raw_growth)[19])
 
 colnames(raw_growth) <- gsub("([[:print:]]+)(\\.1$)", "\\1", colnames(raw_growth))
-raw_growth %>% colnames()
+raw_growth %>% colnames() 
 
 raw_growth_parent <- 
 raw_growth <- 
@@ -677,7 +677,7 @@ heritability <-
 merge(VarE, VarP, by = 0) %>% 
   mutate(heritability = (VarP - VarE)/VarP) %>% 
   arrange(desc(heritability)) 
-
+heritability
 # second method, use parental data only to calculate heritability 
 heritability_2 <- 
 sapply(unique(final_parent$PHENOTYPE), function(i) {
@@ -711,9 +711,19 @@ heritability_all %>%
   geom_abline(a = 0, b = 1) 
   
 heritability_all   
+
+heritability_all %>% 
+  dplyr::filter(Row.names != "Heptadecanoic_acid") %>% 
+  ggplot(aes(x = heritability, y = heritability_2)) + 
+  geom_point() + 
+  geom_text_repel(aes(label = Row.names)) + 
+  geom_abline(a = 0, b = 1) 
+
+heritability %>% 
+  filter(Row.names != "Caprylic_acid") 
 ```  
 
-### appendix function for this script 
+### appendix function for this script  
 ```{r}
 ### function to extract pair of traits with high correlation 
 high.cor.pair <- function(correlation, threshold){ 

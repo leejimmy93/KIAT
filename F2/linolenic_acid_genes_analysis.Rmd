@@ -479,7 +479,7 @@ write.csv(F2_geno_data_interval_linolenic, file = "~/F2/for_paper/linolenic_acid
 
 sig_SNP_ann <- read_table2("~/F2/for_paper/linolenic_acid/significant_SNP_annotation", col_names=F)
 head(sig_SNP_ann)  
-dim(sig_SNP_ann)
+dim(sig_SNP_ann) 
 colnames(sig_SNP_ann) <- c("CHROM", "POS", "REF", "ALT", "mutation_type")
 
 unique(sig_SNP_ann$mutation_type)                          
@@ -512,7 +512,7 @@ F2_geno_data_interval_linolenic$SNP.ID <- paste(F2_geno_data_interval_linolenic$
 SNP_interval_linolenic <- 
 F2_geno_data_interval_linolenic %>% 
   left_join(SNP_gene_final) 
-dim(SNP_interval_linolenic) # 1472 
+dim(SNP_interval_linolenic) # 1472  
 
 save(SNP_interval_linolenic, file = "~/F2/for_paper/linolenic_acid/SNP_interval_linolenic.Rdata")
 load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
