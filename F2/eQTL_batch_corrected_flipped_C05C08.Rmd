@@ -165,7 +165,7 @@ cis_eQTL %>%
   View()
 ###
 
-cis_eQTL$class <- rep("cis", nrow(cis_eQTL)) 
+cis_eQTL$class <- rep("cis", nrow(cis_eQTL))  
 trans_eQTL$class <- rep("trans", nrow(trans_eQTL))   
 
 # get only main chromosome stuff   
@@ -246,4 +246,152 @@ sum(C_genes$eQTL_subgenome == C_genes$gene_subgenome) /nrow(C_genes) # 70%
 eQTL[eQTL$eQTL_subgenome == "A",] %>% nrow() /nrow(eQTL) 
 eQTL[eQTL$eQTL_subgenome == "C",] %>% nrow() /nrow(eQTL) 
 ``` 
+
+### find overlaps between eQTL and traitQTL 
+```{r}
+# trait QTL using scanone result  
+load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
+load("~/F2/output/eQTL/cis_trans_result_new_flipped_C05C08.Rdata") 
+
+cis_eQTL %>% dim() #  11587    15
+trans_eQTL %>% dim() # 14657    15  
+traitQTL.annotated %>% dim() # 18647    13 
+
+traitQTL.annotated %>% colnames()
+traitQTL.annotated %>% 
+  group_by(trait, chrom) %>% 
+  dplyr::summarise(count = n()) %>% 
+  dim()
+
+cis_eQTL.qtl.combined <- inner_join(cis_eQTL,traitQTL.annotated,by="gene_ID") 
+cis_eQTL.qtl.combined %>% head()    
+cis_eQTL.qtl.combined %>% dim() # 2165   27   
+
+colnames(cis_eQTL.qtl.combined) 
+
+cis_eQTL.qtl.combined.final <- 
+cis_eQTL.qtl.combined %>% 
+  mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y, eQTL_genetic_start = genetic_start.x, eQTL_genetic_end = genetic_end.x, QTL_genetic_start = genetic_start.y, QTL_genetic_end = genetic_end.y) %>% 
+  dplyr::select(-c(start.x, end.x, start.y, end.y, genetic_start.x, genetic_end.x, genetic_start.y, genetic_end.y)) 
+
+write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")   
+  
+# trans-eQTL overlap with trait QTL, use genetic interval as the interval for both trait QTL and eQTL  
+
+traitQTL <-  
+traitQTL.annotated %>%  
+  group_by(trait, chrom, genetic_start, genetic_end, model, start, end) %>% 
+  dplyr::summarise(count = n())  
+
+trans_eQTL %>% colnames() 
+trans_eQTL %>% head()
+gff.trans_eQTL <- GRanges(seqnames = Rle(trans_eQTL$eQTL_chr),ranges = IRanges(start = trans_eQTL$genetic_start, end = trans_eQTL$genetic_end), names = trans_eQTL$gene_ID) 
+
+traitQTL %>% colnames() 
+gff.trait_qtl<- GRanges(seqnames = Rle(paste("chr", traitQTL$chrom, sep = "")),ranges = IRanges(start = traitQTL$genetic_start, end = traitQTL$genetic_end), trait = traitQTL$trait)   
+
+# cis_eQTL.qtl.combined 
+trans_candidate <- mergeByOverlaps(gff.trait_qtl, gff.trans_eQTL) 
+trans_candidate %>% dim()  # 4022    4  
+trans_candidate 
+
+### add the rest of information from trans_eQTL & trait_QTL 
+trans_candidate <- 
+trans_candidate %>% 
+  as.data.frame() %>% 
+  mutate(chrom = gff.trait_qtl.seqnames, trait_genetic_start = gff.trait_qtl.start, trait_genetic_end = gff.trait_qtl.end, gene_ID = names, eQTL_chr = gff.trans_eQTL.seqnames, eQTL_genetic_start = gff.trans_eQTL.start, eQTL_genetic_end = gff.trans_eQTL.end) %>% 
+  dplyr::select(chrom, trait_genetic_start, trait_genetic_end, trait, gene_ID, eQTL_chr, eQTL_genetic_start, eQTL_genetic_end) 
+
+### annotate trans_eQTL 
+load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
+BnapusAnnotation %>% colnames()
+
+trans_candidate.final <- 
+trans_candidate %>%  
+  left_join(BnapusAnnotation, c("gene_ID" = "name")) %>% 
+  mutate(trait_chrom = chrom.x, gene.chrom = chrom.y, gene.start = start, gene.end = end) %>% 
+  dplyr::select(-c(chrom.x, chrom.y, start, end)) 
+
+## get GO term for each gene
+load("~/Reference/B.napus/napus_GO_combined.Rdata") # there is one colomn hiding... 
+
+trans_candidate.final <- 
+trans_candidate.final %>% 
+  left_join(napus_GO_combined) 
+
+trans_candidate.final %>% dim() # 4022 16 
+trans_candidate.final$gene_ID %>% unique() %>% length() # 1972 
+write.csv(trans_candidate.final, file = "~/F2/output/eQTL/trans_candidate.final.csv") 
+
+### make some plot for several important genes 
+# the two FAE 
+
+# the two 
+### make some table & plot for several important genes 
+# 1) Fatty acid/flowering/growth related genes for cis-eQTL final list 
+cis_eQTL.qtl.combined.final_fatty_acid <- 
+cis_eQTL.qtl.combined.final[grep("lipid|fatty", cis_eQTL.qtl.combined.final$GO_des),] %>% 
+    dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) 
+
+# 2) transcription factor coding genes for cis-eQTL final list
+cis_eQTL.qtl.combined.final_TF <- 
+cis_eQTL.qtl.combined.final[grep("DNA|nucleotide|transcription", cis_eQTL.qtl.combined.final$GO_des),] %>% 
+  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) 
+
+# 3) Fatty acid/flowering/growth related genes for trans-eQTL final list
+trans_candidate.final_fatty_acid <- 
+trans_candidate.final[grep("lipid|fatty", trans_candidate.final$GO_des),] %>%
+    dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des) 
+
+# 4) figures for the two cis-eQTL gene 
+# BnaA08g11060D & BnaA08g11140D two cis-eQTL gene for fatty acid, need to deal with the color problem... more colors than a single palette can handel... 
+# save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata") 
+
+### check whether FLC is cis-regulator for some the traits 
+# load("~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
+
+cis_eQTL.qtl.combined.final %>%  
+  filter(AGI == "AT5G10140") %>% 
+  View() # FLC is cis-regulator    
+
+#### other important flower genes under C06? 
+### important flower related genes 
+flowering_time_gene <- read.csv("~/F2/for_paper/flowering_time/flowering_time_genes.csv")
+flowering_time_gene$Gene.number <- gsub("\\ ", "", flowering_time_gene$Gene.number)
+flowering_time_gene$Gene.number <- gsub("\\\xca", "", flowering_time_gene$Gene.number) 
+
+cis_eQTL.qtl.combined.final_flowering <- 
+cis_eQTL.qtl.combined.final[cis_eQTL.qtl.combined.final$AGI %in% flowering_time_gene$Gene.number,] %>% 
+  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) # no cis-flowering regulator under C06 
+
+trans_candidate.final_flowering <- 
+trans_candidate.final[trans_candidate.final$AGI %in% flowering_time_gene$Gene.number,] %>%
+  dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des)
+
+write.csv(cis_eQTL.qtl.combined.final_fatty_acid, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_fatty_acid.csv")
+write.csv(cis_eQTL.qtl.combined.final_flowering, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_flowering.csv")
+write.csv(cis_eQTL.qtl.combined.final_TF, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_TF.csv")
+
+write.csv(trans_candidate.final_fatty_acid, file = "~/F2/output/eQTL/trans_candidate.final_fatty_acid.csv")
+write.csv(trans_candidate.final_flowering, file =  "~/F2/output/eQTL/trans_candidate.final_flowering.csv") 
+```
+
+### temp 
+```{r}
+eQTL %>% colnames() 
+eQTL %>% 
+  filter(gene_ID == "BnaC03g63040D" | gene_ID == "BnaC03g63070D" | gene_ID == "BnaC03g64150D") %>% 
+  dplyr::select(gene_ID, eQTL_chr, pos, class, eQTL_subgenome, gene_subgenome) %>% 
+  View()
+
+eQTL %>% 
+  filter(gene_ID == "BnaA08g11130D" | gene_ID == "BnaC03g65980D" | gene_ID == "BnaA08g11060D" | gene_ID == "BnaA08g11140D" | gene_ID == "BnaA08g12780D" | gene_ID == "BnaA08g27750D" | gene_ID == "BnaA10g22080D" | gene_ID == "BnaA04g09490D" | gene_ID == "BnaC06g29980D" | gene_ID == "BnaC09g26140D") %>% 
+  dplyr::select(gene_ID, eQTL_chr, pos, class, eQTL_subgenome, gene_subgenome) %>% 
+  View()    
+
+eQTL %>% 
+  filter(gene_ID == "BnaC09g26140D") %>% 
+  dplyr::select(gene_ID, eQTL_chr, pos, class, eQTL_subgenome, gene_subgenome) %>% 
+  View()  
+```
 

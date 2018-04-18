@@ -22,7 +22,7 @@ height[,1:2] %>% head()
 
 ID <- gsub("(r_ID__I)(\\[)([[:print:]]+)(,Intercept])", "\\3", height$X)[347:515] 
 
-### functions 
+### functions  
 coef_extract <- function(model_summary, ID){
   coef_Hmax <- model_summary[grep("r_ID__Hmax", model_summary$X) ,"mean"]
   coef_k <- model_summary[grep("r_ID__k", model_summary$X) ,"mean"] 
@@ -665,13 +665,22 @@ dim(VarE) # 43
 load("~/Desktop/F2_paper/data/phefile.all.Rdata")
 phefile.all %>% colnames() 
 
+<<<<<<< HEAD
+sum(as.data.frame(VarCorr(lme.2))$vcov)  
+=======
 VarP <- 
 sapply(colnames(phefile.all), function(i) var(phefile.all[[i]], na.rm = T)) %>% 
   as.data.frame()
+>>>>>>> 152f1dad7bc0e940ed36caeff7351591ea292edb
 
 colnames(VarP) <- "VarP" 
 
+<<<<<<< HEAD
+save(pheno.parent.H2, file = "~/F2/for_paper/heritability/pheno.parent.H2.Rdata")
+# flowering time, growth, and branch data 
+=======
 dim(VarP) 
+>>>>>>> 152f1dad7bc0e940ed36caeff7351591ea292edb
 
 heritability <- 
 merge(VarE, VarP, by = 0) %>% 

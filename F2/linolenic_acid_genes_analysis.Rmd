@@ -488,7 +488,7 @@ F2_geno_data_interval_linolenic <-
 F2_geno_data_interval_linolenic %>% 
   left_join(sig_SNP_ann)  
 
-gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA") 
 dim(gff.mRNA) # 101040      4 
 head(gff.mRNA) 
 colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
@@ -610,6 +610,10 @@ homeo_blast <-
 candidate_linolenic_2genes <- 
 SNP_interval_linolenic_annotated[SNP_interval_linolenic_annotated$names %in% homeo_blast,] 
 
+candidate_linolenic_2genes %>% 
+  dplyr::select(Ae.gt, Ol.gt, names, mutation_type, AGI, At_symbol) %>% 
+  View()
+  
 write.csv(candidate_linolenic_2genes, file = "~/F2/for_paper/linolenic_acid/candidate_linolenic_2genes.csv") 
 ```
 
@@ -619,16 +623,30 @@ write.csv(candidate_linolenic_2genes, file = "~/F2/for_paper/linolenic_acid/cand
 load("~/F2/for_paper/linolenic_acid/allele_effect_result.Rdata")
 allele_effect_result
 
-blast_result <- read.delim(file = "~/F2/for_paper/linolenic_acid/reciprocal.blast_eQTL", header = F)
-blast_result
+blast_result_eQTL <- read.delim(file = "~/F2/for_paper/linolenic_acid/reciprocal.blast_eQTL", header = F)
+blast_result_eQTL
 
-homeo_blast <- 
-  c(as.character(blast_result$V1), as.character(blast_result$V2))
+homeo_blast_eQTL <- 
+  c(as.character(blast_result_eQTL$V1), as.character(blast_result_eQTL$V2))
 
-homeo_blast
-cis_eQTL_linolenic <- allele_effect_result[allele_effect_result$names %in% homeo_blast,]
+homeo_blast_eQTL
+cis_eQTL_linolenic <- allele_effect_result[allele_effect_result$names %in% homeo_blast_eQTL,]
+cis_eQTL_linolenic
+
+# add annotation 
+  
+cis_eQTL_linolenic %>% 
+  left_join(BnapusAnnotation, c("names" = "name")) %>% 
+  left_join(napus_GO_combined, c("names" = "gene_ID"))%>% 
+  View() 
 
 # combine with SNP result to look for potential candidates ... 
+<<<<<<< HEAD
+
+blast_result_SNP <- read.delim(file = "~/F2/for_paper/linolenic_acid/reciprocal.blast", header = F)
+blast_result_SNP 
+=======
+>>>>>>> 152f1dad7bc0e940ed36caeff7351591ea292edb
 ```
 
 ### appendix function  

@@ -377,8 +377,8 @@ summary(qtl.fit.final.Linolenic)
 # plot result 
 png("~/F2/output/scantwo/figure/Linolenic_scantwo_result.png", width=20, height=8, units="in", res=300)
 par(mfrow=c(1,2)) 
-plot(qtl.refine.Linolenic)
-plotLodProfile(qtl.refine.Linolenic) 
+plot(qtl.refine.Linolenic) 
+plotLodProfile(qtl.refine.Linolenic)   
 dev.off() 
 save(qtl.fit.final.Linolenic, file = "~/F2/output/scantwo/qtl.fit.final.Linolenic.Rdata")
 # summary: A08@72.3 and C03@31.0 with interaction 
