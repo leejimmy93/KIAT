@@ -1322,16 +1322,166 @@ ggsave(p.final_FA, filename = "~/F2/for_paper/FA.png", height = 3, width = 9)
 
 ### get SNP information for genes underneath the QTL interval, those with missense & stop gained mutation  
 
+also check the result in SNP between Da-Ae and Da-Ol-1 no matter whether they have decent coverage or not in late silique, this result looks better, use this result 
+
 ```{r}
+SNP_all <-  read.csv("~/F2/for_paper/candidate_gene_SNP_mutation/vcf.Ae.Ol.intersect.df.2.csv", row.names = 1, as.is = T)
+SNP_all %>% head()  
+
+SNP_all <- data.frame(sapply(SNP_all, function(i) sub("1-Jan", "1/1", i))) %>% 
+  dplyr::select(-subgenome, -Chr_ID)
+
+write.csv(SNP_all, file = "~/F2/for_paper/candidate_gene_SNP_mutation/SNP_all.csv")
+
+# sh ~/KIAT/F2/SNP_info_extract_vcf_ann.sh ~/F2/for_paper/candidate_gene_SNP_mutation/SNP_late_silique.csv /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/freebayes/Ae_Ol_modified_SNPonly_biallelic.recode.ann.modified2.vcf 
+
+sig_SNP_ann <- read_table2("~/KIAT/F2/significant_SNP_annotation", col_names=F)
+head(sig_SNP_ann)  
+dim(sig_SNP_ann) # 62875     6 
+colnames(sig_SNP_ann) <- c("CHROM", "POS", "REF", "ALT", "mutation_type", "impact")
+
+SNP_all$POS <- SNP_all$POS %>% as.character() %>% as.numeric()
+# SNP_all$CHROM <- as.character(SNP_all$CHROM)
+# SNP_all$REF <- as.character(SNP_all$REF)
+# SNP_all$ALT <- as.character(SNP_all$ALT)
+# str(SNP_all)
+
+SNP_all <- 
+SNP_all %>% 
+  left_join(sig_SNP_ann)
+
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+head(gff.mRNA) 
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
+genes 
+
+SNP <- GRanges(seqnames = Rle(sig_SNP_ann$CHROM), ranges = IRanges(start = sig_SNP_ann$POS, end = sig_SNP_ann$POS), ID = paste(sig_SNP_ann$CHROM, sig_SNP_ann$POS, sep = "_"))
+SNP
+
+SNP_gene <- mergeByOverlaps(SNP, genes) # warning message here. look out!!!!!! 
+SNP_gene
+
+SNP_gene_df <- as.data.frame(SNP_gene)
+SNP_gene_df %>% dim() # 58969    14
+
+SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
+
+SNP_all$SNP.ID <- paste(SNP_all$CHROM, SNP_all$POS, sep = "_") 
+
+SNP_all <- 
+SNP_all %>% 
+  left_join(SNP_gene_final)
+
+dim(SNP_all) #  62958    12
+
+unique(SNP_all$mutation_type) 
+
+# the kind of mutations that could affect protein function here: "missense_variant&splice_region_variant", "missense_variant", "stop_lost", "splice_region_variant&synonymous_variant", "splice_donor_variant&intron_variant", "splice_region_variant&intron_variant", "stop_gained&splice_region_variant", "splice_acceptor_variant&intron_variant", "stop_lost&splice_region_variant", "splice_region_variant&stop_retained_variant", "initiator_codon_variant", "start_lost"  
+
+# combine mutation type with candidate genes 
+SNP_all %>% colnames()
+
 load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
-traitQTL.annotated %>% colnames()
+traitQTL.annotated %>% colnames() 
 
+traitQTL.annotated <- 
+traitQTL.annotated %>% 
+  semi_join(SNP_all, c("gene_ID" = "names")) %>% # keep all genes which have SNP annotations 
+  left_join(SNP_all, c("gene_ID" = "names"))   # add SNP info/annotation to the QTL gene
 
+dim(traitQTL.annotated) # 9730 
 
+# just keep mutations which would affect protein function
+traitQTL.annotated.SNP <- 
+traitQTL.annotated %>% 
+  filter(mutation_type != "synonymous_variant" & 
+           mutation_type != "downstream_gene_variant" & 
+           mutation_type != "upstream_gene_variant" & 
+           mutation_type != "intron_variant" & 
+           mutation_type != "stop_retained_variant") %>% 
+  dplyr::select(trait, SNP.ID, mutation_type, impact, gene_ID, AGI, At_symbol, B.napus_GO_term, GO_des) 
 
+dim(traitQTL.annotated.SNP) # 4062 
+traitQTL.annotated.SNP$gene_ID %>% unique() %>% length() # 973 
+write.csv(traitQTL.annotated.SNP, file = "~/F2/for_paper/candidate_gene_SNP_mutation/traitQTL.annotated.SNP.csv")  
+```   
+
+when filtered by F2 SNPs, didn't use this result for final report 
+```{r}
+F2_geno_data <- read.table("~/F2/for_paper/candidate_gene_SNP_mutation/F2_Final_SNP_Calls", header = T)
+head(F2_geno_data) 
+dim(F2_geno_data) # 18226   172  
+
+SNP_late_silique <- 
+F2_geno_data %>% 
+  dplyr::select(CHROM:Ol.gt) 
+
+write.csv(SNP_late_silique, file = "~/F2/for_paper/candidate_gene_SNP_mutation/SNP_late_silique.csv")
+
+# sh ~/KIAT/F2/SNP_info_extract_vcf_ann.sh ~/F2/for_paper/candidate_gene_SNP_mutation/SNP_late_silique.csv /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/SNP_parent/result/freebayes/Ae_Ol_modified_SNPonly_biallelic.recode.ann.modified2.vcf
+
+sig_SNP_ann <- read_table2("~/F2/for_paper/candidate_gene_SNP_mutation/significant_SNP_annotation", col_names=F)
+
+head(sig_SNP_ann)  
+dim(sig_SNP_ann) 
+colnames(sig_SNP_ann) <- c("CHROM", "POS", "REF", "ALT", "mutation_type", "impact")
+
+SNP_late_silique <- 
+SNP_late_silique %>% 
+  left_join(sig_SNP_ann)  
+
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+head(gff.mRNA) 
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
+genes 
+
+SNP <- GRanges(seqnames = Rle(sig_SNP_ann$CHROM), ranges = IRanges(start = sig_SNP_ann$POS, end = sig_SNP_ann$POS), ID = paste(sig_SNP_ann$CHROM, sig_SNP_ann$POS, sep = "_"))
+SNP
+
+SNP_gene <- mergeByOverlaps(SNP, genes) # warning message here. look out!!!!!! 
+SNP_gene
+
+SNP_gene_df <- as.data.frame(SNP_gene)
+SNP_gene_df %>% dim() # 17315    14 
+
+SNP_gene_final <- SNP_gene_df[,c("SNP.ID", "genes.seqnames", "SNP.start", "names")]
+
+SNP_late_silique$SNP.ID <- paste(SNP_late_silique$CHROM, SNP_late_silique$POS, sep = "_") 
+
+SNP_late_silique <- 
+SNP_late_silique %>% 
+  left_join(SNP_gene_final)
+
+dim(SNP_late_silique) # 18226     12
+
+unique(SNP_late_silique$mutation_type)
+
+# the kind of mutations that could affect protein function here: "missense_variant&splice_region_variant", "missense_variant", "stop_lost", "splice_region_variant&synonymous_variant", "splice_donor_variant&intron_variant", "splice_region_variant&intron_variant", "stop_gained&splice_region_variant", "splice_acceptor_variant&intron_variant", "stop_lost&splice_region_variant", "splice_region_variant&stop_retained_variant", "initiator_codon_variant", "start_lost"  
+
+# combine mutation type with candidate genes 
+SNP_late_silique %>% colnames()
+
+load("~/F2/output/QTL_analysis/traitQTL.annotated.flipped.Rdata")
+traitQTL.annotated %>% colnames() 
+
+test <- 
+traitQTL.annotated %>% 
+  semi_join(SNP_late_silique, c("gene_ID" = "names")) %>% # keep all genes which have SNP annotations 
+  left_join(SNP_late_silique, c("gene_ID" = "names"))  # add SNP info/annotation to the QTL gene
+#  dplyr::select(-genes.seqnames, -SNP.start, -genetic_start, -genetic_end, -CHROM, -POS, -start, -end, -B.napus_GO_term, -subject, -REF, -ALT) %>% 
+#  View() 
+
+test[grep("lipid|fatty", test$GO_des),] %>%
+dplyr::select(-genes.seqnames, -SNP.start, -genetic_start, -genetic_end, -CHROM, -POS, -start, -end, -B.napus_GO_term, -subject, -REF, -ALT) %>%
+View() 
+test$gene_ID %>% unique() %>% length() 
 ```
-
-
 
 
 

@@ -488,7 +488,7 @@ F2_geno_data_interval_linolenic <-
 F2_geno_data_interval_linolenic %>% 
   left_join(sig_SNP_ann)  
 
-gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA") 
 dim(gff.mRNA) # 101040      4 
 head(gff.mRNA) 
 colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 

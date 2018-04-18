@@ -319,6 +319,8 @@ trans_candidate.final <-
 trans_candidate.final %>% 
   left_join(napus_GO_combined) 
 
+trans_candidate.final %>% dim() # 4022 16 
+trans_candidate.final$gene_ID %>% unique() %>% length() # 1972 
 write.csv(trans_candidate.final, file = "~/F2/output/eQTL/trans_candidate.final.csv") 
 
 ### make some plot for several important genes 
@@ -390,6 +392,6 @@ eQTL %>%
 eQTL %>% 
   filter(gene_ID == "BnaC09g26140D") %>% 
   dplyr::select(gene_ID, eQTL_chr, pos, class, eQTL_subgenome, gene_subgenome) %>% 
-  View() 
+  View()  
 ```
 
