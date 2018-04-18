@@ -365,7 +365,7 @@ trans_candidate.final[trans_candidate.final$AGI %in% flowering_time_gene$Gene.nu
   dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des)
 
 write.csv(cis_eQTL.qtl.combined.final_fatty_acid, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_fatty_acid.csv")
-write.csv(cis_eQTL.qtl.combined.final_flowering, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_flowering.csv")
+write.csv(cis_eQTL.qtl.combined.final_flowering, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_flowering.csv") 
 write.csv(cis_eQTL.qtl.combined.final_TF, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_TF.csv")
 
 write.csv(trans_candidate.final_fatty_acid, file = "~/F2/output/eQTL/trans_candidate.final_fatty_acid.csv")

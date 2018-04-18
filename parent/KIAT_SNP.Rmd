@@ -2601,7 +2601,7 @@ pl.SNP.main.2.unique <- pl.SNP.main.2.unique + theme(legend.position = "none", p
 pl.SNP.main.2.unique  
 
 # overlay with gene density 
-gff.mRNA <- read.table("~/Desktop/F2_paper/data/gff.mRNA")
+gff.mRNA <- read.table("~/Desktop/F2_paper/data/gff.mRNA") 
 colnames(gff.mRNA) <- c("chrom", "start", "end", "gene_ID")
 gff.mRNA$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", gff.mRNA$chrom)
 
@@ -2620,48 +2620,7 @@ gff.mRNA.main %>%
 gene_density
 gff.m
 
-ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP.main.PerMb.png", width = 9, height = 7)  
-
-# circos plot combing SNP and gene density 
-gene_density <- 
-gff.mRNA.main %>% 
-  ggplot() + 
-  layout_circle(aes(x=start, fill=subgenome), binwidth = 1000000) + 
-  facet_grid(subgenome ~ chrom) + 
-  theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + scale_fill_manual(values=c("red", "blue")) + 
-  labs(x = "gene start position", y = "number of genes")  
-
-N <- 100
-library(GenomicRanges)
-## ======================================================================
-##  simmulated GRanges
-## ======================================================================
-gr <- GRanges(seqnames =
-              sample(c("chr1", "chr2", "chr3"),
-                     size = N, replace = TRUE),
-              IRanges(
-                      start = sample(1:300, size = N, replace = TRUE),
-                      width = sample(70:75, size = N,replace = TRUE)),
-              strand = sample(c("+", "-", "*"), size = N,
-                replace = TRUE),
-              value = rnorm(N, 10, 3), score = rnorm(N, 100, 30),
-              sample = sample(c("Normal", "Tumor"),
-                size = N, replace = TRUE),
-              pair = sample(letters, size = N,
-                replace = TRUE))
-gr
-seqlengths(gr) <- c(400, 500, 700)
-values(gr)$to.gr <- gr[sample(1:length(gr), size = length(gr))]
-
-## doesn't pass gr to the ggplot
-ggplot() + layout_circle(gr, geom = "ideo", fill = "gray70", radius = 7, trackWidth = 3) +
-  layout_circle(gr, geom = "bar", radius = 10, trackWidth = 4, aes(fill = score, y = score)) +
-  layout_circle(gr, geom = "point", color = "red", radius = 14,
-                trackWidth = 3, grid = TRUE, aes(y = score)) +
-    layout_circle(gr, geom = "link", linked.to = "to.gr", radius = 6,
-trackWidth = 1)
-
-gr %>% head() 
+ggsave("~/Desktop/Brassica_project/KIAT_RNA_seq/parent_SNP/output/SNP.main.PerMb.png", width = 9, height = 7)   
 ```
 
 

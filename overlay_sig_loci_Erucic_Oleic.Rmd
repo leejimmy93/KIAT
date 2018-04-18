@@ -61,7 +61,7 @@ getOption("biovizBase")$cytobandColor
 autoplot(hg19IdeogramCyto, layout = "karyogram", cytoband = TRUE)
 
 library(GenomicRanges)
-hg19 <- keepSeqlevels(hg19IdeogramCyto, paste0("chr", c(1:22, "X", "Y")))
+hg19 <- keepSeqlevels(hg19IdeogramCyto, paste0("chr", c(1:22, "X", "Y"))) 
 head(hg19)
 autoplot(hg19, layout = "karyogram", cytoband = TRUE) 
 gffRangeData <- import.gff("~/Desktop/Brassica_project/IGV_file/Brassica_napus.annotation_v5.gff3")
