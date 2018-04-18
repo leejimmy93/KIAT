@@ -274,8 +274,6 @@ lapply(1:length(hotspots), function(i)
 )
 
 length(trans_eQTL_genes_list) # 20  
-<<<<<<< HEAD
-=======
 names(trans_eQTL_genes_list) <- paste(hotspot$chr, hotspot$pos_min, hotspot$pos_max, sep = "_")
 
 trans_eQTL_genes_list$chrA03_49_64 
@@ -285,7 +283,6 @@ BnapusAnnotation[BnapusAnnotation$name %in% trans_eQTL_genes_list$chrA03_49_64,]
 trans_eQTL %>% 
   filter(gene_ID == "BnaA08g11130D" | gene_ID == "BnaC03g65980D") %>%
   View()
->>>>>>> a067af300cf0fd335a41d8dbf899fe4dac148edb
 
 ### BnaA08g11130D (FAE) & BnaC03g65980D (FAE) are regulated by A03 trans-eQTL hostpot, the two BnaA.FAE1 reported by other people       
 ```  
@@ -299,7 +296,7 @@ GO_trans_eQTL <-
 lapply(1:length(trans_eQTL_genes_list), function(i) {
   tryCatch(
     GOseq.Bn.ORA(trans_eQTL_genes_list[[i]]), error= function(e) NA)
-})
+}) 
 
 GO_trans_eQTL 
 save(GO_trans_eQTL, file = "~/Desktop/F2_paper/data/GO_trans_eQTL.Rdata")
@@ -308,6 +305,5 @@ save(GO_trans_eQTL, file = "~/Desktop/F2_paper/data/GO_trans_eQTL.Rdata")
 load("~/F2/for_paper/GO_trans_eQTL.Rdata")
 names(GO_trans_eQTL) <- paste(hotspot$chr, hotspot$pos_min, hotspot$pos_max, sep = "_")
 GO_trans_eQTL$chrA03_49_64
-
 ```
 
