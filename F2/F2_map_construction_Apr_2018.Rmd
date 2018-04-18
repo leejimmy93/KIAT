@@ -245,13 +245,23 @@ p.genetic_vs_physical
 
 ggsave(p.genetic_vs_physical, filename = "~/F2/for_paper/p.genetic_vs_physical.png", height = , width = )
 png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=20, height=15, units="in", res=300)
-par(mfrow=c(4,5))
+par(mfrow=c(4,5)) 
 
 for (i in unique(map_geno$genetic_chr)){
   plot(map_geno[map_geno$genetic_chr == i,]$genetic_pos, map_geno[map_geno$genetic_chr == i,]$physical_pos, 
        xlab = "genetic pos", ylab = "physical pos", main = i)
 }
 
-dev.off()   
+dev.off()    
+
+# genetic map plot 
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.flipped.C05C08.Rdata")
+png("~/Desktop/F2_paper/map_after_crossover.png", width=8, height=8, units="in", res=300)
+plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
+dev.off()  
+
+# summary map 
+map_summary <- summaryMap(LG.f2.madmapper.after.crossover) 
+write.csv(map_summary, file = "~/Desktop/F2_paper/map_summary.csv")  
 ``` 
 

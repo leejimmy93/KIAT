@@ -262,7 +262,7 @@ for (i in colnames(phefile_oil)) {
   abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "F1"),]$mean, col = "purple", lty= 2, lwd= 2)
   }
 
-dev.off() 
+dev.off()  
 
 ### raw data for growth traits 
 raw_growth <- read.csv("~/Desktop/F2_paper/data/raw_growth_traits.csv")  
@@ -280,7 +280,7 @@ raw_growth <-
 raw_growth %>% 
   filter(Name == "Da-Ol1" | Name == "Da-Ae" | Name == "F1") %>% 
   group_by(Name) %>% 
-  summarise(plant_height_2015.12.18 = mean(plant_height_2015.12.18, na.rm = T), 
+  dplyr::summarise(plant_height_2015.12.18 = mean(plant_height_2015.12.18, na.rm = T), 
             plant_height_2016.01.20 = mean(plant_height_2016.01.20, na.rm = T),
             plant_height_2016.02.17 = mean(plant_height_2016.02.17, na.rm = T), 
             plant_height_2016.03.16 = mean(plant_height_2016.03.16, na.rm = T),
@@ -324,17 +324,28 @@ reordered <- c("plant_height_2015_12_18",
                "plant_width_2016_03_16",
                "plant_height_2016_05_13")
 
+phefile_growth_2 <- phefile_growth_2[,reordered] 
+# load("~/Desktop/F2_paper/data/heritability.Rdata")
+# 
+# for(i in colnames(phefile_growth_2)) {
+#   for(j in heritability$Row.names){
+#     colnames(phefile_growth_2)[colnames(phefile_growth_2) == i] <- 
+#       ifelse(i == j, heritability[heritability$Row.names == j,]$label, i)
+#   }
+# } 
+
+colnames(phefile_growth_2) 
 png(filename = "~/Desktop/F2_paper/trait_growth.png",width=10, height=7, units="in", res=300)
 par(mfrow=c(5,4), mai = c(0.4, 0.4, 0.4, 0.2)) 
 
-for (i in colnames(phefile_growth_2[,reordered])) { 
+for (i in colnames(phefile_growth_2)) { 
   hist(phefile_growth_2[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
   abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "Da-Ae"),]$mean, col = "red", lwd= 2)
   abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "Da-Ol-1"),]$mean, col = "blue", lwd= 2)
   abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "F1"),]$mean, col = "purple", lty = 2, lwd= 2)   
   }
 
-dev.off()         
+dev.off()            
 ```
 
 ### correlation & heatmap for different traits 
