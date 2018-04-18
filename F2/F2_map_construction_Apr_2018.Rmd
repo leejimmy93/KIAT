@@ -243,6 +243,7 @@ map_geno %>%
   labs(x = "genetic position", y = "physical position") 
 p.genetic_vs_physical 
 
+ggsave(p.genetic_vs_physical, filename = "~/F2/for_paper/p.genetic_vs_physical.png", height = , width = )
 png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=20, height=15, units="in", res=300)
 par(mfrow=c(4,5))
 

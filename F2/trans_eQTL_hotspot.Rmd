@@ -284,7 +284,38 @@ trans_eQTL %>%
   filter(gene_ID == "BnaA08g11130D" | gene_ID == "BnaC03g65980D") %>%
   View()
 
-### BnaA08g11130D (FAE) & BnaC03g65980D (FAE) are regulated by A03 trans-eQTL hostpot, the two BnaA.FAE1 reported by other people       
+### BnaA08g11130D (FAE) & BnaC03g65980D (FAE) are regulated by A03 trans-eQTL hostpot, the two BnaA.FAE1 reported by other people  
+
+# also add B.napus GO annotation 
+load("~/Reference/B.napus/napus_GO_combined.Rdata") # there is one colomn hiding... 
+load("~/Reference/B.napus/BnapusAnnotation.Rdata") 
+BnapusAnnotation %>% colnames()
+
+trans_eQTL_genes_chrA03_49_64 <- as.data.frame(trans_eQTL_genes_list$chrA03_49_64) 
+colnames(trans_eQTL_genes_chrA03_49_64) <- "name"
+
+trans_eQTL_genes_chrA03_49_64 <- 
+trans_eQTL_genes_chrA03_49_64 %>% 
+  left_join(napus_GO_combined, c("name" = "gene_ID")) %>% 
+  left_join(BnapusAnnotation) 
+
+trans_eQTL_genes_chrA03_49_64_FA <- 
+trans_eQTL_genes_chrA03_49_64[grep("lipid|fatty", trans_eQTL_genes_chrA03_49_64$GO_des),] %>% 
+  dplyr::select(-chrom, -start, -end)
+
+tmp <- test[grep("GO:0006633", test$B.napus_GO_term),]$name
+tmp 
+
+trans_eQTL_genes_chrA03_49_64_FA$note <- ifelse(trans_eQTL_genes_chrA03_49_64_FA$name %in% tmp, "enriched", "no")
+
+load("~/F2/output/eQTL/cis_trans_result_new_flipped_C05C08.Rdata") 
+
+tmp[!(tmp %in% trans_eQTL$gene_ID)]
+"BnaC09g41580D" %in% cis_eQTL$gene_ID 
+
+colnames(napus_GO_combined) 
+colnames(BnapusAnnotation)
+nrow(trans_eQTL_genes_chrA03_49_64)
 ```  
 
 ### GO enrichment of trans-eQTL hotspot regulated genes  
@@ -302,8 +333,44 @@ GO_trans_eQTL
 save(GO_trans_eQTL, file = "~/Desktop/F2_paper/data/GO_trans_eQTL.Rdata")
 
 # check GO enrichment result 
+hotspot <- data.frame(chr = c("A01", "A01", "A02", "A03", "A03", "A03", "A03", "A06", "A09", "A10", "A10", "C01", "C02", "C02", "C03", "C04", "C08", "C08", "C09", "C09"), 
+                      pos_min = c(128, 160, 0, 17, 36, 43, 49, 122, 17, 173, 217, 156, 1, 43, 10, 97, 40, 47, 0, 57), 
+                      pos_max = c(129, 164, 9, 25, 38, 43, 64, 124, 19, 185, 226, 166, 13, 62, 24, 97, 41, 62, 4, 60))
+
+hotspot$chr <- paste("chr", hotspot$chr, sep = "")  
+hotspot$hotspot_id <- rownames(hotspot)
+
+### GO enrichment of trans-eQTL hotspot regulated genes 
+hot_trans$eQTL_chr <- paste("chr", hot_trans$eQTL_chr, sep = "") 
+
 load("~/F2/for_paper/GO_trans_eQTL.Rdata")
 names(GO_trans_eQTL) <- paste(hotspot$chr, hotspot$pos_min, hotspot$pos_max, sep = "_")
 GO_trans_eQTL$chrA03_49_64
+<<<<<<< HEAD
+=======
+
+GO_trans_eQTL <- GO_trans_eQTL[!is.na(GO_trans_eQTL)]   
+GO_trans_eQTL <- do.call("rbind", GO_trans_eQTL) 
+write.csv(GO_trans_eQTL, file = "~/F2/for_paper/GO_trans_eQTL.csv")  
+>>>>>>> a5efc319082df97479d180622f1a67544ada6069
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
