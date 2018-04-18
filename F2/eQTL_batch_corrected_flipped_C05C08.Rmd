@@ -230,7 +230,7 @@ ggsave(p.cis_eQTL, filename = "~/F2/output/eQTL/figure/p.cis_eQTL.flipped.png", 
 ggsave(p.trans_eQTL, filename = "~/F2/output/eQTL/figure/p.trans_eQTL.flipped.png", height = 10, width = 10) 
 
 ### check to see the rate of different vs same subgenome trans-regulators 
-eQTL %>% colnames()
+eQTL %>% colnames() 
 eQTL$eQTL_subgenome <- gsub("(A|C)([[:digit:]]+)", "\\1", eQTL$eQTL_chr)
 eQTL$gene_subgenome <-  gsub("(A|C)([[:digit:]]+)", "\\1", eQTL$gene_CHROM)
 
