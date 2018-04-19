@@ -8,6 +8,10 @@ output: html_document
 * C05 and C08 genetic map only capture half of the physical map, this was caused by the clustering process when a subset of the markers were grouped into another group, here I will order all of them no matter they group together or not in the .tree file 
 * several markers with big segregation distortion at the end of LG, should be removed especially if they don't show good genetic and physical map colinearity 
 
+```{r}
+library(tidyverse)
+library(qtl)
+```
 
 ### 1) 
 order all markers on C05 and C08 
@@ -158,19 +162,13 @@ summaryMap(LG.f2.madmapper.after.crossover.2) # 2009
 markers_large_gap_end <- c("chrA04_6268533", "chrA05_21794646", "chrA09_30078310", "chrC05_40797215", "chrC06_35741582", "chrC08_34141406") 
 plotMap(LG.f2.madmapper.after.crossover.2)
 
-# plot genetic VS. physical map 
-test <- LG.f2.madmapper.after.crossover.2$geno$A04$map %>% as.data.frame() 
-test$physical <- gsub("([[:print:]]+)(_)([[:print:]]+)","\\3",rownames(test))
-colnames(test)[1] <- "genetic" 
-plot(test) 
-
 # segregation distortion 
 mar_seg_dis <- rownames(gt[ gt$P.value < 1e-2,]) # there are quite several markers showing segregation distortion
 mar_seg_dis
 mar2drop <- markers_large_gap_end[markers_large_gap_end %in% mar2drop]
 mar2drop
 
-length(mar2drop) # 5
+length(mar2drop) # 5 
 
 LG.f2.madmapper.after.crossover.2 <- drop.markers(LG.f2.madmapper.after.crossover, mar2drop)
 summaryMap(LG.f2.madmapper.after.crossover.2) # 2929.9 
@@ -199,7 +197,12 @@ LG.f2.madmapper.after.crossover <- flip.order(LG.f2.madmapper.after.crossover, c
 LG.f2.madmapper.after.crossover <- flip.order(LG.f2.madmapper.after.crossover, chr = "C01")
 LG.f2.madmapper.after.crossover <- flip.order(LG.f2.madmapper.after.crossover, chr = "C03")
 
-plotMap(LG.f2.madmapper.after.crossover)
+# three markers are not on their physical chromosome, take them out from the genetic map, this might be caused by mis-mapping
+markers_miss_mapping <- c("chrA05_20283387", "chrA04_10350184", "chrA09_9478710") 
+LG.f2.madmapper.after.crossover <- drop.markers(LG.f2.madmapper.after.crossover, markers_miss_mapping)
+summaryMap(LG.f2.madmapper.after.crossover) # 2021 2929.9 
+
+plotMap(LG.f2.madmapper.after.crossover) 
 save(LG.f2.madmapper.after.crossover, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.flipped.C05C08.Rdata")  
 
 ### write out gen file 
@@ -209,7 +212,7 @@ F2_geno_data_2_Ae_Ol_new <-
 read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/F2_geno_data_2_Ae_Ol_new.txt")
 dim(F2_geno_data_2_Ae_Ol_new) # 3443 166 
 
-F2_map <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.f2.madmapper.final.flipped_gen_C05C08.csv_gen.csv")
+F2_map <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.f2.madmapper.final.flipped_gen_C05C08.csv_gen.csv") 
 colnames(F2_map)[4:169]  <- gsub("X", "Sample_F2_", colnames(F2_geno_data_2_Ae_Ol_new))
 colnames(F2_map) 
 write.csv(F2_map, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped_C05C08.csv")   # manually modify for qtl format   
@@ -239,7 +242,7 @@ map_geno %>%
   theme(axis.text.x=element_blank(),
         axis.text.y=element_blank(), 
         axis.ticks.x=element_blank(),
-        axis.ticks.y=element_blank()) + 
+        axis.ticks.y=element_blank()) +  
   labs(x = "genetic position", y = "physical position") 
 p.genetic_vs_physical 
 
