@@ -764,7 +764,7 @@ for(i in colnames(phefile.all)) {
 }
 
 phefile.non_time_series <- 
-phefile.all[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|Hmax|I|k|delta|branch", colnames(phefile.all))]  
+phefile.all[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|Hmax|I|k|delta|branch|2016_03_21|2016_05_13", colnames(phefile.all))]  
 save(phefile.all, file = "~/Desktop/F2_paper/data/phefile.all.Rdata")
 
 trait_cor <- round(cor(phefile.non_time_series, use = "pairwise.complete.obs"), digits = 2) 
@@ -775,7 +775,7 @@ cor.sig <- trait_cor
 cor.sig[cor.P>0.05] <- NA 
 cor.sig 
 
-png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=8, height=7, units="in", res=300)
+png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=8, height=8, units="in", res=300)
 par(mar = c(3, 3, 3, 3))
 
 pheatmap(as.matrix(trait_cor),  
