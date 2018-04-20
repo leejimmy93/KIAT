@@ -5,7 +5,7 @@ output: html_document
 
 Purpose of this script is to identify trans-eQTL hotspot 
 
-### practice 
+### practice  
 ```{r}
 library(qtlhot)
 
@@ -253,6 +253,13 @@ hotspot$hotspot_id <- rownames(hotspot)
 hot_trans$eQTL_chr <- paste("chr", hot_trans$eQTL_chr, sep = "")
 
 hot_trans %>% colnames()
+hot_trans
+
+# use the flipped one 
+load("~/F2/output/eQTL/cis_trans_result_new_flipped_C05C08.Rdata") 
+
+cis_eQTL %>% dim() # 11587    15
+trans_eQTL %>% dim() # 14657    15  
 
 trans_eQTL_hot <- 
 trans_eQTL %>% 
@@ -306,16 +313,20 @@ trans_eQTL_genes_chrA03_49_64[grep("lipid|fatty", trans_eQTL_genes_chrA03_49_64$
 tmp <- test[grep("GO:0006633", test$B.napus_GO_term),]$name
 tmp 
 
-trans_eQTL_genes_chrA03_49_64_FA$note <- ifelse(trans_eQTL_genes_chrA03_49_64_FA$name %in% tmp, "enriched", "no")
+trans_eQTL_genes_chrA03_49_64_FA$note <- ifelse(trans_eQTL_genes_chrA03_49_64_FA$name %in% tmp, "enriched", "not_enriched")
+trans_eQTL_genes_chrA03_49_64_FA %>% View()
+trans_eQTL_genes_chrA03_49_64_FA %>% dim()
 
-load("~/F2/output/eQTL/cis_trans_result_new_flipped_C05C08.Rdata") 
+write.csv(trans_eQTL_genes_chrA03_49_64_FA, file = "~/F2/for_paper/trans_eQTL_genes_chrA03_49_64_FA.csv")
+
+load("~/F2/output/eQTL/cis_trans_result_new_flipped_C05C08.Rdata")  
 
 tmp[!(tmp %in% trans_eQTL$gene_ID)]
-"BnaC09g41580D" %in% cis_eQTL$gene_ID 
+"BnaC09g41580D" %in% cis_eQTL$gene_ID   
 
 colnames(napus_GO_combined) 
 colnames(BnapusAnnotation)
-nrow(trans_eQTL_genes_chrA03_49_64)
+nrow(trans_eQTL_genes_chrA03_49_64)  
 ```  
 
 ### GO enrichment of trans-eQTL hotspot regulated genes  
@@ -347,9 +358,47 @@ load("~/F2/for_paper/GO_trans_eQTL.Rdata")
 names(GO_trans_eQTL) <- paste(hotspot$chr, hotspot$pos_min, hotspot$pos_max, sep = "_")
 GO_trans_eQTL$chrA03_49_64
 
-GO_trans_eQTL <- GO_trans_eQTL[!is.na(GO_trans_eQTL)]   
+# GO_trans_eQTL <- GO_trans_eQTL[!is.na(GO_trans_eQTL)]   
 GO_trans_eQTL <- do.call("rbind", GO_trans_eQTL) 
 write.csv(GO_trans_eQTL, file = "~/F2/for_paper/GO_trans_eQTL.csv")  
+```
+
+### since the two FAE's expression is not correlated with Erucic acid level, how about other targets of A03 trans-eQTL hotspot? what is their expression correlation level with Erucic acid content? 
+
+```{r}
+vstMat.F2 <- read.csv("~/F2/output/network_analysis/vstMat.f2.batch.corrected_revised.csv", as.is = T, row.names = 1)
+vstMat.F2[1:10, 1:10] 
+colnames(vstMat.F2) 
+vstMat.F2 <- vstMat.F2 %>% t() %>% as.data.frame()
+vstMat.F2[1:10, 1:10]
+vstMat.F2$id <- rownames(vstMat.F2)
+
+F2_pheno <- read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", as.is = T, row.names = 1, header = F)
+F2_pheno <- t(F2_pheno) %>% as.data.frame()
+F2_pheno
+
+# genes regulated by A03 
+A03_FA_gene <- read.csv("~/F2/for_paper/trans_eQTL_genes_chrA03_49_64_FA.csv", row.names = 1)
+A03_FA_gene[1:10,] 
+
+expression_A03_FA_gene <- vstMat.F2[,colnames(vstMat.F2) %in% A03_FA_gene$name] 
+expression_A03_FA_gene$id <- rownames(expression_A03_FA_gene)
+
+A03_FA_gene_data <- 
+expression_A03_FA_gene %>% 
+  left_join(F2_pheno[,c("Crude_oil_contents", "id")]) 
+
+colnames(A03_FA_gene_data)  
+str(A03_FA_gene_data)
+
+test <- 
+sapply(colnames(A03_FA_gene_data)[1:45], function(i) {
+  cor(A03_FA_gene_data[,i], as.numeric(as.character(A03_FA_gene_data$Crude_oil_contents)))
+}) 
+
+max(test) 
+
+colnames(F2_pheno)
 ```
 
 

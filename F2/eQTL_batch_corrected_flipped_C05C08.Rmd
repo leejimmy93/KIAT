@@ -163,7 +163,7 @@ trans_eQTL %>% dim() # 14657    15
 cis_eQTL %>% 
   filter(gene_ID == "BnaA08g12780D") %>% 
   View()
-###
+### 
 
 cis_eQTL$class <- rep("cis", nrow(cis_eQTL))  
 trans_eQTL$class <- rep("trans", nrow(trans_eQTL))   

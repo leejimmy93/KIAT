@@ -1221,15 +1221,17 @@ test <- effectplot(LG.f2.after.crossover, mname1 = "chrA08_10120555", mname2 = "
 test
 
 ### Palmitic acid 
-load("~/F2/output/QTL_analysis/cim.qtl.43traits.corrrected.Rdata")
+load("~/F2/output/QTL_analysis/LG.f2.after.crossover.43traits.corrected.Rdata")
 bayesint(cim.qtl$Palmitic_acid, chr = "A08", expandtomarkers = T) # 72
 bayesint(cim.qtl$Palmitic_acid, chr = "C03", expandtomarkers = T) # 36 
 
-load("LG.f2.after.crossover.43traits.corrected.Rdata")
 LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Palmitic_acid)
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 
-mar <- find.marker(LG.f2.after.crossover, c("A08", "C03"), c(72, 36)) 
+qtlm.palmitic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(72, 36))  
+qtl.fit.palmitic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.palmitic,formula = y ~ Q1 * Q2 ,get.ests=T) 
+summary(qtl.fit.palmitic) 
+
 png("~/F2/output/QTL_analysis/figure/loci_effect_Palmitic.png", width=15, height=7, units="in", res=300)
 par(mfrow = c(1,2))
 plot.pxg(LG.f2.after.crossover, marker = mar)
@@ -1244,6 +1246,7 @@ LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Arachid
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 
 mar <- find.marker(LG.f2.after.crossover, "A08", 78) 
+
 png("~/F2/output/QTL_analysis/figure/loci_effect_Arachidic.png", width=15, height=7, units="in", res=300)
 par(mfrow = c(1,2))
 plot.pxg(LG.f2.after.crossover, marker = mar)
@@ -1259,6 +1262,10 @@ LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Behenic
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 
 mar <- find.marker(LG.f2.after.crossover, c("A08", "C03"), c(73, 35)) 
+qtlm.behenic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(73, 35))  
+qtl.fit.Behenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.palmitic,formula = y ~ Q1 + Q2 ,get.ests=T) 
+summary(qtl.fit.palmitic) 
+
 png("~/F2/output/QTL_analysis/figure/loci_effect_Behenic.png", width=15, height=7, units="in", res=300)
 par(mfrow = c(1,2))
 plot.pxg(LG.f2.after.crossover, marker = mar)
@@ -1273,6 +1280,7 @@ LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$vacceni
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 
 mar <- find.marker(LG.f2.after.crossover, "A08", 72) 
+
 png("~/F2/output/QTL_analysis/figure/loci_effect_vaccenic.png", width=15, height=7, units="in", res=300)
 par(mfrow = c(1,2))
 plot.pxg(LG.f2.after.crossover, marker = mar)
@@ -1302,6 +1310,10 @@ LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linolei
 LG.f2.after.crossover <- sim.geno(LG.f2.after.crossover,step=1,n.draws=32) # imputation 
 
 mar <- find.marker(LG.f2.after.crossover, c("A08", "C03"), c(72.6, 39)) 
+qtlm.linoleic <- makeqtl(LG.f2.after.crossover,chr=c("A08", "C03"),pos=c(72.6, 39))  
+qtl.fit.Linolenic <- fitqtl(cross=LG.f2.after.crossover,qtl=qtlm.linoleic,formula = y ~ Q1 * Q2 ,get.ests=T) 
+summary(qtl.fit.palmitic) 
+
 png("~/F2/output/QTL_analysis/figure/loci_effect_linoleic.png", width=15, height=7, units="in", res=300)
 par(mfrow = c(1,2)) 
 plot.pxg(LG.f2.after.crossover, marker = mar)

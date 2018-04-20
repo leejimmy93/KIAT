@@ -307,6 +307,7 @@ traitQTL.annotated <- lapply(1:nrow(bayesint.result),function(row) { # for each 
                     end <= qtl$end)
 } 
 )  
+
 names(traitQTL.annotated) <- bayesint.result$trait 
 
 traitQTL.annotated <- bind_rows(traitQTL.annotated,.id="trait") %>% # combine list into data.frame 
@@ -360,7 +361,7 @@ traitQTL.annotated[which(traitQTL.annotated$AGI == "AT5G10140" ),]
 
 gff.mRNA[gff.mRNA$gene_ID == "BnaA10g22080D",] 
 #   CHROM    start      end       gene_ID
-#   chrA10 14998617 15003197 BnaA10g22080D
+#   chrA10 14998617 15003197 BnaA10g22080D 
 
 gff.mRNA[gff.mRNA$gene_ID == "BnaA08g12780D",] # FAD
 #   CHROM    start      end       gene_ID
@@ -384,6 +385,11 @@ traitQTL.annotated %>%
 #        start      end chrom
 #  14772310 15942430   A10
 #  25340726 32476288   C06 
+
+# FLC gene
+colnames(traitQTL.annotated)
+traitQTL.annotated %>% 
+  filter(gene_ID == "BnaA10g22080D")
 ```
 
 
@@ -1402,11 +1408,49 @@ traitQTL.annotated %>%
            mutation_type != "upstream_gene_variant" & 
            mutation_type != "intron_variant" & 
            mutation_type != "stop_retained_variant") %>% 
-  dplyr::select(trait, SNP.ID, mutation_type, impact, gene_ID, AGI, At_symbol, B.napus_GO_term, GO_des) 
+  dplyr::select(trait, SNP.ID, mutation_type, impact, gene_ID, AGI, At_symbol, B.napus_GO_term, GO_des, chrom, Ae.gt, Ol.gt) 
 
 dim(traitQTL.annotated.SNP) # 4062 
 traitQTL.annotated.SNP$gene_ID %>% unique() %>% length() # 973 
 write.csv(traitQTL.annotated.SNP, file = "~/F2/for_paper/candidate_gene_SNP_mutation/traitQTL.annotated.SNP.csv")  
+
+# fatty acid genes 
+traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+    View() # sequalene synthase 
+
+# transcription factors  
+
+# flowering related genes
+colnames(traitQTL.annotated)
+traitQTL.annotated %>% 
+  filter(AGI == "AT1G69120" | AGI == "AT1G69570") %>% 
+  dim() 
+
+traitQTL.annotated.SNP %>% 
+  filter(chrom == "C06") %>% 
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% 
+  View()
+
+# C06 
+traitQTL.annotated.SNP[grep("DNA|nucleotide|transcription", traitQTL.annotated.SNP$GO_des),] %>% 
+  filter(chrom == "C06") %>% 
+  dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% View()
+
+# A10
+traitQTL.annotated.SNP[grep("DNA|nucleotide|transcription", traitQTL.annotated.SNP$GO_des),] %>% 
+  filter(chrom == "A10") %>% 
+  dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% View()
+
+# A08 
+traitQTL.annotated.SNP[grep("DNA|nucleotide|transcription", traitQTL.annotated.SNP$GO_des),] %>% 
+  filter(chrom == "A08") %>% 
+  dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% View()
+
+# C03
+traitQTL.annotated.SNP[grep("DNA|nucleotide|transcription", traitQTL.annotated.SNP$GO_des),] %>% 
+  filter(chrom == "C03") %>% 
+  dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% View()
+
 ```   
 
 when filtered by F2 SNPs, didn't use this result for final report 

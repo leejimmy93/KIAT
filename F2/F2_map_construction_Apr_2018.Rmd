@@ -10,7 +10,7 @@ output: html_document
 
 
 ### 1) 
-order all markers on C05 and C08 
+order all markers on C05 and C08   
 ```{r}
 madmapper.result <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/F2_geno_data_m_loc_mmout.x_tree_clust.csv", header = F)
 
@@ -226,13 +226,13 @@ map_geno %>%
 map_geno$genetic_chr <- map_geno$X
 map_geno$genetic_pos <- map_geno$X.1
 map_geno$physical_chr <- gsub("(chr)([[:print:]]+)(_)([[:print:]]+)", "\\2", map_geno$id)
-map_geno$genetic_chr <- factor(map_geno$physical_chr, levels = c("C09", "C08", "C07", "C06", "C05", "C04", "C03", "C02", "C01", "A10", "A09", "A08", "A07", "A06", "A05", "A04", "A03", "A02", "A01"))
+map_geno$genetic_chr <- factor(map_geno$X, levels = c("C09", "C08", "C07", "C06", "C05", "C04", "C03", "C02", "C01", "A10", "A09", "A08", "A07", "A06", "A05", "A04", "A03", "A02", "A01"))
 map_geno$physical_pos <- gsub("(chr)([[:print:]]+)(_)([[:print:]]+)", "\\4", map_geno$id)
 
 p.genetic_vs_physical <- 
 map_geno %>% 
   ggplot() + 
-  geom_point(aes(x = genetic_pos, y = as.numeric(physical_pos)), size = 0.5) +
+  geom_point(aes(x = as.numeric(genetic_pos), y = as.numeric(physical_pos)), size = 0.5) +
   facet_grid(genetic_chr ~ physical_chr, scales = "free", switch="both") + 
   theme_classic() +
   theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) +
@@ -241,10 +241,10 @@ map_geno %>%
         axis.ticks.x=element_blank(),
         axis.ticks.y=element_blank()) + 
   labs(x = "genetic position", y = "physical position") 
-p.genetic_vs_physical 
+p.genetic_vs_physical  
 
 ggsave(p.genetic_vs_physical, filename = "~/F2/for_paper/p.genetic_vs_physical.png", height = , width = )
-png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=20, height=15, units="in", res=300)
+png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=12, height=9, units="in", res=300)
 par(mfrow=c(4,5))
 
 for (i in unique(map_geno$genetic_chr)){
@@ -254,4 +254,21 @@ for (i in unique(map_geno$genetic_chr)){
 
 dev.off()   
 ``` 
+
+# test for A04  
+```{r}
+map_geno %>% 
+  filter(X == "A04") %>% 
+  ggplot(aes(genetic_pos, as.numeric(physical_pos))) + 
+  geom_point() 
+
+map_geno %>% 
+  filter(X == "A04") %>% 
+  ggplot() + 
+  geom_point(aes(x = as.numeric(genetic_pos), y = as.numeric(physical_pos)), size = 0.5) +
+  labs(x = "genetic position", y = "physical position")  
+
+plot(map_geno[map_geno$genetic_chr == "A04",]$genetic_pos, map_geno[map_geno$genetic_chr == i,]$physical_pos, 
+       xlab = "genetic pos", ylab = "physical pos", main = i) 
+```
 
