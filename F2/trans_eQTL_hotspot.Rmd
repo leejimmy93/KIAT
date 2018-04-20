@@ -357,10 +357,13 @@ hot_trans$eQTL_chr <- paste("chr", hot_trans$eQTL_chr, sep = "")
 load("~/F2/for_paper/GO_trans_eQTL.Rdata")
 names(GO_trans_eQTL) <- paste(hotspot$chr, hotspot$pos_min, hotspot$pos_max, sep = "_")
 GO_trans_eQTL$chrA03_49_64
+<<<<<<< HEAD
+=======
 
 # GO_trans_eQTL <- GO_trans_eQTL[!is.na(GO_trans_eQTL)]   
 GO_trans_eQTL <- do.call("rbind", GO_trans_eQTL) 
 write.csv(GO_trans_eQTL, file = "~/F2/for_paper/GO_trans_eQTL.csv")  
+>>>>>>> a5efc319082df97479d180622f1a67544ada6069
 ```
 
 ### since the two FAE's expression is not correlated with Erucic acid level, how about other targets of A03 trans-eQTL hotspot? what is their expression correlation level with Erucic acid content? 
