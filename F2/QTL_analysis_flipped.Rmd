@@ -12,7 +12,7 @@ library(qtl)
 library(snowfall)
 library(ggrepel) 
 library(Biostrings)   
-source("~/KIAT/function_BnRNAseq.R")   
+source("~/KIAT/function_BnRNAseq.R")    
 
 ### load data and run scanone & cim
 LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped.csv",
@@ -1415,10 +1415,25 @@ traitQTL.annotated.SNP$gene_ID %>% unique() %>% length() # 973
 write.csv(traitQTL.annotated.SNP, file = "~/F2/for_paper/candidate_gene_SNP_mutation/traitQTL.annotated.SNP.csv")  
 
 # fatty acid genes 
-traitQTL.annotated[grep("lipid|fatty", traitQTL.annotated$GO_des),] %>%
+traitQTL.annotated.SNP[grep("lipid|fatty", traitQTL.annotated.SNP$GO_des),] %>%
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>%
     View() # sequalene synthase 
 
 # transcription factors  
+test <- 
+traitQTL.annotated.SNP[grep("DNA|nucleotide|transcription", traitQTL.annotated.SNP$GO_des),] %>%
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) # sequalene synthase 
+
+tmp <- 
+test[grep("acid|contents", test$trait),] %>%
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% 
+  group_by(AGI, gene_ID) %>% 
+  summarise(count = n()) %>% 
+  filter(count >= 2) %>% 
+  dplyr::select(AGI) 
+
+test[test$AGI %in% tmp$AGI,] %>% View()
+  # sequalene synthase 
 
 # flowering related genes
 colnames(traitQTL.annotated)
@@ -1451,6 +1466,13 @@ traitQTL.annotated.SNP[grep("DNA|nucleotide|transcription", traitQTL.annotated.S
   filter(chrom == "C03") %>% 
   dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% View()
 
+# stats 
+number_cis_coding <- 
+traitQTL.annotated.SNP %>% 
+  group_by(trait) %>% 
+  summarise(count = n())
+
+number_cis_coding[grep("acid|content", number_cis_coding$trait),] 
 ```   
 
 when filtered by F2 SNPs, didn't use this result for final report 
@@ -1524,7 +1546,7 @@ traitQTL.annotated %>%
 test[grep("lipid|fatty", test$GO_des),] %>%
 dplyr::select(-genes.seqnames, -SNP.start, -genetic_start, -genetic_end, -CHROM, -POS, -start, -end, -B.napus_GO_term, -subject, -REF, -ALT) %>%
 View() 
-test$gene_ID %>% unique() %>% length() 
+test$gene_ID %>% unique() %>% length()  
 ```
 
 

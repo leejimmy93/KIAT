@@ -159,6 +159,14 @@ load("~/F2/output/eQTL/cis_trans_result_new_flipped_C05C08.Rdata")
 cis_eQTL %>% dim() # 11587    15
 trans_eQTL %>% dim() # 14657    15  
 
+cis_eQTL$index <- paste(cis_eQTL$eQTL_chr, cis_eQTL$eQTL_start, cis_eQTL$eQTL_end, sep = "_")
+trans_eQTL$index <- paste(trans_eQTL$eQTL_chr, trans_eQTL$eQTL_start, trans_eQTL$eQTL_end, sep = "_")
+cis_eQTL$index %>% unique() %>% length() # 6515
+trans_eQTL$index %>% unique() %>% length() # 7117 
+6515/(6515+7117)
+
+c(cis_eQTL$index, trans_eQTL$index) %>% unique() %>% length() 
+
 ### FAD6
 cis_eQTL %>% 
   filter(gene_ID == "BnaA08g12780D") %>% 
@@ -222,7 +230,7 @@ eQTL %>%
         axis.text.y=element_blank(), 
         axis.ticks.x=element_blank(),
         axis.ticks.y=element_blank()) + 
-  labs(x = "eQTL genetic position", y = "gene start")   
+  labs(x = "eQTL genetic position", y = "gene start")    
 
 p.trans_eQTL
 ggsave(p.eQTL, filename = "~/F2/output/eQTL/figure/p.eQTL.flipped.png", height = 10, width = 10) 
@@ -230,7 +238,7 @@ ggsave(p.cis_eQTL, filename = "~/F2/output/eQTL/figure/p.cis_eQTL.flipped.png", 
 ggsave(p.trans_eQTL, filename = "~/F2/output/eQTL/figure/p.trans_eQTL.flipped.png", height = 10, width = 10) 
 
 ### check to see the rate of different vs same subgenome trans-regulators 
-eQTL %>% colnames() 
+eQTL %>% colnames()  
 eQTL$eQTL_subgenome <- gsub("(A|C)([[:digit:]]+)", "\\1", eQTL$eQTL_chr)
 eQTL$gene_subgenome <-  gsub("(A|C)([[:digit:]]+)", "\\1", eQTL$gene_CHROM)
 
@@ -245,6 +253,117 @@ sum(C_genes$eQTL_subgenome == C_genes$gene_subgenome) /nrow(C_genes) # 70%
 # number of eQTL on A & C subgenome 
 eQTL[eQTL$eQTL_subgenome == "A",] %>% nrow() /nrow(eQTL) 
 eQTL[eQTL$eQTL_subgenome == "C",] %>% nrow() /nrow(eQTL) 
+
+# plot eQTL which only act in trans- but not cis-, this isn't correct 
+trans_eQTL$index2 <- paste(trans_eQTL$eQTL_chr, trans_eQTL$genetic_start, trans_eQTL$gene_end, sep = "_")
+cis_eQTL$index2 <- paste(cis_eQTL$eQTL_chr, cis_eQTL$genetic_start, cis_eQTL$gene_end, sep = "_") 
+# no identical based on genetic position 
+
+trans_eQTL_only <- 
+trans_eQTL %>% 
+  anti_join(cis_eQTL, by = "index")    
+
+dim(trans_eQTL_only) # 6919 16 
+trans_eQTL_only %>% colnames()
+
+trans_eQTL_only <- trans_eQTL_only[grep("random", trans_eQTL_only$gene_CHROM, value = FALSE, invert = T),] # random scaffolds are exluced 
+trans_eQTL_only$gene_CHROM <- gsub("(chr)([[:print:]]+)", "\\2", trans_eQTL_only$gene_CHROM)
+trans_eQTL_only$eQTL_chr <- gsub("(chr)([[:print:]]+)", "\\2", trans_eQTL_only$eQTL_chr)
+trans_eQTL_only$gene_CHROM <- factor(trans_eQTL_only$gene_CHROM, levels = c("C09", "C08", "C07", "C06", "C05", "C04", "C03", "C02", "C01", "A10", "A09", "A08", "A07", "A06", "A05", "A04", "A03", "A02", "A01"))
+trans_eQTL_only$eQTL_chr <- factor(trans_eQTL_only$eQTL_chr, levels = c("A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09"))
+
+# plot 
+p.trans_eQTL_only <- 
+trans_eQTL_only %>% 
+  ggplot() + 
+  geom_point(aes(x = pos, y = gene_start), size = 0.5) + # x is genetic position of eQTL, y is physical start position of gene 
+  facet_grid(gene_CHROM ~ eQTL_chr, scales = "free", switch="both") + 
+  theme_classic() +
+  theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(), 
+        axis.ticks.x=element_blank(),
+        axis.ticks.y=element_blank()) + 
+  labs(x = "eQTL genetic position", y = "gene start")    
+
+p.trans_eQTL_only 
+ggsave(p.trans_eQTL_only, filename = "~/F2/output/eQTL/figure/p.trans_eQTL_only.flipped.png", height = 10, width = 10)  
+
+### check to see the rate of different vs same subgenome trans-regulators 
+trans_eQTL_only$eQTL_subgenome <- gsub("(A|C)([[:digit:]]+)", "\\1", trans_eQTL_only$eQTL_chr)
+trans_eQTL_only$gene_subgenome <-  gsub("(A|C)([[:digit:]]+)", "\\1", trans_eQTL_only$gene_CHROM)
+
+sum(trans_eQTL_only$eQTL_subgenome != trans_eQTL_only$gene_subgenome) /nrow(trans_eQTL_only) # 56.9% from the same subgenome 
+
+A_genes <- trans_eQTL_only[trans_eQTL_only$eQTL_subgenome == "A",] 
+sum(A_genes$eQTL_subgenome != A_genes$gene_subgenome) /nrow(A_genes) # %60 
+
+C_genes <- trans_eQTL_only[trans_eQTL_only$eQTL_subgenome == "C",] 
+sum(C_genes$eQTL_subgenome != C_genes$gene_subgenome) /nrow(C_genes) # 51%  
+
+# number of eQTL on A & C subgenome 
+trans_eQTL_only[trans_eQTL_only$eQTL_subgenome == "A",] %>% nrow() /nrow(trans_eQTL_only) 
+trans_eQTL_only[trans_eQTL_only$eQTL_subgenome == "C",] %>% nrow() /nrow(trans_eQTL_only)   
+
+# use genetic position to look for overlaps 
+cis_eQTL_range <- GRanges(seqnames = Rle(cis_eQTL$eQTL_chr),ranges = IRanges(start = cis_eQTL$genetic_start, end = cis_eQTL$genetic_end))
+cis_eQTL_range
+
+trans_eQTL_range <- GRanges(seqnames = Rle(trans_eQTL$eQTL_chr), ranges = IRanges(start = trans_eQTL$genetic_start, end = trans_eQTL$genetic_end))
+trans_eQTL_range
+
+cis_trans_eQTL <- mergeByOverlaps(cis_eQTL_range, trans_eQTL_range) # warning message here. look out!!!!!! 
+cis_trans_eQTL_2 <- 
+cis_trans_eQTL$trans_eQTL_range %>% unique() %>% as.data.frame() %>% 
+  mutate(eQTL_chr = seqnames, genetic_start = start, genetic_end = end) %>% 
+  dplyr::select(eQTL_chr, genetic_start, genetic_end)
+
+trans_eQTL$index2 %>% unique() %>% length() 
+
+# exclude these trans-eQTL overlapped with cis-eQTL 
+trans_eQTL_only_genetic <- 
+trans_eQTL %>% 
+  anti_join(cis_trans_eQTL_2) 
+
+trans_eQTL_only_genetic <- trans_eQTL_only_genetic[grep("random", trans_eQTL_only_genetic$gene_CHROM, value = FALSE, invert = T),] # random scaffolds are exluced 
+trans_eQTL_only_genetic$gene_CHROM <- gsub("(chr)([[:print:]]+)", "\\2", trans_eQTL_only_genetic$gene_CHROM)
+trans_eQTL_only_genetic$eQTL_chr <- gsub("(chr)([[:print:]]+)", "\\2", trans_eQTL_only_genetic$eQTL_chr)
+trans_eQTL_only_genetic$gene_CHROM <- factor(trans_eQTL_only_genetic$gene_CHROM, levels = c("C09", "C08", "C07", "C06", "C05", "C04", "C03", "C02", "C01", "A10", "A09", "A08", "A07", "A06", "A05", "A04", "A03", "A02", "A01"))
+trans_eQTL_only_genetic$eQTL_chr <- factor(trans_eQTL_only_genetic$eQTL_chr, levels = c("A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09"))
+
+# plot 
+p.trans_eQTL_only_genetic <- 
+trans_eQTL_only_genetic %>% 
+  ggplot() + 
+  geom_point(aes(x = pos, y = gene_start), size = 0.5) + # x is genetic position of eQTL, y is physical start position of gene 
+  facet_grid(gene_CHROM ~ eQTL_chr, scales = "free", switch="both") + 
+  theme_classic() +
+  theme(panel.spacing = unit(0, "lines"), panel.border = element_rect(colour = "black", fill=NA, size=0.1)) +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(), 
+        axis.ticks.x=element_blank(),
+        axis.ticks.y=element_blank()) + 
+  labs(x = "eQTL genetic position", y = "gene start")    
+
+p.trans_eQTL_only_genetic 
+
+# ggsave(p.trans_eQTL_only, filename = "~/F2/output/eQTL/figure/p.trans_eQTL_only.flipped.png", height = 10, width = 10)  
+
+### check to see the rate of different vs same subgenome trans-regulators 
+trans_eQTL_only_genetic$eQTL_subgenome <- gsub("(A|C)([[:digit:]]+)", "\\1", trans_eQTL_only_genetic$eQTL_chr)
+trans_eQTL_only_genetic$gene_subgenome <-  gsub("(A|C)([[:digit:]]+)", "\\1", trans_eQTL_only_genetic$gene_CHROM) 
+
+sum(trans_eQTL_only_genetic$eQTL_subgenome != trans_eQTL_only_genetic$gene_subgenome) /nrow(trans_eQTL_only_genetic) # 56.9% from different genome  
+
+A_genes <- trans_eQTL_only_genetic[trans_eQTL_only_genetic$eQTL_subgenome == "A",] 
+sum(A_genes$eQTL_subgenome != A_genes$gene_subgenome) /nrow(A_genes) # %60 
+
+C_genes <- trans_eQTL_only_genetic[trans_eQTL_only_genetic$eQTL_subgenome == "C",] 
+sum(C_genes$eQTL_subgenome != C_genes$gene_subgenome) /nrow(C_genes) # 56%  
+
+# number of eQTL on A & C subgenome 
+trans_eQTL_only_genetic[trans_eQTL_only_genetic$eQTL_subgenome == "A",] %>% nrow() /nrow(trans_eQTL_only_genetic) 
+trans_eQTL_only_genetic[trans_eQTL_only_genetic$eQTL_subgenome == "C",] %>% nrow() /nrow(trans_eQTL_only_genetic)   
 ``` 
 
 ### find overlaps between eQTL and traitQTL 
@@ -331,8 +450,7 @@ write.csv(trans_candidate.final, file = "~/F2/output/eQTL/trans_candidate.final.
 # 1) Fatty acid/flowering/growth related genes for cis-eQTL final list 
 cis_eQTL.qtl.combined.final_fatty_acid <- 
 cis_eQTL.qtl.combined.final[grep("lipid|fatty", cis_eQTL.qtl.combined.final$GO_des),] %>% 
-    dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) 
-
+  
 # 2) transcription factor coding genes for cis-eQTL final list
 cis_eQTL.qtl.combined.final_TF <- 
 cis_eQTL.qtl.combined.final[grep("DNA|nucleotide|transcription", cis_eQTL.qtl.combined.final$GO_des),] %>% 
@@ -348,7 +466,7 @@ trans_candidate.final[grep("lipid|fatty", trans_candidate.final$GO_des),] %>%
 # save(cis_eQTL.qtl.combined.final, trans_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata") 
 
 ### check whether FLC is cis-regulator for some the traits 
-# load("~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata")
+# load("~/F2/output/eQTL/eQTL.qtl.combined.final.Rdata") 
 
 cis_eQTL.qtl.combined.final %>%  
   filter(AGI == "AT5G10140") %>% 
@@ -376,22 +494,20 @@ write.csv(trans_candidate.final_fatty_acid, file = "~/F2/output/eQTL/trans_candi
 write.csv(trans_candidate.final_flowering, file =  "~/F2/output/eQTL/trans_candidate.final_flowering.csv") 
 ```
 
-### temp 
+### promoter motif enrichment analysis on trans-eQTL to look for potential up-stream genes in the cis-eQTL site
 ```{r}
-eQTL %>% colnames() 
-eQTL %>% 
-  filter(gene_ID == "BnaC03g63040D" | gene_ID == "BnaC03g63070D" | gene_ID == "BnaC03g64150D") %>% 
-  dplyr::select(gene_ID, eQTL_chr, pos, class, eQTL_subgenome, gene_subgenome) %>% 
-  View()
+trans_candidate.final <- read.csv(file = "~/F2/output/eQTL/trans_candidate.final.csv", row.names = 1) 
+save(trans_candidate.final, file = "~/F2/output/eQTL/trans_candidate.final.Rdata")
+trans_candidate.final %>% dim() # 4022 16 
+trans_candidate.final$gene_ID %>% unique() %>% length() # 1972 
 
-eQTL %>% 
-  filter(gene_ID == "BnaA08g11130D" | gene_ID == "BnaC03g65980D" | gene_ID == "BnaA08g11060D" | gene_ID == "BnaA08g11140D" | gene_ID == "BnaA08g12780D" | gene_ID == "BnaA08g27750D" | gene_ID == "BnaA10g22080D" | gene_ID == "BnaA04g09490D" | gene_ID == "BnaC06g29980D" | gene_ID == "BnaC09g26140D") %>% 
-  dplyr::select(gene_ID, eQTL_chr, pos, class, eQTL_subgenome, gene_subgenome) %>% 
-  View()    
+cis_eQTL.qtl.combined.final <- read.csv(file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv", row.names = 1)   
+number_cis_eQTL <- 
+cis_eQTL.qtl.combined.final %>% 
+  group_by(trait.y) %>% 
+  summarise(count = n()) 
 
-eQTL %>% 
-  filter(gene_ID == "BnaC09g26140D") %>% 
-  dplyr::select(gene_ID, eQTL_chr, pos, class, eQTL_subgenome, gene_subgenome) %>% 
-  View()  
+number_cis_eQTL[grep("acid|content", number_cis_eQTL$trait.y),]$count %>% sum() 
+
 ```
 

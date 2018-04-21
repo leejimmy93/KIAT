@@ -357,7 +357,7 @@ hot_trans$eQTL_chr <- paste("chr", hot_trans$eQTL_chr, sep = "")
 load("~/F2/for_paper/GO_trans_eQTL.Rdata")
 names(GO_trans_eQTL) <- paste(hotspot$chr, hotspot$pos_min, hotspot$pos_max, sep = "_")
 GO_trans_eQTL$chrA03_49_64
-<<<<<<< HEAD
+<<<<<<< HEAD 
 =======
 
 # GO_trans_eQTL <- GO_trans_eQTL[!is.na(GO_trans_eQTL)]   
