@@ -516,3 +516,36 @@ library(BSgenome.Dmelanogaster.UCSC.dm3)
 
 ```
 
+### GO enrichment of trans-eQTL for different phenotypic traits, do this on MAC 
+```{r}
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/trans_candidate.final.Rdata")
+source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
+
+dim(trans_candidate.final) # 4022   16 
+
+trans_candidate.final %>% colnames() 
+trans_candidate.final %>% head()
+
+GO_trans_eQTL <- 
+lapply(unique(trans_candidate.final$trait), function(trait) {
+  test <- trans_candidate.final$gene_ID[trans_candidate.final$trait == trait]
+  tryCatch(
+    GOseq.Bn.ORA(test), error= function(e) NA)
+})
+
+names(GO_trans_eQTL) <- unique(trans_candidate.final$trait) 
+# make a dataframe from this result 
+GO_trans_eQTL$Behenic_acid
+GO_trans_eQTL <- do.call("rbind", GO_trans_eQTL) 
+GO_trans_eQTL %>% View()
+
+save(GO_trans_eQTL, file = "~/Desktop/F2_paper/data/GO_trans_eQTL.Rdata") 
+
+# how many trans-eQTL gene for each trait 
+number_trans_eQTL <- 
+trans_candidate.final %>% 
+  group_by(trait) %>% 
+  summarise(count = n()) 
+
+number_trans_eQTL[grep("acid|content", number_trans_eQTL$trait),]
+```
