@@ -1028,6 +1028,7 @@ FAE1_data$BnaA08g11130D <- as.numeric(FAE1_data$BnaA08g11130D)
 FAE1_data$chrA03_12781099 <- as.numeric(as.character(FAE1_data$chrA03_12781099))
 FAE1_data$chrA08_10120555 <- as.numeric(as.character(FAE1_data$chrA08_10120555))
 FAE1_data$chrC03_53442609 <- as.numeric(as.character(FAE1_data$chrC03_53442609))
+
 FAE1_data$Erucic_acid <- as.numeric(FAE1_data$Erucic_acid)
 summary(FAE1_data)
 id <- FAE1_data$id
@@ -1047,7 +1048,7 @@ colnames(FAE1_data)
   # just the two loci, with interaction 
   FAE1 <- brm(Erucic_acid ~ chrC03_53442609 * chrA08_10120555,
             data = FAE1_data, 
-            prior = set_prior("normal(0,50)",class="b"))  # mean of 0 and sd of 10
+            prior = set_prior("normal(0,50)",class="b"))  # mean of 0 and sd of 50
 
   # add genotype from A03, pairwise interaction 
   FAE1.2 <- brm(Erucic_acid ~ chrA03_12781099 + chrA08_10120555 + chrC03_53442609 + chrA03_12781099:chrA08_10120555 + chrA03_12781099:chrC03_53442609 + chrC03_53442609:chrA08_10120555,
@@ -1113,13 +1114,90 @@ hypothesis(FAE1.2.3, "chrC03_53442609 < 0")
 hypothesis(FAE1.2.3, "chrA03_12781099 > 0")  ### allele from Da-Ol-1 increase Erucic acid level. 
 plot(hypothesis(FAE1.2.2, "chrA03_12781099 > 0")) 
 
-# cool, so A03 genotype is significant for Erucic acid, how about other FA? 
+# cool, so A03 genotype is significant for Erucic acid, how about other FA? I will just test oleic acid and linolenic acid 
 
+FAE1_data <- 
+geno %>% 
+  left_join(expression) %>%
+  left_join(pheno) 
 
+FAE1_data <- data.frame(sapply(FAE1_data, function(x) sub("-",NA,x)))
+FAE1_data <- data.frame(sapply(FAE1_data, function(x) sub("A",-1,x)))
+FAE1_data <- data.frame(sapply(FAE1_data, function(x) sub("B",1,x)))
+FAE1_data <- data.frame(sapply(FAE1_data, function(x) sub("H",0,x)))
+FAE1_data$BnaC03g65980D <- as.numeric(FAE1_data$BnaC03g65980D)
+FAE1_data$BnaA08g11130D <- as.numeric(FAE1_data$BnaA08g11130D)
+FAE1_data$chrA03_12781099 <- as.numeric(as.character(FAE1_data$chrA03_12781099))
+FAE1_data$chrA08_10120555 <- as.numeric(as.character(FAE1_data$chrA08_10120555))
+FAE1_data$chrC03_53442609 <- as.numeric(as.character(FAE1_data$chrC03_53442609))
 
+  FAE1_data$Stearic_acid <- as.numeric(FAE1_data$Stearic_acid)
+  id <- FAE1_data$id
 
+  FAE1_data <- 
+  sapply(colnames(FAE1_data), function(i) 
+    as.numeric(as.character(FAE1_data[,i]))) 
+  FAE1_data <- as.data.frame(FAE1_data)
+  FAE1_data$id <- id
 
+  # just the two loci, with interaction 
+  FAE1 <- brm(Stearic_acid ~ chrC03_53442609 * chrA08_10120555,
+            data = FAE1_data, 
+            prior = set_prior("normal(0,50)",class="b"))  # mean of 0 and sd of 50
 
+  # add genotype from A03, pairwise interaction 
+  FAE1.2 <- brm(Stearic_acid ~ chrA03_12781099 + chrA08_10120555 + chrC03_53442609 + chrA03_12781099:chrA08_10120555 + chrA03_12781099:chrC03_53442609 + chrC03_53442609:chrA08_10120555,
+            data = FAE1_data,
+            prior = set_prior("normal(0,50)",class="b"))
+
+  # no interaction at all, add genotype from A03 
+  FAE1.2.2 <- brm(Stearic_acid ~ chrA03_12781099 + chrA08_10120555 + chrC03_53442609,
+            data = FAE1_data, 
+            prior = set_prior("normal(0,50)",class="b")) 
+
+  # just add interaction between A08 and C03
+  FAE1.2.3 <- brm(Stearic_acid ~ chrA03_12781099 + chrA08_10120555 + chrC03_53442609 + chrA08_10120555:chrC03_53442609,
+            data = FAE1_data, 
+            prior = set_prior("normal(0,50)",class="b"))
+  
+  ### no interaction, just the two major QTL 
+  FAE0 <- brm(Stearic_acid ~ chrC03_53442609 + chrA08_10120555,
+            data = FAE1_data, 
+            prior = set_prior("normal(0,50)",class="b"))  # mean of 0 and sd of 10
+
+### hypothesis testing 
+# A08 & C03, no interaction 
+summary(FAE0) 
+hypothesis(FAE0, "chrA08_10120555 > 0")
+hypothesis(FAE0, "chrC03_53442609 > 0")  
+
+# only A08 & C03
+summary(FAE1)
+hypothesis(FAE1, "chrA08_10120555 > 0")
+hypothesis(FAE1, "chrC03_53442609 > 0")  
+
+loo(FAE1,FAE0) # 
+
+# add A03, pairwise interaction 
+summary(FAE1.2)
+hypothesis(FAE1.2, "chrA08_10120555 > 0") 
+hypothesis(FAE1.2, "chrC03_53442609 > 0") 
+hypothesis(FAE1.2, "chrA03_12781099 < 0") 
+
+# add A03, no interaction  
+summary(FAE1.2.2) 
+hypothesis(FAE1.2.2, "chrA08_10120555 > 0")  
+hypothesis(FAE1.2.2, "chrC03_53442609 > 0") 
+hypothesis(FAE1.2.2, "chrA03_12781099 < 0")  ### allele from Da-Ol-1 increase Erucic acid level. 
+
+# add A03, and include interaction between A08 and C03
+summary(FAE1.2.3)
+hypothesis(FAE1.2.3, "chrA08_10120555 > 0") 
+hypothesis(FAE1.2.3, "chrC03_53442609 > 0") 
+hypothesis(FAE1.2.3, "chrA03_12781099 < 0")  ### allele from Da-Ol-1 increase Erucic acid level.    
+  
+Oleic_result <- c(FAE0, FAE1, FAE1.2, FAE1.2.2, FAE1.2.3) 
+linoleic_result <- c(FAE0, FAE1, FAE1.2, FAE1.2.2, FAE1.2.3) 
 ###### adding the two gene's expression doesn't help, so not included here 
 # add two FAE gene, the two QTL remain significant  
 summary(FAE1.3)
