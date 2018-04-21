@@ -509,5 +509,10 @@ cis_eQTL.qtl.combined.final %>%
 
 number_cis_eQTL[grep("acid|content", number_cis_eQTL$trait.y),]$count %>% sum() 
 
+# demo 
+library(BSgenome.Dmelanogaster.UCSC.dm3)
+
+
+
 ```
 
