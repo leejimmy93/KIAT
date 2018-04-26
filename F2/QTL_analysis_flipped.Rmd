@@ -1400,7 +1400,7 @@ traitQTL.annotated %>%
 
 dim(traitQTL.annotated) # 9730 
 
-# just keep mutations which would affect protein function
+# just keep mutations which would affect protein function 
 traitQTL.annotated.SNP <- 
 traitQTL.annotated %>% 
   filter(mutation_type != "synonymous_variant" & 
@@ -1408,9 +1408,10 @@ traitQTL.annotated %>%
            mutation_type != "upstream_gene_variant" & 
            mutation_type != "intron_variant" & 
            mutation_type != "stop_retained_variant") %>% 
-  dplyr::select(trait, SNP.ID, mutation_type, impact, gene_ID, AGI, At_symbol, B.napus_GO_term, GO_des, chrom, Ae.gt, Ol.gt) 
+  dplyr::select(trait, SNP.ID, mutation_type, impact, gene_ID, AGI, At_symbol, B.napus_GO_term, GO_des, chrom, Ae.gt, Ol.gt, REF, ALT) 
 
-dim(traitQTL.annotated.SNP) # 4062 
+traitQTL.annotated.SNP %>% colnames()
+dim(traitQTL.annotated.SNP) # 4062 14
 traitQTL.annotated.SNP$gene_ID %>% unique() %>% length() # 973 
 write.csv(traitQTL.annotated.SNP, file = "~/F2/for_paper/candidate_gene_SNP_mutation/traitQTL.annotated.SNP.csv")  
 

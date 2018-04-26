@@ -405,7 +405,7 @@ cis_eQTL_effect_all %>% head()
 
 cis_eQTL.qtl.combined.final <- 
 cis_eQTL.qtl.combined.final %>% 
-  left_join(cis_eQTL_effect_all, by = c("gene_ID" = "names"))   
+  left_join(cis_eQTL_effect_all, by = c("gene_ID" = "names"))    
 
 write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")    
   
@@ -678,7 +678,40 @@ trans_candidate.final %>%
 number_trans_eQTL[grep("acid|content", number_trans_eQTL$trait),]
 ```
 
-# appendix 
+### examine the correlation between expression of FAD, FAE, and SQS with Erucic acid content level 
+```{r}
+phefile.expression <- read.csv("~/F2/output/network_analysis/vstMat.f2.batch.corrected_revised.csv", row.names = 1)
+phefile.expression 
+
+phefile.trait <- read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", row.names = 1)    
+phefile.trait  
+
+trait <- as.data.frame(t(phefile.trait)) 
+ID <- c("BnaA08g11140D", "BnaA08g11060D", "BnaA08g12780D")
+expression <- as.data.frame(t(phefile.expression[rownames(phefile.expression) %in% ID,]))
+expression$id <- rownames(expression)
+
+test_gene <- 
+trait %>% 
+  dplyr::select(Erucic_acid, id) %>% 
+  left_join(expression) 
+
+colnames(test_gene)
+
+png("~/F2/output/expression_vs_Erucic.png", width=9, height=3, units="in", res=300)
+par(mfrow=c(1,3)) 
+for (i in colnames(test_gene)[3:5]) {
+  title <- round(cor(as.numeric(test_gene$Erucic_acid), test_gene[,i]), digits = 2)
+  plot(test_gene[,i], test_gene$Erucic_acid, main = title, xlab = i)
+} 
+dev.off() 
+
+# expression between Da-Ae and Da-Ol-1 
+
+
+```
+
+### appendix 
 ```{r}
 # function for promoter motif enrichment analysis 
 #create a function to summarize the results and test for significance
@@ -741,7 +774,7 @@ allele.effect.trans <- function(gene_ID){
                          phefile = "~/F2/output/network_analysis/vstMat.f2.batch.corrected_revised.csv",
                          genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result.
   cross.F2$pheno <- as.data.frame(cross.F2$pheno[,gene_ID])
-  cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?
+  cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation? 
   cross.F2 <- calc.genoprob(cross.F2,step=1)
 
   chr = trans_eQTL[trans_eQTL$gene_ID == gene_ID,]$eQTL_chr
