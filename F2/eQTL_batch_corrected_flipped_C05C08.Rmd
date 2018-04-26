@@ -627,6 +627,13 @@ lapply(unique(trans_candidate.final$trait), function(trait) {
   motif.results <- motifEnrichment(target.promoters,universe.promoters) 
 }) 
 
+<<<<<<< HEAD
+### demo 
+
+
+
+
+=======
 names(motif.results) <- unique(trans_candidate.final$trait)
 motif.results.2 <- 
 lapply(names(motif.results), function(trait) {
@@ -642,10 +649,12 @@ write.csv(motif.results.final, file = "~/F2/for_paper/trans_regulator_motif_resu
 
 motif.results.final[grep("acid|aicd|content", motif.results.final$trait),]
 motif.results.final[grep("acid|aicd|content", motif.results.final$trait, invert = T),] %>% View() 
+>>>>>>> c5edaab06ec02da01b8889bd27552411ca8538ab
 ```
 
-### GO enrichment of trans-eQTL for different phenotypic traits, do this on MAC 
+### GO enrichment analysis 
 ```{r}
+# trans-eQTL 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/eQTL/trans_candidate.final.Rdata")
 source("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")
 
@@ -666,7 +675,7 @@ names(GO_trans_eQTL) <- unique(trans_candidate.final$trait)
 GO_trans_eQTL$Behenic_acid
 GO_trans_eQTL <- do.call("rbind", GO_trans_eQTL) 
 GO_trans_eQTL %>% View()
-
+load("~/Desktop/F2_paper/data/GO_trans_eQTL.Rdata")
 save(GO_trans_eQTL, file = "~/Desktop/F2_paper/data/GO_trans_eQTL.Rdata") 
 
 # how many trans-eQTL gene for each trait 
@@ -676,6 +685,32 @@ trans_candidate.final %>%
   summarise(count = n()) 
 
 number_trans_eQTL[grep("acid|content", number_trans_eQTL$trait),]
+
+# cis-coding candidate 
+traitQTL.annotated.SNP <- read.csv("~/Desktop/F2_paper/supplementary/table/traitQTL.annotated.SNP.csv", row.names = 1)
+
+dim(traitQTL.annotated.SNP) # 4062    9  
+
+traitQTL.annotated.SNP %>% colnames() 
+traitQTL.annotated.SNP %>% head()
+
+GO_cis_coding <- 
+lapply(unique(traitQTL.annotated.SNP$trait), function(trait) {
+  test <- traitQTL.annotated.SNP$gene_ID[traitQTL.annotated.SNP$trait == trait]
+  tryCatch(
+    GOseq.Bn.ORA(test), error= function(e) NA)
+})
+
+GO_cis_coding 
+names(GO_cis_coding) <- unique(traitQTL.annotated.SNP$trait) 
+# make a dataframe from this result 
+GO_cis_coding <- do.call("rbind", GO_cis_coding) 
+GO_cis_coding %>% View() 
+
+# cis-regulator  
+
+
+
 ```
 
 ### examine the correlation between expression of FAD, FAE, and SQS with Erucic acid content level 

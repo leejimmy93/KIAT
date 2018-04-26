@@ -2816,7 +2816,7 @@ expression.pattern.Bn.parent(genes.GWAS.df)
 ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/two_genes.png", width = 7, height = 5)  
 
 expression.pattern.Bn.parent.bar(vstMat.parent = vstMat.parent, gene = genes.GWAS.df) 
-ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/two_genes.png", width = 7, height = 5) 
+ggsave("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/505/output/figure/131_sample/two_genes.png", width = 7, height = 5)  
 ```
 
 # GWAS on more traits: 
