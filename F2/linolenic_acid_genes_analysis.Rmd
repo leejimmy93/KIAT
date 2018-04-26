@@ -671,7 +671,7 @@ allele.effect <- function(gene_ID){
   qtl.fit <- fitqtl(cross=cross.F2,qtl=qtlm,formula = y ~ Q1, get.ests=T)
 
   summary(qtl.fit)    
-}  
+}   
 ```
 
 

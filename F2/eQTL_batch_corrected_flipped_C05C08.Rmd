@@ -146,8 +146,8 @@ trans_eQTL <-
 bayesint.result.2 %>% 
   anti_join(cis_eQTL) 
 
-save(cis_eQTL, trans_eQTL, file = "~/F2/output/eQTL/cis_trans_result_new_flipped_C05C08.Rdata")
-```
+save(cis_eQTL, trans_eQTL, file = "~/F2/output/eQTL/cis_trans_result_new_flipped_C05C08.Rdata") 
+```  
 
 ### determine cis- and trans- eQTL using lodint 
 Also tried with lodint() to get QTL interval, no big difference compared to bayesint() 
@@ -393,7 +393,21 @@ cis_eQTL.qtl.combined %>%
   mutate(eQTL_start = start.x, eQTL_end = end.x, QTL_start = start.y, QTL_end = end.y, eQTL_genetic_start = genetic_start.x, eQTL_genetic_end = genetic_end.x, QTL_genetic_start = genetic_start.y, QTL_genetic_end = genetic_end.y) %>% 
   dplyr::select(-c(start.x, end.x, start.y, end.y, genetic_start.x, genetic_end.x, genetic_start.y, genetic_end.y)) 
 
-write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")   
+# add additive allele effect 
+load("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/F2/for_paper/cis_eQTL_effect_all.Rdata")
+
+names(cis_eQTL_effect_all) <- unique(cis_eQTL.qtl.combined.final$gene_ID)
+cis_eQTL_effect_all <- sapply(names(cis_eQTL_effect_all), function(gene) cis_eQTL_effect_all[[gene]]$ests[2,1])
+cis_eQTL_effect_all <- cis_eQTL_effect_all %>% as.data.frame() ## all possible genes have positive allele effect from Da-Ol-1 
+cis_eQTL_effect_all$names <- rownames(cis_eQTL_effect_all) 
+colnames(cis_eQTL_effect_all)[1] <- "additive_allele_effect_Da_Ol"
+cis_eQTL_effect_all %>% head()
+
+cis_eQTL.qtl.combined.final <- 
+cis_eQTL.qtl.combined.final %>% 
+  left_join(cis_eQTL_effect_all, by = c("gene_ID" = "names"))   
+
+write.csv(cis_eQTL.qtl.combined.final, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv")    
   
 # trans-eQTL overlap with trait QTL, use genetic interval as the interval for both trait QTL and eQTL  
 
@@ -429,7 +443,7 @@ trans_candidate.final <-
 trans_candidate %>%  
   left_join(BnapusAnnotation, c("gene_ID" = "name")) %>% 
   mutate(trait_chrom = chrom.x, gene.chrom = chrom.y, gene.start = start, gene.end = end) %>% 
-  dplyr::select(-c(chrom.x, chrom.y, start, end)) 
+  dplyr::select(-c(chrom.x, chrom.y, start, end))   
 
 ## get GO term for each gene
 load("~/Reference/B.napus/napus_GO_combined.Rdata") # there is one colomn hiding... 
@@ -449,12 +463,12 @@ write.csv(trans_candidate.final, file = "~/F2/output/eQTL/trans_candidate.final.
 ### make some table & plot for several important genes 
 # 1) Fatty acid/flowering/growth related genes for cis-eQTL final list 
 cis_eQTL.qtl.combined.final_fatty_acid <- 
-cis_eQTL.qtl.combined.final[grep("lipid|fatty", cis_eQTL.qtl.combined.final$GO_des),] %>% 
+cis_eQTL.qtl.combined.final[grep("lipid|fatty", cis_eQTL.qtl.combined.final$GO_des),] 
   
 # 2) transcription factor coding genes for cis-eQTL final list
 cis_eQTL.qtl.combined.final_TF <- 
 cis_eQTL.qtl.combined.final[grep("DNA|nucleotide|transcription", cis_eQTL.qtl.combined.final$GO_des),] %>% 
-  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des) 
+  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des)  
 
 # 3) Fatty acid/flowering/growth related genes for trans-eQTL final list
 trans_candidate.final_fatty_acid <- 
@@ -472,6 +486,44 @@ cis_eQTL.qtl.combined.final %>%
   filter(AGI == "AT5G10140") %>% 
   View() # FLC is cis-regulator    
 
+cis_eQTL.qtl.combined.final[grep("acid|aicd|content", cis_eQTL.qtl.combined.final$trait.y),] %>% 
+  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des, additive_allele_effect_Da_Ol) %>% 
+  # dplyr::select(At_symbol) %>%
+  # unique() %>% 
+  View()  
+
+
+# cis_eQTL.qtl.combined.final <- 
+test <- 
+cis_eQTL.qtl.combined.final[grep("acid|aicd|content", cis_eQTL.qtl.combined.final$trait.y, invert = T),] %>% 
+  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des, additive_allele_effect_Da_Ol) 
+  # dplyr::select(At_symbol) %>%
+  # unique() %>% 
+
+test[grep("DNA|nucleotide|transcription", test$GO_des),] %>% 
+  View()
+
+###### for fatty acid trait  
+test <- 
+cis_eQTL.qtl.combined.final[grep("acid|aicd|content", cis_eQTL.qtl.combined.final$trait.y),] %>% 
+  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des, additive_allele_effect_Da_Ol) 
+  # dplyr::select(At_symbol) %>%
+  # unique() %>% 
+
+test[grep("lipid|fatty", test$GO_des),]  %>% View()
+
+cis_eQTL.qtl.combined.final %>%  
+  filter(gene_ID == "BnaA08g11060D" | gene_ID == "BnaA08g11140D" | gene_ID == "BnaA01g03770D"| gene_ID == "BnaA03g37760D" | gene_ID == "BnaC06g28980D" | gene_ID == "BnaA01g07910D") %>% 
+  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des, additive_allele_effect_Da_Ol) %>% 
+  # dplyr::select(At_symbol) %>%
+  # unique() %>% 
+  View()    
+
+cis_eQTL.qtl.combined.final %>% 
+  filter(gene_ID == "BnaA10g22080D" | gene_ID == "BnaC06g20640D" | gene_ID == "BnaC06g27170D" | gene_ID == "BnaA10g21380D") %>% 
+  dplyr::select(gene_ID, trait.y, AGI, At_symbol, GO_des, additive_allele_effect_Da_Ol) %>% 
+  View()
+
 #### other important flower genes under C06? 
 ### important flower related genes 
 flowering_time_gene <- read.csv("~/F2/for_paper/flowering_time/flowering_time_genes.csv")
@@ -486,6 +538,32 @@ trans_candidate.final_flowering <-
 trans_candidate.final[trans_candidate.final$AGI %in% flowering_time_gene$Gene.number,] %>%
   dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des)
 
+trans_candidate.final[grep("acid|aicd|content", trans_candidate.final$trait, invert = T),] %>% 
+  dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des) %>% 
+  dplyr::select(At_symbol) %>%
+  unique() %>% 
+  View() 
+trans_candidate.final[grep("MADS", trans_candidate.final$At_symbol),] 
+
+test <- 
+trans_candidate.final[grep("acid|aicd|content", trans_candidate.final$trait, invert = T),] %>% 
+  dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des)
+
+test[grep("DNA|nucleotide|transcription", test$GO_des),] %>%
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des) %>% View()
+
+test <- 
+trans_candidate.final[grep("acid|aicd|content", trans_candidate.final$trait),] %>% 
+  dplyr::select(gene_ID, trait, AGI, At_symbol, GO_des)
+
+test[grep("lipid|fatty", test$GO_des),] %>% 
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des) %>% View()
+
+# trans effect for BnaA08g27750D
+trans_candidate.final %>% 
+  filter(gene_ID == "BnaA08g27750D") 
+
+
 write.csv(cis_eQTL.qtl.combined.final_fatty_acid, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_fatty_acid.csv")
 write.csv(cis_eQTL.qtl.combined.final_flowering, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_flowering.csv")
 write.csv(cis_eQTL.qtl.combined.final_TF, file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final_TF.csv")
@@ -498,22 +576,72 @@ write.csv(trans_candidate.final_flowering, file =  "~/F2/output/eQTL/trans_candi
 ```{r}
 trans_candidate.final <- read.csv(file = "~/F2/output/eQTL/trans_candidate.final.csv", row.names = 1) 
 save(trans_candidate.final, file = "~/F2/output/eQTL/trans_candidate.final.Rdata")
+
 trans_candidate.final %>% dim() # 4022 16 
 trans_candidate.final$gene_ID %>% unique() %>% length() # 1972 
 
-cis_eQTL.qtl.combined.final <- read.csv(file = "~/F2/output/eQTL/cis_eQTL.qtl.combined.final.csv", row.names = 1)   
-number_cis_eQTL <- 
-cis_eQTL.qtl.combined.final %>% 
-  group_by(trait.y) %>% 
-  summarise(count = n()) 
+trans_candidate.final$gene_ID %>% unique() %>% length() 
 
-number_cis_eQTL[grep("acid|content", number_cis_eQTL$trait.y),]$count %>% sum() 
+# get trans-candidate gene fasta file 
+# perl extract-utr.pl --gff_file=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.gff3 --genome_fa_file=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus_v4.1.chromosomes.fa --cds_fa_file=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa --fiveprime --utr_length=1000 --gene_length=0 --output_fa_file=Brassica_napus.upstream.fa
+# cat ~/F2/output/eQTL/trans_candidate.final.csv | awk 'BEGIN{FS= ","}{print $5}' | sort | uniq | grep "Bna" | sed 's/"//g' > trans_candidate.final.ID
+# cat trans_candidate.final.ID | grep -v "Unn" | grep -v "Ann" | grep -v "Cnn"  > trans_candidate.final.main.ID
+# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' trans_candidate.final.ID ~/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa | grep ">" > trans_candidate_upstream.fa # all genes including random chromosome 
+# perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' trans_candidate.final.main.ID ~/Reference/B.napus/Brassica_napus.annotation_v5.cds.fa | grep ">" > trans_candidate_upstream_main.fa 
 
-# demo 
-library(BSgenome.Dmelanogaster.UCSC.dm3)
+# promoter motif enrichment for trans-eQTL for each trait 
 
+# get the promoter sequences 
+library(Biostrings) #R package for handling DNA and protein data
+promoters <- readDNAStringSet("~/F2/for_paper/Brassica_napus.upstream.fa")
 
+#convert "N" to "-" in promoters.  otherwise motifs will match strings of "N"s
+promoters <- DNAStringSet(gsub("N","-",promoters))
+promoters 
 
+# motif 
+motifs <- read.delim("~/Reference/promoter/element_name_and_motif_IUPACsupp.txt",header=FALSE,as.is=TRUE)
+head(motifs)
+motifsV <- as.character(motifs[,2])
+names(motifsV) <- motifs[,1]
+motifsSS <- DNAStringSet(motifsV)
+motifsSS 
+
+# subset "universe" & "target" genes's motif 
+#get names to match...there are are few names in the DEgene list not in the promoter set
+# only get genes on main chromosomes 
+expressed_gene <- read.csv("~/F2/output/network_analysis/vstMat.f2.batch.corrected_revised.csv", row.names = 1)
+expressed_gene_main <- unique(grep("nn",  rownames(expressed_gene), value = T, invert = T)) 
+expressed_gene_main.match <- expressed_gene_main[expressed_gene_main %in% names(promoters)] 
+universe.promoters <- promoters[expressed_gene_main.match]  
+
+motif.results <- 
+lapply(unique(trans_candidate.final$trait), function(trait) {
+  trans_eQTL_main <- unique(grep("nn",  trans_candidate.final[trans_candidate.final$trait == trait,]$gene_ID, value = T, invert = T)) 
+  trans_eQTL_main.match <- trans_eQTL_main[trans_eQTL_main %in% names(promoters)] 
+
+  #subset promoter files 
+  target.promoters <- promoters[trans_eQTL_main.match]   
+
+  # enrichment analysis 
+  motif.results <- motifEnrichment(target.promoters,universe.promoters) 
+}) 
+
+names(motif.results) <- unique(trans_candidate.final$trait)
+motif.results.2 <- 
+lapply(names(motif.results), function(trait) {
+  motif.results[[trait]][motif.results[[trait]]$p.value < 0.05,]
+})
+
+names(motif.results.2) <- unique(trans_candidate.final$trait)
+motif.results.2 
+motif.results.final <- do.call("rbind", motif.results.2) 
+motif.results.final$trait <- gsub("([[:print:]]+)(\\.)(+[[:print:]]+)", "\\1", rownames(motif.results.final))
+motif.results.final %>% View()
+write.csv(motif.results.final, file = "~/F2/for_paper/trans_regulator_motif_results.csv")  
+
+motif.results.final[grep("acid|aicd|content", motif.results.final$trait),]
+motif.results.final[grep("acid|aicd|content", motif.results.final$trait, invert = T),] %>% View() 
 ```
 
 ### GO enrichment of trans-eQTL for different phenotypic traits, do this on MAC 
@@ -531,7 +659,7 @@ lapply(unique(trans_candidate.final$trait), function(trait) {
   test <- trans_candidate.final$gene_ID[trans_candidate.final$trait == trait]
   tryCatch(
     GOseq.Bn.ORA(test), error= function(e) NA)
-})
+}) 
 
 names(GO_trans_eQTL) <- unique(trans_candidate.final$trait) 
 # make a dataframe from this result 
@@ -549,3 +677,85 @@ trans_candidate.final %>%
 
 number_trans_eQTL[grep("acid|content", number_trans_eQTL$trait),]
 ```
+
+# appendix 
+```{r}
+# function for promoter motif enrichment analysis 
+#create a function to summarize the results and test for significance
+motifEnrichment <- function(target.promoters,universe.promoters,all.counts=F,motifs=motifsSS) {
+  
+  #use vcountPDict to count the occurrences of each motif in each promoter
+  target.counts <- vcountPDict(motifs,target.promoters,fixed=F) + 
+    vcountPDict(motifsSS,reverseComplement(target.promoters),fixed=F)
+  universe.counts <- vcountPDict(motifs,universe.promoters,fixed=F) + 
+    vcountPDict(motifsSS,reverseComplement(universe.promoters),fixed=F)
+  
+  if (all.counts) { 
+    #count all occurrences of a motif instead of the number of promoters that it occurs in
+    target.counts.sum <- apply(target.counts,1,sum)
+    universe.counts.sum <- apply(universe.counts,1,sum)
+  } else {
+    target.counts.sum <- apply(ifelse(target.counts > 0,1,0),1,sum)
+    universe.counts.sum <- apply(ifelse(universe.counts > 0 , 1, 0),1,sum)
+  }
+  n.motifs <- length(target.counts.sum)
+  results <- vector(mode="numeric",length=n.motifs)
+  for (i in 1:n.motifs) {
+    if (all.counts) { #the contigency tables are different depending on whether we are looking at promoters or overall occurrences
+      #test if ratio of occurrences to promoters is the same in the target and the universe
+      m <- matrix(c(
+        target.counts.sum[i],                       #number of occurrences within target
+        dim(target.counts)[2],                      #number of promoters in target
+        universe.counts.sum[i],                  #number of occurrences within universe
+        dim(universe.counts)[2]                  #number of promoters in universe
+      ),ncol=2)
+    } else { #looking at promoters with and without hits
+      m <- matrix(c(
+        target.counts.sum[i],                        #number of promoters in target with hit
+        dim(target.counts)[2]-target.counts.sum[i],            #number of promoters in target with no hit
+        universe.counts.sum[i],                   #number of promoters in universe with hit
+        dim(universe.counts)[2]-universe.counts.sum[i]   #number of promoters in universe with no hit
+      ),ncol=2)
+    } #else
+    results[i] <- fisher.test(m,alternative="greater")$p.value
+  } #for loop
+  results.table <- data.frame(
+    motif=names(motifs),
+    universe.percent = round(universe.counts.sum/dim(universe.counts)[2],3)*100,
+    target.percent = round(target.counts.sum/dim(target.counts)[2],3)*100,
+    p.value =  results)
+  results.table <- results.table[order(results.table$p.value),]
+  results.table
+} 
+
+
+allele.effect.trans <- function(gene_ID){
+  
+  gene_ID <- "BnaA08g27750D" 
+  load("~/F2/output/eQTL/cis_trans_result_new_flipped_C05C08.Rdata")
+  cis_eQTL %>% dim()
+  trans_eQTL %>% dim()
+  
+  cross.F2 <- read.cross("csvsr",
+                         genfile ="~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped_C05C08.csv",
+                         phefile = "~/F2/output/network_analysis/vstMat.f2.batch.corrected_revised.csv",
+                         genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result.
+  cross.F2$pheno <- as.data.frame(cross.F2$pheno[,gene_ID])
+  cross.F2 <- sim.geno(cross.F2,step=1,n.draws=32) # imputation?
+  cross.F2 <- calc.genoprob(cross.F2,step=1)
+
+  chr = trans_eQTL[trans_eQTL$gene_ID == gene_ID,]$eQTL_chr
+  chr = gsub("chr", "", chr)
+  pos = trans_eQTL[trans_eQTL$gene_ID == gene_ID,]$pos
+  qtlm <- makeqtl(cross.F2,chr=chr,pos=pos)
+
+#make a model for QTL action.  Since there is no evidence of interaction, start with an additive model
+  qtl.fit <- fitqtl(cross=cross.F2,qtl=qtlm,formula = y ~ Q1, get.ests=T)
+
+#examine our model
+  summary(qtl.fit) 
+}
+
+```
+
+

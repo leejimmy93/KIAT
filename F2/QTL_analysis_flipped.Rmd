@@ -9,7 +9,7 @@ output: html_document
 ### load lib
 library(tidyverse)
 library(qtl) 
-library(snowfall)
+library(snowfall) 
 library(ggrepel) 
 library(Biostrings)   
 source("~/KIAT/function_BnRNAseq.R")    
@@ -1422,7 +1422,11 @@ traitQTL.annotated.SNP[grep("lipid|fatty", traitQTL.annotated.SNP$GO_des),] %>%
 # transcription factors  
 test <- 
 traitQTL.annotated.SNP[grep("DNA|nucleotide|transcription", traitQTL.annotated.SNP$GO_des),] %>%
-  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) # sequalene synthase 
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type)  # sequalene synthase 
+
+test[grep("acid|aicd|content", test$trait, invert = T),] %>% 
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% 
+  View()
 
 tmp <- 
 test[grep("acid|contents", test$trait),] %>%
@@ -1441,10 +1445,21 @@ traitQTL.annotated %>%
   filter(AGI == "AT1G69120" | AGI == "AT1G69570") %>% 
   dim() 
 
+# non fatty acid trait 
+
+traitQTL.annotated.SNP[grep("acid|content", traitQTL.annotated.SNP$trait, invert = T),] %>% # enrichment analysis 
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% # sequalene synthase 
+  group_by(trait) %>% 
+  summarise(count = n())
+
+traitQTL.annotated.SNP[grep("acid|content|aicd", traitQTL.annotated.SNP$trait, invert = T),] %>% # enrichment analysis 
+  dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% # sequalene synthase 
+  View() 
+
 traitQTL.annotated.SNP %>% 
   filter(chrom == "C06") %>% 
   dplyr::select(trait, gene_ID, AGI, At_symbol, GO_des, Ae.gt, Ol.gt, mutation_type) %>% 
-  View()
+  View() 
 
 # C06 
 traitQTL.annotated.SNP[grep("DNA|nucleotide|transcription", traitQTL.annotated.SNP$GO_des),] %>% 
@@ -1473,6 +1488,11 @@ traitQTL.annotated.SNP %>%
   summarise(count = n())
 
 number_cis_coding[grep("acid|content", number_cis_coding$trait),] 
+
+traitQTL.annotated.SNP %>% 
+  filter(gene_ID == "BnaA01g03770D" | gene_ID == "BnaA01g07910D" | gene_ID == "BnaA03g37760D" | gene_ID == "BnaA08g07360D" | gene_ID == "BnaA08g07670D" | gene_ID == "BnaA08g11140D" | gene_ID == "BnaC03g51320D") %>% 
+  View()
+
 ```   
 
 when filtered by F2 SNPs, didn't use this result for final report 
