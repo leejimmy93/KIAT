@@ -1282,13 +1282,14 @@ lapply(1:length(cim_result), function(i) {
 
 final_FA <- do.call(rbind, plyr::compact(c(scanone, cim))) 
 
-# p.final_FA <-
+p.final_FA <-
 final_FA %>% 
   ggplot() +
   geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=log10(lod))) +  scale_fill_gradient2(low=("green"), high=("magenta")) +
   facet_grid(trait~chr, scales = "free") + 
   labs(y = "", x="genetic position", title="Fatty acid major QTL") + 
   theme_bw() +
+  theme(text = element_text(size=8)) + 
   theme(axis.text.x=element_blank(), strip.text.y = element_blank(), plot.title = element_text(hjust = 0.5))   
 
 # flower etc. 
@@ -1312,18 +1313,28 @@ lapply(1:length(cim_result), function(i) {
 
 final_flower_etc <- do.call(rbind, plyr::compact(c(scanone_2, cim_2))) 
 
-# p.flower_etc <-
+p.flower_etc <-
 final_flower_etc %>%  
   filter(trait != "Myristic_acid") %>% 
   ggplot() +
-  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=lod, linetype = model)) + scale_fill_gradient2(low=("green"), high=("magenta")) +
+  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=lod)) + scale_fill_gradient2(low=("green"), high=("magenta")) +
   facet_grid(trait~chr, scales = "free") + 
   labs(y = "", x="genetic position", title="flowering time and growth-related traits major QTL") + 
-  theme_bw() +
+  theme_bw() + 
+  theme(text = element_text(size=8)) + 
   theme(axis.text.x=element_blank(), strip.text.y = element_blank(), plot.title = element_text(hjust = 0.5)) 
 
-ggsave(p.flower_etc, filename = "~/F2/for_paper/flower_etc.png", height = 3, width = 9)
-ggsave(p.final_FA, filename = "~/F2/for_paper/FA.png", height = 3, width = 9) 
+library(cowplot)
+
+plot.all.paper <-plot_grid(
+  p.final_FA,
+  p.flower_etc,
+  ncol=1, nrow = 2,labels=c("a","b"), label_size = 10)  
+
+plot.all.paper
+
+ggsave(p.flower_etc, filename = "~/F2/for_paper/flower_etc.png", height = 70, width = 174, dpi = 300, units = "mm")
+ggsave(p.final_FA, filename = "~/F2/for_paper/FA.png", height = 70, width = 174, dpi = 300, units = "mm")  
 ```
 
 ### get SNP information for genes underneath the QTL interval, those with missense & stop gained mutation  
@@ -1490,10 +1501,11 @@ traitQTL.annotated.SNP %>%
 
 number_cis_coding[grep("acid|content", number_cis_coding$trait),] 
 
+three_genes <- 
 traitQTL.annotated.SNP %>% 
-  filter(gene_ID == "BnaA01g03770D" | gene_ID == "BnaA01g07910D" | gene_ID == "BnaA03g37760D" | gene_ID == "BnaA08g07360D" | gene_ID == "BnaA08g07670D" | gene_ID == "BnaA08g11140D" | gene_ID == "BnaC03g51320D") %>% 
-  View()
-
+  filter(gene_ID == "BnaA10g21380D" | gene_ID == "BnaA10g22000D" | gene_ID == "BnaC06g30620D") 
+  
+write.csv(three_genes, file = "~/F2/output/three_genes.csv")
 ```   
 
 when filtered by F2 SNPs, didn't use this result for final report 

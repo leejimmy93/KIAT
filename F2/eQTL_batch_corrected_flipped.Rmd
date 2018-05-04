@@ -455,15 +455,20 @@ colnames(cim.qtl[["BnaA08g12780D"]])[3] <- "lod"
 oil_eQTL <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid", group = "QTL"), 
                        data.frame(cim.qtl[["Oleic_acid"]], method = "Oleic_acid", group = "QTL"), 
+                       data.frame(cim.qtl[["Stearic_acid"]], method = "Stearic_acid", group = "QTL"),
+                       data.frame(cim.qtl[["Palmitic_acid"]], method = "Palmitic_acid", group = "QTL"),
+                       data.frame(cim.qtl[["Linoleic_acid"]], method = "Linoleic_acid", group = "QTL"),
+                       data.frame(cim.qtl[["Linolenic_acid"]], method = "Linolenic_acid", group = "QTL"),
+                       data.frame(cim.qtl[["vaccenic_acid"]], method = "vaccenic_acid", group = "QTL"),
                        data.frame(cim.qtl[["BnaA08g11140D"]], method = "BnaA08g11140D", group = "eQTL"),
-                       data.frame(cim.qtl[["BnaA08g11060D"]], method = "BnaA08g11060D", group = "eQTL"), 
-                       data.frame(cim.qtl[["BnaA08g12780D"]], method = "BnaA08g12780D", group = "eQTL")),
+                       data.frame(cim.qtl[["BnaA08g11060D"]], method = "BnaA08g11060D", group = "eQTL")
+                       ),
          chrs = c("A08"), 
          # lod = cim.perm[[1]], 
-         title = "cis-regulators for oil composition traits", 
+         title = "", 
          rug = TRUE)   
-ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL_FAD.png", width = 8, height = 8) 
-ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL.png", width = 5, height = 5) 
+# ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL_FAD.png", width = 8, height = 8) 
+ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL.png", width = , height = 4) 
 # Lipid biosynthesis: Arabidopsis squalene synthase homolog  
 # FAE coding gene  
 
@@ -483,10 +488,10 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_b
                        
          chrs = c("A10"), 
          # lod = cim.perm[[1]], 
-         title = "cis-regulators for flowering and growth traits", 
-         rug = TRUE)     
+         title = "", 
+         rug = TRUE)      
 
-ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 6, height = 5)  
+ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 6, height = 2.8)  
 ```
 
 ### why FLC is disappearing for time_to_flowering trait 

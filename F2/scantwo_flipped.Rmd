@@ -7,7 +7,6 @@ output: html_document
 
 ```{r}
 library(qtl) 
-library(tidyverse) 
 ```
 
 ### load data 
@@ -1239,8 +1238,21 @@ FAE1.4 <- brm(Erucic_acid ~ BnaA08g11130D + BnaC03g65980D + chrA08_10120555 + ch
 summary(FAE1.4) 
 ```
 
+### plot for paper
+```{r}
+LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped_C05C08.csv",
+                     phefile = "~/F2/data/QTL_analysis/F2.pheno.csv",
+                     genotypes = c("AA", "AB", "BB")) # the only problem is that 44 phenotypes were read instead of 43, need to figure out why later
 
+LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linolenic_acid) 
 
+setEPS()
+postscript(file = "~/F2/for_paper/Fig6.eps", width=5, height=7)
+par(ps = 8, cex = 1, cex.main = 1, cex.axis = 1, tcl = -0.3) 
+
+effectplot(LG.f2.after.crossover, mname1 = "A08@37.6", mname2 = "C03@174.0", ylab = "Linolenic_acid", main = "") 
+dev.off()
+```
 
 
 
