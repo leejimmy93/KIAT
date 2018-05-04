@@ -195,17 +195,19 @@ max(high1, lod.thr = lod.thrs) # max number of e-trait fall into loci with diffe
 
 hots1 <- hotsize(high1, lod.thr = lod.thr)  
 summary(hots1) # for each genomic position 
-
+save(hots1, file = "~/F2/for_paper/hots1.Rdata")
 ### permutation to get the statistical significance # permutation takes time, did this in screen 
 # trans_eQTL_hotspot_perm_trans.R 
 
 load("~/F2/output/eQTL/hotperm1.trans.Rdata")
 hotperm1.trans   
 
-png("~/F2/output/QTL_analysis/figure/trans_eQTL_hotspot.png", width=15, height=10, units="in", res=300) 
-plot(hots1, cex.lab = 1.5, cex.axis = 1.5) 
+png("~/F2/output/QTL_analysis/figure/trans_eQTL_hotspot.png", width=200, height=80, units="mm", res=300) 
+par(ps = 8, cex = 1, cex.main = 1, cex.axis = 0.8, tcl = -0.3) 
+
+plot(hots1, ylab="trans-eQTL counts") 
 abline(h = 129) 
-dev.off()
+dev.off()  
 
 ### how to get all the genetic pos with trans-eQTL hotspot? 
 hot_trans <- data.frame(chr = hots1$chr,

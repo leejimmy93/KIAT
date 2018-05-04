@@ -247,20 +247,19 @@ map_geno %>%
 p.genetic_vs_physical  
 
 ggsave(p.genetic_vs_physical, filename = "~/F2/for_paper/p.genetic_vs_physical.png", height = , width = )
-<<<<<<< HEAD
-png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=12, height=9, units="in", res=300)
-par(mfrow=c(4,5))
-=======
-png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=20, height=15, units="in", res=300)
-par(mfrow=c(4,5)) 
->>>>>>> a9f43fae8456250d3482e7034edd4f11e110b07e
+
+# png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=20, height=15, units="in", res=300)
+# par(mfrow=c(4,5)) 
+setEPS()
+postscript(file = "~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.eps", width=6.8, height=9.2) 
+par(mfrow=c(5,4), mai = c(0.4, 0.4, 0.4, 0.4), ps = 8, cex = 1, cex.main = 1, cex.axis = 0.8, tcl = -0.3)  
 
 for (i in unique(map_geno$genetic_chr)){
   plot(map_geno[map_geno$genetic_chr == i,]$genetic_pos, map_geno[map_geno$genetic_chr == i,]$physical_pos, 
-       xlab = "genetic pos", ylab = "physical pos", main = i)
+       xlab = "genetic pos", ylab = "physical pos", main = i, type = "p") 
 }
 
-dev.off()    
+dev.off()      
 
 # genetic map plot 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.flipped.C05C08.Rdata")

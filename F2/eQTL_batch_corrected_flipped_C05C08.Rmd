@@ -198,9 +198,10 @@ eQTL %>%
         axis.ticks.x=element_blank(),
         axis.ticks.y=element_blank()) + 
   labs(x = "eQTL genetic position", y = "gene start") + 
+  theme(text = element_text(size=8)) + 
   scale_color_manual(values=c("red", "royalblue"))  
 
-p.eQTL      
+p.eQTL    
 
 p.cis_eQTL <-  
 eQTL %>% 
@@ -233,7 +234,7 @@ eQTL %>%
   labs(x = "eQTL genetic position", y = "gene start")    
 
 p.trans_eQTL
-ggsave(p.eQTL, filename = "~/F2/output/eQTL/figure/p.eQTL.flipped.png", height = 10, width = 10) 
+ggsave(p.eQTL, filename = "~/F2/output/eQTL/figure/p.eQTL.flipped.png", height = 10, width = 7.87) 
 ggsave(p.cis_eQTL, filename = "~/F2/output/eQTL/figure/p.cis_eQTL.flipped.png", height = 10, width = 10)
 ggsave(p.trans_eQTL, filename = "~/F2/output/eQTL/figure/p.trans_eQTL.flipped.png", height = 10, width = 10) 
 

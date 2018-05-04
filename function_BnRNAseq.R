@@ -758,14 +758,17 @@ qtl_plot <- function(input,              # data frame input from scanone
     # minimal plotting theme
     theme(panel.background = element_blank()) +
     # increase strip title size
-    theme(strip.text = element_text(face = "bold", size = 12)) +
+    theme(strip.text = element_text(face = "bold", size = 8)) +
     # use RcolorBrewer palette
     scale_color_brewer(palette = "Set1") + ### default Set1 gave the best color combination  
     # scale_color_brewer(palette = "Set3") + ### 
     # no plot 
     theme(legend.position = "bottom") + ### this can be changed or , axis.text.x=element_blank() for making supplementary figures
-    # Change plot labels
-    labs(x = "Chromosome",
+    # set font size to 8 
+    theme(text = element_text(size=8)) + 
+    theme(axis.text=element_text(size=rel(0.8))) + 
+     # Change plot labels
+    labs(x = "Chromosome", 
          y = "LOD",
          color = "",
          linetype = "", 
