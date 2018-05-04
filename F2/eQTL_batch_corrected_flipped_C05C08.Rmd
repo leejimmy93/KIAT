@@ -742,8 +742,15 @@ for (i in colnames(test_gene)[3:5]) {
 dev.off() 
 
 # expression between Da-Ae and Da-Ol-1 
+### plot the expression of the two genes 
+load("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/data/vstMat.parent.Rdata")
+genes.GWAS <- c("BnaA08g11140D", "BnaA08g11060D", "BnaA08g12780D")
+genes.GWAS.df <- as.data.frame(genes.GWAS)
+colnames(genes.GWAS.df) <- "V1"
+genes.GWAS.df 
 
-
+expression.pattern.Bn.parent.bar(vstMat.parent = vstMat.parent, gene = genes.GWAS.df) 
+ggsave("/Users/ruijuanli/Desktop/F2_paper/three_genes.png", width = 7, height = 5)   
 ```
 
 ### appendix 

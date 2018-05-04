@@ -247,13 +247,9 @@ map_geno %>%
 p.genetic_vs_physical  
 
 ggsave(p.genetic_vs_physical, filename = "~/F2/for_paper/p.genetic_vs_physical.png", height = , width = )
-<<<<<<< HEAD
-png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=12, height=9, units="in", res=300)
-par(mfrow=c(4,5))
-=======
+
 png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=20, height=15, units="in", res=300)
-par(mfrow=c(4,5)) 
->>>>>>> a9f43fae8456250d3482e7034edd4f11e110b07e
+par(mfrow=c(4,5))  
 
 for (i in unique(map_geno$genetic_chr)){
   plot(map_geno[map_geno$genetic_chr == i,]$genetic_pos, map_geno[map_geno$genetic_chr == i,]$physical_pos, 
@@ -264,10 +260,15 @@ dev.off()
 
 # genetic map plot 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.flipped.C05C08.Rdata")
-png("~/Desktop/F2_paper/map_after_crossover.png", width=8, height=8, units="in", res=300)
-plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
-dev.off()  
+png("~/Desktop/F2_paper/Fig4.png", width=6.7, height=3.5, units = "in", res = 300)
+# setEPS()
+# postscript(file = "~/Desktop/F2_paper/Fig4.eps", width=6.7, height=3.5)
+par(mfrow=c(1,2), ps = 8, cex = 0.8, cex.main = 0.8, cex.axis = 0.8)
 
+plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T, main = "") # genetic map comparison
+plot.rf(LG.f2.madmapper.after.crossover, col.scheme = "redblue", alternate.chrid = T, main = "") 
+
+dev.off()  
 # summary map 
 map_summary <- summaryMap(LG.f2.madmapper.after.crossover) 
 write.csv(map_summary, file = "~/Desktop/F2_paper/map_summary.csv")  

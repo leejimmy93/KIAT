@@ -1197,9 +1197,10 @@ pl.heatmap1 <- ggplot(data = gt_gt.tissue.melt)
 pl.heatmap1 <- pl.heatmap1 + geom_tile(color = "black", aes(x = factor(variable), y = Term, fill=logPvalue)) + scale_fill_gradient2(low=muted("green"), high=("royalblue")) 
 pl.heatmap1 <- pl.heatmap1 + labs(y = "GO term", x="", title=" ") 
 pl.heatmap1 <- pl.heatmap1 + theme_classic()
+pl.heatmap1 <- pl.heatmap1 + theme(text = element_text(size=7), axis.text=element_text(size=rel(0.8))) 
 pl.heatmap1  
 
-ggsave(pl.heatmap1, filename = "~/Desktop/F2_paper/pl.heatmap1.png", width = 7, height = 4)
+ggsave(pl.heatmap1, filename = "~/Desktop/F2_paper/pl.heatmap1.png", width = 5, height = 3)  
 # young 
 DEgene.young.GO.ORA <- GOseq.Bn.ORA(rownames(DEgene.young))
 DEgene.young.GO.ORA
