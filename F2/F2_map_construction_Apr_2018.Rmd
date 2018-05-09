@@ -248,25 +248,32 @@ p.genetic_vs_physical
 
 ggsave(p.genetic_vs_physical, filename = "~/F2/for_paper/p.genetic_vs_physical.png", height = , width = )
 
-# png("~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.png", width=20, height=15, units="in", res=300)
-# par(mfrow=c(4,5)) 
-setEPS()
+setEPS() 
 postscript(file = "~/F2/output/QTL_analysis/figure/P.genetic_vs_physical.eps", width=6.8, height=9.2) 
 par(mfrow=c(5,4), mai = c(0.3, 0.3, 0.3, 0.3), ps = 8, cex = 1, cex.main = 1, cex.axis = 0.8, tcl = -0.3)  
 
 for (i in unique(map_geno$genetic_chr)){
   plot(map_geno[map_geno$genetic_chr == i,]$genetic_pos, map_geno[map_geno$genetic_chr == i,]$physical_pos, 
+<<<<<<< HEAD
        xlab = "", ylab = "", main = i, type = "p", mgp=c(.1,.5,.0)) 
+=======
+       xlab = "genetic pos", ylab = "physical pos", main = i, type = "p", mgp=c(.1,.5,.0)) 
+>>>>>>> 6c08ebd02d931dc7e6eacc741e2d1bc306ab6e8e
 }
 
 dev.off()       
 
 # genetic map plot 
 load("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.f2.madmapper.after.crossover.flipped.C05C08.Rdata")
-png("~/Desktop/F2_paper/map_after_crossover.png", width=8, height=8, units="in", res=300)
-plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T) # genetic map comparison
-dev.off()  
+png("~/Desktop/F2_paper/Fig4.png", width=6.7, height=3.5, units = "in", res = 300)
+# setEPS()
+# postscript(file = "~/Desktop/F2_paper/Fig4.eps", width=6.7, height=3.5)
+par(mfrow=c(1,2), ps = 8, cex = 0.8, cex.main = 0.8, cex.axis = 0.8)
 
+plot.map(LG.f2.madmapper.after.crossover, alternate.chrid = T, main = "") # genetic map comparison
+plot.rf(LG.f2.madmapper.after.crossover, col.scheme = "redblue", alternate.chrid = T, main = "") 
+
+dev.off()  
 # summary map 
 map_summary <- summaryMap(LG.f2.madmapper.after.crossover) 
 write.csv(map_summary, file = "~/Desktop/F2_paper/map_summary.csv")  

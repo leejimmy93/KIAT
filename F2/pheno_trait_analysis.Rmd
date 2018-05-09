@@ -59,7 +59,7 @@ coef_extract_width <- function(model_summary, ID){
 }
 
 ### load all data 
-height <- coef_extract(height, ID = ID) 
+height <- coef_extract(height, ID = ID)  
 lobe_number <- coef_extract(lobe_number, ID = ID)
 leaf_number <- coef_extract(leaf_number, ID = ID)
 width <- coef_extract_width(width, ID = ID)  
@@ -100,17 +100,20 @@ growth_model_trait$id <- gsub("ID", "Sample_F2", growth_model_trait$line_ID)
 growth_model_trait <- growth_model_trait[,-1] 
 save(growth_model_trait, file = "~/Desktop/F2_paper/data/growth_model_trait.Rdata")
 
-png(filename = "~/Desktop/F2_paper/model.png",width=6, height=7, units="in", res=300)
-par(mfrow=c(4,3), mai = c(0.4, 0.4, 0.4, 0.2)) 
+# png(filename = "~/Desktop/F2_paper/model.png",width=6, height=7, units="in", res=300)
+# par(mfrow=c(4,3), mai = c(0.4, 0.4, 0.4, 0.2))  
+setEPS()
+postscript(file = "~/Desktop/F2_paper/model.eps", width=5.7, height=6.9)
+par(mfrow=c(4,3), mai = c(0.3, 0.3, 0.3, 0.3), ps = 8, cex = 1, cex.main = 1, cex.axis = 0.8, tcl = -0.3)
 
-for (i in colnames(growth_model_trait)[2:13]) { 
-  hist(growth_model_trait[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i, xlim = c(min(growth_model_trait[,i], test.melt[(test.melt$variable == i),]$value), max(growth_model_trait[,i], test.melt[(test.melt$variable == i),]$value))) 
+for (i in colnames(growth_model_trait)[1:12]) { 
+  hist(growth_model_trait[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i, xlim = c(min(growth_model_trait[,i], test.melt[(test.melt$variable == i),]$value), max(growth_model_trait[,i], test.melt[(test.melt$variable == i),]$value)), mgp=c(.1,.5,.0)) 
   abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "Da_Ae"),]$value, col = "red", lwd = 2)
   abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "Da_Ol1"),]$value, col = "blue", lwd = 2) 
-  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "F1"),]$value, col = "purple", lty = 2, lwd = 2)  
+  abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "F1"),]$value, col = "green", lty = 2, lwd = 2)  
   } 
  
-dev.off()        
+dev.off()               
 ```  
 
 ### summary of trait values 
@@ -153,7 +156,7 @@ as.data.frame(sapply(trait_summary, function(x)
 
 rownames(trait_summary) <- colnames(phefile)
 trait_summary$missing_rate <- ifelse(is.na(trait_summary$missing_rate), 0, trait_summary$missing_rate) 
-write.csv(trait_summary, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_summary.csv")
+# write.csv(trait_summary, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/F2/for_paper/trait_summary.csv")
 
 ### add branch data into phefile 
 extra <- read.csv("~/Desktop/F2_paper/data/AdditionalF2Data_updated_20180222.csv")
@@ -174,7 +177,7 @@ phefile %>%
          id = ID) %>% 
   dplyr::select(-(Name:X15_length_of_branch), -ID) 
 
-save(phefile, file = "~/Desktop/F2_paper/data/phefile.Rdata")
+# save(phefile, file = "~/Desktop/F2_paper/data/phefile.Rdata")
 
 ### 
 library(lubridate) 
@@ -239,30 +242,44 @@ colnames(pheno.parent.oil) <- c("variable", "PHENOTYPE", "mean")
 
 pheno.parent.oil$PHENOTYPE <- gsub("crude_oil", "Crude_oil_contents", pheno.parent.oil$PHENOTYPE)
 pheno.parent.oil$PHENOTYPE <- gsub("Palmitoliec_aicd", "Palmitoliec_acid", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$PHENOTYPE <- gsub("length_of_branch_5", "height_to_branch_5", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$PHENOTYPE <- gsub("length_of_branch_10", "height_to_branch_10", pheno.parent.oil$PHENOTYPE)
+pheno.parent.oil$PHENOTYPE <- gsub("length_of_branch_15", "height_to_branch_15", pheno.parent.oil$PHENOTYPE)
+
 pheno.parent.oil$variable <- gsub("Da-Ol1", "Da-Ol-1", pheno.parent.oil$variable)  
 
 load("~/Desktop/F2_paper/data/phefile.Rdata") # F2 data 
-colnames(phefile) <- gsub("Palmitoliec_aicd", "Palmitoliec_acid", colnames(phefile))
+colnames(phefile) <- gsub("Palmitoliec_aicd", "Palmitoliec_acid", colnames(phefile)) 
 
 pheno.parent.oil <-
 extra_2[,c(2,1,3)] %>% 
   rbind(as.data.frame(pheno.parent.oil))  
 
-phefile_oil <- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|branch", colnames(phefile))]  
-png(filename = "~/Desktop/F2_paper/trait_oil.png",width=12, height=7, units="in", res=300)
-par(mfrow=c(5,5), mai = c(0.4, 0.4, 0.4, 0.2)) 
+phefile_oil <- phefile[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|branch", colnames(phefile))] 
+phefile_oil <- 
+phefile_oil %>% 
+  select(-Survival_rate)  
+  
+colnames(phefile_oil)[22:24] <- c("height_to_branch_5", "height_to_branch_10", "height_to_branch_15")
+colnames(phefile_oil)[5] <- "Palmitoleic_acid"
+pheno.parent.oil$PHENOTYPE <- gsub("Palmitoliec_acid", "Palmitoleic_acid", pheno.parent.oil$PHENOTYPE)
+
+# png(filename = "~/Desktop/F2_paper/trait_oil.png",width=174, height=200, units="mm", res=300)
+setEPS()
+postscript(file = "~/Desktop/F2_paper/trait_oil.eps", width=6.9, height=7.9)
+par(mfrow=c(6,4), mai = c(0.3, 0.3, 0.3, 0.3), ps = 8, cex = 1, cex.main = 1, cex.axis = 0.8)   
 
 for (i in colnames(phefile_oil)) {
   if(i == "Erucic_acid" |i == "Oleic_acid"){
-    hist(phefile_oil[,i], breaks = 30, col = "grey", border = "black", xlab = "", ylab = "", main = i, xlim = c(min(phefile_oil[,i]), 65))
-  } else {
-  hist(phefile_oil[,i], breaks = 30, col = "grey", border = "black", xlab = "", ylab = "", main = i)}
+    hist(phefile_oil[,i], breaks = 30, col = "grey", border = "black", xlab = "", ylab = "", main = i, xlim = c(min(phefile_oil[,i]), 65), mgp=c(.1,.5,.0))
+  } else { 
+  hist(phefile_oil[,i], breaks = 30, col = "grey", border = "black", xlab = "", ylab = "", main = i, mgp=c(.1,.5,.0))}
   abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ae"),]$mean, col = "red", lwd = 2)
   abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "Da-Ol-1"),]$mean, col = "blue", lwd = 2) 
-  abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "F1"),]$mean, col = "purple", lty= 2, lwd= 2)
-  }
+  abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "F1"),]$mean, col = "green", lty= 2, lwd= 2)
+  }  
 
-dev.off()  
+dev.off()       
 
 ### raw data for growth traits 
 raw_growth <- read.csv("~/Desktop/F2_paper/data/raw_growth_traits.csv")  
@@ -335,17 +352,21 @@ phefile_growth_2 <- phefile_growth_2[,reordered]
 # } 
 
 colnames(phefile_growth_2) 
-png(filename = "~/Desktop/F2_paper/trait_growth.png",width=10, height=7, units="in", res=300)
-par(mfrow=c(5,4), mai = c(0.4, 0.4, 0.4, 0.2)) 
+# png(filename = "~/Desktop/F2_paper/trait_growth.png",width=10, height=7, units="mm", res=300)
+ 
+setEPS()
+postscript(file = "~/Desktop/F2_paper/trait_growth.eps", width=6.7, height=7.9)
+par(mfrow=c(5,4), mai = c(0.3, 0.3, 0.3, 0.3), ps = 8, cex = 1, cex.main = 1, cex.axis = 0.8, tcl = -0.3)
+# par(mfrow=c(5,4), mai = c(0.4, 0.4, 0.4, 0.2)) 
 
 for (i in colnames(phefile_growth_2)) { 
-  hist(phefile_growth_2[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i)
+  hist(phefile_growth_2[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i, mgp=c(.1,.5,.0))
   abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "Da-Ae"),]$mean, col = "red", lwd= 2)
   abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "Da-Ol-1"),]$mean, col = "blue", lwd= 2)
-  abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "F1"),]$mean, col = "purple", lty = 2, lwd= 2)   
+  abline(v = raw_growth[(raw_growth$PHENOTYPE == i & raw_growth$variable == "F1"),]$mean, col = "green", lty = 2, lwd= 2)    
   }
 
-dev.off()            
+dev.off()               
 ```
 
 ### correlation & heatmap for different traits 
@@ -445,7 +466,7 @@ pheno.parent <- rbind(tmp.1, tmp.2)
 pheno.parent$variable <- gsub("ID_505_K200", "Da-Ae", pheno.parent$variable)
 pheno.parent$variable <- gsub("ID_505_K201", "Da-Ol-1", pheno.parent$variable)
 pheno.parent$variable <- gsub("K200", "Da-Ae", pheno.parent$variable)
-pheno.parent$variable <- gsub("K201", "Da-Ol-1", pheno.parent$variable)
+pheno.parent$variable <- gsub("K201", "Da-Ol-1", pheno.parent$variable) 
 
 pheno.parent$value <- round(as.numeric(as.character(pheno.parent$value)), 2)
 pheno.parent %>% head()  
@@ -507,7 +528,7 @@ save(pheno.parent.oil, file = "~/Desktop/F2_paper/data/pheno.parent.oil.Rdata")
 
 ### prepare phefile for QTL mapping 
 ```{r}
-load("~/Desktop/F2_paper/data/phefile.all.Rdata")
+load("~/Desktop/F2_paper/data/phefile.all.Rdata") 
 phefile.all %>% colnames() 
 
 phefile.branch <- 
@@ -517,6 +538,11 @@ phefile.all %>%
   as.data.frame() 
 
 write.csv(phefile.branch, file = "~/Desktop/F2_paper/data/phefile.branch.csv") 
+phefile.all <- 
+phefile.all %>% 
+  dplyr::select(-Survival_rate) 
+
+write.csv(phefile.all, file = "~/Desktop/F2_paper/submission/Online_Resource_Table2.csv") 
 ```
 
 ### heritability 
@@ -775,19 +801,91 @@ cor.sig <- trait_cor
 cor.sig[cor.P>0.05] <- NA 
 cor.sig 
 
-png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=8, height=8, units="in", res=300)
-par(mar = c(3, 3, 3, 3))
+colnames(trait_cor) <- gsub("Crude_oil_contents:-0.1", "Crude_oil_contents:0", colnames(trait_cor))
+colnames(trait_cor) <- gsub("length_of_branch_5:0.4", "height_to_branch_5:0.4", colnames(trait_cor))
+colnames(trait_cor) <- gsub("length_of_branch_10:0.52", "height_to_branch_10:0.52", colnames(trait_cor))
+colnames(trait_cor) <- gsub("length_of_branch_15:0.79", "height_to_branch_15:0.79", colnames(trait_cor))
+colnames(trait_cor) <- gsub(":NA", "", colnames(trait_cor))
+
+rownames(trait_cor) <- gsub("Crude_oil_contents:-0.1", "Crude_oil_contents:0", rownames(trait_cor))
+rownames(trait_cor) <- gsub("length_of_branch_5:0.4", "height_to_branch_5:0.4", rownames(trait_cor))
+rownames(trait_cor) <- gsub("length_of_branch_10:0.52", "height_to_branch_10:0.52", rownames(trait_cor))
+rownames(trait_cor) <- gsub("length_of_branch_15:0.79", "height_to_branch_15:0.79", rownames(trait_cor))
+rownames(trait_cor) <- gsub("Palmitoliec_acid:0.86", "Palmitoleic_acid:0.86", rownames(trait_cor))
+rownames(trait_cor) <- gsub(":NA", "", rownames(trait_cor))
+
+trait_cor <- trait_cor[,colnames(trait_cor) != "Survival_rate"]
+trait_cor <- trait_cor[rownames(trait_cor) != "Survival_rate",]
+
+# png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=170, height=200, units="mm", res=300)
+setEPS()
+postscript(file = "~/Desktop/F2_paper/trait_cor_heatmap.eps", width=6.7, height=7.9)
+par(mar = c(3, 3, 3, 3), ps = 8, cex = 0.8, cex.main = 0.8, cex.axis = 0.8, tcl = -0.3)
 
 pheatmap(as.matrix(trait_cor),  
      clustering_method = "average", 
      # cellheight = 10,
      # cellwidth = 5,
      border_color=NA,
-     fontsize_row = 6, 
+     fontsize_col = 6, 
      legend = T
 )
-dev.off()   
+dev.off()        
 ```  
+
+### F2 mapping summary
+```{r}
+mapping_result_C <- read.table("~/Desktop/F2_paper/data/Star_Stats_C.tab", header = T) # ID is the original wrong ID
+mapping_result_C$Sample <- gsub("Sample","Sample_F2", mapping_result_C$Sample)
+
+batch_C <- read.csv("~/Desktop/F2_paper/data/F2_batch_C.csv") 
+batch_C$Sample <- paste("Sample_F2_", batch_C$Sample.ID, sep = "") # get Sample with the sample wrong ID 
+batch_C <- 
+batch_C %>% 
+  dplyr::select(Sample, No..of.Sowing) 
+dim(batch_C) # 47 
+batch_C$Sample
+mapping_result_C$Sample
+
+mapping_result_C <- 
+mapping_result_C %>%
+  left_join(batch_C) %>% 
+  mutate(Sample = paste("Sample_F2_", No..of.Sowing, sep = "")) %>% 
+  dplyr::select(-No..of.Sowing) 
+
+mapping_result_AB <- read.table("~/Desktop/F2_paper/data/Star_Stats_AB.tab", header = T)
+mapping_result <- rbind(mapping_result_AB, mapping_result_C)
+mapping_result$Sample 
+mapping_result$Sample <- gsub("138-", "F2_", mapping_result$Sample)
+mapping_result$Sample <- gsub(".paired", "", mapping_result$Sample)
+mapping_result <- 
+mapping_result %>% 
+  mutate(TotalReads = Number_Input_Reads) %>% 
+  dplyr::select(Sample, TotalReads, Percent_Unique_Mapped, Percent_Multi_Mapped, Percent_Unmapped_Too_Short, Percent_Unmapped_Other)
+
+write.csv(mapping_result, file = "~/Desktop/F2_paper/supplementary/mapping_result_F2.csv") 
+```
+
+### create SRA submission file 
+```{r}
+biosample <- read_tsv("~/Desktop/F2_paper/data/attributes.tsv")
+
+parent_sample <- read.csv("/Users/ruijuanli/Desktop/Brassica_project/KIAT_RNA_seq/analysis/parent/parent_summary_corrected.csv")
+
+parent_sample <- 
+parent_sample %>% 
+  mutate(library_ID = SampleID, filename = paste(SampleID, "_1.fq.gz", sep = ""), filename2 = paste(SampleID, "_2.fq.gz", sep = ""), cultivar = Cultivar, dev_stage = Stage) %>% 
+  dplyr::select(library_ID, filename, filename2, cultivar, dev_stage)  
+
+parent_sample$dev_stage <- gsub("Young", "young", parent_sample$dev_stage)
+
+
+
+
+
+
+
+```
 
 ### appendix function for this script  
 ```{r}
@@ -816,3 +914,4 @@ high.cor.pair <- function(correlation, threshold){
   output   
 }       
 ```  
+

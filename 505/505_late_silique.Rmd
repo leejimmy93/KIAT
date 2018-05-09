@@ -3659,4 +3659,15 @@ SNP.Erucic.Oleic.unique %>%
   dim() # no common items, all of them were filtered out because of either not being SNP or low quality  
 ```
 
+```{r}
+WGS_samples <- read.csv("~/Desktop/DNA_to_Library_Submission_Form_20180508(incorporated)_all.csv", header = F)
+WGS_samples <- 
+t(WGS_samples) %>% as.data.frame() %>% 
+  dplyr::select(V1:V12) 
+
+missing_sample <- c("K114", "SJ280", "SJ294")
+
+
+RNAseq_sample 
+```
 
