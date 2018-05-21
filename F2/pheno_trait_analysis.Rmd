@@ -266,7 +266,7 @@ pheno.parent.oil$PHENOTYPE <- gsub("Palmitoliec_acid", "Palmitoleic_acid", pheno
 
 # png(filename = "~/Desktop/F2_paper/trait_oil.png",width=174, height=200, units="mm", res=300)
 setEPS()
-postscript(file = "~/Desktop/F2_paper/trait_oil.eps", width=6.9, height=7.9)
+postscript(file = "~/Desktop/F2_paper/trait_oil.eps", width=7.4, height=7.9)
 par(mfrow=c(6,4), mai = c(0.3, 0.3, 0.3, 0.3), ps = 8, cex = 1, cex.main = 1, cex.axis = 0.8)   
 
 for (i in colnames(phefile_oil)) {
@@ -279,7 +279,7 @@ for (i in colnames(phefile_oil)) {
   abline(v = pheno.parent.oil[(pheno.parent.oil$PHENOTYPE == i & pheno.parent.oil$variable == "F1"),]$mean, col = "green", lty= 2, lwd= 2)
   }  
 
-dev.off()       
+dev.off()        
 
 ### raw data for growth traits 
 raw_growth <- read.csv("~/Desktop/F2_paper/data/raw_growth_traits.csv")  
@@ -819,7 +819,7 @@ trait_cor <- trait_cor[rownames(trait_cor) != "Survival_rate",]
 
 # png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=170, height=200, units="mm", res=300)
 setEPS()
-postscript(file = "~/Desktop/F2_paper/trait_cor_heatmap.eps", width=6.7, height=7.9)
+postscript(file = "~/Desktop/F2_paper/trait_cor_heatmap.eps", width=7.4, height=7.9)
 par(mar = c(3, 3, 3, 3), ps = 8, cex = 0.8, cex.main = 0.8, cex.axis = 0.8, tcl = -0.3)
 
 pheatmap(as.matrix(trait_cor),  
@@ -827,7 +827,7 @@ pheatmap(as.matrix(trait_cor),
      # cellheight = 10,
      # cellwidth = 5,
      border_color=NA,
-     fontsize_col = 6, 
+     fontsize_col = 8, 
      legend = T
 )
 dev.off()        
@@ -878,13 +878,49 @@ parent_sample %>%
   dplyr::select(library_ID, filename, filename2, cultivar, dev_stage)  
 
 parent_sample$dev_stage <- gsub("Young", "young", parent_sample$dev_stage)
+parent_sample$sample_name <- paste(parent_sample$cultivar, parent_sample$dev_stage, sep = "_")
+parent_sample$sample_name <- gsub("Da-Ae_late-silique", "Da-Ae_late_silique", parent_sample$sample_name)
 
+F2_sample <- data.frame(sample_name = mapping_result$Sample,
+                        library_ID = mapping_result$Sample, 
+                        filename = gsub("(Sample_F2_)([[:digit:]]+)", "\\2_1.fq.gz", mapping_result$Sample),
+                        filename2 = gsub("(Sample_F2_)([[:digit:]]+)", "\\2_2.fq.gz", mapping_result$Sample))  
 
+F2_sample$sample_name <- as.character(F2_sample$sample_name)
+F2_sample$library_ID <- as.character(F2_sample$library_ID)
+F2_sample$filename <- as.character(F2_sample$filename)
+F2_sample$filename2 <- as.character(F2_sample$filename2)
 
+biosample %>% 
+  left_join(parent_sample) %>% 
+  left_join(F2_sample) %>% 
+  View() 
 
+parent_sample <- 
+parent_sample %>% 
+  left_join(biosample) %>% 
+  dplyr::select(bioproject_accession, accession, library_ID, filename, filename2) 
 
+F2_sample <- 
+F2_sample %>% 
+  left_join(biosample) %>% 
+  dplyr::select(bioproject_accession, accession, library_ID, filename, filename2) 
 
+SRA_to_submit <- rbind(parent_sample, F2_sample) 
+write.csv(SRA_to_submit, file = "~/Desktop/F2_paper/submission/SRA_to_submit.csv")
 
+SRA_to_submit_final <- read.csv("~/Desktop/F2_paper/submission/Book3.csv")
+SRA_to_submit_final$filename <- as.character(SRA_to_submit_final$filename)
+SRA_to_submit_final$filename[c(20:25, 27)] <- as.character(sapply(SRA_to_submit_final$filename[c(20:25, 27)], function(i) paste("parent", i, sep = "_")))
+
+SRA_to_submit_final$filename2 <- as.character(SRA_to_submit_final$filename2)
+SRA_to_submit_final$filename2[c(20:25, 27)] <- as.character(sapply(SRA_to_submit_final$filename2[c(20:25, 27)], function(i) paste("parent", i, sep = "_")))
+
+SRA_to_submit_final <- 
+SRA_to_submit_final %>% 
+  dplyr::select(-filename3, -filename4, -assembly)
+
+write_tsv(SRA_to_submit_final, path = "~/Desktop/SRA_Maloof_lab_KIAT_2018.tsv") 
 ```
 
 ### appendix function for this script  

@@ -258,7 +258,7 @@ eQTL[eQTL$eQTL_subgenome == "C",] %>% nrow() /nrow(eQTL)
 # plot eQTL which only act in trans- but not cis-, this isn't correct 
 trans_eQTL$index2 <- paste(trans_eQTL$eQTL_chr, trans_eQTL$genetic_start, trans_eQTL$gene_end, sep = "_")
 cis_eQTL$index2 <- paste(cis_eQTL$eQTL_chr, cis_eQTL$genetic_start, cis_eQTL$gene_end, sep = "_") 
-# no identical based on genetic position 
+# no identical based on genetic position   
 
 trans_eQTL_only <- 
 trans_eQTL %>% 
@@ -830,8 +830,7 @@ allele.effect.trans <- function(gene_ID){
 
 #examine our model
   summary(qtl.fit) 
-}
-
+} 
 ```
 
 
