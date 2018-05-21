@@ -234,7 +234,7 @@ eQTL %>%
   labs(x = "eQTL genetic position", y = "gene start")    
 
 p.trans_eQTL
-ggsave(p.eQTL, filename = "~/F2/output/eQTL/figure/p.eQTL.flipped.png", height = 10, width = 7.87) 
+ggsave(p.eQTL, filename = "~/F2/output/eQTL/figure/p.eQTL.flipped.png", height = 5, width = 7.4) 
 ggsave(p.cis_eQTL, filename = "~/F2/output/eQTL/figure/p.cis_eQTL.flipped.png", height = 10, width = 10)
 ggsave(p.trans_eQTL, filename = "~/F2/output/eQTL/figure/p.trans_eQTL.flipped.png", height = 10, width = 10) 
 

@@ -1321,7 +1321,7 @@ p.flower_etc <-
 final_flower_etc %>%  
   filter(trait != "Myristic_acid") %>% 
   ggplot() +
-  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=lod)) + scale_fill_gradient2(low=("green"), high=("magenta"), midpoint = 2.5) +
+  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=lod)) + scale_fill_gradient2(low=("green"), high=("magenta"), midpoint = 1) +
   facet_grid(trait~chr, scales = "free") + 
   labs(y = "", x="genetic position", title="flowering time and growth-related traits major QTL") + 
   theme_bw() + 
@@ -1337,8 +1337,8 @@ plot.all.paper <-plot_grid(
 
 plot.all.paper
 
-ggsave(p.flower_etc, filename = "~/F2/for_paper/flower_etc.png", height = 70, width = 174, dpi = 300, units = "mm")
-ggsave(p.final_FA, filename = "~/F2/for_paper/FA.png", height = 70, width = 174, dpi = 300, units = "mm")  
+ggsave(p.flower_etc, filename = "~/F2/for_paper/flower_etc.png", height = 70, width = 188, dpi = 300, units = "mm")
+ggsave(p.final_FA, filename = "~/F2/for_paper/FA.png", height = 70, width = 188, dpi = 300, units = "mm")  
 ```
 
 ### get SNP information for genes underneath the QTL interval, those with missense & stop gained mutation  

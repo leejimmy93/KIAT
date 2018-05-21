@@ -1247,7 +1247,7 @@ LG.f2.after.crossover <- read.cross("csvsr", genfile = "~/F2/data/QTL_analysis/L
 LG.f2.after.crossover$pheno <- as.data.frame(LG.f2.after.crossover$pheno$Linolenic_acid) 
 
 setEPS()
-postscript(file = "~/F2/for_paper/Fig6.eps", width=5, height=7)
+postscript(file = "~/F2/for_paper/Fig6.eps", width=7.4, height=5)
 par(ps = 8, cex = 1, cex.main = 1, cex.axis = 1, tcl = -0.3) 
 
 effectplot(LG.f2.after.crossover, mname1 = "A08@37.6", mname2 = "C03@174.0", ylab = "Linolenic_acid", main = "") 

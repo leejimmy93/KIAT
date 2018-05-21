@@ -202,7 +202,7 @@ save(hots1, file = "~/F2/for_paper/hots1.Rdata")
 load("~/F2/output/eQTL/hotperm1.trans.Rdata")
 hotperm1.trans   
 
-png("~/F2/output/QTL_analysis/figure/trans_eQTL_hotspot.png", width=200, height=80, units="mm", res=300) 
+png("~/F2/output/QTL_analysis/figure/trans_eQTL_hotspot.png", width=188, height=80, units="mm", res=300) 
 par(ps = 8, cex = 1, cex.main = 1, cex.axis = 0.8, tcl = -0.3) 
 
 plot(hots1, ylab="trans-eQTL counts") 

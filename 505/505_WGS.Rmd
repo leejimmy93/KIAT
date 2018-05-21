@@ -1,0 +1,40 @@
+---
+title: "505_WGS"
+output: html_document
+---
+
+# import lib and execute function
+```{r}
+source("~/Genomic_prediction_KIAT/Genomic_prediction_KIAT/helpler.R")  
+```
+
+# sample submission for WGS 
+```{r}
+WGS_samples <- read.csv("~/505/WGS/sample/DNA_to_Library_Submission_Form_20180508_incorporated_all.csv", header = F)
+WGS_samples <- 
+t(WGS_samples) %>% as.data.frame() %>% 
+  dplyr::select(V1:V12) 
+
+WGS_samples$V2 %>% unlist() %>% as.character()
+
+missing_sample <- c("K114", "SJ_280", "SJ_294")
+
+geno <- read.vcfR("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.vcf.gz") 
+geno.2 <- reform.vcf(geno) 
+dim(geno.2) #  174397    135
+geno.2 %>% colnames() 
+
+RNAseq_sample <- gsub("X505.| X505_", "", colnames(geno.2))
+RNAseq_sample <- gsub("_", "", RNAseq_sample)[5:135] 
+
+sum(WGS_samples$V2 %in% RNAseq_sample)
+sum(RNAseq_sample %in% WGS_samples$V2)
+
+WGS_sample_only <- as.data.frame(t(WGS_samples[!(WGS_samples$V2 %in% c(RNAseq_sample, missing_sample)),])) 
+write.csv(WGS_sample_only, file = "~/505/WGS/sample/WGS_sample_only.csv")
+
+sum(WGS_sample_only[2,] %>% unlist() %>% as.character() %in% c(RNAseq_sample, missing_sample)) # correct 
+as.data.frame(t(WGS_sample_only[c(1,2),])) %>% 
+  left_join(WGS_samples[,c(1,2)]) %>% dim() 
+```
+

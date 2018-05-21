@@ -468,7 +468,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_aci
          title = "", 
          rug = TRUE)   
 # ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL_FAD.png", width = 8, height = 8) 
-ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL.png", width = 6.2, height = 2.8) 
+ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL.png", width = 7.4, height = 2.8) 
 # Lipid biosynthesis: Arabidopsis squalene synthase homolog  
 # FAE coding gene  
 
@@ -491,7 +491,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_b
          title = "", 
          rug = TRUE)      
 
-ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 6.2, height = 2.8)  
+ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 7.4, height = 2.8)  
 ```
 
 ### why FLC is disappearing for time_to_flowering trait 
