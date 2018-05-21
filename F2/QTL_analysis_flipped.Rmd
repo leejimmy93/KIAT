@@ -1144,7 +1144,7 @@ lapply(seq_along(LG.f2.after.crossover$pheno[1:4]), function(trait) {
   scanone(LG.f2.after.crossover,pheno.col=trait,method="imp")
 })
 )
-names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)[1:4]
+names(scanone.imp) <- colnames(LG.f2.after.crossover$pheno)[1:4] 
 
 png("~/F2/for_paper/branch_data/QTL_one_dim_flipped.png", width=25, height=15, units="in", res=300)
 par(mfrow=c(1,4))
@@ -1282,10 +1282,14 @@ lapply(1:length(cim_result), function(i) {
 
 final_FA <- do.call(rbind, plyr::compact(c(scanone, cim))) 
 
+final_FA$lod
+
+final_FA$lod <- ifelse(log10(final_FA$lod) <= -2, 0.01, final_FA$lod)
 p.final_FA <-
 final_FA %>% 
   ggplot() +
-  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=log10(lod))) +  scale_fill_gradient2(low=("green"), high=("magenta")) +
+  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=log10(lod))) +  scale_fill_gradient2(low=("green"), mid = "white", high=("magenta"), midpoint = 0, limits = c(-2, 2)) +
+  # geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=lod)) +  scale_fill_gradient2(low=("green"), mid = "white", high=("magenta"), midpoint = 1, breaks = c(1, 2, 3, 4, 40)) + 
   facet_grid(trait~chr, scales = "free") + 
   labs(y = "", x="genetic position", title="Fatty acid major QTL") + 
   theme_bw() +
@@ -1317,7 +1321,7 @@ p.flower_etc <-
 final_flower_etc %>%  
   filter(trait != "Myristic_acid") %>% 
   ggplot() +
-  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=lod)) + scale_fill_gradient2(low=("green"), high=("magenta")) +
+  geom_tile(color = "white", aes(x = factor(pos), y = trait, fill=lod)) + scale_fill_gradient2(low=("green"), high=("magenta"), midpoint = 2.5) +
   facet_grid(trait~chr, scales = "free") + 
   labs(y = "", x="genetic position", title="flowering time and growth-related traits major QTL") + 
   theme_bw() + 
