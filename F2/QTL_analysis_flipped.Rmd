@@ -1388,7 +1388,7 @@ gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
 dim(gff.mRNA) # 101040      4 
 head(gff.mRNA) 
 colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
-
+ 
 genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
 genes 
 

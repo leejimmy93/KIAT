@@ -5,10 +5,10 @@ output: html_document
 
 Goal of this script is to re-run eQTL analysis using reconstructed map with C05 and C08 modified 
 
-### import lib
+### import lib 
 ```{r} 
-library(tidyverse) 
-library(qtl)
+library(tidyverse)   
+library(qtl) 
 library(snowfall) 
 library(Biostrings) 
 source("~/KIAT/function_BnRNAseq.R")    
@@ -18,7 +18,7 @@ source("~/KIAT/function_BnRNAseq.R")
 
 ### with flipped LG for eQTL anlaysis just for the plot 
 
-```{r}
+```{r} 
 cross.F2 <- read.cross("csvsr", genfile ="~/F2/data/QTL_analysis/LG.f2.madmapper.final_gen_revised_flipped_C05C08.csv", 
                          phefile = "~/F2/output/network_analysis/vstMat.f2.batch.corrected_revised.csv",
                          genotypes = c("AA", "AB", "BB"))   # although the sample IDs are not matched in the original phe and gen file, I still get the right result. 
@@ -258,7 +258,7 @@ eQTL[eQTL$eQTL_subgenome == "C",] %>% nrow() /nrow(eQTL)
 # plot eQTL which only act in trans- but not cis-, this isn't correct 
 trans_eQTL$index2 <- paste(trans_eQTL$eQTL_chr, trans_eQTL$genetic_start, trans_eQTL$gene_end, sep = "_")
 cis_eQTL$index2 <- paste(cis_eQTL$eQTL_chr, cis_eQTL$genetic_start, cis_eQTL$gene_end, sep = "_") 
-# no identical based on genetic position   
+# no identical based on genetic position 
 
 trans_eQTL_only <- 
 trans_eQTL %>% 
@@ -719,7 +719,7 @@ GO_cis_coding %>% View()
 phefile.expression <- read.csv("~/F2/output/network_analysis/vstMat.f2.batch.corrected_revised.csv", row.names = 1)
 phefile.expression 
 
-phefile.trait <- read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", row.names = 1)    
+phefile.trait <- read.csv("~/F2/data/QTL_analysis/F2.pheno.csv", row.names = 1)     
 phefile.trait  
 
 trait <- as.data.frame(t(phefile.trait)) 
@@ -830,7 +830,8 @@ allele.effect.trans <- function(gene_ID){
 
 #examine our model
   summary(qtl.fit) 
-} 
+}
+
 ```
 
 

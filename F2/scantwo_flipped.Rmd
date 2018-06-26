@@ -1219,8 +1219,8 @@ FAE1.5 <- brm(Erucic_acid ~ BnaA08g11130D * BnaC03g65980D,
 
 summary(FAE1.5)
 
-hypothesis(FAE1.4, "BnaA08g11130D > 0")
-hypothesis(FAE1.4, "BnaC03g65980D > 0")   
+# hypothesis(FAE1.4, "BnaA08g11130D > 0")
+# hypothesis(FAE1.4, "BnaC03g65980D > 0")   
 
 # add expression of the two FAE1, with interaction between two QTL 
 FAE1.3 <- brm(Erucic_acid ~ BnaA08g11130D + BnaC03g65980D + chrA08_10120555 + chrC03_53442609 + chrC03_53442609:chrA08_10120555,
@@ -1235,7 +1235,7 @@ FAE1.4 <- brm(Erucic_acid ~ BnaA08g11130D + BnaC03g65980D + chrA08_10120555 + ch
             data = FAE1_data, 
             prior = set_prior("normal(0,10)",class="b"))
 
-summary(FAE1.4) 
+summary(FAE1.4)  
 ```
 
 ### plot for paper
