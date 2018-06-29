@@ -84,22 +84,29 @@ test2 %>%
   ggplot() + 
   geom_point(aes(x = V1, y= V2, color = as.factor(batch))) # great, batch effect removed
 
-# get genes with large variation across samples using variance, The variance is a numerical measure of how the data values is dispersed around the mean.
+# get genes with large variation across samples using CV, The coefficient of variation (CV) is defined as the ratio of the standard deviation sigma  to the mean mu (standerdized deviation):
 # https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html
 
-vstMat.505.batch.corrected <- as.data.frame(vstMat.505.batch.corrected)
-vstMat.505.batch.corrected$variance <- as.numeric(apply(vstMat.505.batch.corrected,1,var))  
-summary(vstMat.505.batch.corrected$variance) 
+vstMat.505.batch.corrected <- as.data.frame(vstMat.505.batch.corrected) 
+
+gene.CV <- 
+sapply(rownames(vstMat.505.batch.corrected), function(i) {
+  sd(as.numeric(vstMat.505.batch.corrected[i,]), na.rm = T)/mean(as.numeric(vstMat.505.batch.corrected[i,]), na.rm = T) * 100
+}) 
+
+vstMat.505.batch.corrected$CV <- as.numeric(gene.CV) 
+summary(vstMat.505.batch.corrected$CV) 
+hist(vstMat.505.batch.corrected$CV, breaks = 30)
 
 vstMat.505.batch.corrected.largeVar<-
   vstMat.505.batch.corrected %>% 
-  filter(variance>1) %>% # dispersed one reads arround the mean 
-  dplyr::select(-variance) 
+  filter(CV>18) %>% # only the last quantile was left for co-expression analysis 
+  dplyr::select(-CV, -variance) 
 
 rownames(vstMat.505.batch.corrected.largeVar) <- 
-  rownames(vstMat.505.batch.corrected[vstMat.505.batch.corrected$variance >1,])
+  rownames(vstMat.505.batch.corrected[vstMat.505.batch.corrected$CV >18,])
 
-dim(vstMat.505.batch.corrected.largeVar) # 14264   132   
+dim(vstMat.505.batch.corrected.largeVar) # 10788   131  
 
 save(vstMat.505.batch.corrected.largeVar, file = "~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")
 ```
@@ -152,13 +159,12 @@ plot(sft$fitIndices[,1], sft$fitIndices[,5],
      xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
      main = paste("Mean connectivity"))
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red") 
-# For this unsigned networks, while I didn't get plautea but 6 is the suggested power to use and it gives me high R squared to fit a scale free network model. 
 
-# choose 14 
-softPower <- 14
+# choose 8 
+softPower <- 8
 adjacency <- adjacency(vstMat.505.WGCNA.t, power = softPower)
 # Turn adjacency into topological overlap, topological overlap leads to a network distance measure
-dim(adjacency) # 14264 14264
+dim(adjacency) # 10788 10788
 system.time(TOM <- TOMsimilarity(adjacency)); # Calculation of the topological overlap matrix from a given adjacency matrix. takes 30 mins 
 dissTOM <- 1-TOM
 
@@ -177,7 +183,7 @@ dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
                              deepSplit <- 2, pamRespectsDendro = FALSE,
                              minClusterSize = minModuleSize);
 table(dynamicMods)
-table(dynamicMods) %>% length() # 46 modules 
+table(dynamicMods) %>% length() # 35 modules 
 
 # Convert numeric lables into colors
 dynamicColors = labels2colors(dynamicMods)
@@ -231,9 +237,9 @@ moduleColors = mergedColors
 # Construct numerical labels corresponding to the colors
 colorOrder = c("grey", standardColors(50));
 moduleLabels = match(moduleColors, colorOrder)-1;
-MEs = mergedMEs
+MEs = mergedMEs # 30 modules 
 
-save(MEs, file = "~/505/network_analysis/output/MEs_505.Rdata")
+save(MEs, moduleColors, file = "~/505/network_analysis/output/MEs_505_unsigned.Rdata")
 ```
 
 ### signed network 
@@ -269,11 +275,11 @@ plot(sft$fitIndices[,1], sft$fitIndices[,5],
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red") 
 # For this signed networks, while I didn't get plautea but 12 is the suggested power to use and it gives me high R squared to fit a scale free network model. 
 
-# choose 12
-softPower <- 12
+# choose 16
+softPower <- 16
 adjacency <- adjacency(vstMat.505.WGCNA.t, power = softPower, type = "signed")
 # Turn adjacency into topological overlap, topological overlap leads to a network distance measure
-dim(adjacency) # 14264 14264
+dim(adjacency) # 10788 10788
 system.time(TOM <- TOMsimilarity(adjacency)); # Calculation of the topological overlap matrix from a given adjacency matrix. takes 30 mins 
 dissTOM <- 1-TOM
 
@@ -292,7 +298,7 @@ dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
                              deepSplit <- 2, pamRespectsDendro = FALSE,
                              minClusterSize = minModuleSize);
 table(dynamicMods)
-table(dynamicMods) %>% length() # 46 modules 
+table(dynamicMods) %>% length() # 32 modules 
 
 # Convert numeric lables into colors
 dynamicColors = labels2colors(dynamicMods)
@@ -347,9 +353,10 @@ moduleColors = mergedColors
 colorOrder = c("grey", standardColors(50));
 moduleLabels = match(moduleColors, colorOrder)-1;
 MEs = mergedMEs
-
+moduleColors.signed <- moduleColors
 MEs.signed <- MEs
-save(moduleColors, MEs.signed, file = "~/505/network_analysis/output/MEs_505_signed.Rdata")
+
+save(moduleColors.signed, MEs.signed, file = "~/505/network_analysis/output/MEs_505_signed.Rdata")
 ``` 
 
 ###  phenotype data for 505 
@@ -404,27 +411,27 @@ save(pheno_data_505, file = "~/505/network_analysis/output/pheno_data_505.Rdata"
 ```{r}
 load("~/505/network_analysis/output/MEs_505_signed.Rdata")
 
-moduleColors %>% length()
+moduleColors.signed %>% length()
 MEs.signed 
 
 load("~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")  
 vstMat.505.batch.corrected.largeVar %>% dim()
 
-table(moduleColors) 
+table(moduleColors.signed) 
 
 # check "brown4" module 
-vstMat.505.brown4 <- 
-  vstMat.505.batch.corrected.largeVar[moduleColors == "brown4",] %>% 
+vstMat.505.white <- 
+  vstMat.505.batch.corrected.largeVar[moduleColors == "white",] %>% 
   t() %>% as.data.frame()
 
 # plot heatmap 
-vstMat.505.brown4 %>% 
+vstMat.505.white %>% 
   t() %>% 
   melt() %>% 
   ggplot() + 
   geom_line(mapping = aes(x = Var1, y = Var2)) 
 
-pheatmap(as.matrix(t(vstMat.505.brown4)),  
+pheatmap(as.matrix(t(vstMat.505.white)),  
      clustering_method = "average", 
      # cellheight = 10,
      # cellwidth = 5,
@@ -432,6 +439,9 @@ pheatmap(as.matrix(t(vstMat.505.brown4)),
      fontsize_col = 8, 
      legend = T
 ) 
+
+
+
 ```
 
 
