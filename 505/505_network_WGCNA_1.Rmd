@@ -418,30 +418,51 @@ load("~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")
 vstMat.505.batch.corrected.largeVar %>% dim()
 
 table(moduleColors.signed) 
+dim(MEs.signed) # 30 
 
-# check "brown4" module 
-vstMat.505.white <- 
-  vstMat.505.batch.corrected.largeVar[moduleColors == "white",] %>% 
+# check "white" module 
+vstMat.505.signed <- 
+  vstMat.505.batch.corrected.largeVar[moduleColors.signed == "orange",] %>% 
   t() %>% as.data.frame()
 
 # plot heatmap 
-vstMat.505.white %>% 
-  t() %>% 
-  melt() %>% 
-  ggplot() + 
-  geom_line(mapping = aes(x = Var1, y = Var2)) 
-
-pheatmap(as.matrix(t(vstMat.505.white)),  
+pheatmap(as.matrix(t(vstMat.505.signed)),  
+     cluster_rows = T,
+     cluster_cols = T,
      clustering_method = "average", 
      # cellheight = 10,
      # cellwidth = 5,
      border_color=NA,
      fontsize_col = 8, 
-     legend = T
+     legend = T, 
+     main = "signed"
 ) 
 
+### unsigned modules 
+load("~/505/network_analysis/output/MEs_505_unsigned.Rdata")
 
+moduleColors %>% length()
+MEs
+table(moduleColors) 
+length(MEs) # 30 
 
+# check "white" module 
+vstMat.505.unsigned <- 
+  vstMat.505.batch.corrected.largeVar[moduleColors == "royalblue",] %>% 
+  t() %>% as.data.frame()
+
+# plot heatmap 
+pheatmap(as.matrix(t(vstMat.505.unsigned)),  
+     cluster_rows = T,
+     cluster_cols = T,
+     clustering_method = "average", 
+     # cellheight = 10,
+     # cellwidth = 5,
+     border_color=NA,
+     fontsize_col = 8, 
+     legend = T, 
+     main = "unsigned"
+)  
 ```
 
 
