@@ -10,7 +10,7 @@ Goal of this script is to summarize the trait values, caculate heritability, as 
 ### growth trait 
 ```{r}
 library(tidyverse) 
-library(ggplot2)
+library(ggplot2) 
 library(reshape2) 
 
 width <- read.csv("~/Desktop/F2_paper/data/width.added(indentical).best.fitted.summary.csv")
@@ -113,7 +113,7 @@ for (i in colnames(growth_model_trait)[1:12]) {
   abline(v = test.melt[(test.melt$variable == i & test.melt$line_ID == "F1"),]$value, col = "green", lty = 2, lwd = 2)  
   } 
  
-dev.off()               
+dev.off()                
 ```  
 
 ### summary of trait values 
@@ -529,7 +529,7 @@ save(pheno.parent.oil, file = "~/Desktop/F2_paper/data/pheno.parent.oil.Rdata")
 ### prepare phefile for QTL mapping 
 ```{r}
 load("~/Desktop/F2_paper/data/phefile.all.Rdata") 
-phefile.all %>% colnames() 
+phefile.all %>% colnames()  
 
 phefile.branch <- 
 phefile.all %>% 
@@ -779,15 +779,16 @@ phefile.all %>%
   dplyr::select(-id)  
 
 colnames(phefile.all) <- gsub("aicd", "acid", colnames(phefile.all))
+write.csv(as.data.frame(t(phefile.all)), "~/Desktop/F2_paper/data/F2.pheno.csv") 
 
-load("~/Desktop/F2_paper/data/heritability.Rdata")
+load("~/Desktop/F2_paper/data/heritability.Rdata") 
 
 for(i in colnames(phefile.all)) {
   for(j in heritability$Row.names){
     colnames(phefile.all)[colnames(phefile.all) == i] <- 
       ifelse(i == j, heritability[heritability$Row.names == j,]$label, i)
-  }
-}
+  } 
+} 
 
 phefile.non_time_series <- 
 phefile.all[,grep("oil|acid|seeds|rate|flower|bolt|root|weight|Hmax|I|k|delta|branch|2016_03_21|2016_05_13", colnames(phefile.all))]  
@@ -820,7 +821,7 @@ trait_cor <- trait_cor[rownames(trait_cor) != "Survival_rate",]
 # png(filename = "~/Desktop/F2_paper/trait_cor_heatmap.png",width=170, height=200, units="mm", res=300)
 setEPS()
 postscript(file = "~/Desktop/F2_paper/trait_cor_heatmap.eps", width=7.4, height=7.9)
-par(mar = c(3, 3, 3, 3), ps = 8, cex = 0.8, cex.main = 0.8, cex.axis = 0.8, tcl = -0.3)
+par(mar = c(3, 3, 3, 3), ps = 8, cex = 1, cex.main = 1, cex.axis = 1, tcl = -0.3)
 
 pheatmap(as.matrix(trait_cor),  
      clustering_method = "average", 
@@ -828,7 +829,7 @@ pheatmap(as.matrix(trait_cor),
      # cellwidth = 5,
      border_color=NA,
      fontsize_col = 8, 
-     legend = T
+     legend = T 
 )
 dev.off()        
 ```  
@@ -920,7 +921,7 @@ SRA_to_submit_final <-
 SRA_to_submit_final %>% 
   dplyr::select(-filename3, -filename4, -assembly)
 
-write_tsv(SRA_to_submit_final, path = "~/Desktop/SRA_Maloof_lab_KIAT_2018.tsv") 
+write_tsv(SRA_to_submit_final, path = "~/Desktop/SRA_Maloof_lab_KIAT_2018.tsv")  
 ```
 
 ### appendix function for this script  
