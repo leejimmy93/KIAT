@@ -14,7 +14,7 @@ load("~/505/network_analysis/output/MEs_505_signed.Rdata")
 load("~/505/network_analysis/output/pheno_data_505.Rdata")
 
 # include triat value  
-dim(MEs.signed) # 36 moduels 
+dim(MEs.signed) # 30 moduels 
 rownames(vstMat.505.WGCNA.t) 
 rownames(MEs.signed) 
 rownames(MEs.signed) <- rownames(vstMat.505.WGCNA.t)
@@ -35,10 +35,10 @@ ME.blups.505 <-
 MEs.signed %>% 
   left_join(pheno_data_505, by = "ID") 
 
-dim(ME.blups.505) # 36 module + 56 traits + 1 "line"
+dim(ME.blups.505) # 30 module + 56 traits + 1 "line"
 colnames(ME.blups.505)
 
-blups.cor <- cor(ME.blups.505[,38:93], ME.blups.505[,1:36], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info, calculate correlation between eigengene and trait value
+blups.cor <- cor(ME.blups.505[,32:87], ME.blups.505[,1:30], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info, calculate correlation between eigengene and trait value
 blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.505.WGCNA.t))
 blups.cor.sig <- blups.cor
 blups.cor.sig[blups.cor.P>0.05] <- NA 
@@ -73,7 +73,7 @@ dev.off()
 # Arbitrary, but let's take the max and min for each trait (so long as they are significant)
 
 blups.cor.5 <- blups.cor.sig  
-dim(blups.cor.5) # 56 36 
+dim(blups.cor.5) # 56 30 
 
 cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait 
   maxx = max(x,na.rm=TRUE) 
@@ -81,74 +81,45 @@ cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait
   ifelse(x == maxx | x == minx, x, NA) # only keep the largest and smallest correlation for each trait 
 }
 )) 
-dim(cor.top) # 56 36  
+dim(cor.top) # 56 30  
 
 cor.top <- cor.top[,apply(cor.top,2,function(x) !all(is.na(x)))] # keep modules which have significant correlations with traits
-cor.top %>% dim() # 56 29 
-write.csv(cor.top,"~/505/network_analysis/output/Eigen_trait_cor_505_threshold.csv") 
+cor.top %>% dim() # 56 25
+# write.csv(cor.top,"~/505/network_analysis/output/Eigen_trait_cor_505_threshold.csv") 
 
-# write the Eigen genes
-head(MEs.signed[,colnames(cor.top)]) 
-MEs.signed[,colnames(cor.top)] %>% dim # get 29 modules which are significantly correlated with traits 
-write.csv(MEs.signed[,colnames(cor.top)], file = "~/505/network_analysis/output/Top_Eigen_genes_505.csv") 
-```
-
-### looks like there are so many modules correlated with different traits, what if I use unsigned network 
-```{r}
-load("~/505/network_analysis/output/MEs_505.Rdata")
-load("~/505/network_analysis/output/pheno_data_505.Rdata")
-
-# include triat value  
-dim(MEs) # 38 moduels 
-rownames(MEs) <- rownames(vstMat.505.WGCNA.t)
-MEs$ID <- rownames(MEs.signed)
-
-# merge trait and module values 
-MEs$ID <- gsub("\\_|\\-", "", MEs$ID)
-MEs$ID <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", MEs$ID)
-
-# There are two K200 sequencing info (this line was sequenced twice), modify the name, change the 1st K200 to K200-1, the 2nd to K200-2, for both module and trait info  
-MEs$ID[15] <- "ID_505_K200-1"
-MEs$ID[16] <- "ID_505_K200-2"
-
-pheno_data_505$ID[16] <- "ID_505_K200-1"
-pheno_data_505$ID[17] <- "ID_505_K200-2"
-
-ME.blups.505 <- 
-MEs %>% 
-  left_join(pheno_data_505, by = "ID") 
-
-dim(ME.blups.505) # 38 module + 56 traits + 1 "line"
-colnames(ME.blups.505)
-
-blups.cor <- cor(ME.blups.505[,40:95], ME.blups.505[,1:38], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info, calculate correlation between eigengene and trait value
-blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.505.WGCNA.t))
-blups.cor.sig <- blups.cor
-blups.cor.sig[blups.cor.P>0.05] <- NA 
-blups.cor.sig 
-
-MEs <- MEs %>% dplyr::select(-ID) 
-ME.blups.505 <- ME.blups.505 %>% dplyr::select(-ID)  
-blups.505 <- pheno_data_505 %>% dplyr::select(-ID)  
-save(blups.505, file = "~/505/network_analysis/output/blups.505.unsigned.Rdata")
-
-# plot it 
-# Will display correlations and their p-values
-png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505_unsigned.png",width=20, height=16, units="in", res=300)
+png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505_cortop.png",width=20, height=16, units="in", res=300)
 par(mar = c(8, 18, 3, 3)); 
-# Display the correlation values within a heatmap plot
-labeledHeatmap(Matrix = blups.cor,
+# make plot for this new cor.top object 
+labeledHeatmap(Matrix = cor.top, # blups.cor
                yLabels = names(blups.505),
-               xLabels = names(MEs), 
-               xSymbols = names(MEs),
+               xLabels = colnames(cor.top), 
+               xSymbols = colnames(cor.top),
                ySymbols = names(blups.505),
                colorLabels = FALSE,
                colors = blueWhiteRed(50),
-               textMatrix = signif(blups.cor.sig,2),
+               # textMatrix = signif(blups.cor.sig,2),
                setStdMargins = FALSE,
                cex.text = 0.5,
                zlim = c(-1,1),
-               main = paste("505 Module-trait relationships")) # this figure shows the correlation between traits and eigene gene of different modules, only correlation with P-value smaller than 0.05 were shown with correlation value 
+               main = paste("505 Module-trait relationships")) 
+dev.off()   
 
-dev.off()     
+# write the Eigen genes
+head(MEs.signed[,colnames(cor.top)]) 
+MEs.signed[,colnames(cor.top)] %>% dim # get 25 modules which are significantly correlated with traits 
+# write.csv(MEs.signed[,colnames(cor.top)], file = "~/505/network_analysis/output/Top_Eigen_genes_505.csv") 
 ```
+
+Based on the above result, for oil related traits, looks like oil and pink modules are more important than other modules because they are have the highest correlation with multiple FA composition traits. 
+
+### GO enrichment of different modules 
+```{r}
+load("~/505/network_analysis/output/MEs_505_signed.Rdata")
+load("~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")  
+
+
+
+```
+
+
+
