@@ -151,7 +151,7 @@ colnames(info) <- c("AB","ABP","AC","AF","AN","AO","CIGAR","DP","DPB","DPRA","EP
                     "RPL","RPP","RPPR","RPR","RUN","SAF","SAP","SAR","SRF","SRP","SRR","TYPE")
 
 head(info)
-info <- as.data.frame(info)
+info <- as.data.frame(info) 
 colnames(info)
 
 for (i in 1:ncol(info)){

@@ -452,6 +452,8 @@ colnames(cim.qtl[["BnaA08g11060D"]])[3] <- "lod"
 cim.qtl[["BnaA08g12780D"]] <- scanone_eQTL.F2[,c("chr", "pos", "BnaA08g12780D")] 
 colnames(cim.qtl[["BnaA08g12780D"]])[3] <- "lod" 
 
+save(cim.qtl, file = "~/F2/output/cim.qtl_two_genes.Rdata")
+
 oil_eQTL <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_acid", group = "QTL"), 
                        data.frame(cim.qtl[["Oleic_acid"]], method = "Oleic_acid", group = "QTL"), 
@@ -468,7 +470,7 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["Erucic_acid"]], method = "Erucic_aci
          title = "", 
          rug = TRUE)   
 # ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL_FAD.png", width = 8, height = 8) 
-ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL.png", width = 6.2, height = 2.8) 
+ggsave(oil_eQTL$plot, filename = "~/F2/output/eQTL/figure/oil_eQTL.png", width = 7.4, height = 2.8) 
 # Lipid biosynthesis: Arabidopsis squalene synthase homolog  
 # FAE coding gene  
 
@@ -477,6 +479,7 @@ load("~/F2/output/growth_model/cim_growth_model_trait_flipped.Rdata")
 
 cim_growth_model_trait.F2[["BnaA10g22080D"]] <- scanone_eQTL.F2[,c("chr", "pos", "BnaA10g22080D")] 
 colnames(cim_growth_model_trait.F2[["BnaA10g22080D"]])[3] <- "lod"
+save(cim_growth_model_trait.F2, file = "~/F2/output/cim.qtl_FLC.Rdata")
 
 growth_eQTL <- 
 qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_bolt", group = "QTL"), 
@@ -489,9 +492,9 @@ qtl_plot(input = rbind(data.frame(cim.qtl[["days_to_bolt"]], method = "days_to_b
          chrs = c("A10"), 
          # lod = cim.perm[[1]], 
          title = "", 
-         rug = TRUE)      
+         rug = TRUE)       
 
-ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 6.2, height = 2.8)  
+ggsave(growth_eQTL$plot, filename = "~/F2/output/eQTL/figure/growth_eQTL.png", width = 7.4, height = 2.8)  
 ```
 
 ### why FLC is disappearing for time_to_flowering trait 

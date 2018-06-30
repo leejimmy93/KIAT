@@ -1,0 +1,580 @@
+---
+title: "505_network_WGCNA"
+output: html_document
+---
+
+purpose of this script is to do WGCNA network anaysis using 505 SNP data. 
+
+I did network analysis for our 414 F2 population using SNP data (https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network.Rmd & https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network_batch_corrected.Rmd), however, the identified gene co-expression modules correlated with different traits seems to arise from the genetic linkage instead of expression, so we want to see whether we have the same problem for 505. 
+
+### load libs
+```{r}
+library(WGCNA) 
+library(tidyverse) 
+library(edgeR) 
+library(DESeq2)
+library(magrittr) 
+library(gplots) 
+library(reshape2)
+library(sva) 
+options(stringsAsFactors = FALSE) 
+```
+
+### load expression data, normalize, and correct for batch effect 
+```{r}
+# load data 
+read_count_505 <- read.table("~/505/data/late_silique/read.count.505.tsv", header=T, row.names=1)
+dim(read_count_505) # 101040    131 
+read_count_505[1:10, 1:10]
+
+# filter low expression tags 
+keep <- rowSums(cpm(read_count_505) > 1) >= (131 * 0.25) # 1cpm in at least 1/4 of the samples 
+read_count_505 <- read_count_505[keep,]
+dim(read_count_505) # 49038   131
+
+colnames(read_count_505) <- gsub("Sample_", "", colnames(read_count_505))
+colnames(read_count_505) <- gsub("\\.", "\\-", colnames(read_count_505))
+
+# add batch information 
+sample_des_c <- read.csv("~/505/data/phenotype/batch_c.csv", stringsAsFactors=F, header=T, na.strings = "")
+sample_des_d <- read.csv("~/505/data/phenotype/batch_d.csv", stringsAsFactors=F, header=T, na.strings = "")
+sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", stringsAsFactors=F, header=T, na.strings = "")
+
+batch_info <- data.frame(batch = c(rep("C", nrow(sample_des_c)), 
+                                  rep("D", nrow(sample_des_d)), 
+                                  rep("E", nrow(sample_des_e))), 
+                         sample_ID = c(sample_des_c$Sample.ID, sample_des_d$Sample.ID, sample_des_e$Sample.ID))
+
+batch_info <- batch_info[match(colnames(read_count_505), batch_info$sample_ID),] 
+all(batch_info$sample_ID == colnames(read_count_505)) # True 
+
+# sample description 
+sample.505 <- data.frame(batch = factor(batch_info$batch), 
+                        genotype = factor(batch_info$sample_ID))
+
+# vst transformation 
+dds.505 <- DESeqDataSetFromMatrix(countData = round(read_count_505), 
+                                  colData = sample.505, 
+                                  design = ~genotype)
+
+vsd.505 <- varianceStabilizingTransformation(dds.505)
+vstMat.505 <- assay(vsd.505)
+colnames(vstMat.505) <- colnames(read_count_505) 
+
+# MDS to check batch effect 
+vstMat.505 %>% dim() #  49038   131
+test1 <- as.matrix(dist(t(vstMat.505)))  
+
+test2 <- as.data.frame(cmdscale(test1))
+head(test2) #now we have 2 dimensions 
+plot(test2)
+test2$sample_ID <- rownames(test2)
+test2 %>% 
+  left_join(batch_info, by = "sample_ID") %>% 
+  ggplot() + 
+  geom_point(aes(x = V1, y= V2, color = as.factor(batch))) # looks like there is batch effect on PC2
+
+# correct batch effect 
+vstMat.505.batch.corrected <- removeBatchEffect(vstMat.505, batch = batch_info$batch) 
+test1 <- as.matrix(dist(t(vstMat.505.batch.corrected)))  
+test2 <- as.data.frame(cmdscale(test1))
+test2$sample_ID <- rownames(test2)
+test2 %>% 
+  left_join(batch_info, by = "sample_ID") %>% 
+  ggplot() + 
+  geom_point(aes(x = V1, y= V2, color = as.factor(batch))) # great, batch effect removed
+
+# get genes with large variation across samples using variance, The variance is a numerical measure of how the data values is dispersed around the mean.
+# https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html
+
+vstMat.505.batch.corrected <- as.data.frame(vstMat.505.batch.corrected)
+vstMat.505.batch.corrected$variance <- as.numeric(apply(vstMat.505.batch.corrected,1,var))  
+summary(vstMat.505.batch.corrected$variance) 
+
+vstMat.505.batch.corrected.largeVar<-
+  vstMat.505.batch.corrected %>% 
+  filter(variance>1) %>% # dispersed one reads arround the mean 
+  dplyr::select(-variance) 
+
+dim(vstMat.505.batch.corrected.largeVar) # 14264   132   
+
+save(vstMat.505.batch.corrected.largeVar, file = "~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")
+```
+
+### 1) follow Julin's method for network analysis 
+
+### WGCNA for network  
+
+https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/FemaleLiver-02-networkConstr-man.pdf  
+
+### unsigned network 
+```{r}
+enableWGCNAThreads()
+
+load("~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")  
+vstMat.505.WGCNA <- vstMat.505.batch.corrected.largeVar
+dim(vstMat.505.WGCNA)
+
+# transform expression data 
+head(vstMat.505.WGCNA[,1:6])
+vstMat.505.WGCNA.t <- t(vstMat.505.WGCNA)
+head(vstMat.505.WGCNA.t[,1:6]) 
+
+# check sample quality, this is to see whether there are many missing entry for certain gene, also check variance  
+gag.CR <- goodSamplesGenes(vstMat.505.WGCNA.t, verbose = 3)
+gag.CR$allOK
+
+# cluster samples to look for outliers based on gene expression data
+# hclust 1stly calculate pairwise dissimilarity between each pair of observations, the observations that are most similar to each other are fused, then the next most similar observations... For clusters with multiple observations, use linkage to quantitate their dissimlarity, including complete, single, average, and centroid linkage. 
+sampleTREE.CR <- hclust(dist(vstMat.505.WGCNA.t), method = "average") # average is the mean intercluster dissmilarity 
+plot(sampleTREE.CR,cex=.6) 
+
+# soft threshold:  In an unsigned coexpression network, modules correspond to clusters of genes with high absolute correlations. In a signed network, modules correspond to positively correlated genes.
+powers <- c(c(1:10), seq(from = 12, to=30, by=2))
+sft <- pickSoftThreshold(vstMat.505.WGCNA.t, powerVector = powers, verbose = 5, networkType = "unsigned")
+
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2)) 
+cex1 <- 0.9 
+# Scale-free topology fit index as a fCRction of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"))
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red")
+# this line corresponds to using an R^2 cut-off of h
+abline(h=0.90,col="red")
+# Mean connectivity as a fCRction of the soft-thresholding power
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red") 
+# For this unsigned networks, while I didn't get plautea but 6 is the suggested power to use and it gives me high R squared to fit a scale free network model. 
+
+# choose 14 
+softPower <- 14
+adjacency <- adjacency(vstMat.505.WGCNA.t, power = softPower)
+# Turn adjacency into topological overlap, topological overlap leads to a network distance measure
+dim(adjacency) # 14264 14264
+system.time(TOM <- TOMsimilarity(adjacency)); # Calculation of the topological overlap matrix from a given adjacency matrix. takes 30 mins 
+dissTOM <- 1-TOM
+
+# Call the hierarchical clustering fCRction
+geneTree <- hclust(as.dist(dissTOM), method = "average")
+# Plot the resulting clustering tree (dendrogram)
+sizeGrWindow(12,9)
+plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity",
+     labels = FALSE, hang = 0.04)
+
+# define modules 
+# We like large modules, so we set the minimum module size relatively high:
+minModuleSize <- 30;
+# Module identification using dynamic tree cut:
+dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
+                             deepSplit <- 2, pamRespectsDendro = FALSE,
+                             minClusterSize = minModuleSize);
+table(dynamicMods)
+table(dynamicMods) %>% length() # 46 modules 
+
+# Convert numeric lables into colors
+dynamicColors = labels2colors(dynamicMods)
+table(dynamicColors)
+# Plot the dendrogram and colors CRderneath
+sizeGrWindow(8,6)
+plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05,
+                    main = "Gene dendrogram and module colors")
+
+# merge similar modules
+# Calculate eigengenes 
+MEList <- moduleEigengenes(vstMat.505.WGCNA.t, colors = dynamicColors) # Calculates module eigengenes (1st principal component) of modules in a given single dataset. 
+MEs <- MEList$eigengenes
+# Calculate dissimilarity of module eigengenes
+MEDiss <- 1-cor(MEs);
+# Cluster module eigengenes
+METree <- hclust(as.dist(MEDiss), method = "average");
+# Plot the result
+sizeGrWindow(7, 6)
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+
+# merge with correlation > 0.8
+
+MEDissThres = 0.2
+# Plot the cut line into the dendrogram
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+abline(h=MEDissThres, col = "red")
+# Call an automatic merging fCRction
+merge = mergeCloseModules(vstMat.505.WGCNA.t, dynamicColors, cutHeight = MEDissThres, verbose = 3)
+# The merged module colors
+mergedColors = merge$colors
+# Eigengenes of the new merged modules:
+mergedMEs = merge$newMEs
+
+# compare pre and post merge
+
+sizeGrWindow(12, 9)
+#pdf(file = "Plots/geneDendro-3.pdf", wi = 9, he = 6)
+plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
+c("Dynamic Tree Cut", "Merged dynamic"),
+dendroLabels = FALSE, hang = 0.03,
+addGuide = TRUE, guideHang = 0.05)
+#dev.off()
+
+# Rename to moduleColors
+moduleColors = mergedColors
+# Construct numerical labels corresponding to the colors
+colorOrder = c("grey", standardColors(50));
+moduleLabels = match(moduleColors, colorOrder)-1;
+MEs = mergedMEs
+
+save(MEs, file = "~/505/network_analysis/output/MEs_505.Rdata")
+```
+
+### signed network 
+```{r}
+load("~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")  
+vstMat.505.WGCNA <- vstMat.505.batch.corrected.largeVar
+dim(vstMat.505.WGCNA)
+
+# transform expression data 
+head(vstMat.505.WGCNA[,1:6])
+vstMat.505.WGCNA.t <- t(vstMat.505.WGCNA)
+head(vstMat.505.WGCNA.t[,1:6]) 
+
+# soft threshold:  In an unsigned coexpression network, modules correspond to clusters of genes with high absolute correlations. In a signed network, modules correspond to positively correlated genes.
+powers <- c(c(1:10), seq(from = 12, to=30, by=2))
+sft <- pickSoftThreshold(vstMat.505.WGCNA.t, powerVector = powers, verbose = 5, networkType = "signed")
+
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2)) 
+cex1 <- 0.9 
+# Scale-free topology fit index as a fCRction of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"))
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red")
+# this line corresponds to using an R^2 cut-off of h
+abline(h=0.90,col="red")
+# Mean connectivity as a fCRction of the soft-thresholding power
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red") 
+# For this signed networks, while I didn't get plautea but 12 is the suggested power to use and it gives me high R squared to fit a scale free network model. 
+
+# choose 12
+softPower <- 12
+adjacency <- adjacency(vstMat.505.WGCNA.t, power = softPower, type = "signed")
+# Turn adjacency into topological overlap, topological overlap leads to a network distance measure
+dim(adjacency) # 14264 14264
+system.time(TOM <- TOMsimilarity(adjacency)); # Calculation of the topological overlap matrix from a given adjacency matrix. takes 30 mins 
+dissTOM <- 1-TOM
+
+# Call the hierarchical clustering fCRction
+geneTree <- hclust(as.dist(dissTOM), method = "average")
+# Plot the resulting clustering tree (dendrogram)
+sizeGrWindow(12,9)
+plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity",
+     labels = FALSE, hang = 0.04)
+
+# define modules 
+# We like large modules, so we set the minimum module size relatively high:
+minModuleSize <- 30;
+# Module identification using dynamic tree cut:
+dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
+                             deepSplit <- 2, pamRespectsDendro = FALSE,
+                             minClusterSize = minModuleSize);
+table(dynamicMods)
+table(dynamicMods) %>% length() # 46 modules 
+
+# Convert numeric lables into colors
+dynamicColors = labels2colors(dynamicMods)
+table(dynamicColors)
+# Plot the dendrogram and colors CRderneath
+sizeGrWindow(8,6)
+plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05,
+                    main = "Gene dendrogram and module colors")
+
+# merge similar modules
+# Calculate eigengenes 
+MEList <- moduleEigengenes(vstMat.505.WGCNA.t, colors = dynamicColors) # Calculates module eigengenes (1st principal component) of modules in a given single dataset. 
+MEs <- MEList$eigengenes
+# Calculate dissimilarity of module eigengenes
+MEDiss <- 1-cor(MEs);
+# Cluster module eigengenes
+METree <- hclust(as.dist(MEDiss), method = "average");
+# Plot the result
+sizeGrWindow(7, 6)
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+
+# merge with correlation > 0.8
+
+MEDissThres = 0.2
+# Plot the cut line into the dendrogram
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+abline(h=MEDissThres, col = "red")
+# Call an automatic merging fCRction
+merge = mergeCloseModules(vstMat.505.WGCNA.t, dynamicColors, cutHeight = MEDissThres, verbose = 3)
+# The merged module colors
+mergedColors = merge$colors
+# Eigengenes of the new merged modules:
+mergedMEs = merge$newMEs
+
+# compare pre and post merge
+
+sizeGrWindow(12, 9)
+#pdf(file = "Plots/geneDendro-3.pdf", wi = 9, he = 6)
+plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
+c("Dynamic Tree Cut", "Merged dynamic"),
+dendroLabels = FALSE, hang = 0.03,
+addGuide = TRUE, guideHang = 0.05)
+#dev.off()
+
+# Rename to moduleColors
+moduleColors = mergedColors
+# Construct numerical labels corresponding to the colors
+colorOrder = c("grey", standardColors(50));
+moduleLabels = match(moduleColors, colorOrder)-1;
+MEs = mergedMEs
+
+MEs.signed <- MEs
+save(MEs.signed, file = "~/505/network_analysis/output/MEs_505_signed.Rdata")
+``` 
+
+### GO enrichment of all modules
+```{r}
+load("~/505/network_analysis/output/MEs_505.Rdata")
+load("~/505/network_analysis/output/MEs_505_signed.Rdata")
+
+
+
+```
+
+###  phenotype data for 505 
+```{r}
+pheno.505 <- read_csv("~/505/data/505_Phenotype_Bnapus_38_traits.csv") # 1st year data, 2016?
+pheno.505 <- pheno.505[,!apply(pheno.505,2,function(x) all(is.na(x)))]
+pheno.505 %>% dim() 
+pheno.505.t <- as.data.frame(t(pheno.505[,-1]))
+colnames(pheno.505.t) <- paste(pheno.505$PHENOTYPE, "year1", sep = "_")
+pheno.505.t$ID <- rownames(pheno.505.t)
+
+load("~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata") # 2nd year data, on FA related traits 
+pheno_data_505 %>% dim()
+colnames(pheno_data_505) <- paste(colnames(pheno_data_505), "year2", sep = "_")
+colnames(pheno_data_505)[1] <- "ID"
+pheno.505.t$ID
+pheno_data_505$ID
+pheno_data_505$ID <- gsub("\\_|\\-", "", pheno_data_505$ID)
+pheno_data_505$ID <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", pheno_data_505$ID)
+
+# merge two dataset 
+pheno_data_505 <- 
+pheno_data_505 %>% 
+  left_join(pheno.505.t) 
+
+dim(pheno_data_505)   # 131 57 
+
+# plot the data to see missing rate, distribution, etc... 
+summary(pheno_data_505)
+colnames(pheno_data_505)
+
+par(mfrow=c(5, 4))
+
+for (i in colnames(pheno_data_505)[2:21]) { 
+  hist(pheno_data_505[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i) 
+  } 
+ 
+for (i in colnames(pheno_data_505)[22:41]) { 
+  hist(pheno_data_505[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i) 
+  } 
+ 
+for (i in colnames(pheno_data_505)[42:57]) { 
+  hist(pheno_data_505[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i, mgp=c(.1,.5,.0)) 
+  } 
+
+save(pheno_data_505, file = "~/505/network_analysis/output/pheno_data_505.Rdata")
+
+# check correlation between phenotypes 
+```
+
+### plot several clusters gene expression value & their eigengenes 
+```{r}
+
+```
+
+### related modules to trait and identify important genes
+```{r}
+load("~/505/network_analysis/output/MEs_505_signed.Rdata")
+load("~/505/network_analysis/output/pheno_data_505.Rdata")
+
+# include triat value  
+dim(MEs.signed) # 36 moduels 
+rownames(vstMat.505.WGCNA.t) 
+rownames(MEs.signed) 
+rownames(MEs.signed) <- rownames(vstMat.505.WGCNA.t)
+MEs.signed$ID <- rownames(MEs.signed)
+
+# merge trait and module values 
+MEs.signed$ID <- gsub("\\_|\\-", "", MEs.signed$ID)
+MEs.signed$ID <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", MEs.signed$ID)
+
+# There are two K200 sequencing info (this line was sequenced twice), modify the name, change the 1st K200 to K200-1, the 2nd to K200-2, for both module and trait info  
+MEs.signed$ID[15] <- "ID_505_K200-1"
+MEs.signed$ID[16] <- "ID_505_K200-2"
+
+pheno_data_505$ID[16] <- "ID_505_K200-1"
+pheno_data_505$ID[17] <- "ID_505_K200-2"
+
+ME.blups.505 <- 
+MEs.signed %>% 
+  left_join(pheno_data_505, by = "ID") 
+
+dim(ME.blups.505) # 36 module + 56 traits + 1 "line"
+colnames(ME.blups.505)
+
+blups.cor <- cor(ME.blups.505[,38:93], ME.blups.505[,1:36], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info, calculate correlation between eigengene and trait value
+blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.505.WGCNA.t))
+blups.cor.sig <- blups.cor
+blups.cor.sig[blups.cor.P>0.05] <- NA 
+blups.cor.sig 
+
+MEs.signed <- MEs.signed %>% dplyr::select(-ID) 
+ME.blups.505 <- ME.blups.505 %>% dplyr::select(-ID)  
+blups.505 <- pheno_data_505 %>% dplyr::select(-ID)  
+save(blups.505, file = "~/505/network_analysis/output/blups.505.Rdata")
+
+# plot it 
+# Will display correlations and their p-values
+png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505.png",width=20, height=16, units="in", res=300)
+par(mar = c(8, 18, 3, 3)); 
+# Display the correlation values within a heatmap plot
+labeledHeatmap(Matrix = blups.cor,
+               yLabels = names(blups.505),
+               xLabels = names(MEs.signed), 
+               xSymbols = names(MEs.signed),
+               ySymbols = names(blups.505),
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = signif(blups.cor.sig,2),
+               setStdMargins = FALSE,
+               cex.text = 0.5,
+               zlim = c(-1,1),
+               main = paste("505 Module-trait relationships")) # this figure shows the correlation between traits and eigene gene of different modules, only correlation with P-value smaller than 0.05 were shown with correlation value 
+
+dev.off()    
+
+# again follow Julin's method 
+# Arbitrary, but let's take the max and min for each trait (so long as they are significant)
+
+blups.cor.5 <- blups.cor.sig  
+dim(blups.cor.5) # 56 36 
+
+cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait 
+  maxx = max(x,na.rm=TRUE) 
+  minx = min(x,na.rm=TRUE)
+  ifelse(x == maxx | x == minx, x, NA) # only keep the largest and smallest correlation for each trait 
+}
+)) 
+dim(cor.top) # 56 36  
+
+cor.top <- cor.top[,apply(cor.top,2,function(x) !all(is.na(x)))] # keep modules which have significant correlations with traits
+cor.top %>% dim() # 56 29 
+write.csv(cor.top,"~/505/network_analysis/output/Eigen_trait_cor_505_threshold.csv") 
+
+# write the Eigen genes
+head(MEs.signed[,colnames(cor.top)]) 
+MEs.signed[,colnames(cor.top)] %>% dim # get 29 modules which are significantly correlated with traits 
+write.csv(MEs.signed[,colnames(cor.top)], file = "~/505/network_analysis/output/Top_Eigen_genes_505.csv") 
+```
+
+### looks like there are so many modules correlated with different traits, what if I use unsigned network 
+```{r}
+load("~/505/network_analysis/output/MEs_505.Rdata")
+load("~/505/network_analysis/output/pheno_data_505.Rdata")
+
+# include triat value  
+dim(MEs) # 38 moduels 
+rownames(MEs) <- rownames(vstMat.505.WGCNA.t)
+MEs$ID <- rownames(MEs.signed)
+
+# merge trait and module values 
+MEs$ID <- gsub("\\_|\\-", "", MEs$ID)
+MEs$ID <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", MEs$ID)
+
+# There are two K200 sequencing info (this line was sequenced twice), modify the name, change the 1st K200 to K200-1, the 2nd to K200-2, for both module and trait info  
+MEs$ID[15] <- "ID_505_K200-1"
+MEs$ID[16] <- "ID_505_K200-2"
+
+pheno_data_505$ID[16] <- "ID_505_K200-1"
+pheno_data_505$ID[17] <- "ID_505_K200-2"
+
+ME.blups.505 <- 
+MEs %>% 
+  left_join(pheno_data_505, by = "ID") 
+
+dim(ME.blups.505) # 38 module + 56 traits + 1 "line"
+colnames(ME.blups.505)
+
+blups.cor <- cor(ME.blups.505[,40:95], ME.blups.505[,1:38], use = "pairwise.complete.obs") # the 1st part is phenotype, 2nd part is the module info, calculate correlation between eigengene and trait value
+blups.cor.P <- corPvalueStudent(blups.cor,nrow(vstMat.505.WGCNA.t))
+blups.cor.sig <- blups.cor
+blups.cor.sig[blups.cor.P>0.05] <- NA 
+blups.cor.sig 
+
+MEs <- MEs %>% dplyr::select(-ID) 
+ME.blups.505 <- ME.blups.505 %>% dplyr::select(-ID)  
+blups.505 <- pheno_data_505 %>% dplyr::select(-ID)  
+save(blups.505, file = "~/505/network_analysis/output/blups.505.unsigned.Rdata")
+
+# plot it 
+# Will display correlations and their p-values
+png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505_unsigned.png",width=20, height=16, units="in", res=300)
+par(mar = c(8, 18, 3, 3)); 
+# Display the correlation values within a heatmap plot
+labeledHeatmap(Matrix = blups.cor,
+               yLabels = names(blups.505),
+               xLabels = names(MEs), 
+               xSymbols = names(MEs),
+               ySymbols = names(blups.505),
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = signif(blups.cor.sig,2),
+               setStdMargins = FALSE,
+               cex.text = 0.5,
+               zlim = c(-1,1),
+               main = paste("505 Module-trait relationships")) # this figure shows the correlation between traits and eigene gene of different modules, only correlation with P-value smaller than 0.05 were shown with correlation value 
+
+dev.off()     
+```
+
+### do GWAS on eigene gene 
+```{r}
+
+```
+
+### GWAS on all traits  
+```{r}
+
+```
+
+### compare the GWAS result between traits and their associated eigene genes 
+```{r}
+
+```
+
+
+
+
+
+
+
+
