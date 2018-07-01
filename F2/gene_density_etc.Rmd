@@ -181,13 +181,25 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
                 col = rand_color(n_breaks), border = NA)
 })
 
-circos.link("a", 0, "b", 0, h = 0.4)
+circos.link("a", 0, "b", 0, h = 0.3)
 circos.link("c", c(-0.5, 0.5), "d", c(-0.5,0.5), col = "red",
     border = "blue", h = 0.2)
 circos.link("e", 0, "g", c(-1,1), col = "green", border = "black", lwd = 2, lty = 2)
 
 circos.clear() 
-```
+
+### more practice 
+set.seed(123)
+bed1 = generateRandomBed(nr = 100)
+bed1 = bed1[sample(nrow(bed1), 20), ]
+bed2 = generateRandomBed(nr = 100)
+bed2 = bed2[sample(nrow(bed2), 20), ]
+
+circos.initializeWithIdeogram()
+circos.genomicLink(bed1, bed2, col = rand_color(nrow(bed1), transparency = 0.5), 
+    border = NA) 
+
+``` 
 
 ### try my own data 
 
@@ -211,7 +223,7 @@ F2_map_cytoband <- data.frame(V1 = F2_map$chrom,
                               V4 = F2_map$id, 
                               V5 = c("stalk"))
 
-circos.initializeWithIdeogram(F2_map_cytoband)  
+circos.initializeWithIdeogram(F2_map_cytoband)    
 
 # data 
 # add SNP data 
