@@ -28,9 +28,9 @@ dim(read_count_505) # 101040    131
 read_count_505[1:10, 1:10]
 
 # filter low expression tags 
-keep <- rowSums(cpm(read_count_505) > 1) >= (131 * 0.25) # 1cpm in at least 1/4 of the samples 
+keep <- rowSums(cpm(read_count_505) > 1) >= 3 # 1cpm in at least 1/4 of the samples 
 read_count_505 <- read_count_505[keep,]
-dim(read_count_505) # 49038   131
+dim(read_count_505) # 60222   131
 
 colnames(read_count_505) <- gsub("Sample_", "", colnames(read_count_505))
 colnames(read_count_505) <- gsub("\\.", "\\-", colnames(read_count_505))
@@ -62,27 +62,34 @@ vstMat.505 <- assay(vsd.505)
 colnames(vstMat.505) <- colnames(read_count_505) 
 
 # MDS to check batch effect 
-vstMat.505 %>% dim() #  49038   131
+vstMat.505 %>% dim() #  60222   131 
 test1 <- as.matrix(dist(t(vstMat.505)))  
 
 test2 <- as.data.frame(cmdscale(test1))
 head(test2) #now we have 2 dimensions 
-plot(test2)
 test2$sample_ID <- rownames(test2)
+
+P.batch.before <- 
 test2 %>% 
   left_join(batch_info, by = "sample_ID") %>% 
   ggplot() + 
   geom_point(aes(x = V1, y= V2, color = as.factor(batch))) # looks like there is batch effect on PC2
+
 
 # correct batch effect 
 vstMat.505.batch.corrected <- removeBatchEffect(vstMat.505, batch = batch_info$batch) 
 test1 <- as.matrix(dist(t(vstMat.505.batch.corrected)))  
 test2 <- as.data.frame(cmdscale(test1))
 test2$sample_ID <- rownames(test2)
+
+P.batch.after <- 
 test2 %>% 
   left_join(batch_info, by = "sample_ID") %>% 
   ggplot() + 
   geom_point(aes(x = V1, y= V2, color = as.factor(batch))) # great, batch effect removed
+
+ggsave(P.batch.before, filename = "~/505/network_analysis/output/P.batch.before.png", width = 9, height = 4)
+ggsave(P.batch.after, filename = "~/505/network_analysis/output/P.batch.after.png", width = 9, height = 4)
 
 # get genes with large variation across samples using CV, The coefficient of variation (CV) is defined as the ratio of the standard deviation sigma  to the mean mu (standerdized deviation):
 # https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html
@@ -100,13 +107,13 @@ hist(vstMat.505.batch.corrected$CV, breaks = 30)
 
 vstMat.505.batch.corrected.largeVar<-
   vstMat.505.batch.corrected %>% 
-  filter(CV>18) %>% # only the last quantile was left for co-expression analysis 
-  dplyr::select(-CV, -variance) 
+  filter(CV>15) %>% # only the last quantile was left for co-expression analysis 
+  dplyr::select(-CV) 
 
 rownames(vstMat.505.batch.corrected.largeVar) <- 
-  rownames(vstMat.505.batch.corrected[vstMat.505.batch.corrected$CV >18,])
+  rownames(vstMat.505.batch.corrected[vstMat.505.batch.corrected$CV >15,]) # keep the last quantile & make sure include the two FAE1 genes "BnaA08g11130D" & "BnaC03g65980D"
 
-dim(vstMat.505.batch.corrected.largeVar) # 10788   131  
+dim(vstMat.505.batch.corrected.largeVar) # 13454   131  
 
 save(vstMat.505.batch.corrected.largeVar, file = "~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")
 ```
@@ -117,7 +124,7 @@ save(vstMat.505.batch.corrected.largeVar, file = "~/505/network_analysis/output/
 
 https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/FemaleLiver-02-networkConstr-man.pdf  
 
-### unsigned network 
+### data QC 
 ```{r}
 enableWGCNAThreads()
 
@@ -139,119 +146,43 @@ gag.CR$allOK
 sampleTREE.CR <- hclust(dist(vstMat.505.WGCNA.t), method = "average") # average is the mean intercluster dissmilarity 
 plot(sampleTREE.CR,cex=.6) 
 
-# soft threshold:  In an unsigned coexpression network, modules correspond to clusters of genes with high absolute correlations. In a signed network, modules correspond to positively correlated genes.
-powers <- c(c(1:10), seq(from = 12, to=30, by=2))
-sft <- pickSoftThreshold(vstMat.505.WGCNA.t, powerVector = powers, verbose = 5, networkType = "unsigned")
+### MDS plot to make sure I get the right data to start with 
+vstMat.505.WGCNA.t %>% dim()
+vstMat.505.WGCNA.t[1:10, 1:10]
+rnames <- rownames(vstMat.505.WGCNA.t)
 
-sizeGrWindow(9, 5)
-par(mfrow = c(1,2)) 
-cex1 <- 0.9 
-# Scale-free topology fit index as a fCRction of the soft-thresholding power
-plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
-     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
-     main = paste("Scale independence"))
-text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
-     labels=powers,cex=cex1,col="red")
-# this line corresponds to using an R^2 cut-off of h
-abline(h=0.90,col="red")
-# Mean connectivity as a fCRction of the soft-thresholding power
-plot(sft$fitIndices[,1], sft$fitIndices[,5],
-     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
-     main = paste("Mean connectivity"))
-text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red") 
+genDist <- as.matrix(dist(as.matrix(vstMat.505.WGCNA.t)))
 
-# choose 8 
-softPower <- 8
-adjacency <- adjacency(vstMat.505.WGCNA.t, power = softPower)
-# Turn adjacency into topological overlap, topological overlap leads to a network distance measure
-dim(adjacency) # 10788 10788
-system.time(TOM <- TOMsimilarity(adjacency)); # Calculation of the topological overlap matrix from a given adjacency matrix. takes 30 mins 
-dissTOM <- 1-TOM
+#perform the multi-dimensional scaling
+geno.mds <- as.data.frame(cmdscale(genDist))
+head(geno.mds) #now we have 2 dimensions
+dim(geno.mds) # 131 2 
+plot(geno.mds)  
 
-# Call the hierarchical clustering fCRction
-geneTree <- hclust(as.dist(dissTOM), method = "average")
-# Plot the resulting clustering tree (dendrogram)
-sizeGrWindow(12,9)
-plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity",
-     labels = FALSE, hang = 0.04)
+load("~/505/output/131_sample/sample_des_revised.Rdata")
+sample_des_revised 
 
-# define modules 
-# We like large modules, so we set the minimum module size relatively high:
-minModuleSize <- 30;
-# Module identification using dynamic tree cut:
-dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
-                             deepSplit <- 2, pamRespectsDendro = FALSE,
-                             minClusterSize = minModuleSize);
-table(dynamicMods)
-table(dynamicMods) %>% length() # 35 modules 
+geno.mds$ID <- rownames(geno.mds)
 
-# Convert numeric lables into colors
-dynamicColors = labels2colors(dynamicMods)
-table(dynamicColors)
-# Plot the dendrogram and colors CRderneath
-sizeGrWindow(8,6)
-plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
-                    dendroLabels = FALSE, hang = 0.03,
-                    addGuide = TRUE, guideHang = 0.05,
-                    main = "Gene dendrogram and module colors")
+geno.mds <- 
+geno.mds %>% 
+  left_join(sample_des_revised, by = c("ID" = "Sample.ID"))  
 
-# merge similar modules
-# Calculate eigengenes 
-MEList <- moduleEigengenes(vstMat.505.WGCNA.t, colors = dynamicColors) # Calculates module eigengenes (1st principal component) of modules in a given single dataset. 
-MEs <- MEList$eigengenes
-# Calculate dissimilarity of module eigengenes
-MEDiss <- 1-cor(MEs);
-# Cluster module eigengenes
-METree <- hclust(as.dist(MEDiss), method = "average");
-# Plot the result
-sizeGrWindow(7, 6)
-plot(METree, main = "Clustering of module eigengenes",
-     xlab = "", sub = "")
+p.mds.WGCNA <- ggplot(data=geno.mds, aes(V1, V2, color=Sample.Description.Origin)) + theme_bw() + 
+  geom_point(size=1) + 
+# p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
+  scale_color_manual(values = c("lightblue", "orange", "red", "green", "blue", "grey", "purple", "pink", "darkred", "black")) + 
+  geom_text_repel(aes(x=V1, y=V2, label=factor(ID))) + 
+  theme(legend.position = c(0.9, 0.2), legend.background = element_rect(fill="lightgrey", size=0.5, linetype="solid"), axis.title.x=element_blank(), axis.title.y =element_blank()) + 
+  labs(title="MDS of 505 collection") + theme(plot.title = element_text(hjust = 0.5, size = 16, face="bold")) 
+p.mds.WGCNA
 
-# merge with correlation > 0.8
-
-MEDissThres = 0.2
-# Plot the cut line into the dendrogram
-plot(METree, main = "Clustering of module eigengenes",
-     xlab = "", sub = "")
-abline(h=MEDissThres, col = "red")
-# Call an automatic merging fCRction
-merge = mergeCloseModules(vstMat.505.WGCNA.t, dynamicColors, cutHeight = MEDissThres, verbose = 3)
-# The merged module colors
-mergedColors = merge$colors
-# Eigengenes of the new merged modules:
-mergedMEs = merge$newMEs
-
-# compare pre and post merge
-
-sizeGrWindow(12, 9)
-#pdf(file = "Plots/geneDendro-3.pdf", wi = 9, he = 6)
-plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
-c("Dynamic Tree Cut", "Merged dynamic"),
-dendroLabels = FALSE, hang = 0.03,
-addGuide = TRUE, guideHang = 0.05)
-#dev.off()
-
-# Rename to moduleColors
-moduleColors = mergedColors
-# Construct numerical labels corresponding to the colors
-colorOrder = c("grey", standardColors(50));
-moduleLabels = match(moduleColors, colorOrder)-1;
-MEs = mergedMEs # 30 modules 
-
-save(MEs, moduleColors, file = "~/505/network_analysis/output/MEs_505_unsigned.Rdata")
+ggsave(p.mds.WGCNA, filename="~/505/network_analysis/output/p.mds.WGCNA.png", height=10, width=10)  
 ```
 
-### signed network 
+### WGCNA module detection 
 ```{r}
 load("~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")  
-vstMat.505.WGCNA <- vstMat.505.batch.corrected.largeVar
-dim(vstMat.505.WGCNA)
-
-# transform expression data 
-head(vstMat.505.WGCNA[,1:6])
-vstMat.505.WGCNA.t <- t(vstMat.505.WGCNA)
-head(vstMat.505.WGCNA.t[,1:6]) 
 
 # soft threshold:  In an unsigned coexpression network, modules correspond to clusters of genes with high absolute correlations. In a signed network, modules correspond to positively correlated genes.
 powers <- c(c(1:10), seq(from = 12, to=30, by=2))
@@ -273,13 +204,12 @@ plot(sft$fitIndices[,1], sft$fitIndices[,5],
      xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
      main = paste("Mean connectivity"))
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red") 
-# For this signed networks, while I didn't get plautea but 12 is the suggested power to use and it gives me high R squared to fit a scale free network model. 
 
-# choose 16
-softPower <- 16
+# choose 14 
+softPower <- 14
 adjacency <- adjacency(vstMat.505.WGCNA.t, power = softPower, type = "signed")
 # Turn adjacency into topological overlap, topological overlap leads to a network distance measure
-dim(adjacency) # 10788 10788
+dim(adjacency) # 13454 13454 
 system.time(TOM <- TOMsimilarity(adjacency)); # Calculation of the topological overlap matrix from a given adjacency matrix. takes 30 mins 
 dissTOM <- 1-TOM
 
@@ -298,7 +228,7 @@ dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM,
                              deepSplit <- 2, pamRespectsDendro = FALSE,
                              minClusterSize = minModuleSize);
 table(dynamicMods)
-table(dynamicMods) %>% length() # 32 modules 
+table(dynamicMods) %>% length() # 43 modules 
 
 # Convert numeric lables into colors
 dynamicColors = labels2colors(dynamicMods)
@@ -352,12 +282,10 @@ moduleColors = mergedColors
 # Construct numerical labels corresponding to the colors
 colorOrder = c("grey", standardColors(50));
 moduleLabels = match(moduleColors, colorOrder)-1;
-MEs = mergedMEs
-moduleColors.signed <- moduleColors
-MEs.signed <- MEs
+MEs = mergedMEs # 39 modules 
 
-save(moduleColors.signed, MEs.signed, file = "~/505/network_analysis/output/MEs_505_signed.Rdata")
-``` 
+save(MEs, moduleColors, file = "~/505/network_analysis/output/MEs_505_signed.Rdata")
+```
 
 ###  phenotype data for 505 
 ```{r}
