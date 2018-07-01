@@ -114,9 +114,40 @@ Based on the above result, for oil related traits, looks like oil and pink modul
 
 ### GO enrichment of different modules 
 ```{r}
-load("~/505/network_analysis/output/MEs_505_signed.Rdata")
-load("~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")  
+source("~/Desktop/Brassica_project/KIAT_RNA_seq/analysis/function_BnRNAseq.R")  
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/MEs_505_signed.Rdata")
+load("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/vstMat.505.batch.corrected.largeVar.Rdata")  
 
+MEs %>% dim() # 131 39 
+moduleColors %>% length() # 13454
+vstMat.505.batch.corrected.largeVar %>% dim()  # 13454   131
+
+# split genes into list based on their module name 
+
+GO.module <- 
+lapply(unique(moduleColors), function(i)
+{ print(i)
+  genes <- vstMat.505.batch.corrected.largeVar[moduleColors == i,] %>% rownames()
+  print(length(genes))
+  tryCatch(
+    GOseq.Bn.ORA(genes), error = function(e) NA
+  )
+  })
+
+names(GO.module) <- unique(moduleColors) 
+GO.module 
+
+# look at what genes do I have for module brown and module pink 
+gene.module <- 
+lapply(unique(moduleColors), function(i)
+{ print(i)
+  genes <- vstMat.505.batch.corrected.largeVar[moduleColors == i,] %>% rownames()
+  })
+
+names(gene.module) <- unique(moduleColors) 
+
+save(gene.module, GO.module, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/module.gene.GO.Rdata")
+grep("BnaA08|BnaC03", gene.module[["brown"]], value = T) 
 
 
 ```
