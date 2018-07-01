@@ -147,10 +147,40 @@ lapply(unique(moduleColors), function(i)
 names(gene.module) <- unique(moduleColors) 
 
 save(gene.module, GO.module, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/module.gene.GO.Rdata")
-grep("BnaA08|BnaC03", gene.module[["brown"]], value = T) 
+```
+
+### check modules with significant correlation with traits, combined with GO enrichment analysis result 
+```{r}
+load("~/505/network_analysis/input/module.gene.GO.Rdata")
+GO.module %>% length()
+gene.module %>% length()
+
+# where are the two FAE1 genes? "BnaA08g11130D" & "BnaC03g65980D"
+
+"BnaA08g11130D" %in% gene.module[["brown"]]
+"BnaC03g65980D" %in% gene.module[["brown"]] # although "brown" is enriched for FA, it is not significantly correlated with FA traits. 
+
+# FA trait
+GO.module[["salmon"]]
+GO.module[["yellow"]]
+GO.module[["turquoise"]]
+GO.module[["darkturquoise"]]  # not that high association 
+
+# flower 
+GO.module[["darkorange"]] 
+
+# leaf, bolt, flower, width 
+GO.module[["darkred"]] # not very high association with traits 
+GO.module[["green"]]
+GO.module[["ivory"]]  
+
+GO.module[!is.na(GO.module)] %>% names()  
+
+### Gene significance and module membership, genes with high GS and MM are more correlated with certain trait 
+
+### summary output of genes with high GS and MM 
 
 
 ```
-
 
 
