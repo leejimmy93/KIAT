@@ -5,4 +5,88 @@ output: html_document
 
 Purpose of this script is to do eigene network analysis 
 
+0) check expression profile of genes in important modules as well as their eigengenes
+```{r}
+load("~/505/network_analysis/input/module.gene.GO.Rdata")
+GO.module %>% length() # 39 
+gene.module %>% length() # 39 
+
+# FA trait
+GO.module[["salmon"]]
+GO.module[["yellow"]]
+GO.module[["turquoise"]]
+GO.module[["darkturquoise"]]  # not that high association 
+
+# flower 
+GO.module[["darkorange"]] 
+
+# leaf, bolt, flower, width 
+GO.module[["darkred"]] # not very high association with traits 
+GO.module[["green"]]
+GO.module[["ivory"]]  
+
+load("~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")  
+vstMat.505.batch.corrected.largeVar %>% dim() # 13454   131
+
+load("~/505/network_analysis/output/MEs_505_signed.Rdata")
+MEs$ID <-colnames(vstMat.505.batch.corrected.largeVar)
+
+sig_modules <- c("salmon", "yellow", "turquoise", "darkturquoise", "darkorange","darkred", "green", "ivory")
+
+for(i in sig_modules){ 
+
+filename <- paste("~/505/network_analysis/output/module_gene_", i, ".png",  sep = "")
+png(filename = filename, width=16, height=9, units="in", res=300)
+
+vstMat.505.batch.corrected.largeVar[moduleColors == i,] %>% 
+  pheatmap(  
+     cluster_rows = F, 
+     cluster_cols = F,
+     clustering_method = "average", 
+     # cellheight = 10,
+     # cellwidth = 5,
+     border_color=NA, 
+     fontsize_col = 8, 
+     legend = T, 
+     main = i, 
+     show_rownames = F)
+
+dev.off()
+}
+
+sig_modules.eigene <- paste("ME", sig_modules, sep = "")
+
+expression.eigengene <- 
+lapply(sig_modules.eigene, function(i){
+MEs %>% melt() %>% 
+  filter(variable == i) %>% 
+  ggplot() + 
+  geom_bar(aes(x = ID, y = value, fill = value < 0), stat = "identity") + 
+  scale_fill_manual(values = c("TRUE" = "lightblue", "FALSE" = "orange")) + 
+  theme(legend.position = "none") + 
+  labs(x = "", title = i)
+} 
+)
+
+plots <- expression.eigengene
+
+paths <- stringr::str_c(sig_modules.eigene, ".pdf") 
+paths 
+pwalk(list(paths, plots), ggsave, path = "~/505/network_analysis/output/", width = 15, height = 7) # save on whitney   
+```
+
+1) GWAS on eigenegenes genes of important modules 
+```{r}
+
+```
+
+2) GWAS on all traits 
+```{r}
+
+```
+
+3) look for overlaps between GWAS signals for eigene genes and traits 
+```{r}
+
+```
 
