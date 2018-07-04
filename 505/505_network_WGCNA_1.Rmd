@@ -395,7 +395,7 @@ pheatmap(as.matrix(t(vstMat.505.unsigned)),
 )  
 ```
 
-# check to see the three genes I found from F2, BnaA08g12780D, BnaA08g11060D, and BnaA08g11140D 
+### check to see the three genes I found from F2, BnaA08g12780D, BnaA08g11060D, and BnaA08g11140D 
 ```{r}
 # BnaA08g11060D is not expressed at all 
 read_count_505 <- read.table("~/505/data/late_silique/read.count.505.tsv", header=T, row.names=1)
