@@ -122,6 +122,7 @@ Geno.View.output=FALSE,
 PCA.View.output=FALSE,
 Model.selection = TRUE
 )  
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/505/GWAS_eigengene.R 
 ```
 
 ### 2) 
@@ -130,46 +131,161 @@ GWAS on all traits
 ```{r}
 load("~/505/network_analysis/output/pheno_data_505.Rdata")
 
+# genotype data
+geno_505_hmp <- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.hmp.txt", head=FALSE)
+geno_505_hmp$V3 <- as.numeric(as.factor(geno_505_hmp$V3))
+geno_505_hmp[1,3] <- "chrom" 
+
+colnames(pheno_data_505) 
+geno_505_hmp[1,] 
+
+# make ID matching file 
+ID.2 <- gsub("\\_|\\-", "", geno_505_hmp[1,])
+ID.2 <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", ID.2)
+
+ID.matching <- data.frame(ID = as.character(geno_505_hmp[1,12:142]),
+                          ID.2 = ID.2[12:142])
+  
+pheno_data_505 <- 
+pheno_data_505 %>% 
+  left_join(ID.matching, by=c("ID" = "ID.2")) %>% 
+  mutate(Taxa = ID.y) %>% 
+  dplyr::select(Taxa, Oil_content_year2:bolting_50_cat_year1) 
+
+myY <- pheno_data_505 
+myG <- geno_505_hmp 
+
+# split file to ten pieces 
+myY <- 
+lapply(0:11, function(i) {
+  if(i < 11){
+  index <- c(1, i*5+(2:6))
+  myY[,index]
+  } else {
+    myY[,c(1,57)]
+  }
+}) 
+
+save(myY, myG, file = "~/505/network_analysis/output/GWAS_trait_input.Rdata")
+
+# below run on whitney 
+
 library(multtest)
 library(gplots)
 library(genetics)
 library(EMMREML)
 library(compiler) #this library is already installed in R
 library("scatterplot3d")
+library(snowfall)
 
 source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("http://zzlab.net/GAPIT/emma.txt")
 
-setwd("~/505/network_analysis/output/GWAS_trait/")
+load("~/505/network_analysis/output/GWAS_trait_input.Rdata")
+setwd("~/505/network_analysis/output/GWAS_traits/")
 
-# genotype data
-geno_505_hmp <- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.hmp.txt", head=FALSE)
-geno_505_hmp$V3 <- as.numeric(as.factor(geno_505_hmp$V3))
-geno_505_hmp[1,3] <- "chrom"
-
-colnames(pheno_data_505) 
-geno_505_hmp[1,] 
-
-geno_505_hmp[1,] <- gsub("\\_|\\-", "", geno_505_hmp[1,])
-geno_505_hmp[1,] <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", geno_505_hmp[1,])
-
-colnames(pheno_data_505)[1] <- "Taxa"
-
-myY <- pheno_data_505 
-myG <- geno_505_hmp 
-
-# run GAPIT
+# run GAPIT 
 myGAPIT <- GAPIT(
-Y=myY,
-G=myG,
-PCA.total=0,
-Geno.View.output=FALSE,
-PCA.View.output=FALSE,
-Model.selection = TRUE
-)    
+    Y=myY,
+    G=myG,
+    PCA.total=0,
+    Geno.View.output=FALSE,
+    PCA.View.output=FALSE,
+    Model.selection = TRUE
+    ) 
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/505/GWAS_trait_1.R ... GWAS_trait_12.R
 ```
 
-3) look for overlaps between GWAS signals for eigene genes and traits 
+### 3) 
+
+look for overlaps between GWAS signals for eigen genes and traits, I will only check overlaps of single SNPs, because if a SNP is significant, it should be detected no matter what.  
+```{r}
+# for each eigen gene, extract GWAS signal, store in list 
+# load data 
+path <- "~/505/network_analysis/output/GWAS_eigengene/"
+files <- list.files(path=path, pattern = "*GWAS.Results.csv") # Taxa is MEturquoise, I made a mistake when rename it during GWAS 
+setwd(path)
+GWAS_eigengene <- lapply(files, function(x) read.csv(x)) 
+
+files <- gsub("GAPIT.MLM.", "", files)
+files <- gsub(".GWAS.Results.csv", "", files)
+
+names(GWAS_eigengene) <- files
+
+GWAS_eigengene.sig <- 
+lapply(names(GWAS_eigengene), function(i) 
+  GWAS_eigengene[[i]] %>% 
+    filter(P.value < 0.00001))
+
+names(GWAS_eigengene.sig) <- files
+names(GWAS_eigengene.sig)[39] <- "MEturquoise" 
+
+# for each trait, extract GWAS signal, store in list 
+path <- "~/505/network_analysis/output/GWAS_traits/"
+files <- list.files(path=path, pattern = "*GWAS.Results.csv") # Taxa is MEturquoise, I made a mistake when rename it during GWAS 
+setwd(path)
+GWAS_trait <- lapply(files, function(x) read.csv(x)) 
+
+files <- gsub("GAPIT.MLM.", "", files)
+files <- gsub(".GWAS.Results.csv", "", files)
+
+names(GWAS_trait) <- files
+
+GWAS_trait.sig <- 
+lapply(names(GWAS_trait), function(i) 
+  GWAS_trait[[i]] %>% 
+    filter(P.value < 0.00001))
+
+names(GWAS_trait.sig) <- files
+
+sapply(names(GWAS_trait.sig), function(i) dim(GWAS_trait.sig))
+
+# pairwise comparison between eigen gene and trait 
+GWAS_eigengene_trait_overlap <- 
+lapply(names(GWAS_eigengene.sig), function(i){
+  lapply(names(GWAS_trait.sig), function(j){
+    test <- 
+    GWAS_eigengene.sig[[i]] %>% 
+      semi_join(GWAS_trait.sig[[j]], by = "SNP")
+    if(nrow(test) != 0){ 
+      return(test)} 
+  })
+}) 
+
+GWAS_eigengene_trait_overlap.name <-
+sapply(names(GWAS_eigengene.sig), function(i){
+  sapply(names(GWAS_trait.sig), function(j){
+    paste(i, j, sep = "_")
+  })
+}) 
+
+library(rlist)
+GWAS_eigengene_trait_overlap <- flatten(GWAS_eigengene_trait_overlap) 
+names(GWAS_eigengene_trait_overlap) <- GWAS_eigengene_trait_overlap.name
+
+# extract only the non-empty item and know their identity (eigen gene and trait)
+GWAS_eigengene_trait_overlap <- 
+GWAS_eigengene_trait_overlap[vapply(GWAS_eigengene_trait_overlap, Negate(is.null), NA)] 
+
+# turn this into a dataframe 
+GWAS_eigengene_trait_overlap <- 
+lapply(names(GWAS_eigengene_trait_overlap), function(i){ 
+  GWAS_eigengene_trait_overlap[[i]]$class <- i
+  return(GWAS_eigengene_trait_overlap[[i]])
+})
+
+GWAS_eigengene_trait_overlap <- do.call(rbind, GWAS_eigengene_trait_overlap)
+GWAS_eigengene_trait_overlap$class %>% unique() 
+
+save(GWAS_eigengene_trait_overlap, file = "~/505/network_analysis/output/GWAS_eigengene_trait_overlap.Rdata")
+```
+
+### 4) 
+
+More, what is the correlation between modules and traits with overlapped significant SNPs? If there is high correlation, it suggest that genes in or close to the SNP regions affect expression of that module genes as well as the trait, we can make hypothesis on the potential regulatory network. 
+
+a) linkage of genes controling module genes expression and trait; b) pleotrophic effect of gene(s) for trait and module genes   
+
 ```{r}
 
 ```

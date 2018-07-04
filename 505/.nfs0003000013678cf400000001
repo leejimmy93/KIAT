@@ -1,0 +1,33 @@
+load("~/505/network_analysis/output/GWAS_trait_input.Rdata")
+setwd("~/505/network_analysis/output/GWAS_traits/")
+
+sfInit(parallel = TRUE, cpus = 10)
+
+sfLibrary(multtest)
+sfLibrary(gplots)
+sfLibrary(genetics)
+sfLibrary(EMMREML)
+sfLibrary(compiler)
+sfLibrary("scatterplot3d")
+sfSource("http://zzlab.net/GAPIT/gapit_functions.txt")
+sfSource("http://zzlab.net/GAPIT/emma.txt")
+
+sfExport(myY)
+sfExport(myG)
+
+# run GAPIT
+
+test <- 
+sfLapply(colnames(myY[2:57]), function(trait) {
+  myY <- myY[,c("Taxa", trait)]
+  myGAPIT <- GAPIT(
+    Y=myY,
+    G=myG,
+    PCA.total=0,
+    Geno.View.output=FALSE,
+    PCA.View.output=FALSE,
+    Model.selection = TRUE
+    )
+})
+
+sfStop() 
