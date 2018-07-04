@@ -160,6 +160,13 @@ gene.module %>% length()
 "BnaA08g11130D" %in% gene.module[["brown"]]
 "BnaC03g65980D" %in% gene.module[["brown"]] # although "brown" is enriched for FA, it is not significantly correlated with FA traits. 
 
+"BnaA08g11060D" %in% rownames(vstMat.505.batch.corrected.largeVar) # not detected 
+"BnaA08g11140D" %in% rownames(vstMat.505.batch.corrected.largeVar) # not detected 
+"BnaA08g12780D" %in% rownames(vstMat.505.batch.corrected.largeVar) # not detected
+"BnaC04g05920D" %in% rownames(vstMat.505.batch.corrected.largeVar) 
+
+rownames(vstMat.505.batch.corrected) 
+
 # FA trait
 GO.module[["salmon"]]
 GO.module[["yellow"]]

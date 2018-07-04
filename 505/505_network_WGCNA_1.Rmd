@@ -75,7 +75,6 @@ test2 %>%
   ggplot() + 
   geom_point(aes(x = V1, y= V2, color = as.factor(batch))) # looks like there is batch effect on PC2
 
-
 # correct batch effect 
 vstMat.505.batch.corrected <- removeBatchEffect(vstMat.505, batch = batch_info$batch) 
 test1 <- as.matrix(dist(t(vstMat.505.batch.corrected)))  
@@ -105,13 +104,15 @@ vstMat.505.batch.corrected$CV <- as.numeric(gene.CV)
 summary(vstMat.505.batch.corrected$CV) 
 hist(vstMat.505.batch.corrected$CV, breaks = 30)
 
+save(vstMat.505.batch.corrected, file = "~/505/network_analysis/output/vstMat.505.batch.corrected.Rdata")
+
 vstMat.505.batch.corrected.largeVar<-
   vstMat.505.batch.corrected %>% 
   filter(CV>15) %>% # only the last quantile was left for co-expression analysis 
   dplyr::select(-CV) 
 
-rownames(vstMat.505.batch.corrected.largeVar) <- 
-  rownames(vstMat.505.batch.corrected[vstMat.505.batch.corrected$CV >15,]) # keep the last quantile & make sure include the two FAE1 genes "BnaA08g11130D" & "BnaC03g65980D"
+rownames(vstMat.505.batch.corrected.largeVar) <- rownames(vstMat.505.batch.corrected[vstMat.505.batch.corrected$CV >15,]) # keep the last quantile & make sure include the two FAE1 genes "BnaA08g11130D" & "BnaC03g65980D"
+
 
 dim(vstMat.505.batch.corrected.largeVar) # 13454   131  
 
@@ -394,12 +395,33 @@ pheatmap(as.matrix(t(vstMat.505.unsigned)),
 )  
 ```
 
+# check to see the three genes I found from F2, BnaA08g12780D, BnaA08g11060D, and BnaA08g11140D 
+```{r}
+# BnaA08g11060D is not expressed at all 
+read_count_505 <- read.table("~/505/data/late_silique/read.count.505.tsv", header=T, row.names=1)
+read_count_505["BnaA08g11140D",]
 
+# BnaA08g11060D and BnaA08g12780D were expressed but not varied a lot among lines 
+load("~/505/network_analysis/output/vstMat.505.batch.corrected.Rdata")
+load("~/505/network_analysis/output/pheno_data_505.Rdata")
 
+vstMat.505.batch.corrected["BnaA08g12780D",]$CV
+vstMat.505.batch.corrected["BnaA08g11060D",]$CV 
 
+test1 <- 
+vstMat.505.batch.corrected [c("BnaA08g12780D", "BnaA08g11060D"),-15] %>% 
+  dplyr::select(-CV) %>% 
+  t() %>% as.data.frame()
 
+test1$ID <- rownames(test1)
 
+tmp <- 
+test1 %>% 
+  left_join(pheno_data_505)
 
+cor(tmp$BnaA08g12780D, tmp$Erucic_acid_year1, use = "pairwise.complete.obs") # 0.240422 this is not very high correlation compared to what we found from network analysis 
+cor(tmp$BnaA08g11060D, tmp$Erucic_acid_year1, use = "pairwise.complete.obs")  
+```
 
 
 

@@ -284,9 +284,41 @@ save(GWAS_eigengene_trait_overlap, file = "~/505/network_analysis/output/GWAS_ei
 
 More, what is the correlation between modules and traits with overlapped significant SNPs? If there is high correlation, it suggest that genes in or close to the SNP regions affect expression of that module genes as well as the trait, we can make hypothesis on the potential regulatory network. 
 
-a) linkage of genes controling module genes expression and trait; b) pleotrophic effect of gene(s) for trait and module genes   
+a) linkage of genes controling module genes expression and trait; b) pleotrophic effect of gene(s) for trait and module genes; c) SNP variation control of the expression of gene modules, gene module expression control trait    
 
 ```{r}
+load("~/505/network_analysis/output/GWAS_eigengene_trait_overlap.Rdata")
+GWAS_eigengene_trait_overlap$class %>% unique() 
 
+# important module and trait pairs 
+# "MEblack_Pubescence.of.blade_MG_year1", "MEbrown_germ.rate_KR_GH_year1", "MEbrown_leafn_July_03_04_MG_year1", "MEdarkolivegreen_Development.of.lobes_MG_year1", "MEdarkturquoise_Development.of.lobes_MG_year1", "MElightcyan_Heptadecanoic_acid_year2", "MEmagenta_bolting_height_12_15_KR_GH_year1", "MEmidnightblue_Erucic_acid_year1", "MEmidnightblue_Erucic_acid_year2", "MEmidnightblue_plant_length_08_07_MG_year1", "MEmidnightblue_plant_width_bottom_08_07_MG_year1", "MEorange_Behenic_acid_year2", "MEorange_Erucic_acid_year1", "MEorange_Behenic_acid_year2", "MEorange_Indentation.of.margin_MG_year1", "MEorange_Oleic_acid_year1", "MEorange_Oleic_acid_year2", "MEturquoise_plant_width_bottom_08_07_MG_year1", "MEturquoise_Pubescence.of.blade_MG_year1"
+
+load("~/505/network_analysis/input/module.gene.GO.Rdata")
+GO.module %>% length()
+names(GO.module)
+GO.module[["black"]] 
+GO.module[["brown"]] # oxidation, FA, response to water 
+GO.module[["darkolivegreen"]]
+GO.module[["darkturquoise"]] # defense response
+GO.module[["lightcyan"]] # response to stress, oxidation reduction process
+GO.module[["magenta"]]
+GO.module[["midnightblue"]]
+GO.module[["orange"]] 
+GO.module[["turquoise"]] # defense response, biotic response, and lipid synthetic process  
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
