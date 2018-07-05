@@ -420,7 +420,7 @@ test1 %>%
   left_join(pheno_data_505)
 
 cor(tmp$BnaA08g12780D, tmp$Erucic_acid_year1, use = "pairwise.complete.obs") # 0.240422 this is not very high correlation compared to what we found from network analysis 
-cor(tmp$BnaA08g11060D, tmp$Erucic_acid_year1, use = "pairwise.complete.obs")  
+cor(tmp$BnaA08g11060D, tmp$Erucic_acid_year1, use = "pairwise.complete.obs") # -0.1287613 
 ```
 
 

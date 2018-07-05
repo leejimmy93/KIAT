@@ -175,8 +175,7 @@ library(gplots)
 library(genetics)
 library(EMMREML)
 library(compiler) #this library is already installed in R
-library("scatterplot3d")
-library(snowfall)
+library("scatterplot3d") 
 
 source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("http://zzlab.net/GAPIT/emma.txt")
@@ -218,7 +217,7 @@ lapply(names(GWAS_eigengene), function(i)
     filter(P.value < 0.00001))
 
 names(GWAS_eigengene.sig) <- files
-names(GWAS_eigengene.sig)[39] <- "MEturquoise" 
+names(GWAS_eigengene.sig)[39] <- "MEturquoise"   
 
 # for each trait, extract GWAS signal, store in list 
 path <- "~/505/network_analysis/output/GWAS_traits/"
@@ -236,7 +235,7 @@ lapply(names(GWAS_trait), function(i)
   GWAS_trait[[i]] %>% 
     filter(P.value < 0.00001))
 
-names(GWAS_trait.sig) <- files
+names(GWAS_trait.sig) <- files 
 
 sapply(names(GWAS_trait.sig), function(i) dim(GWAS_trait.sig))
 
@@ -259,7 +258,7 @@ sapply(names(GWAS_eigengene.sig), function(i){
   })
 }) 
 
-library(rlist)
+library(rlist) 
 GWAS_eigengene_trait_overlap <- flatten(GWAS_eigengene_trait_overlap) 
 names(GWAS_eigengene_trait_overlap) <- GWAS_eigengene_trait_overlap.name
 
@@ -278,11 +277,14 @@ GWAS_eigengene_trait_overlap <- do.call(rbind, GWAS_eigengene_trait_overlap)
 GWAS_eigengene_trait_overlap$class %>% unique() 
 
 save(GWAS_eigengene_trait_overlap, file = "~/505/network_analysis/output/GWAS_eigengene_trait_overlap.Rdata")
+save(GWAS_eigengene.sig, GWAS_trait.sig, file = "~/505/network_analysis/output/GWAS_eigengene_trait_sig.Rdata")
 ```
 
 ### 4) 
 
 More, what is the correlation between modules and traits with overlapped significant SNPs? If there is high correlation, it suggest that genes in or close to the SNP regions affect expression of that module genes as well as the trait, we can make hypothesis on the potential regulatory network. 
+
+ideally, I want the several modules that I picked in (2) have overlapped SNPs with their correlated traits 
 
 a) linkage of genes controling module genes expression and trait; b) pleotrophic effect of gene(s) for trait and module genes; c) SNP variation control of the expression of gene modules, gene module expression control trait    
 
@@ -307,16 +309,20 @@ GO.module[["orange"]]
 GO.module[["turquoise"]] # defense response, biotic response, and lipid synthetic process  
 ```
 
+### focus on important modules
+
+look for genes in the flanking region of those important module and traits, then look for overlaps 
+
+```{r}
+# 1.2 Gb B.napus genome, 19 chromosomes, all A sub chromosome has ~20Mb length, C sub genome has ~40-60Mb length, the rest are scaffold not anchored to chromosomes
+
+# the flanking region should be decided based on LD, LD decayed 250Kb in Arabidopsis, so I decided to use 250Kb as the flanking region size 
+
+load("~/505/network_analysis/output/GWAS_eigengene_trait_sig.Rdata")
 
 
 
-
-
-
-
-
-
-
+```
 
 
 

@@ -181,13 +181,86 @@ GO.module[["darkred"]] # not very high association with traits
 GO.module[["green"]]
 GO.module[["ivory"]]  
 
-GO.module[!is.na(GO.module)] %>% names()  
+GO.module[!is.na(GO.module)] %>% names()   
+```
 
-### Gene significance and module membership, genes with high GS and MM are more correlated with certain trait 
+### Gene significance and module membership
 
-### summary output of genes with high GS and MM 
+genes with high GS and MM are more correlated with certain trait through expression, eQTL? GS is defined as the correlation between the gene and the trait, MM as the correlation beteween the module eigengene and the module gene expression profile. 
+
+```{r}
+load("~/505/network_analysis/output/blups.505.Rdata")
+load("~/505/network_analysis/output/vstMat.505.WGCNA.t.Rdata")
+load("~/505/network_analysis/output/MEs_505_signed.Rdata") 
+
+modNames = substring(names(MEs), 3)
+
+# calculate gene membership and membership significance  
+geneModuleMembership = as.data.frame(cor(vstMat.505.WGCNA.t, MEs, use = "p"));
+MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples = nrow(vstMat.505.WGCNA.t)))
+names(geneModuleMembership) = paste("MM", modNames, sep="") 
+names(MMPvalue) = paste("p.MM", modNames, sep="")
+
+# calculate gene significance and significance P-value 
+geneTraitSignificance <- 
+  lapply(colnames(blups.505), function(i) {
+  tmp <- as.data.frame(cor(vstMat.505.WGCNA.t, blups.505[,i], use = "p"))
+  names(tmp) = paste("GS.", i, sep="")
+  tmp
+}) 
+
+names(geneTraitSignificance) <- colnames(blups.505)
+
+GSPvalue <- 
+  lapply(names(geneTraitSignificance), function(i) {
+  tmp <- as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance[[i]]), nSamples = nrow(vstMat.505.WGCNA.t)))
+  names(tmp) = paste("p.GS.", i, sep="")   
+  tmp 
+})    
+
+# identify genes with high GS and MM for specific modules, which are highly correlated with certain trait, these genes might be key player for specific trait, eQTL...  
+
+load("~/Reference/B.napus/BnapusAnnotation.Rdata")  
+load("~/Reference/B.napus/napus_GO_combined.Rdata") 
+BnapusAnnotation <- 
+BnapusAnnotation %>% 
+  left_join(napus_GO_combined, by=c("name"="gene_ID")) # use annotation file from B.napus 
+
+########################### down to here, start from here tomorrow. 
+### summary output of genes with high GS and MM: combine module correlation information and gene annotation to check the result 
+
+# import B.napus annotation file 
+probes = colnames(vstMat.505.WGCNA.t)
+probes2annot = match(probes, BnapusAnnotation$name)
+# The following is the number or probes without annotation:
+sum(is.na(probes2annot))
+# Should return 0. 
 
 
+# Create the starting data frame
+geneInfo0 = data.frame(substanceBXH = probes,
+                        geneSymbol = BnapusAnnotation$name[probes2annot],
+                        LocusLinkID = BnapusAnnotation$At_symbol[probes2annot],
+                        moduleColor = moduleColors,
+                        geneTraitSignificance,
+                        GSPvalue) 
+# Order modules by their significance for weight
+modOrder = order(-abs(cor(MEs, as.numeric(blups.505$Erucic_acid_year1), use = "p"))); 
+# Add module membership information in the chosen order
+
+for (mod in 1:ncol(geneModuleMembership))
+{
+  oldNames = names(geneInfo0)
+  geneInfo0 = data.frame(geneInfo0, geneModuleMembership[, modOrder[mod]],
+  MMPvalue[, modOrder[mod]]);
+  names(geneInfo0) = c(oldNames, paste("MM.", modNames[modOrder[mod]], sep=""),
+  paste("p.MM.", modNames[modOrder[mod]], sep=""))
+}
+
+# Order the genes in the geneInfo variable first by module color, then by geneTraitSignificance
+geneOrder = order(geneInfo0$moduleColor, -abs(geneInfo0$GS.Erucic_acid));
+geneInfo = geneInfo0[geneOrder, ] 
+geneInfo %>% colnames()    
 ```
 
 
