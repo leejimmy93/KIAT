@@ -1,0 +1,47 @@
+---
+title: "505_network_WGCNA_4"
+output: html_document
+---
+
+purpose of this script is to combine GWAS analysis, WGCNA module-trait correlation, and module gene significance result to come up with biological interpretation
+
+### overlapped GWAS signal for trait-module pairs, which with interesting GO term enriched in that module 
+
+goal: propose SNP/QTL/gene -- gene expression/biological pathway/GO term (module) -- phenotypic trait connection 
+
+```{r}
+load("~/505/network_analysis/output/GWAS_eigengene_trait_overlap_gene.Rdata")
+
+GWAS_eigengene_trait_overlap_gene$class %>% unique() %>% length() # 540 
+GWAS_eigengene_trait_overlap_gene$class %>% unique() 
+
+# important modules based on heatmap 
+grep("MEyellow", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) # Erucic acid/ Oleic acid 
+grep("MEsalmon", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) # Erucic acid/ Oleic acid 
+grep("MEturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
+grep("MEdarkturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T)
+grep("MEdarkorange_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) # flower eQTL, don't need to pay much attention to this 
+grep("MEdarkred_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) 
+grep("MEgreen_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) 
+grep("MEivory_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) 
+
+# 
+load("~/505/network_analysis/output/blups.cor.5.Rdata")
+load("~/505/network_analysis/output/geneTraitSignificance.final.Rdata")
+
+blups.cor.5 %>% 
+  as.data.frame() %>% 
+  dplyr::select(MEyellow, MEsalmon, MEturquoise, MEdarkturquoise, MEdarkred, MEgreen, MEivory)
+
+GWAS_eigengene_trait_overlap_gene %>% 
+  filter(class == "MEturquoise_Erucic_acid_year2")
+
+GWAS_eigengene_trait_overlap_gene %>% 
+  filter(class == "MEdarkturquoise_Erucic_acid_year1")  
+
+grep("A10", GWAS_trait.sig.genes[["Erucic_acid_year1"]]$names, value = T) 
+grep("A10", GWAS_trait.sig[["Erucic_acid_year1"]]$SNP, value = T)    
+```
+
+
+

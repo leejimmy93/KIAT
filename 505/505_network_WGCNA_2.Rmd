@@ -76,6 +76,8 @@ dev.off()
 blups.cor.5 <- blups.cor.sig  
 dim(blups.cor.5) # 56 39
 
+save(blups.cor.5, file = "~/505/network_analysis/output/blups.cor.5.Rdata")
+
 cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait 
   maxx = max(x,na.rm=TRUE) 
   minx = min(x,na.rm=TRUE)
@@ -174,7 +176,7 @@ GO.module[["turquoise"]]
 GO.module[["darkturquoise"]]  # not that high association 
 
 # flower 
-GO.module[["darkorange"]] 
+GO.module[["darkorange"]] # flower trait seems have high correlation with every module because flower QTL is one of the trans-eQTL hotspot, which regulate expression of many genes across the genome 
 
 # leaf, bolt, flower, width 
 GO.module[["darkred"]] # not very high association with traits 
@@ -277,5 +279,9 @@ cor(vstMat.505.WGCNA.t[,"BnaC08g11070D"], pheno_data_505$Erucic_acid_year2) # co
 save(geneTraitSignificance.final, file = "~/505/network_analysis/output/geneTraitSignificance.final.Rdata")
 ```
 
+### 
+```{r}
+
+```
 
 

@@ -319,9 +319,75 @@ look for genes in the flanking region of those important module and traits, then
 # the flanking region should be decided based on LD, LD decayed 250Kb in Arabidopsis, so I decided to use 250Kb as the flanking region size 
 
 load("~/505/network_analysis/output/GWAS_eigengene_trait_sig.Rdata")
+GWAS_eigengene.sig %>% length()
+GWAS_trait.sig %>% length()
+names(GWAS_trait.sig)
+names(GWAS_eigengene.sig)
 
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+gff.mRNA$CHROM <- gff.mRNA$CHROM %>% as.factor() %>% as.numeric()
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
 
+# for all the traits, find candidate genes 
+GWAS_trait.sig.genes <- 
+lapply(names(GWAS_trait.sig), function(i) {
+  SNP <- GRanges(seqnames = Rle(GWAS_trait.sig[[i]]$Chromosome), ranges = IRanges(start = ifelse(GWAS_trait.sig[[i]]$Position - 250000 >0, GWAS_trait.sig[[i]]$Position - 250000,0), end = GWAS_trait.sig[[i]]$Position + 250000), ID = paste(GWAS_trait.sig[[i]]$Chromosome, GWAS_trait.sig[[i]]$Position, sep = "_"))
+  SNP_gene <- mergeByOverlaps(SNP, genes) %>% as.data.frame %>%
+    dplyr::select("SNP.ID", "genes.seqnames", "SNP.end", "names")
+})
 
+names(GWAS_trait.sig.genes) <- names(GWAS_trait.sig)
+
+# for all the module, find candidate genes 
+GWAS_eigengene.sig.genes <- 
+lapply(names(GWAS_eigengene.sig), function(i) {
+  SNP <- GRanges(seqnames = Rle(GWAS_eigengene.sig[[i]]$Chromosome), ranges = IRanges(start = ifelse(GWAS_eigengene.sig[[i]]$Position - 250000 >0, GWAS_eigengene.sig[[i]]$Position - 250000,0), end = GWAS_eigengene.sig[[i]]$Position + 250000), ID = paste(GWAS_eigengene.sig[[i]]$Chromosome, GWAS_eigengene.sig[[i]]$Position, sep = "_"))
+  SNP_gene <- mergeByOverlaps(SNP, genes) %>% as.data.frame %>%
+    dplyr::select("SNP.ID", "genes.seqnames", "SNP.end", "names")
+})
+
+names(GWAS_eigengene.sig.genes) <- names(GWAS_eigengene.sig)
+
+# look for overlaps 
+# pairwise comparison between eigen gene and trait 
+GWAS_eigengene_trait_overlap_gene <- 
+lapply(names(GWAS_eigengene.sig.genes), function(i){
+  lapply(names(GWAS_trait.sig.genes), function(j){
+    test <- 
+    GWAS_eigengene.sig.genes[[i]] %>% 
+      semi_join(GWAS_trait.sig.genes[[j]], by = "names")
+    if(nrow(test) != 0){ 
+      return(test)} 
+  })
+}) 
+
+GWAS_eigengene_trait_overlap_gene.name <-
+sapply(names(GWAS_eigengene.sig.genes), function(i){
+  sapply(names(GWAS_trait.sig.genes), function(j){
+    paste(i, j, sep = "_")
+  })
+}) 
+
+GWAS_eigengene_trait_overlap_gene <- flatten(GWAS_eigengene_trait_overlap_gene) 
+names(GWAS_eigengene_trait_overlap_gene) <- GWAS_eigengene_trait_overlap_gene.name
+
+# extract only the non-empty item and know their identity (eigen gene and trait)
+GWAS_eigengene_trait_overlap_gene <- 
+GWAS_eigengene_trait_overlap_gene[vapply(GWAS_eigengene_trait_overlap_gene, Negate(is.null), NA)] 
+
+# turn this into a dataframe 
+GWAS_eigengene_trait_overlap_gene <- 
+lapply(names(GWAS_eigengene_trait_overlap_gene), function(i){ 
+  GWAS_eigengene_trait_overlap_gene[[i]]$class <- i
+  return(GWAS_eigengene_trait_overlap_gene[[i]])
+})
+
+GWAS_eigengene_trait_overlap_gene <- do.call(rbind, GWAS_eigengene_trait_overlap_gene)
+GWAS_eigengene_trait_overlap_gene$class %>% unique() %>% length() # 540 
+GWAS_eigengene_trait_overlap_gene$class %>% unique() 
+save(GWAS_eigengene_trait_overlap_gene, file = "~/505/network_analysis/output/GWAS_eigengene_trait_overlap_gene.Rdata") 
 ```
 
 
