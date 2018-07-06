@@ -9,6 +9,7 @@ purpose of this script is to combine GWAS analysis, WGCNA module-trait correlati
 
 goal: propose SNP/QTL/gene -- gene expression/biological pathway/GO term (module) -- phenotypic trait connection 
 
+### load data and take a look 
 ```{r}
 load("~/505/network_analysis/output/GWAS_eigengene_trait_overlap_gene.Rdata")
 
@@ -25,7 +26,6 @@ grep("MEdarkred_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value =
 grep("MEgreen_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) 
 grep("MEivory_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) 
 
-# 
 load("~/505/network_analysis/output/blups.cor.5.Rdata")
 load("~/505/network_analysis/output/geneTraitSignificance.final.Rdata")
 
@@ -41,7 +41,91 @@ GWAS_eigengene_trait_overlap_gene %>%
 
 grep("A10", GWAS_trait.sig.genes[["Erucic_acid_year1"]]$names, value = T) 
 grep("A10", GWAS_trait.sig[["Erucic_acid_year1"]]$SNP, value = T)    
+
+load("~/505/network_analysis/input/module.gene.GO.Rdata")
+load("~/505/network_analysis/output/GWAS_eigengene.Rdata")
+load("~/505/network_analysis/output/GWAS_trait.Rdata")
 ```
+
+### propose network for trait regulated by salmon and yellow, Erucic acid and Oleic acid 
+```{r}
+grep("MEyellow_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) # Erucic acid/ Oleic acid 
+grep("MEsalmon_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) # Erucic acid/ Oleic acid 
+GO.module[["yellow"]]
+GO.module[["salmon"]] 
+```
+
+salmon and yellow don't have overlapped QTL/SNP/gene with FA trait, so the hypothesis is that FA and defense can affect each other, correlation. 
+
+### turquoise, doesn't seem very good module, GWAS result looks messy  
+```{r}
+GO.module[["turquoise"]]
+grep("MEturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
+# this module has high correlation with both FA and plant growth, also has overlapped QTL with many trait, 24 
+
+tmp <- grep("MEturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) 
+tmp <- grep("acid", tmp, value = T) 
+turquoise_FA <- 
+GWAS_eigengene_trait_overlap_gene[GWAS_eigengene_trait_overlap_gene$class %in% tmp,] 
+
+GWAS_eigengene.sig[["MEturquoise"]] 
+
+# plot it out 
+colnames(GWAS_eigengene[["MEturquoise"]])[1:4] <- c("SNP", "CHR", "BP", "P")
+manhattan(GWAS_eigengene[["MEturquoise"]], main = "", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+```
+
+### darkturquoise, useful 
+```{r}
+GO.module[["darkturquoise"]]
+grep("MEdarkturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
+
+colnames(GWAS_eigengene[["MEdarkturquoise"]] )[1:4] <- c("SNP", "CHR", "BP", "P")
+manhattan(GWAS_eigengene[["MEdarkturquoise"]], main = "", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F) 
+```
+
+### darkred, dosn't look quite good, messy GWAS result  
+```{r}
+GO.module[["darkred"]]
+grep("MEdarkred_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
+
+colnames(GWAS_eigengene[["MEdarkred"]] )[1:4] <- c("SNP", "CHR", "BP", "P")
+manhattan(GWAS_eigengene[["MEdarkred"]], main = "", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)  
+```
+
+### green, good result!  
+```{r}
+GO.module[["green"]]
+grep("MEgreen_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
+
+colnames(GWAS_eigengene[["MEgreen"]] )[1:4] <- c("SNP", "CHR", "BP", "P")
+manhattan(GWAS_eigengene[["MEgreen"]], main = "", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)   
+
+GWAS_eigengene_trait_overlap_gene %>% 
+  filter(class == "MEgreen_bolting_height_12_15_KR_GH_year1") %>% 
+  dplyr::select(genes.seqnames) %>% 
+  unique() 
+```
+
+### ivory 
+```{r}
+GO.module[["ivory"]]
+grep("MEivory_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
+
+colnames(GWAS_eigengene[["MEivory"]] )[1:4] <- c("SNP", "CHR", "BP", "P")
+manhattan(GWAS_eigengene[["MEivory"]], main = "", ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)   
+
+GWAS_eigengene_trait_overlap_gene %>% 
+  filter(class == "MEivory_bolting_height_12_15_KR_GH_year1") %>% 
+  dplyr::select(genes.seqnames) %>% 
+  unique()  
+```
+
 
 
 

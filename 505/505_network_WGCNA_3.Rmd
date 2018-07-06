@@ -210,14 +210,17 @@ files <- gsub("GAPIT.MLM.", "", files)
 files <- gsub(".GWAS.Results.csv", "", files)
 
 names(GWAS_eigengene) <- files
+names(GWAS_eigengene)[39] <- "MEturquoise"   
+save(GWAS_eigengene, file = "~/505/network_analysis/output/GWAS_eigengene.Rdata")
 
 GWAS_eigengene.sig <- 
 lapply(names(GWAS_eigengene), function(i) 
   GWAS_eigengene[[i]] %>% 
     filter(P.value < 0.00001))
 
-names(GWAS_eigengene.sig) <- files
+names(GWAS_eigengene.sig) <- files 
 names(GWAS_eigengene.sig)[39] <- "MEturquoise"   
+save(GWAS_eigengene, file = "~/505/network_analysis/output/GWAS_eigengene.Rdata")
 
 # for each trait, extract GWAS signal, store in list 
 path <- "~/505/network_analysis/output/GWAS_traits/"
@@ -229,6 +232,7 @@ files <- gsub("GAPIT.MLM.", "", files)
 files <- gsub(".GWAS.Results.csv", "", files)
 
 names(GWAS_trait) <- files
+save(GWAS_trait, file = "~/505/network_analysis/output/GWAS_trait.Rdata")
 
 GWAS_trait.sig <- 
 lapply(names(GWAS_trait), function(i) 
@@ -290,7 +294,7 @@ a) linkage of genes controling module genes expression and trait; b) pleotrophic
 
 ```{r}
 load("~/505/network_analysis/output/GWAS_eigengene_trait_overlap.Rdata")
-GWAS_eigengene_trait_overlap$class %>% unique() 
+GWAS_eigengene_trait_overlap$class %>% unique()  
 
 # important module and trait pairs 
 # "MEblack_Pubescence.of.blade_MG_year1", "MEbrown_germ.rate_KR_GH_year1", "MEbrown_leafn_July_03_04_MG_year1", "MEdarkolivegreen_Development.of.lobes_MG_year1", "MEdarkturquoise_Development.of.lobes_MG_year1", "MElightcyan_Heptadecanoic_acid_year2", "MEmagenta_bolting_height_12_15_KR_GH_year1", "MEmidnightblue_Erucic_acid_year1", "MEmidnightblue_Erucic_acid_year2", "MEmidnightblue_plant_length_08_07_MG_year1", "MEmidnightblue_plant_width_bottom_08_07_MG_year1", "MEorange_Behenic_acid_year2", "MEorange_Erucic_acid_year1", "MEorange_Behenic_acid_year2", "MEorange_Indentation.of.margin_MG_year1", "MEorange_Oleic_acid_year1", "MEorange_Oleic_acid_year2", "MEturquoise_plant_width_bottom_08_07_MG_year1", "MEturquoise_Pubescence.of.blade_MG_year1"
@@ -380,7 +384,7 @@ GWAS_eigengene_trait_overlap_gene[vapply(GWAS_eigengene_trait_overlap_gene, Nega
 # turn this into a dataframe 
 GWAS_eigengene_trait_overlap_gene <- 
 lapply(names(GWAS_eigengene_trait_overlap_gene), function(i){ 
-  GWAS_eigengene_trait_overlap_gene[[i]]$class <- i
+  GWAS_eigengene_trait_overlap_gene[[i]]$class <- i 
   return(GWAS_eigengene_trait_overlap_gene[[i]])
 })
 

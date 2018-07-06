@@ -3649,7 +3649,7 @@ load("~/505/output/131_sample/SNP.Erucic.Oleic.Unique.Rdata")
 SNP.Erucic.Oleic.unique %>% dim() # 235 2 
 SNP.Erucic.Oleic.unique %>% colnames() 
 
-FAE1 <- rbind(BnaA08g11130D, BnaC03g65980D)
+FAE1 <- rbind(BnaA08g11130D, BnaC03g65980D) 
 FAE1 %>% dim() 
 
 colnames(FAE1)[1:2] <- c("CHROM", "POS")
