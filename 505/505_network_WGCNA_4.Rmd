@@ -3,13 +3,45 @@ title: "505_network_WGCNA_4"
 output: html_document
 ---
 
-purpose of this script is to combine GWAS analysis, WGCNA module-trait correlation, and module gene significance result to come up with biological interpretation
+purpose of this script is to combine GWAS analysis, WGCNA module-trait correlation, and module gene significance result to come up with biological interpretation, plot, plot, plot... 
 
 ### overlapped GWAS signal for trait-module pairs, which with interesting GO term enriched in that module 
 
 goal: propose SNP/QTL/gene -- gene expression/biological pathway/GO term (module) -- phenotypic trait connection 
 
-### load data and take a look 
+### GWAS plot for all traits & eigengene 
+```{r}
+library("qqman")
+
+load("~/505/network_analysis/output/GWAS_eigengene.Rdata")
+load("~/505/network_analysis/output/GWAS_trait.Rdata")
+
+for(i in names(GWAS_eigengene)){ 
+
+filename <- paste("~/505/network_analysis/output/figure/GWAS_eigengene_", i, ".png",  sep = "")
+png(filename = filename, width=12, height=10, units="in", res=300)
+
+colnames(GWAS_eigengene[[i]])[1:4] <- c("SNP", "CHR", "BP", "P")
+manhattan(GWAS_eigengene[[i]], main = i, ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+
+dev.off()
+}
+
+for(i in names(GWAS_trait)){ 
+
+filename <- paste("~/505/network_analysis/output/figure/GWAS_trait_", i, ".png",  sep = "")
+png(filename = filename, width=12, height=10, units="in", res=300)
+
+colnames(GWAS_trait[[i]])[1:4] <- c("SNP", "CHR", "BP", "P")
+manhattan(GWAS_trait[[i]], main = i, ylim = c(0, 8), cex = 0.6,
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
+
+dev.off()
+}
+```
+
+### load overlap data and take a look 
 ```{r}
 load("~/505/network_analysis/output/GWAS_eigengene_trait_overlap_gene.Rdata")
 
@@ -17,14 +49,7 @@ GWAS_eigengene_trait_overlap_gene$class %>% unique() %>% length() # 540
 GWAS_eigengene_trait_overlap_gene$class %>% unique() 
 
 # important modules based on heatmap 
-grep("MEyellow", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) # Erucic acid/ Oleic acid 
-grep("MEsalmon", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) # Erucic acid/ Oleic acid 
-grep("MEturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
-grep("MEdarkturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T)
 grep("MEdarkorange_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) # flower eQTL, don't need to pay much attention to this 
-grep("MEdarkred_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) 
-grep("MEgreen_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) 
-grep("MEivory_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) 
 
 load("~/505/network_analysis/output/blups.cor.5.Rdata")
 load("~/505/network_analysis/output/geneTraitSignificance.final.Rdata")
@@ -33,18 +58,7 @@ blups.cor.5 %>%
   as.data.frame() %>% 
   dplyr::select(MEyellow, MEsalmon, MEturquoise, MEdarkturquoise, MEdarkred, MEgreen, MEivory)
 
-GWAS_eigengene_trait_overlap_gene %>% 
-  filter(class == "MEturquoise_Erucic_acid_year2")
-
-GWAS_eigengene_trait_overlap_gene %>% 
-  filter(class == "MEdarkturquoise_Erucic_acid_year1")  
-
-grep("A10", GWAS_trait.sig.genes[["Erucic_acid_year1"]]$names, value = T) 
-grep("A10", GWAS_trait.sig[["Erucic_acid_year1"]]$SNP, value = T)    
-
 load("~/505/network_analysis/input/module.gene.GO.Rdata")
-load("~/505/network_analysis/output/GWAS_eigengene.Rdata")
-load("~/505/network_analysis/output/GWAS_trait.Rdata")
 ```
 
 ### propose network for trait regulated by salmon and yellow, Erucic acid and Oleic acid 
@@ -57,7 +71,7 @@ GO.module[["salmon"]]
 
 salmon and yellow don't have overlapped QTL/SNP/gene with FA trait, so the hypothesis is that FA and defense can affect each other, correlation. 
 
-### turquoise, doesn't seem very good module, GWAS result looks messy  
+### turquoise, doesn't seem very good module, GWAS result looks messy, correlation between FA, etc. trait with this module, only focus on WGCNA result    
 ```{r}
 GO.module[["turquoise"]]
 grep("MEturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
@@ -76,7 +90,7 @@ manhattan(GWAS_eigengene[["MEturquoise"]], main = "", ylim = c(0, 8), cex = 0.6,
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)
 ```
 
-### darkturquoise, useful 
+### darkturquoise, useful, genes control defense and genes control FA, growth are linked or has pleotrophic effect
 ```{r}
 GO.module[["darkturquoise"]]
 grep("MEdarkturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
@@ -86,7 +100,7 @@ manhattan(GWAS_eigengene[["MEdarkturquoise"]], main = "", ylim = c(0, 8), cex = 
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F) 
 ```
 
-### darkred, dosn't look quite good, messy GWAS result  
+### darkred, dosn't look quite good, messy GWAS result, only focus on WGCNA result 
 ```{r}
 GO.module[["darkred"]]
 grep("MEdarkred_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
@@ -96,7 +110,7 @@ manhattan(GWAS_eigengene[["MEdarkred"]], main = "", ylim = c(0, 8), cex = 0.6,
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)  
 ```
 
-### green, good result!  
+### green, good result! MEgreen_plant_width_bottom_08_07_MG_year1 
 ```{r}
 GO.module[["green"]]
 grep("MEgreen_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
@@ -106,12 +120,10 @@ manhattan(GWAS_eigengene[["MEgreen"]], main = "", ylim = c(0, 8), cex = 0.6,
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F)   
 
 GWAS_eigengene_trait_overlap_gene %>% 
-  filter(class == "MEgreen_bolting_height_12_15_KR_GH_year1") %>% 
-  dplyr::select(genes.seqnames) %>% 
-  unique() 
+  filter(class == "MEgreen_plant_width_bottom_08_07_MG_year1") 
 ```
 
-### ivory 
+### ivory, not good to use GWAS result, focus on correlation 
 ```{r}
 GO.module[["ivory"]]
 grep("MEivory_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), value = T) ### 
