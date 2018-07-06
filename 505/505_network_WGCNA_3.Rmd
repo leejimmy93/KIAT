@@ -142,7 +142,7 @@ geno_505_hmp[1,]
 
 # make ID matching file 
 ID.2 <- gsub("\\_|\\-", "", geno_505_hmp[1,])
-ID.2 <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", ID.2)
+ID.2 <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", ID.2) # potential problem, with duplicated Taxa ID!!! 
 
 ID.matching <- data.frame(ID = as.character(geno_505_hmp[1,12:142]),
                           ID.2 = ID.2[12:142])

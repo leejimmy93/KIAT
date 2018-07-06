@@ -217,7 +217,7 @@ system.time(TOM <- TOMsimilarity(adjacency)); # Calculation of the topological o
 dissTOM <- 1-TOM
 
 # Call the hierarchical clustering fCRction
-geneTree <- hclust(as.dist(dissTOM), method = "average") 
+geneTree <- hclust(as.dist(dissTOM), method = "average")  
 # Plot the resulting clustering tree (dendrogram)
 sizeGrWindow(12,9)
 plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity",
@@ -296,7 +296,7 @@ pheno.505 <- read_csv("~/505/data/505_Phenotype_Bnapus_38_traits.csv") # 1st yea
 pheno.505 <- pheno.505[,!apply(pheno.505,2,function(x) all(is.na(x)))]
 pheno.505 %>% dim() 
 pheno.505.t <- as.data.frame(t(pheno.505[,-1]))
-colnames(pheno.505.t) <- paste(pheno.505$PHENOTYPE, "year1", sep = "_")
+colnames(pheno.505.t) <- paste(pheno.505$PHENOTYPE, "year1", sep = "_") 
 pheno.505.t$ID <- rownames(pheno.505.t)
 
 load("~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata") # 2nd year data, on FA related traits 
