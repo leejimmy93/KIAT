@@ -10,7 +10,7 @@ source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("http://zzlab.net/GAPIT/emma.txt")
 
 load("~/505/network_analysis/output/GWAS_trait_input.Rdata")
-setwd("~/505/network_analysis/output/GWAS_traits/")
+setwd("~/505/network_analysis/output/GWAS_traits_2/")
 
 myY <- myY[[7]]
 # run GAPIT

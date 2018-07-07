@@ -130,6 +130,7 @@ Model.selection = TRUE
 GWAS on all traits 
 ```{r}
 load("~/505/network_analysis/output/pheno_data_505.Rdata")
+pheno_data_505$ID[16] <- "ID_505_K200-1" 
 
 # genotype data
 geno_505_hmp <- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.hmp.txt", head=FALSE)
@@ -146,7 +147,8 @@ ID.2 <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", ID.2) # potential proble
 
 ID.matching <- data.frame(ID = as.character(geno_505_hmp[1,12:142]),
                           ID.2 = ID.2[12:142])
-  
+ID.matching[15,2] <- "ID_505_K200-1"
+
 pheno_data_505 <- 
 pheno_data_505 %>% 
   left_join(ID.matching, by=c("ID" = "ID.2")) %>% 
@@ -184,6 +186,7 @@ source("http://zzlab.net/GAPIT/emma.txt")
 load("~/505/network_analysis/output/GWAS_trait_input.Rdata")
 setwd("~/505/network_analysis/output/GWAS_traits/")
 
+myY <- myY[[i]]
 # run GAPIT 
 myGAPIT <- GAPIT(
     Y=myY,
@@ -193,7 +196,7 @@ myGAPIT <- GAPIT(
     PCA.View.output=FALSE,
     Model.selection = TRUE
     ) 
-# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/505/GWAS_trait_1.R ... GWAS_trait_12.R
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/505/GWAS_trait_1.R ... GWAS_trait_12.R 
 ```
 
 ### 3) 
