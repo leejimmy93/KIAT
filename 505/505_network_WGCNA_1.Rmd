@@ -5,7 +5,7 @@ output: html_document
 
 purpose of this script is to do WGCNA network anaysis using 505 SNP data: identify the different modules and check their correlation with pheno data.  
 
-I did network analysis for our 414 F2 population using SNP data (https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network.Rmd & https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network_batch_corrected.Rmd), however, the identified gene co-expression modules correlated with different traits seems to arise from the genetic linkage instead of expression, so we want to see whether we have the same problem for 505. 
+I did network analysis for our 414 F2 population using SNP data (https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network.Rmd & https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network_batch_corrected.Rmd), however, the identified gene co-expression modules correlated with different traits seems to arise from the genetic linkage instead of expression, so we want to see whether we have the same problem for 505.  
 
 ### load libs
 ```{r}
