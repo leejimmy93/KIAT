@@ -5,4 +5,400 @@ output: html_document
 
 Purpose of this script is to do eigene network analysis 
 
+### 0) 
+
+check expression profile of genes in important modules as well as their eigengenes
+```{r}
+load("~/505/network_analysis/input/module.gene.GO.Rdata")
+GO.module %>% length() # 39 
+gene.module %>% length() # 39 
+
+# FA trait
+GO.module[["salmon"]]
+GO.module[["yellow"]]
+GO.module[["turquoise"]]
+GO.module[["darkturquoise"]]  # not that high association 
+
+# flower 
+GO.module[["darkorange"]] 
+
+# leaf, bolt, flower, width 
+GO.module[["darkred"]] # not very high association with traits 
+GO.module[["green"]]
+GO.module[["ivory"]]  
+
+load("~/505/network_analysis/output/vstMat.505.batch.corrected.largeVar.Rdata")  
+vstMat.505.batch.corrected.largeVar %>% dim() # 13454   131
+
+load("~/505/network_analysis/output/MEs_505_signed.Rdata")
+MEs$ID <-colnames(vstMat.505.batch.corrected.largeVar)
+save(MEs, file = "~/505/network_analysis/output/MEs_with_ID.Rdata")
+
+sig_modules <- c("salmon", "yellow", "turquoise", "darkturquoise", "darkorange","darkred", "green", "ivory")
+
+for(i in sig_modules){ 
+
+filename <- paste("~/505/network_analysis/output/module_gene_", i, ".png",  sep = "")
+png(filename = filename, width=16, height=9, units="in", res=300)
+
+vstMat.505.batch.corrected.largeVar[moduleColors == i,] %>% 
+  pheatmap(  
+     cluster_rows = F, 
+     cluster_cols = F,
+     clustering_method = "average", 
+     # cellheight = 10,
+     # cellwidth = 5,
+     border_color=NA, 
+     fontsize_col = 8, 
+     legend = T, 
+     main = i, 
+     show_rownames = F)
+
+dev.off()
+}
+
+sig_modules.eigene <- paste("ME", sig_modules, sep = "")
+
+expression.eigengene <- 
+lapply(sig_modules.eigene, function(i){
+MEs %>% melt() %>% 
+  filter(variable == i) %>% 
+  ggplot() + 
+  geom_bar(aes(x = ID, y = value, fill = value < 0), stat = "identity") + 
+  scale_fill_manual(values = c("TRUE" = "lightblue", "FALSE" = "orange")) + 
+  theme(legend.position = "none") + 
+  labs(x = "", title = i)
+} 
+)
+
+plots <- expression.eigengene
+
+paths <- stringr::str_c(sig_modules.eigene, ".pdf") 
+paths 
+pwalk(list(paths, plots), ggsave, path = "~/505/network_analysis/output/", width = 15, height = 7) # save on whitney   
+```
+
+### 1) 
+
+GWAS on eigenegenes genes of important modules 
+```{r}
+load(file = "~/505/network_analysis/output/MEs_with_ID.Rdata")
+
+MEs <- 
+MEs %>% 
+  mutate(Taxa = ID) %>% 
+  dplyr::select(Taxa, MEgreen:MEturquoise) 
+
+library(multtest)
+library(gplots)
+library(genetics)
+library(EMMREML)
+library(compiler) #this library is already installed in R
+library("scatterplot3d")
+
+source("http://zzlab.net/GAPIT/gapit_functions.txt")
+source("http://zzlab.net/GAPIT/emma.txt")
+
+setwd("~/505/network_analysis/output/GWAS_eigengene/")
+
+# genotype data
+geno_505_hmp <- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.hmp.txt", head=FALSE)
+geno_505_hmp$V3 <- as.numeric(as.factor(geno_505_hmp$V3))
+geno_505_hmp[1,3] <- "chrom"
+
+MEs[,c("Taxa")]
+colnames(MEs)[40] <- "Taxa"
+pheno_data_505 <- MEs
+
+myY <- pheno_data_505 
+myG <- geno_505_hmp 
+
+# run GAPIT
+myGAPIT <- GAPIT(
+Y=myY,
+G=myG,
+PCA.total=0,
+Geno.View.output=FALSE,
+PCA.View.output=FALSE,
+Model.selection = TRUE
+)  
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/505/GWAS_eigengene.R 
+```
+
+### 2) 
+
+GWAS on all traits 
+```{r}
+load("~/505/network_analysis/output/pheno_data_505.Rdata")
+pheno_data_505$ID[16] <- "ID_505_K200-1" 
+
+# genotype data
+geno_505_hmp <- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.hmp.txt", head=FALSE)
+geno_505_hmp$V3 <- as.numeric(as.factor(geno_505_hmp$V3))
+geno_505_hmp[1,3] <- "chrom" 
+dim(geno_505_hmp) # 174398     
+
+colnames(pheno_data_505) 
+geno_505_hmp[1,] 
+
+# make ID matching file 
+ID.2 <- gsub("\\_|\\-", "", geno_505_hmp[1,])
+ID.2 <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", ID.2) # potential problem, with duplicated Taxa ID!!! 
+
+ID.matching <- data.frame(ID = as.character(geno_505_hmp[1,12:142]),
+                          ID.2 = ID.2[12:142])
+ID.matching[15,2] <- "ID_505_K200-1"
+
+pheno_data_505 <- 
+pheno_data_505 %>% 
+  left_join(ID.matching, by=c("ID" = "ID.2")) %>% 
+  mutate(Taxa = ID.y) %>% 
+  dplyr::select(Taxa, Oil_content_year2:bolting_50_cat_year1) 
+
+myY <- pheno_data_505 
+myG <- geno_505_hmp 
+
+# split file to ten pieces 
+myY <- 
+lapply(0:11, function(i) {
+  if(i < 11){
+  index <- c(1, i*5+(2:6))
+  myY[,index]
+  } else {
+    myY[,c(1,57)]
+  }
+}) 
+
+save(myY, myG, file = "~/505/network_analysis/output/GWAS_trait_input.Rdata")
+
+# below run on whitney 
+
+library(multtest)
+library(gplots)
+library(genetics)
+library(EMMREML)
+library(compiler) #this library is already installed in R
+library("scatterplot3d") 
+
+source("http://zzlab.net/GAPIT/gapit_functions.txt")
+source("http://zzlab.net/GAPIT/emma.txt")
+
+load("~/505/network_analysis/output/GWAS_trait_input.Rdata")
+setwd("~/505/network_analysis/output/GWAS_traits/")
+
+myY <- myY[[i]]
+# run GAPIT 
+myGAPIT <- GAPIT(
+    Y=myY,
+    G=myG,
+    PCA.total=0,
+    Geno.View.output=FALSE,
+    PCA.View.output=FALSE,
+    Model.selection = TRUE
+    ) 
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/505/GWAS_trait_1.R ... GWAS_trait_12.R  
+```
+
+### 3) 
+
+look for overlaps between GWAS signals for eigen genes and traits, I will only check overlaps of single SNPs, because if a SNP is significant, it should be detected no matter what.  
+```{r}
+# for each eigen gene, extract GWAS signal, store in list 
+# load data 
+path <- "~/505/network_analysis/output/GWAS_eigengene/"
+files <- list.files(path=path, pattern = "*GWAS.Results.csv") # Taxa is MEturquoise, I made a mistake when rename it during GWAS 
+setwd(path)
+GWAS_eigengene <- lapply(files, function(x) read.csv(x)) 
+
+files <- gsub("GAPIT.MLM.", "", files)
+files <- gsub(".GWAS.Results.csv", "", files)
+
+names(GWAS_eigengene) <- files
+names(GWAS_eigengene)[39] <- "MEturquoise"   
+save(GWAS_eigengene, file = "~/505/network_analysis/output/GWAS_eigengene.Rdata")
+
+GWAS_eigengene.sig <- 
+lapply(names(GWAS_eigengene), function(i) 
+  GWAS_eigengene[[i]] %>% 
+    filter(P.value < 0.00001))
+
+names(GWAS_eigengene.sig) <- files 
+names(GWAS_eigengene.sig)[39] <- "MEturquoise"   
+save(GWAS_eigengene, file = "~/505/network_analysis/output/GWAS_eigengene.Rdata")
+
+# for each trait, extract GWAS signal, store in list 
+path <- "~/505/network_analysis/output/GWAS_traits/"
+files <- list.files(path=path, pattern = "*GWAS.Results.csv") # Taxa is MEturquoise, I made a mistake when rename it during GWAS 
+setwd(path)
+GWAS_trait <- lapply(files, function(x) read.csv(x)) 
+
+files <- gsub("GAPIT.MLM.", "", files)
+files <- gsub(".GWAS.Results.csv", "", files)
+
+names(GWAS_trait) <- files
+save(GWAS_trait, file = "~/505/network_analysis/output/GWAS_trait.Rdata")
+
+GWAS_trait.sig <- 
+lapply(names(GWAS_trait), function(i) 
+  GWAS_trait[[i]] %>% 
+    filter(P.value < 0.00001))
+
+names(GWAS_trait.sig) <- files 
+
+sapply(names(GWAS_trait.sig), function(i) dim(GWAS_trait.sig))
+
+# pairwise comparison between eigen gene and trait 
+GWAS_eigengene_trait_overlap <- 
+lapply(names(GWAS_eigengene.sig), function(i){
+  lapply(names(GWAS_trait.sig), function(j){
+    test <- 
+    GWAS_eigengene.sig[[i]] %>% 
+      semi_join(GWAS_trait.sig[[j]], by = "SNP")
+    if(nrow(test) != 0){ 
+      return(test)} 
+  })
+}) 
+
+GWAS_eigengene_trait_overlap.name <-
+sapply(names(GWAS_eigengene.sig), function(i){
+  sapply(names(GWAS_trait.sig), function(j){
+    paste(i, j, sep = "_")
+  })
+}) 
+
+library(rlist) 
+GWAS_eigengene_trait_overlap <- flatten(GWAS_eigengene_trait_overlap) 
+names(GWAS_eigengene_trait_overlap) <- GWAS_eigengene_trait_overlap.name
+
+# extract only the non-empty item and know their identity (eigen gene and trait)
+GWAS_eigengene_trait_overlap <- 
+GWAS_eigengene_trait_overlap[vapply(GWAS_eigengene_trait_overlap, Negate(is.null), NA)] 
+
+# turn this into a dataframe 
+GWAS_eigengene_trait_overlap <- 
+lapply(names(GWAS_eigengene_trait_overlap), function(i){ 
+  GWAS_eigengene_trait_overlap[[i]]$class <- i
+  return(GWAS_eigengene_trait_overlap[[i]])
+})
+
+GWAS_eigengene_trait_overlap <- do.call(rbind, GWAS_eigengene_trait_overlap)
+GWAS_eigengene_trait_overlap$class %>% unique() 
+
+save(GWAS_eigengene_trait_overlap, file = "~/505/network_analysis/output/GWAS_eigengene_trait_overlap.Rdata")
+save(GWAS_eigengene.sig, GWAS_trait.sig, file = "~/505/network_analysis/output/GWAS_eigengene_trait_sig.Rdata")
+```
+
+### 4) 
+
+More, what is the correlation between modules and traits with overlapped significant SNPs? If there is high correlation, it suggest that genes in or close to the SNP regions affect expression of that module genes as well as the trait, we can make hypothesis on the potential regulatory network. 
+
+ideally, I want the several modules that I picked in (2) have overlapped SNPs with their correlated traits 
+
+a) linkage of genes controling module genes expression and trait; b) pleotrophic effect of gene(s) for trait and module genes; c) SNP variation control of the expression of gene modules, gene module expression control trait    
+
+```{r}
+load("~/505/network_analysis/output/GWAS_eigengene_trait_overlap.Rdata")
+GWAS_eigengene_trait_overlap$class %>% unique()  
+
+# important module and trait pairs 
+# "MEblack_Pubescence.of.blade_MG_year1", "MEbrown_germ.rate_KR_GH_year1", "MEbrown_leafn_July_03_04_MG_year1", "MEdarkolivegreen_Development.of.lobes_MG_year1", "MEdarkturquoise_Development.of.lobes_MG_year1", "MElightcyan_Heptadecanoic_acid_year2", "MEmagenta_bolting_height_12_15_KR_GH_year1", "MEmidnightblue_Erucic_acid_year1", "MEmidnightblue_Erucic_acid_year2", "MEmidnightblue_plant_length_08_07_MG_year1", "MEmidnightblue_plant_width_bottom_08_07_MG_year1", "MEorange_Behenic_acid_year2", "MEorange_Erucic_acid_year1", "MEorange_Behenic_acid_year2", "MEorange_Indentation.of.margin_MG_year1", "MEorange_Oleic_acid_year1", "MEorange_Oleic_acid_year2", "MEturquoise_plant_width_bottom_08_07_MG_year1", "MEturquoise_Pubescence.of.blade_MG_year1"
+
+load("~/505/network_analysis/input/module.gene.GO.Rdata")
+GO.module %>% length()
+names(GO.module)
+GO.module[["black"]] 
+GO.module[["brown"]] # oxidation, FA, response to water 
+GO.module[["darkolivegreen"]]
+GO.module[["darkturquoise"]] # defense response
+GO.module[["lightcyan"]] # response to stress, oxidation reduction process
+GO.module[["magenta"]]
+GO.module[["midnightblue"]]
+GO.module[["orange"]] 
+GO.module[["turquoise"]] # defense response, biotic response, and lipid synthetic process  
+```
+
+### focus on important modules
+
+look for genes in the flanking region of those important module and traits, then look for overlaps 
+
+```{r}
+# 1.2 Gb B.napus genome, 19 chromosomes, all A sub chromosome has ~20Mb length, C sub genome has ~40-60Mb length, the rest are scaffold not anchored to chromosomes
+
+# the flanking region should be decided based on LD, LD decayed 250Kb in Arabidopsis, so I decided to use 250Kb as the flanking region size 
+
+load("~/505/network_analysis/output/GWAS_eigengene_trait_sig.Rdata")
+GWAS_eigengene.sig %>% length()
+GWAS_trait.sig %>% length()
+names(GWAS_trait.sig)
+names(GWAS_eigengene.sig)
+
+gff.mRNA <- read.table("~/Reference/B.napus/gff.mRNA")
+dim(gff.mRNA) # 101040      4 
+colnames(gff.mRNA) <- c("CHROM", "start", "end", "name") 
+gff.mRNA$CHROM <- gff.mRNA$CHROM %>% as.factor() %>% as.numeric()
+genes <- GRanges(seqnames = Rle(gff.mRNA$CHROM),ranges = IRanges(start = gff.mRNA$start, end = gff.mRNA$end), names = gff.mRNA$name)
+
+# for all the traits, find candidate genes 
+GWAS_trait.sig.genes <- 
+lapply(names(GWAS_trait.sig), function(i) {
+  SNP <- GRanges(seqnames = Rle(GWAS_trait.sig[[i]]$Chromosome), ranges = IRanges(start = ifelse(GWAS_trait.sig[[i]]$Position - 250000 >0, GWAS_trait.sig[[i]]$Position - 250000,0), end = GWAS_trait.sig[[i]]$Position + 250000), ID = paste(GWAS_trait.sig[[i]]$Chromosome, GWAS_trait.sig[[i]]$Position, sep = "_"))
+  SNP_gene <- mergeByOverlaps(SNP, genes) %>% as.data.frame %>%
+    dplyr::select("SNP.ID", "genes.seqnames", "SNP.end", "names")
+})
+
+names(GWAS_trait.sig.genes) <- names(GWAS_trait.sig)
+
+# for all the module, find candidate genes 
+GWAS_eigengene.sig.genes <- 
+lapply(names(GWAS_eigengene.sig), function(i) {
+  SNP <- GRanges(seqnames = Rle(GWAS_eigengene.sig[[i]]$Chromosome), ranges = IRanges(start = ifelse(GWAS_eigengene.sig[[i]]$Position - 250000 >0, GWAS_eigengene.sig[[i]]$Position - 250000,0), end = GWAS_eigengene.sig[[i]]$Position + 250000), ID = paste(GWAS_eigengene.sig[[i]]$Chromosome, GWAS_eigengene.sig[[i]]$Position, sep = "_"))
+  SNP_gene <- mergeByOverlaps(SNP, genes) %>% as.data.frame %>%
+    dplyr::select("SNP.ID", "genes.seqnames", "SNP.end", "names")
+})
+
+names(GWAS_eigengene.sig.genes) <- names(GWAS_eigengene.sig)
+
+# look for overlaps 
+# pairwise comparison between eigen gene and trait 
+GWAS_eigengene_trait_overlap_gene <- 
+lapply(names(GWAS_eigengene.sig.genes), function(i){
+  lapply(names(GWAS_trait.sig.genes), function(j){
+    test <- 
+    GWAS_eigengene.sig.genes[[i]] %>% 
+      semi_join(GWAS_trait.sig.genes[[j]], by = "names")
+    if(nrow(test) != 0){ 
+      return(test)} 
+  })
+}) 
+
+GWAS_eigengene_trait_overlap_gene.name <-
+sapply(names(GWAS_eigengene.sig.genes), function(i){
+  sapply(names(GWAS_trait.sig.genes), function(j){
+    paste(i, j, sep = "_")
+  })
+}) 
+
+GWAS_eigengene_trait_overlap_gene <- flatten(GWAS_eigengene_trait_overlap_gene) 
+names(GWAS_eigengene_trait_overlap_gene) <- GWAS_eigengene_trait_overlap_gene.name
+
+# extract only the non-empty item and know their identity (eigen gene and trait)
+GWAS_eigengene_trait_overlap_gene <- 
+GWAS_eigengene_trait_overlap_gene[vapply(GWAS_eigengene_trait_overlap_gene, Negate(is.null), NA)] 
+
+# turn this into a dataframe 
+GWAS_eigengene_trait_overlap_gene <- 
+lapply(names(GWAS_eigengene_trait_overlap_gene), function(i){ 
+  GWAS_eigengene_trait_overlap_gene[[i]]$class <- i 
+  return(GWAS_eigengene_trait_overlap_gene[[i]])
+})
+
+GWAS_eigengene_trait_overlap_gene <- do.call(rbind, GWAS_eigengene_trait_overlap_gene)
+GWAS_eigengene_trait_overlap_gene$class %>% unique() %>% length() # 540 
+GWAS_eigengene_trait_overlap_gene$class %>% unique() 
+save(GWAS_eigengene_trait_overlap_gene, file = "~/505/network_analysis/output/GWAS_eigengene_trait_overlap_gene.Rdata") 
+```
+
+
+
+
 

@@ -1801,7 +1801,7 @@ geno_505_hmp <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/M
 geno_505_hmp$V3 <- as.numeric(geno_505_hmp$V3)
 geno_505_hmp[1,3] <- "chrom"
 
-# phenotype data
+# phenotype data 
 load("~/505/data/phenotype/gh.seed.bolt.table.wide.Rdata")
 # reform phentype data to have match taxa ID with geno data
 # get taxa ID from sample description file
@@ -3648,7 +3648,7 @@ load("~/505/output/131_sample/SNP.Erucic.Oleic.Unique.Rdata")
 SNP.Erucic.Oleic.unique %>% dim() # 235 2 
 SNP.Erucic.Oleic.unique %>% colnames() 
 
-FAE1 <- rbind(BnaA08g11130D, BnaC03g65980D)
+FAE1 <- rbind(BnaA08g11130D, BnaC03g65980D) 
 FAE1 %>% dim() 
 
 colnames(FAE1)[1:2] <- c("CHROM", "POS")

@@ -5,7 +5,7 @@ output: html_document
 
 purpose of this script is to do WGCNA network anaysis using 505 SNP data: identify the different modules and check their correlation with pheno data.  
 
-I did network analysis for our 414 F2 population using SNP data (https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network.Rmd & https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network_batch_corrected.Rmd), however, the identified gene co-expression modules correlated with different traits seems to arise from the genetic linkage instead of expression, so we want to see whether we have the same problem for 505. 
+I did network analysis for our 414 F2 population using SNP data (https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network.Rmd & https://github.com/leejimmy93/KIAT/blob/master/F2/F2_network_batch_corrected.Rmd), however, the identified gene co-expression modules correlated with different traits seems to arise from the genetic linkage instead of expression, so we want to see whether we have the same problem for 505.  
 
 ### load libs
 ```{r}
@@ -75,7 +75,6 @@ test2 %>%
   ggplot() + 
   geom_point(aes(x = V1, y= V2, color = as.factor(batch))) # looks like there is batch effect on PC2
 
-
 # correct batch effect 
 vstMat.505.batch.corrected <- removeBatchEffect(vstMat.505, batch = batch_info$batch) 
 test1 <- as.matrix(dist(t(vstMat.505.batch.corrected)))  
@@ -105,13 +104,15 @@ vstMat.505.batch.corrected$CV <- as.numeric(gene.CV)
 summary(vstMat.505.batch.corrected$CV) 
 hist(vstMat.505.batch.corrected$CV, breaks = 30)
 
+save(vstMat.505.batch.corrected, file = "~/505/network_analysis/output/vstMat.505.batch.corrected.Rdata")
+
 vstMat.505.batch.corrected.largeVar<-
   vstMat.505.batch.corrected %>% 
   filter(CV>15) %>% # only the last quantile was left for co-expression analysis 
   dplyr::select(-CV) 
 
-rownames(vstMat.505.batch.corrected.largeVar) <- 
-  rownames(vstMat.505.batch.corrected[vstMat.505.batch.corrected$CV >15,]) # keep the last quantile & make sure include the two FAE1 genes "BnaA08g11130D" & "BnaC03g65980D"
+rownames(vstMat.505.batch.corrected.largeVar) <- rownames(vstMat.505.batch.corrected[vstMat.505.batch.corrected$CV >15,]) # keep the last quantile & make sure include the two FAE1 genes "BnaA08g11130D" & "BnaC03g65980D"
+
 
 dim(vstMat.505.batch.corrected.largeVar) # 13454   131  
 
@@ -168,16 +169,18 @@ geno.mds <-
 geno.mds %>% 
   left_join(sample_des_revised, by = c("ID" = "Sample.ID"))  
 
+library(ggrepel)
 p.mds.WGCNA <- ggplot(data=geno.mds, aes(V1, V2, color=Sample.Description.Origin)) + theme_bw() + 
   geom_point(size=1) + 
 # p.mds.country.2 <- p.mds.country.2 + scale_color_brewer(type="qual",palette="Set1")
   scale_color_manual(values = c("lightblue", "orange", "red", "green", "blue", "grey", "purple", "pink", "darkred", "black")) + 
   geom_text_repel(aes(x=V1, y=V2, label=factor(ID))) + 
-  theme(legend.position = c(0.9, 0.2), legend.background = element_rect(fill="lightgrey", size=0.5, linetype="solid"), axis.title.x=element_blank(), axis.title.y =element_blank()) + 
+  theme(legend.position = c(0.1, 0.8), legend.background = element_rect(fill="lightgrey", size=0.5, linetype="solid"), axis.title.x=element_blank(), axis.title.y =element_blank()) + 
   labs(title="MDS of 505 collection") + theme(plot.title = element_text(hjust = 0.5, size = 16, face="bold")) 
 p.mds.WGCNA
 
 ggsave(p.mds.WGCNA, filename="~/505/network_analysis/output/p.mds.WGCNA.png", height=10, width=10)  
+save(vstMat.505.WGCNA.t, file = "~/505/network_analysis/output/vstMat.505.WGCNA.t.Rdata")
 ```
 
 ### WGCNA module detection 
@@ -214,11 +217,11 @@ system.time(TOM <- TOMsimilarity(adjacency)); # Calculation of the topological o
 dissTOM <- 1-TOM
 
 # Call the hierarchical clustering fCRction
-geneTree <- hclust(as.dist(dissTOM), method = "average")
+geneTree <- hclust(as.dist(dissTOM), method = "average")  
 # Plot the resulting clustering tree (dendrogram)
 sizeGrWindow(12,9)
 plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity",
-     labels = FALSE, hang = 0.04)
+     labels = FALSE, hang = 0.04) 
 
 # define modules 
 # We like large modules, so we set the minimum module size relatively high:
@@ -293,7 +296,7 @@ pheno.505 <- read_csv("~/505/data/505_Phenotype_Bnapus_38_traits.csv") # 1st yea
 pheno.505 <- pheno.505[,!apply(pheno.505,2,function(x) all(is.na(x)))]
 pheno.505 %>% dim() 
 pheno.505.t <- as.data.frame(t(pheno.505[,-1]))
-colnames(pheno.505.t) <- paste(pheno.505$PHENOTYPE, "year1", sep = "_")
+colnames(pheno.505.t) <- paste(pheno.505$PHENOTYPE, "year1", sep = "_") 
 pheno.505.t$ID <- rownames(pheno.505.t)
 
 load("~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata") # 2nd year data, on FA related traits 
@@ -333,6 +336,23 @@ for (i in colnames(pheno_data_505)[42:57]) {
 save(pheno_data_505, file = "~/505/network_analysis/output/pheno_data_505.Rdata")
 
 # check correlation between phenotypes 
+library(pheatmap)
+pheno_data_505[1:10, 1:10]
+trait_cor <- round(cor(pheno_data_505[,c(2,6:57)], use = "pairwise.complete.obs"), digits = 2) 
+
+png(filename = "~/505/network_analysis/output/figure/trait_heatmap.png",width=220, height=200, units="mm", res=300)
+par(mar = c(3, 3, 3, 3))
+pheatmap(as.matrix(t(trait_cor)),
+     # scale="row",
+     clustering_method = "average", 
+     # cellheight = 10,
+     # cellwidth = 5,
+     border_color=NA,
+     fontsize_row = 6, 
+     fontsize_col = 6, 
+     legend = T
+)   
+dev.off()     
 ```
 
 ### plot several clusters gene expression value & their eigengenes 
@@ -393,12 +413,33 @@ pheatmap(as.matrix(t(vstMat.505.unsigned)),
 )  
 ```
 
+### check to see the three genes I found from F2, BnaA08g12780D, BnaA08g11060D, and BnaA08g11140D 
+```{r}
+# BnaA08g11060D is not expressed at all 
+read_count_505 <- read.table("~/505/data/late_silique/read.count.505.tsv", header=T, row.names=1)
+read_count_505["BnaA08g11140D",]
 
+# BnaA08g11060D and BnaA08g12780D were expressed but not varied a lot among lines 
+load("~/505/network_analysis/output/vstMat.505.batch.corrected.Rdata")
+load("~/505/network_analysis/output/pheno_data_505.Rdata") 
 
+vstMat.505.batch.corrected["BnaA08g12780D",]$CV
+vstMat.505.batch.corrected["BnaA08g11060D",]$CV 
 
+test1 <- 
+vstMat.505.batch.corrected [c("BnaA08g12780D", "BnaA08g11060D"),-15] %>% 
+  dplyr::select(-CV) %>% 
+  t() %>% as.data.frame()
 
+test1$ID <- rownames(test1)
 
+tmp <- 
+test1 %>% 
+  left_join(pheno_data_505)
 
+cor(tmp$BnaA08g12780D, tmp$Erucic_acid_year1, use = "pairwise.complete.obs") # 0.240422 this is not very high correlation compared to what we found from network analysis 
+cor(tmp$BnaA08g11060D, tmp$Erucic_acid_year1, use = "pairwise.complete.obs") # -0.1287613 
+```
 
 
 

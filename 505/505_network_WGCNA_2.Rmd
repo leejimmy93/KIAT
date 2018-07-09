@@ -45,9 +45,10 @@ blups.cor.sig[blups.cor.P>0.05] <- NA
 blups.cor.sig 
 
 MEs <- MEs %>% dplyr::select(-ID) 
-ME.blups.505 <- ME.blups.505 %>% dplyr::select(-ID)  
-blups.505 <- pheno_data_505 %>% dplyr::select(-ID)  
+blups.505 <- ME.blups.505[,41:96]  
 save(blups.505, file = "~/505/network_analysis/output/blups.505.Rdata")
+
+ME.blups.505 <- ME.blups.505 %>% dplyr::select(-ID)  
 
 # plot it 
 # Will display correlations and their p-values
@@ -75,6 +76,8 @@ dev.off()
 blups.cor.5 <- blups.cor.sig  
 dim(blups.cor.5) # 56 39
 
+save(blups.cor.5, file = "~/505/network_analysis/output/blups.cor.5.Rdata")
+
 cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait 
   maxx = max(x,na.rm=TRUE) 
   minx = min(x,na.rm=TRUE)
@@ -84,7 +87,8 @@ cor.top <- t(apply(blups.cor.5,1,function(x) { # for each trait
 dim(cor.top) # 56 39
 
 cor.top <- cor.top[,apply(cor.top,2,function(x) !all(is.na(x)))] # keep modules which have significant correlations with traits
-cor.top %>% dim() # 56 28
+cor.top %>% dim() # 56 28 
+save(cor.top, file = "~/505/network_analysis/output/cor.top.Rdata")
 write.csv(cor.top,"~/505/network_analysis/output/Eigen_trait_cor_505_threshold.csv") 
 
 png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505_cortop.png",width=20, height=16, units="in", res=300)
@@ -109,8 +113,6 @@ head(MEs[,colnames(cor.top)])
 MEs[,colnames(cor.top)] %>% dim # get 28 modules which are significantly correlated with traits 
 write.csv(MEs[,colnames(cor.top)], file = "~/505/network_analysis/output/Top_Eigen_genes_505.csv") 
 ```
-
-Based on the above result, for oil related traits, looks like oil and pink modules are more important than other modules because they are have the highest correlation with multiple FA composition traits. 
 
 ### GO enrichment of different modules 
 ```{r}
@@ -147,10 +149,139 @@ lapply(unique(moduleColors), function(i)
 names(gene.module) <- unique(moduleColors) 
 
 save(gene.module, GO.module, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/module.gene.GO.Rdata")
-grep("BnaA08|BnaC03", gene.module[["brown"]], value = T) 
-
-
 ```
 
+### check modules with significant correlation with traits, combined with GO enrichment analysis result 
+```{r}
+load("~/505/network_analysis/input/module.gene.GO.Rdata")
+GO.module %>% length()
+gene.module %>% length()
+
+# where are the two FAE1 genes? "BnaA08g11130D" & "BnaC03g65980D"
+
+"BnaA08g11130D" %in% gene.module[["brown"]]
+"BnaC03g65980D" %in% gene.module[["brown"]] # although "brown" is enriched for FA, it is not significantly correlated with FA traits. 
+
+"BnaA08g11060D" %in% rownames(vstMat.505.batch.corrected.largeVar) # not detected 
+"BnaA08g11140D" %in% rownames(vstMat.505.batch.corrected.largeVar) # not detected 
+"BnaA08g12780D" %in% rownames(vstMat.505.batch.corrected.largeVar) # not detected
+"BnaC04g05920D" %in% rownames(vstMat.505.batch.corrected.largeVar) 
+
+rownames(vstMat.505.batch.corrected) 
+
+# FA trait
+GO.module[["salmon"]]
+GO.module[["yellow"]]
+GO.module[["turquoise"]]
+GO.module[["darkturquoise"]]  # not that high association 
+
+# flower 
+GO.module[["darkorange"]] # flower trait seems have high correlation with every module because flower QTL is one of the trans-eQTL hotspot, which regulate expression of many genes across the genome 
+
+# leaf, bolt, flower, width 
+GO.module[["darkred"]] # not very high association with traits 
+GO.module[["green"]]
+GO.module[["ivory"]]  
+
+GO.module[!is.na(GO.module)] %>% names()   
+```
+
+### Gene significance and module membership
+
+genes with high GS and MM are more correlated with certain trait through expression, eQTL? GS is defined as the correlation between the gene and the trait, MM as the correlation beteween the module eigengene and the module gene expression profile. 
+
+```{r}
+load("~/505/network_analysis/output/vstMat.505.WGCNA.t.Rdata")
+load("~/505/network_analysis/output/pheno_data_505.Rdata")
+
+vstMat.505.WGCNA.t %>% rownames()
+rownames(vstMat.505.WGCNA.t) <- gsub("\\_|\\-", "", rownames(vstMat.505.WGCNA.t))
+rownames(vstMat.505.WGCNA.t) <- gsub("(505)(K)([[:digit:]]+)", "ID_\\1_\\2\\3", rownames(vstMat.505.WGCNA.t)) 
+
+pheno_data_505 <- pheno_data_505[match(rownames(vstMat.505.WGCNA.t), pheno_data_505$ID),]
+
+# calculate gene significance and significance P-value, 56 trait  
+geneTraitSignificance <- 
+  lapply(colnames(pheno_data_505)[-1], function(i) {
+  tmp <- as.data.frame(cor(vstMat.505.WGCNA.t, pheno_data_505[,i], use = "p"))
+  names(tmp) = paste("GS.", i, sep="")
+  tmp
+}) 
+
+names(geneTraitSignificance) <- colnames(pheno_data_505)[-1] 
+
+GSPvalue <- 
+  lapply(names(geneTraitSignificance), function(i) {
+  tmp <- as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance[[i]]), nSamples = nrow(vstMat.505.WGCNA.t)))
+  names(tmp) = paste("p.GS.", i, sep="")   
+  tmp 
+})    
+
+names(GSPvalue) <- names(geneTraitSignificance)
+
+# identify genes with high GS and MM for specific modules, which are highly correlated with certain trait, these genes might be key player for specific trait, eQTL...  
+
+load("~/Reference/B.napus/BnapusAnnotation.Rdata")  
+load("~/Reference/B.napus/napus_GO_combined.Rdata") 
+BnapusAnnotation <- 
+BnapusAnnotation %>% 
+  left_join(napus_GO_combined, by=c("name"="gene_ID")) # use annotation file from B.napus 
+
+### summary output of genes with high GS and MM: combine module correlation information and gene annotation to check the result 
+
+load("~/505/network_analysis/output/cor.top.Rdata")
+load("~/505/network_analysis/input/module.gene.GO.Rdata")
+gene.module %>% length() 
+
+# for every trait, only get the GS value for genes from important modules 
+names(geneTraitSignificance)[-(2:4)]
+
+geneTraitSignificance.final <- 
+lapply(names(geneTraitSignificance), function(i) {  
+  # 1) get genes for the two modules, keep module name and module trait correlation
+  # 2) extract genes from GS table, combine with previous info 
+  test <- cor.top[i,][!is.na(cor.top[i,])] %>% as.data.frame() 
+  rownames(test) <- gsub("ME", "", rownames(test))
+  
+  if(nrow(test) >0){
+  test2 <- 
+  lapply(rownames(test), function(j) {
+  data.frame(geneID = gene.module[[j]], 
+             module = rep(j, length(gene.module[[j]])), 
+             trait_module_cor = rep(test[j,], length(gene.module[[j]]))    
+             )
+  })  
+  test3 <- do.call(rbind, test2) 
+  
+  geneTraitSignificance[[i]]$geneID <- rownames(geneTraitSignificance[[i]])
+  GSPvalue[[i]]$geneID <- rownames(GSPvalue[[i]])
+  
+  test3 %>% dplyr::left_join(geneTraitSignificance[[i]]) %>%
+    left_join(GSPvalue[[i]]) %>% 
+    left_join(BnapusAnnotation, by = c("geneID" = "name"))
+  }
+}) 
+
+names(geneTraitSignificance.final) <- names(geneTraitSignificance)
+
+# double check  
+geneTraitSignificance.final %>% names()
+geneTraitSignificance.final[["Erucic_acid_year2"]] %>% dim()
+c(gene.module[["salmon"]], gene.module[["yellow"]]) %>% length()
+geneTraitSignificance.final[["Erucic_acid_year2"]][1:10, 1:4]
+vstMat.505.WGCNA.t %>% dim()
+vstMat.505.WGCNA.t <- as.data.frame(vstMat.505.WGCNA.t)
+vstMat.505.WGCNA.t$ID <- rownames(vstMat.505.WGCNA.t) 
+all(vstMat.505.WGCNA.t$ID == pheno_data_505$ID)
+cor(vstMat.505.WGCNA.t[,"BnaA05g26660D"], pheno_data_505$Erucic_acid_year2)
+cor(vstMat.505.WGCNA.t[,"BnaC08g11070D"], pheno_data_505$Erucic_acid_year2) # correct! 
+
+save(geneTraitSignificance.final, file = "~/505/network_analysis/output/geneTraitSignificance.final.Rdata")
+```
+
+### 
+```{r}
+
+```
 
 
