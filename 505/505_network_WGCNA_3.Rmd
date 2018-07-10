@@ -344,9 +344,10 @@ lapply(names(GWAS_trait.sig), function(i) {
   SNP <- GRanges(seqnames = Rle(GWAS_trait.sig[[i]]$Chromosome), ranges = IRanges(start = ifelse(GWAS_trait.sig[[i]]$Position - 250000 >0, GWAS_trait.sig[[i]]$Position - 250000,0), end = GWAS_trait.sig[[i]]$Position + 250000), ID = paste(GWAS_trait.sig[[i]]$Chromosome, GWAS_trait.sig[[i]]$Position, sep = "_"))
   SNP_gene <- mergeByOverlaps(SNP, genes) %>% as.data.frame %>%
     dplyr::select("SNP.ID", "genes.seqnames", "SNP.end", "names")
-})
+}) 
 
 names(GWAS_trait.sig.genes) <- names(GWAS_trait.sig)
+save(GWAS_trait.sig.genes, file = "~/505/network_analysis/output/GWAS_trait.sig.genes.Rdata")
 
 # for all the module, find candidate genes 
 GWAS_eigengene.sig.genes <- 
@@ -357,6 +358,7 @@ lapply(names(GWAS_eigengene.sig), function(i) {
 })
 
 names(GWAS_eigengene.sig.genes) <- names(GWAS_eigengene.sig)
+save(GWAS_eigengene.sig.genes, file = "~/505/network_analysis/output/GWAS_eigengene.sig.genes.Rdata")
 
 # look for overlaps 
 # pairwise comparison between eigen gene and trait 

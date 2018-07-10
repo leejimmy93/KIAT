@@ -192,6 +192,7 @@ powers <- c(c(1:10), seq(from = 12, to=30, by=2))
 sft <- pickSoftThreshold(vstMat.505.WGCNA.t, powerVector = powers, verbose = 5, networkType = "signed")
 
 sizeGrWindow(9, 5)
+png(filename = "~/505/network_analysis/output/WGCNA_module_detection.png",width=9, height=6, units="in", res=300)
 par(mfrow = c(1,2)) 
 cex1 <- 0.9 
 # Scale-free topology fit index as a fCRction of the soft-thresholding power
@@ -207,6 +208,7 @@ plot(sft$fitIndices[,1], sft$fitIndices[,5],
      xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
      main = paste("Mean connectivity"))
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red") 
+dev.off()
 
 # choose 14 
 softPower <- 14
@@ -273,12 +275,13 @@ mergedMEs = merge$newMEs
 # compare pre and post merge
 
 sizeGrWindow(12, 9)
-#pdf(file = "Plots/geneDendro-3.pdf", wi = 9, he = 6)
+
+png(filename = "~/505/network_analysis/output/WGCNA_module.png",width=12, height=9, units="in", res=300)
 plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
 c("Dynamic Tree Cut", "Merged dynamic"),
 dendroLabels = FALSE, hang = 0.03,
 addGuide = TRUE, guideHang = 0.05)
-#dev.off()
+dev.off()
 
 # Rename to moduleColors
 moduleColors = mergedColors
@@ -334,6 +337,7 @@ for (i in colnames(pheno_data_505)[42:57]) {
   } 
 
 save(pheno_data_505, file = "~/505/network_analysis/output/pheno_data_505.Rdata")
+write.csv(pheno_data_505, file = "~/505/network_analysis/output/pheno_data_505.csv")
 
 # check correlation between phenotypes 
 library(pheatmap)
@@ -400,6 +404,7 @@ vstMat.505.unsigned <-
   t() %>% as.data.frame()
 
 # plot heatmap 
+png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505.png",width=20, height=16, units="in", res=300)
 pheatmap(as.matrix(t(vstMat.505.unsigned)),  
      cluster_rows = T,
      cluster_cols = T,
@@ -409,8 +414,9 @@ pheatmap(as.matrix(t(vstMat.505.unsigned)),
      border_color=NA,
      fontsize_col = 8, 
      legend = T, 
-     main = "unsigned"
-)  
+     main = "unsigned", 
+     show_rownames = F
+)   
 ```
 
 ### check to see the three genes I found from F2, BnaA08g12780D, BnaA08g11060D, and BnaA08g11140D 

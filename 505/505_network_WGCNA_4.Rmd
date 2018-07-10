@@ -9,7 +9,7 @@ purpose of this script is to combine GWAS analysis, WGCNA module-trait correlati
 
 goal: propose SNP/QTL/gene -- gene expression/biological pathway/GO term (module) -- phenotypic trait connection 
 
-### GWAS plot for all traits & eigengene 
+### GWAS plot for all traits & eigengene  
 ```{r}
 library("qqman")
 
@@ -42,7 +42,7 @@ dev.off()
 ```
 
 ### load overlap data and take a look 
-```{r}
+```{r} 
 load("~/505/network_analysis/output/GWAS_eigengene_trait_overlap_gene.Rdata")
 
 GWAS_eigengene_trait_overlap_gene$class %>% unique() %>% length() # 540 
@@ -98,6 +98,14 @@ grep("MEdarkturquoise_", GWAS_eigengene_trait_overlap_gene$class %>% unique(), v
 colnames(GWAS_eigengene[["MEdarkturquoise"]] )[1:4] <- c("SNP", "CHR", "BP", "P")
 manhattan(GWAS_eigengene[["MEdarkturquoise"]], main = "", ylim = c(0, 8), cex = 0.6,
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F) 
+
+GWAS_eigengene_trait_overlap_gene %>% 
+  filter(class == "MEdarkturquoise_Behenic_acid_year2" | 
+           class == "MEdarkturquoise_Erucic_acid_year1" | 
+           class == "MEdarkturquoise_Erucic_acid_year2" | 
+           class == "MEdarkturquoise_vaccenic_acid_year2") %>% 
+  dplyr::select(names) %>% 
+  unique()  
 ```
 
 ### darkred, dosn't look quite good, messy GWAS result, only focus on WGCNA result 
@@ -138,6 +146,70 @@ GWAS_eigengene_trait_overlap_gene %>%
   unique()  
 ```
 
+### look for overlap between GWAS candidate genes with genes from modules which are highly correlated with different traits, eQTL for different traits 
+
+```{r}
+load("~/505/network_analysis/output/GWAS_trait.sig.genes.Rdata")
+load("~/505/network_analysis/output/geneTraitSignificance.final.Rdata")
+  
+geneTraitSignificance.final$Erucic_acid_year1$GS.Erucic_acid_year1
+GWAS_trait.sig.genes$Behenic_acid_year2 
+
+geneTraitSignificance.final$Erucic_acid_year1 %>% 
+  semi_join(GWAS_trait.sig.genes$Erucic_acid_year1, by= c("geneID"="names")) %>% 
+  View()
+
+GWAS_trait_gene_GS <- 
+lapply(names(geneTraitSignificance.final), function(i) {
+  if((i %in% names(GWAS_trait.sig.genes)) && (nrow(GWAS_trait.sig.genes[[i]])>0)){
+  geneTraitSignificance.final[[i]] %>% 
+  semi_join(GWAS_trait.sig.genes[[i]], by= c("geneID"="names"))
+  }
+})
+
+names(GWAS_trait_gene_GS) <- names(geneTraitSignificance.final)
+
+test <- 
+sapply(names(geneTraitSignificance.final), function(i) {
+  if((i %in% names(GWAS_trait.sig.genes)) && (nrow(GWAS_trait.sig.genes[[i]])>0)){
+  tmp <-   
+  geneTraitSignificance.final[[i]] %>% 
+  semi_join(GWAS_trait.sig.genes[[i]], by= c("geneID"="names")) %>% 
+      nrow()
+  }
+})
+
+test2 <- test %>% unlist() %>% as.data.frame() 
+
+GWAS_trait_gene_GS$Palmitic_acid_year2 %>% View()
+GWAS_trait_gene_GS$Heptadecanoic_acid_year2 %>% View()
+GWAS_trait_gene_GS$Stearic_acid_year2 %>% View()
+GWAS_trait_gene_GS$vaccenic_acid_year2 %>% View()
+GWAS_trait_gene_GS$Linoleic_acid_year2 %>% View()
+GWAS_trait_gene_GS$Linolenic_acid_year2 %>% View()
+GWAS_trait_gene_GS$Arachidic_acid_year2 %>% View()
+GWAS_trait_gene_GS$Behenic_acid_year2 %>% View()
+GWAS_trait_gene_GS$Erucic_acid_year1 %>% View() # ***  
+# BnaA08g30740D 
+# BnaC03g66150D plays a role in membrane lipid modulation under Al stress.
+GWAS_trait_gene_GS$Erucic_acid_year2 %>% View() # ***  
+GWAS_trait_gene_GS$Oleic_acid_year1 %>% View() # *** 
+GWAS_trait_gene_GS$Oleic_acid_year2 %>% View() # *** 
+GWAS_trait_gene_GS$Erucic_acid_year1 %>% 
+  filter(geneID == "BnaA08g30740D") %>% 
+  dplyr::select(geneID, module, chrom, AGI, At_symbol, GS.Erucic_acid_year1) %>% 
+  View()
+
+GWAS_trait_gene_GS$bolt_50_days_MG_year1 %>% View()  
+GWAS_trait_gene_GS$leafn_July_03_04_MG_year1 %>% View()  
+GWAS_trait_gene_GS$flower_50_days_MG_year1 %>% View() 
+GWAS_trait_gene_GS$bolting_length_08_07_MG_year1 %>% View() 
+GWAS_trait_gene_GS$germ.rate_KR_GH_year1 %>% View()
+GWAS_trait_gene_GS$germ.rate_KR_GH_year1[!is.na(GWAS_trait_gene_GS$germ.rate_KR_GH_year1$AGI),] %>% 
+  filter(abs(GS.germ.rate_KR_GH_year1) > 0.2) %>% 
+  dplyr::select(geneID, module, chrom, AGI, At_symbol, GS.germ.rate_KR_GH_year1) %>% 
+  View()  
+``` 
 
 
 

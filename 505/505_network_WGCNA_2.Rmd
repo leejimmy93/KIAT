@@ -279,9 +279,5 @@ cor(vstMat.505.WGCNA.t[,"BnaC08g11070D"], pheno_data_505$Erucic_acid_year2) # co
 save(geneTraitSignificance.final, file = "~/505/network_analysis/output/geneTraitSignificance.final.Rdata")
 ```
 
-### 
-```{r}
-
-```
 
 
