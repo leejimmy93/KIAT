@@ -70,6 +70,40 @@ labeledHeatmap(Matrix = blups.cor,
 
 dev.off()    
 
+# heatmap for several module only 
+blups.cor.sub <- 
+blups.cor[-(2:4),] %>%
+  as.data.frame() %>% 
+  dplyr::select(MEsalmon, MEyellow, MEturquoise, MEdarkturquoise, MEdarkred, MEgreen, MEivory) 
+
+MEs.sub <- 
+MEs %>% 
+    dplyr::select(MEsalmon, MEyellow, MEturquoise, MEdarkturquoise, MEdarkred, MEgreen, MEivory) 
+
+blups.cor.sig.sub <- 
+blups.cor.sig[-(2:4),] %>% 
+  as.data.frame() %>% 
+    dplyr::select(MEsalmon, MEyellow, MEturquoise, MEdarkturquoise, MEdarkred, MEgreen, MEivory) 
+
+png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505_sub.png",width=12, height=14, units="in", res=300)
+par(mar = c(8, 18, 3, 3)); 
+# Display the correlation values within a heatmap plot
+labeledHeatmap(Matrix = blups.cor.sub,
+               yLabels = rownames(blups.cor.sub),
+               xLabels = names(MEs.sub), 
+               xSymbols = names(MEs.sub),
+               ySymbols = rownames(blups.cor.sub),
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = signif(blups.cor.sig.sub,2),
+               setStdMargins = FALSE,
+               cex.text = 0.5,
+               zlim = c(-1,1),
+               main = paste("505 Module-trait relationships")) # this figure shows the correlation between traits and eigene gene of different modules, only correlation with P-value smaller than 0.05 were shown with correlation value 
+
+dev.off()    
+
+
 # again follow Julin's method 
 # Arbitrary, but let's take the max and min for each trait (so long as they are significant)
 
@@ -91,7 +125,7 @@ cor.top %>% dim() # 56 28
 save(cor.top, file = "~/505/network_analysis/output/cor.top.Rdata")
 write.csv(cor.top,"~/505/network_analysis/output/Eigen_trait_cor_505_threshold.csv") 
 
-png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505_cortop.png",width=20, height=16, units="in", res=300)
+png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505_cortop.png",width=20, height=16, units="in", res=300) 
 par(mar = c(8, 18, 3, 3)); 
 # make plot for this new cor.top object 
 labeledHeatmap(Matrix = cor.top, # blups.cor
@@ -111,7 +145,7 @@ dev.off()
 # write the Eigen genes
 head(MEs[,colnames(cor.top)]) 
 MEs[,colnames(cor.top)] %>% dim # get 28 modules which are significantly correlated with traits 
-write.csv(MEs[,colnames(cor.top)], file = "~/505/network_analysis/output/Top_Eigen_genes_505.csv") 
+write.csv(MEs[,colnames(cor.top)], file = "~/505/network_analysis/output/Top_Eigen_genes_505.csv")  
 ```
 
 ### GO enrichment of different modules 

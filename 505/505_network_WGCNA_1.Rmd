@@ -400,11 +400,11 @@ length(MEs) # 30
 
 # check "white" module 
 vstMat.505.unsigned <- 
-  vstMat.505.batch.corrected.largeVar[moduleColors == "royalblue",] %>% 
+  vstMat.505.batch.corrected.largeVar[moduleColors == "darkgrey",] %>% 
   t() %>% as.data.frame()
 
 # plot heatmap 
-png(filename = "~/505/network_analysis/output/Module-trait_heatmap_505.png",width=20, height=16, units="in", res=300)
+png(filename = "~/505/network_analysis/output/unsigned_module.png",width=12, height=9, units="in", res=300)
 pheatmap(as.matrix(t(vstMat.505.unsigned)),  
      cluster_rows = T,
      cluster_cols = T,
@@ -417,6 +417,7 @@ pheatmap(as.matrix(t(vstMat.505.unsigned)),
      main = "unsigned", 
      show_rownames = F
 )   
+dev.off()
 ```
 
 ### check to see the three genes I found from F2, BnaA08g12780D, BnaA08g11060D, and BnaA08g11140D 

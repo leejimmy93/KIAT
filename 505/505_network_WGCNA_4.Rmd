@@ -105,7 +105,12 @@ GWAS_eigengene_trait_overlap_gene %>%
            class == "MEdarkturquoise_Erucic_acid_year2" | 
            class == "MEdarkturquoise_vaccenic_acid_year2") %>% 
   dplyr::select(names) %>% 
-  unique()  
+  unique() %>% 
+  left_join(BnapusAnnotation, by=c("names"="name")) %>% 
+  View()
+
+left_join()
+
 ```
 
 ### darkred, dosn't look quite good, messy GWAS result, only focus on WGCNA result 
@@ -208,7 +213,7 @@ GWAS_trait_gene_GS$germ.rate_KR_GH_year1 %>% View()
 GWAS_trait_gene_GS$germ.rate_KR_GH_year1[!is.na(GWAS_trait_gene_GS$germ.rate_KR_GH_year1$AGI),] %>% 
   filter(abs(GS.germ.rate_KR_GH_year1) > 0.2) %>% 
   dplyr::select(geneID, module, chrom, AGI, At_symbol, GS.germ.rate_KR_GH_year1) %>% 
-  View()  
+  View()   
 ``` 
 
 

@@ -7,7 +7,7 @@ Purpose of this script is to do eigene network analysis
 
 ### 0) 
 
-check expression profile of genes in important modules as well as their eigengenes
+check expression profile of genes in important modules as well as their eigengenes 
 ```{r}
 load("~/505/network_analysis/input/module.gene.GO.Rdata")
 GO.module %>% length() # 39 
