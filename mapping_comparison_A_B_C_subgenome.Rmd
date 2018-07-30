@@ -7,7 +7,7 @@ The idea is that if there is introgression from B subgenome, this will present a
 
 The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome (using STAR), get read depth for a sliding window of 1000bp (samtool or bedtools), then to see whether there are read preferentially map to B subgenome, for each sliding window mapping position on A + C genome, plot the differences in read depth between the two mapping result. If there are differences, plot the read depth on B subgenome only, and we expect to see a cluster of sliding window positions with high read depth. 
 
-# get B.napus + B subgenome 
+### get B.napus + B subgenome 
 ```{r}
 # 1) get B subgenome from B.juncea 
 # J11-J18 in B.juncea are B subgenome 
@@ -219,7 +219,7 @@ prep.4.plot.depth.diff <- function(depth_AC, depth_ABC){
 } 
 ```
 
-# also get mapping result when map to ABC & AC 
+### also get mapping result when map to ABC & AC 
 ```{r}
 mapping.ABC <- read.table("~/2016_summer/raw_data/flower_Ol_with_ABC/Star_Stats.tab", header=T)
 mapping.AC <- read.table("~/2016_summer/raw_data/flower_Ol/Star_Stats.tab", header=T)
@@ -257,7 +257,7 @@ mapping_Ol_mismatch0.sh
 
 3) /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/mapping_comparison_A_B_C_subgenome/mismatch_0/subset_by_chromosome.sh 
 
-# do the same thing for 505 
+### do the same thing for 505 
 for the late silique batchE, map to ABC genome... on cluster 
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array_ABC.slurm
 ```{r}
@@ -285,11 +285,23 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/mapping_array_ABC.sl
 # again get coverage on B subgenome.... I must made some mistake in the earlier analysis, sad... 
 
 # To do, replicate my mistake tomorrow... is that true or due to a different method?  
-
-
-
 ```
 
+### For paper revision 
+
+After paper submission to Frontiers in Plant biologiy, we were challenged by a Q from a reviewer: Could there be fragments from B-genome? Did you try to map your reads against the B genome? 
+
+Since I just deleted this folder, so I will re-run everything from the start. I can re-run just the flower data, 3 samples: 2, All1_Gae_2, All1_Gae_3  
+
+1) map flower data from Da-Ol-1 to B.napus & B.napus + B subgenome, 0 mismatch for both, checking mapping result  
+
+2) extract uniquely mapped reads from both mapping result 
+
+3) calculate read depth for each position  
+
+4) subset to each chromosome & calculate average depth for a window size of 1000bp 
+
+5) get the difference in read depth between ABC VS AC mapped reads in 10,000 bp window size 
 
 
 

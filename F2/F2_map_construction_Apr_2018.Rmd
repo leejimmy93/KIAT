@@ -276,7 +276,18 @@ plot.rf(LG.f2.madmapper.after.crossover, col.scheme = "redblue", alternate.chrid
 dev.off()  
 # summary map 
 map_summary <- summaryMap(LG.f2.madmapper.after.crossover) 
-write.csv(map_summary, file = "~/Desktop/F2_paper/map_summary.csv")  
+write.csv(map_summary, file = "~/Desktop/F2_paper/map_summary.csv") 
+
+# average distance between markers in bp 
+tmp <- 
+lapply(unique(map_geno$X), function(i) {
+  map_geno[map_geno$X == i,] %>% 
+    mutate(physical_pos = as.numeric(physical_pos)) %>% 
+    mutate(distance = max(physical_pos) - min(physical_pos)) %>% 
+    mutate(average_dis = distance/length(id)) 
+})
+tmp2 <- do.call(rbind, tmp) 
+unique(tmp2$average_dis) %>% sum() / 19  # 457235.2 --> 0.5 Mb average between markers 
 ``` 
 
 # test for A04  
