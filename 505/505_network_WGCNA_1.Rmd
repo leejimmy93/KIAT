@@ -10,7 +10,7 @@ I did network analysis for our 414 F2 population using SNP data (https://github.
 ### load libs
 ```{r}
 library(WGCNA) 
-library(tidyverse) 
+library(tidyverse)  
 library(edgeR) 
 library(DESeq2)
 library(magrittr) 
@@ -322,26 +322,26 @@ dim(pheno_data_505)   # 131 57
 summary(pheno_data_505)
 colnames(pheno_data_505)
 
-png(filename = "~/505/network_analysis/output/figure/trait_hist1.png",width=220, height=200, units="mm", res=300)
+png(filename = "~/505/network_analysis/output/figure/trait_hist1.png",width=280, height=200, units="mm", res=300)
 par(mfrow=c(5, 4))
 for (i in colnames(pheno_data_505)[2:21]) { 
   hist(pheno_data_505[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i) 
   } 
 dev.off() 
 
-png(filename = "~/505/network_analysis/output/figure/trait_hist2.png",width=220, height=200, units="mm", res=300)
+png(filename = "~/505/network_analysis/output/figure/trait_hist2.png",width=280, height=200, units="mm", res=300)
 par(mfrow=c(5, 4))
 for (i in colnames(pheno_data_505)[22:41]) { 
   hist(pheno_data_505[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i) 
   } 
 dev.off() 
 
-png(filename = "~/505/network_analysis/output/figure/trait_hist3.png",width=220, height=200, units="mm", res=300)
+png(filename = "~/505/network_analysis/output/figure/trait_hist3.png",width=280, height=200, units="mm", res=300)
 par(mfrow=c(5, 4)) 
 for (i in colnames(pheno_data_505)[42:57]) { 
   hist(pheno_data_505[,i], breaks = 15, col = "grey", border = "black", xlab = "", ylab = "", main = i, mgp=c(.1,.5,.0)) 
   } 
-dev.off()
+dev.off() 
 
 save(pheno_data_505, file = "~/505/network_analysis/output/pheno_data_505.Rdata")
 write.csv(pheno_data_505, file = "~/505/network_analysis/output/pheno_data_505.csv")

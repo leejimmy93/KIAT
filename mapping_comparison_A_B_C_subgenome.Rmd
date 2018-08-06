@@ -293,9 +293,40 @@ After paper submission to Frontiers in Plant biologiy, we were challenged by a Q
 
 Since I just deleted this folder, so I will re-run everything from the start. I can re-run just the flower data, 3 samples: 2, All1_Gae_2, All1_Gae_3  
 
-1) map flower data from Da-Ol-1 to B.napus & B.napus + B subgenome, 0 mismatch for both, checking mapping result  
+1) map flower data from Da-Ol-1 to B.napus & B.napus + B subgenome, 0 mismatch for both mapping_napus.sh & mapping_napus_Bsub.sh
+
+checking mapping result 
+```{r}
+mapping.ABC <- read.table("~/B_subgenome_check/output/mapping_result/ABC/Star_Stats.tab", header=T)
+mapping.AC <- read.table("~/B_subgenome_check/output/mapping_result/AC/Star_Stats.tab", header=T)
+
+head(mapping.ABC)
+head(mapping.AC)
+
+mapping.AC$Sample <- gsub("_paired.star.trim.dir", "", mapping.AC$Sample)
+mapping.ABC$type <- rep("ABC", 3)
+mapping.AC$type <- rep("AC", 3)
+
+mapping <- rbind(mapping.ABC, mapping.AC)
+mapping.sub <- mapping[,c("Sample", "Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short", "type")]
+mapping.sub.melt <- melt(mapping.sub)
+mapping.sub.melt
+
+p.mapping <- ggplot(data=mapping.sub.melt)
+p.mapping <- p.mapping + geom_col(aes(x=variable, y=value, fill=variable))
+p.mapping <- p.mapping + facet_grid(type~Sample)
+p.mapping <- p.mapping + geom_text(aes(x=variable, y=value, label=value))
+p.mapping <- p.mapping + theme(axis.text.x = element_text(angle = 90, size = 8))
+p.mapping
+ggsave(p.mapping, filename="~/B_subgenome_check/output/figure/mapping.png", height=8, width=11)
+```
+
+the result is same as before
 
 2) extract uniquely mapped reads from both mapping result 
+```{r}
+
+```
 
 3) calculate read depth for each position  
 
