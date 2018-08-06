@@ -834,4 +834,3 @@ allele.effect.trans <- function(gene_ID){
 
 ```
 
-
