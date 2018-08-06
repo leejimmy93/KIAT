@@ -1,5 +1,5 @@
 Title: Allelic specific expression 
-========================================================
+======================================================== 
 ### call SNPs between 414 & 415 F1 population 
 ```{r} 
 # 1) trim & map fastq file using script trimming_mapping_01_23_2017.sh 

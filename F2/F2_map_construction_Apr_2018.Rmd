@@ -276,7 +276,7 @@ plot.rf(LG.f2.madmapper.after.crossover, col.scheme = "redblue", alternate.chrid
 dev.off()  
 # summary map 
 map_summary <- summaryMap(LG.f2.madmapper.after.crossover) 
-write.csv(map_summary, file = "~/Desktop/F2_paper/map_summary.csv")  
+write.csv(map_summary, file = "~/Desktop/F2_paper/map_summary.csv")   
 ``` 
 
 # test for A04  
