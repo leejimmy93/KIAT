@@ -324,9 +324,8 @@ ggsave(p.mapping, filename="~/B_subgenome_check/output/figure/mapping.png", heig
 the result is same as before
 
 2) extract uniquely mapped reads from both mapping result 
-```{r}
-
-```
+https://github.com/leejimmy93/KIAT/blob/master/parent/extract_unique_mapping_reads.sh
+https://github.com/leejimmy93/KIAT/blob/master/parent/extract_unique_mapping_reads_Bsub.sh  
 
 3) calculate read depth for each position  
 

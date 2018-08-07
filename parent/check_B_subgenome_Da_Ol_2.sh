@@ -3,10 +3,10 @@
 # the purpose is to check the existence of B subgenome in Da-Ol
 # although a previous run had 0 reads mapped to B subgenome, running a slitely different pipeline found all 505 have some B subgenome, so I need to try that pipeline on Da-Ol 
 
-cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/B_subgenome_check/output/mapping_result/ABC
+cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/B_subgenome_check/output/mapping_result/AC
 
 sample=`ls | grep "Unique"`
-chrom=`cat chrom_list_napus_plus_Bsub`
+chrom=`cat chrom_list`
 
 # index unique bam file & subset by chrom id & calculate per base depth 
 for i in $sample
@@ -22,7 +22,7 @@ for i in $sample
         	samtools depth ${i}_${j}.bam -a > ${i}_${j}.depth  
 	done
 
-# rm ${i}_${j}.bam 
+rm ${i}_${j}.bam 
 
 done
 

@@ -19,7 +19,7 @@ for i in $sample
 		do
 		echo $j
         	samtools view -@ 2 -b $i ${j} > ${i}_${j}.bam
-        	samtools depth ${i}_${j}.bam -a > ${i}_${j}.depth  
+        	samtools depth ${j}.bam -a > ${i}_${j}.depth  
 	done
 
 # rm ${i}_${j}.bam 
