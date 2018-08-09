@@ -2,7 +2,7 @@
 
 cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/B_subgenome_check/output/mapping_result/ABC
 
-sample=`cat sample_list`
+sample=`cat sample_list_Ae`
 echo $sample
 
 for i in $sample 

@@ -777,15 +777,29 @@ qtl_plot <- function(input,              # data frame input from scanone
   print(plot)
 } 
 
+###### function 
+total.by.window.size <- function(depth_in_bp){
+  tmp <- depth_in_bp 
+  window_size <- 10000 # widow size of 10,000bp 
+  num1 <- floor(nrow(tmp)/window_size) # 25945944 
+  num2 <- num1 + 1
+  num3 <- nrow(tmp) %% window_size
+  class_major <- rep(c(1:num1), each=10000)
+  class_minor <- rep(num2, each=num3)
+  tmp$class <- c(class_major, class_minor)
+  depth_in_window <- aggregate(tmp$V3, by=list(tmp$class), sum)
+  return(depth_in_window) 
+} 
 
-
-
-
-
-
-
-
-
+prep.4.plot.depth.diff <- function(depth_AC, depth_ABC){
+  depth_in_window_ABC <- total.by.window.size(depth_in_bp=depth_ABC)
+  depth_in_window_AC <- total.by.window.size(depth_in_bp=depth_AC)
+  
+  depth_ABC_AC <- merge(depth_in_window_ABC, depth_in_window_AC, by="Group.1") # merge by position 
+  colnames(depth_ABC_AC) <- c("range_group", "ABC", "AC")
+  depth_ABC_AC$diff <- depth_ABC_AC$AC - depth_ABC_AC$ABC # AC minus ABC, 
+  # greater than 0 means more coverage in AC, less than 0 means more coverage on ABC  
+}   
 
 
 

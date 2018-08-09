@@ -192,31 +192,6 @@ plot(J16_in_window, xlab="J16", ylim=c(0, 8e+5), ylab="")
 plot(J17_in_window, xlab="J17", ylim=c(0, 8e+5), ylab="")
 plot(J18_in_window, xlab="J18", ylim=c(0, 8e+5), ylab="")
 dev.off()  
-
-### random ######### wait... 
-
-###### function 
-total.by.window.size <- function(depth_in_bp){
-  tmp <- depth_in_bp 
-  window_size <- 10000 # widow size of 10,000bp 
-  num1 <- floor(nrow(tmp)/window_size) # 25945944 
-  num2 <- num1 + 1
-  num3 <- nrow(tmp) %% window_size
-  class_major <- rep(c(1:num1), each=10000)
-  class_minor <- rep(num2, each=num3)
-  tmp$class <- c(class_major, class_minor)
-  depth_in_window <- aggregate(tmp$V3, by=list(tmp$class), sum)
-  return(depth_in_window) 
-} 
-
-prep.4.plot.depth.diff <- function(depth_AC, depth_ABC){
-  depth_in_window_ABC <- total.by.window.size(depth_in_bp=depth_ABC)
-  depth_in_window_AC <- total.by.window.size(depth_in_bp=depth_AC)
-
-  depth_ABC_AC <- merge(depth_in_window_ABC, depth_in_window_AC, by="Group.1")
-  colnames(depth_ABC_AC) <- c("range_group", "ABC", "AC")
-  depth_ABC_AC$diff <- depth_ABC_AC$AC - depth_ABC_AC$ABC # AC minus ABC  
-} 
 ```
 
 ### also get mapping result when map to ABC & AC 
@@ -247,7 +222,7 @@ ggsave(p.mapping, filename="~/mapping_comparison_A_B_C_subgenome/output/mapping.
 
 Based on the 1st result, we didn't see a chunk of genes in B subgenome present as a continous spike of read depth. The overall mapping ratio between B.napus + B subgenome VS B.napus are not different very much, unique mapping ratio goes down when B subgenome was added in, and multiple mapping ratio goes up a little bit. the reason we didn't see spike might because we used the default mapping parameter, which is 10bp mismatch, so now check 0 mismatch. 
 
-update: after using 0 mismismatch, no reads were uniquely mapped to B subgenome, suggesting that there is no B subgenome present in Da-Ol-1 
+update: after using 0 mismismatch, no reads were uniquely mapped to B subgenome, suggesting that there is no B subgenome present in Da-Ol-1 (mistakes?)
 
 1) /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/mapping_comparison_A_B_C_subgenome/mismatch_0/mapping_Ol_mismatch0_ABC.sh 
 
@@ -304,8 +279,8 @@ head(mapping.ABC)
 head(mapping.AC)
 
 mapping.AC$Sample <- gsub("_paired.star.trim.dir", "", mapping.AC$Sample)
-mapping.ABC$type <- rep("ABC", 3)
-mapping.AC$type <- rep("AC", 3)
+mapping.ABC$type <- rep("ABC", 1)
+mapping.AC$type <- rep("AC", 1)
 
 mapping <- rbind(mapping.ABC, mapping.AC)
 mapping.sub <- mapping[,c("Sample", "Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short", "type")]
@@ -328,10 +303,116 @@ https://github.com/leejimmy93/KIAT/blob/master/parent/extract_unique_mapping_rea
 https://github.com/leejimmy93/KIAT/blob/master/parent/extract_unique_mapping_reads_Bsub.sh  
 
 3) calculate read depth for each position  
+https://github.com/leejimmy93/KIAT/blob/master/parent/check_B_subgenome_Da_Ol.sh
+https://github.com/leejimmy93/KIAT/blob/master/parent/check_B_subgenome_Da_Ol_2.sh 
 
-4) subset to each chromosome & calculate average depth for a window size of 1000bp 
+4) get the difference in read depth between ABC VS AC mapped reads in 10,000 bp window size, next time should do average before load into R, can do average using python script  
 
-5) get the difference in read depth between ABC VS AC mapped reads in 10,000 bp window size 
+```{r}
+ABC_A01 <- read.table("~/B_subgenome_check/output/mapping_result/ABC/2_Unique.sorted.bam_chrA01.depth")
+AC_A01 <- read.table("~/B_subgenome_check/output/mapping_result/AC/2_Unique.sorted.bam_chrA01.depth")
+data <- prep.4.plot.depth.diff(depth_AC=AC_A01, depth_ABC=ABC_A01) 
+plot(data, xlab="A01", ylim=c(-4e+5, 8e+5), ylab="") 
+
+J11 <- read.table("~/B_subgenome_check/output/mapping_result/ABC/2_Unique.sorted.bam_J11.depth")
+J11_in_window <- total.by.window.size(J11) 
+plot(J11_in_window, xlab="J11", ylim=c(0, 8e+5), ylab="")
+
+path_ABC <- "~/B_subgenome_check/output/mapping_result/ABC/depth"
+files <- list.files(path=path_ABC)
+files <- grep("depth", files, value = T)
+setwd(path_ABC)
+ABC_depth <- lapply(files, function(x) read.table(x)) 
+files <- gsub("Unique.sorted.bam_", "", files)
+files <- gsub("\\.depth", "", files)
+names(ABC_depth) <- files
+
+path_AC <- "~/B_subgenome_check/output/mapping_result/AC/depth"
+files <- list.files(path=path_AC)
+files <- grep("depth", files, value = T)
+setwd(path_AC)
+AC_depth <- lapply(files, function(x) read.table(x))   
+files <- gsub("Unique.sorted.bam_", "", files)
+files <- gsub("\\.depth", "", files)
+names(AC_depth) <- files
+
+# average across 10k bp and plot 
+# all J 
+ABC_depth_B <- ABC_depth[grep("J", names(ABC_depth), value = T)] 
+tmp <- total.by.window.size(ABC_depth_B[1:8]) 
+ABC_depth_B_window_average <- lapply(names(ABC_depth_B[1:8]), function(i) total.by.window.size((ABC_depth_B[[i]])))
+names(ABC_depth_B_window_average) <- names(ABC_depth_B[1:8])
+
+png("~/B_subgenome_check/output/figure/Ol_2_J_depth.png", width=10, height=20, units="in", res=300)
+par(mfrow=c(8,1)) 
+for(i in names(ABC_depth_B_window_average)){
+  plot(ABC_depth_B_window_average[[i]], xlab=i, ylim=c(0, 8e+5), ylab="") 
+}
+dev.off()
+
+ABC_depth_diff_window_average <- 
+lapply(names(AC_depth[1:19]), function(i) {
+  prep.4.plot.depth.diff(depth_AC=AC_depth[[i]], depth_ABC=ABC_depth[[i]]) 
+}) 
+names(ABC_depth_diff_window_average) <- names(AC_depth[1:19])
+
+png("~/B_subgenome_check/output/figure/ABC_VS_AC_depth.png", width=12, height=20, units="in", res=300)
+par(mfrow=c(10,2)) 
+for(i in names(ABC_depth_diff_window_average)){
+  plot(ABC_depth_diff_window_average[[i]], xlab=i, ylim=c(-4e+5, 8e+5), ylab="") 
+}
+
+dev.off() 
+```
+
+### run the same pipeline for Da-Ae, as a negative control 
+mapping result 
+```{r}
+mapping.ABC <- read.table("~/B_subgenome_check/output/mapping_result/ABC/Star_Stats.tab", header=T)
+mapping.AC <- read.table("~/B_subgenome_check/output/mapping_result/AC/Star_Stats.tab", header=T)
+
+head(mapping.ABC)
+head(mapping.AC)
+
+mapping.AC$Sample <- gsub("_paired.star.trim.dir", "", mapping.AC$Sample)
+mapping.ABC$type <- rep("ABC", 3)
+mapping.AC$type <- rep("AC", 3)
+
+mapping <- rbind(mapping.ABC, mapping.AC)
+mapping.sub <- mapping[,c("Sample", "Percent_Unique_Mapped", "Percent_Multi_Mapped", "Percent_Too_Many_Multi_Mapped", "Percent_Unmapped_Too_Short", "type")]
+mapping.sub.melt <- melt(mapping.sub)
+mapping.sub.melt
+
+p.mapping <- ggplot(data=mapping.sub.melt)
+p.mapping <- p.mapping + geom_col(aes(x=variable, y=value, fill=variable))
+p.mapping <- p.mapping + facet_grid(type~Sample)
+p.mapping <- p.mapping + geom_text(aes(x=variable, y=value, label=value))
+p.mapping <- p.mapping + theme(axis.text.x = element_text(angle = 90, size = 8))
+p.mapping
+ggsave(p.mapping, filename="~/B_subgenome_check/output/figure/mapping.Ae.png", height=8, width=11) 
+```
+
+# depth result 
+```{r}
+path_ABC <- "~/B_subgenome_check/output/mapping_result/ABC/depth/Ae/"
+files <- list.files(path=path_ABC)
+files <- grep("depth", files, value = T)
+setwd(path_ABC)
+ABC_depth <- lapply(files, function(x) read.table(x)) 
+files <- gsub("Unique.sorted.bam_", "", files)
+files <- gsub("\\.depth", "", files)
+names(ABC_depth) <- files 
+
+path_AC <- "~/B_subgenome_check/output/mapping_result/AC/depth/Ae/"
+files <- list.files(path=path_AC)
+files <- grep("depth", files, value = T)
+setwd(path_AC)
+AC_depth <- lapply(files, function(x) read.table(x))   
+files <- gsub("Unique.sorted.bam_", "", files)
+files <- gsub("\\.depth", "", files)
+names(AC_depth) <- files
+
+```
 
 
 
