@@ -397,7 +397,7 @@ ggsave(p.mapping, filename="~/B_subgenome_check/output/figure/mapping.Ae.png", h
 path_ABC <- "~/B_subgenome_check/output/mapping_result/ABC/depth/Ae/"
 files <- list.files(path=path_ABC)
 files <- grep("depth", files, value = T)
-setwd(path_ABC)
+setwd(path_ABC) 
 ABC_depth <- lapply(files, function(x) read.table(x)) 
 files <- gsub("Unique.sorted.bam_", "", files)
 files <- gsub("\\.depth", "", files)
@@ -412,6 +412,32 @@ files <- gsub("Unique.sorted.bam_", "", files)
 files <- gsub("\\.depth", "", files)
 names(AC_depth) <- files
 
+# average across 10k bp and plot 
+# all J 
+ABC_depth_B <- ABC_depth[grep("J", names(ABC_depth), value = T)] 
+ABC_depth_B_window_average <- lapply(names(ABC_depth_B), function(i) total.by.window.size((ABC_depth_B[[i]])))
+names(ABC_depth_B_window_average) <- names(ABC_depth_B)
+
+png("~/B_subgenome_check/output/figure/Ae_2_J_depth.png", width=10, height=20, units="in", res=300)
+par(mfrow=c(8,1)) 
+for(i in names(ABC_depth_B_window_average)){
+  plot(ABC_depth_B_window_average[[i]], xlab=i, ylim=c(0, 8e+5), ylab="") 
+}
+dev.off()
+
+ABC_depth_diff_window_average <- 
+lapply(names(AC_depth), function(i) {
+  prep.4.plot.depth.diff(depth_AC=AC_depth[[i]], depth_ABC=ABC_depth[[i]]) 
+}) 
+names(ABC_depth_diff_window_average) <- names(AC_depth)
+
+png("~/B_subgenome_check/output/figure/Ae_ABC_VS_AC_depth.png", width=12, height=20, units="in", res=300)
+par(mfrow=c(10,2)) 
+for(i in names(ABC_depth_diff_window_average)){
+  plot(ABC_depth_diff_window_average[[i]], xlab=i, ylim=c(-4e+5, 8e+5), ylab="") 
+}
+
+dev.off() 
 ```
 
 
