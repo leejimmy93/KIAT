@@ -252,4 +252,46 @@ circos.trackHist(factors = gff.mRNA.main$chrom, x = gff.mRNA.main$start, bin.siz
 dev.off()    
 ```
 
+```{r}
+# average genetic length 
+F2_map <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/F2/output/missing_rate_0.10/LG.f2.madmapper.final.flipped_gen_C05C08.csv_gen.csv") 
+F2_map$chrom <- F2_map$X
+F2_map$start <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)(_)([[:print:]]+)", "\\5", F2_map$id) %>% as.numeric()
+summary_genetic <- 
+F2_map %>% group_by(X) %>% 
+  summarise(max(round(X.1))) 
+
+colnames(summary_genetic) <- c("chrom", "genetic")
+summary_genetic
+
+physical <- read.delim("~/Desktop/revision/analysis/Brassica_napus_v4.1.length", header = F)
+
+summary_genetic_physical <- 
+physical %>% 
+  mutate(chrom = gsub("chr", "", V1)) %>% 
+  mutate(physical = V2) %>% 
+  left_join(summary_genetic) %>% 
+  dplyr::select(chrom, physical, genetic) 
+  
+summary_genetic_physical <- summary_genetic_physical[1:19,]
+
+gff.mRNA <- read.table("~/Desktop/F2_paper/data/gff.mRNA")
+colnames(gff.mRNA) <- c("chrom", "start", "end", "gene_ID")
+gff.mRNA$subgenome <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\2", gff.mRNA$chrom)
+
+gff.mRNA.main <- gff.mRNA[grep("random", gff.mRNA$chrom, invert = T),]
+gff.mRNA.main$chrom <- gsub("(chr)(A|C)(01|02|03|04|05|06|07|08|09|10)", "\\3", gff.mRNA.main$chrom)
+dim(gff.mRNA.main)  
+
+gff.mRNA.main$chrom <- paste(gff.mRNA.main$subgenome, gff.mRNA.main$chrom, sep = "")
+
+summary_final <- 
+gff.mRNA.main %>% 
+  group_by(chrom) %>% 
+  summarise(count = n()) %>% 
+  left_join(summary_genetic_physical) %>% 
+  mutate(gene_density = count/physical * 1000) 
+
+write.csv(summary_final, file = "~/Desktop/revision/analysis/summary_final.csv") 
+```
 
