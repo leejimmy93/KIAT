@@ -2,8 +2,8 @@
 
 echo Collecing names of all directories which start in Sample
 
-cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/B_subgenome_check/output/mapping_result/AC
-files=`cat sample_list`
+cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/B_subgenome_check/output/mapping_result/ABC
+files=`cat sample_list_Ae`
 #echo $files
 echo `wc -w <<< $files` Directories found
 

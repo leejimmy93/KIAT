@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/B_subgenome_check/input
-samples=`cat sample_list`
+samples=`cat sample_list_Ae`
 sample_dir="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/calenbadger/assembly_parent/B.napus/De_novo_Assembly/Trimmed_Fastqs"
 output_dir="/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/B_subgenome_check/output/mapping_result/ABC"
 
