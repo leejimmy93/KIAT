@@ -774,7 +774,7 @@ DEgene.bolting <- topTags(lrt.bolting,n = Inf)$table[topTags(lrt.bolting,n = Inf
 # 0  56327
 # 1   1854
 
-save(DEgene.young, DEgene.flowering, DEgene.bolting, DEgene.early.silique, DEgene.late.silique, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.pairwise.gt.Rdata")
+save(DEgene.young, DEgene.flowering, DEgene.bolting, DEgene.early.silique, DEgene.late.silique, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/output/parent/DEgene.pairwise.gt.Rdata") 
 
 ### barplot for DEGs number 
 ### reformat for ggplot barplot 

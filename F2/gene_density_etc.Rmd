@@ -223,7 +223,7 @@ F2_map_cytoband <- data.frame(V1 = F2_map$chrom,
                               V4 = F2_map$id, 
                               V5 = c("stalk"))
 
-circos.initializeWithIdeogram(F2_map_cytoband)    
+circos.initializeWithIdeogram(F2_map_cytoband)     
 
 # data 
 # add SNP data 
