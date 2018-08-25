@@ -5,7 +5,7 @@ Because Da-Ol-1 has introgression from B subgenome, we want to use our RNA-seq d
 
 The idea is that if there is introgression from B subgenome, this will present as a chunk of genes. So reads that map to A or C genome will map to B subgeome instead. And in the final B subgnome mapping result, there will be spikes where the read depth increase a lot.  
 
-The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome (using STAR), get read depth for a sliding window of 1000bp (samtool or bedtools), then to see whether there are read preferentially map to B subgenome, for each sliding window mapping position on A + C genome, plot the differences in read depth between the two mapping result. If there are differences, plot the read depth on B subgenome only, and we expect to see a cluster of sliding window positions with high read depth. 
+The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome (using STAR), get read depth for a sliding window of 1000bp (samtool or bedtools), then to see whether there are read preferentially map to B subgenome, for each sliding window mapping position on A + C genome, plot the differences in read depth between the two mapping result. If there are differences, plot the read depth on B subgenome only, and we expect to see a cluster of sliding window positions with high read depth.  
 
 ### get B.napus + B subgenome 
 ```{r}
@@ -36,7 +36,7 @@ The way to test this is: map Da-Ol-1 reads to B.napus and B.napus + B subgenome 
 ABC_depth_A01_2 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_A01")
 AC_depth_A01_2 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_AC_depth_A01")
 data <- prep.4.plot.depth.diff(depth_AC=AC_depth_A01_2, depth_ABC=ABC_depth_A01_2)
-plot(data, xlab="A01", ylab="diff in read depth")   
+plot(data, xlab="A01", ylab="diff in read depth")     
 
 ## A02 
 ABC_depth_A02 <- read.table("~/mapping_comparison_A_B_C_subgenome/2_ABC_depth_chrA02")
