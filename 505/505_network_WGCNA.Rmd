@@ -384,8 +384,8 @@ pheno_data_505 %>%
 dim(pheno_data_505)   # 131 57 
 
 # plot the data to see missing rate, distribution, etc... 
-summary(pheno_data_505)
-colnames(pheno_data_505)
+summary(pheno_data_505) 
+colnames(pheno_data_505) 
 
 par(mfrow=c(5, 4))
 
