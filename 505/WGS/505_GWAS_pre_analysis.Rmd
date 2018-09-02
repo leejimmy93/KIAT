@@ -5,6 +5,11 @@ date: "8/20/2018"
 output: html_document
 ---
 
+### load libs
+```{r}
+library(tidyverse)
+```
+
 ### download 
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/download_array_WGS.slurm
 
@@ -14,13 +19,13 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/trimming_array.slurm
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/QC_trimmed.sh
 
 QC stats: 
-https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/fastqc_extract_stats.sh
+https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/fastqc_extract_stats.sh 
 
 ```{r}
 WGS_data <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/WGS_raw_data_info.csv")
 WGS_data <- 
 WGS_data %>% 
-  dplyr::select(Sample, Yield..Mbases., X.....Q30, Mean.Quality) 
+  dplyr::select(Sample, Yield..Mbases., X.....Q30, Mean.Quality)  
 
 WGS_data <- WGS_data[2:239,] 
 colnames(WGS_data) <- c("Sample", "Yield_in_Mb", "Q30_pct", "Mean_quality")
@@ -65,6 +70,56 @@ stats_compare$note <- ifelse(stats_compare$Yield_in_Mb != stats_compare$FastQC_c
 stats_compare %>% View()
 
 write.csv(stats_compare, file = "~/Desktop/stats_compare.csv") 
+
+stats_compare <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/stats_compare.csv")
+sample_list <- read.table("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/sample_list")
+
+Prob_samples <- 
+stats_compare %>% 
+  filter(note == "NO") %>% 
+  dplyr::select(Sample) 
+
+sample_list_47 <- 
+sample_list %>% 
+  mutate(Sample = gsub("_L003", "", V1)) %>% 
+  mutate(Sample = gsub("_S.*", "", V1)) %>% 
+  right_join(Prob_samples) %>% 
+  dplyr::select(V1)
+
+write.table(sample_list_47, file = "~/Desktop/sample_list_47")
+
+# redownload 47 samples and did QC 
+read_stats_47 <- read.delim("~/Desktop/FastQC_Stats.tab")
+read_stats_47 <- 
+read_stats_47 %>% 
+  mutate(Sample = gsub("_S.*", "", Sample)) %>% 
+  group_by(Sample) %>% 
+  summarise(Number_Reads = sum(Number_Reads)) 
+dim(read_stats_47)
+
+read_stats_47_HQ <- read.delim("~/Desktop/FastQC_Stats_HQ.tab")
+read_stats_47_HQ <- 
+read_stats_47_HQ %>% 
+  mutate(Sample = gsub("_S.*", "", Sample)) %>% 
+  group_by(Sample) %>% 
+  summarise(Number_Reads_HQ = sum(Number_Reads))  
+
+stats_compare_47 <- 
+read_stats_47 %>% 
+  left_join(WGS_data) %>% 
+  mutate(FastQC_calc_Mb = round(Number_Reads * 151 / 1000000, digits = 0)) %>% 
+  dplyr::select(Sample, Yield_in_Mb, FastQC_calc_Mb, Number_Reads)
+
+sum(stats_compare_47$Yield_in_Mb > stats_compare_47$FastQC_calc_Mb)
+sum(stats_compare_47$Yield_in_Mb != stats_compare_47$FastQC_calc_Mb) 
+
+stats_compare_47 %>% View() 
+
+read_stats_47 %>% 
+  left_join(read_stats_47_HQ) %>% 
+  mutate(HQ_pct = Number_Reads_HQ/Number_Reads) %>% 
+  ggplot() + 
+  geom_histogram(aes(x = HQ_pct))  
 ```
 
 ### mapping 
