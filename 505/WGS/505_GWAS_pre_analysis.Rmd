@@ -72,7 +72,6 @@ sum(stats_compare$Yield_in_Mb > stats_compare$FastQC_calc_Mb)
 sum(stats_compare$Yield_in_Mb != stats_compare$FastQC_calc_Mb) 
 
 stats_compare$note <- ifelse(stats_compare$Yield_in_Mb != stats_compare$FastQC_calc_Mb, "NO", "YES")
-stats_compare %>% View() 
 
 p.stats_compare <- 
 stats_compare %>% 
@@ -106,7 +105,7 @@ sample_list %>%
 write.table(sample_list_47, file = "~/Desktop/sample_list_47")
 
 # redownload 47 samples and did QC 
-read_stats_47 <- read.delim("~/Desktop/FastQC_Stats.tab")
+read_stats_47 <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/FastQC_Stats.tab")
 read_stats_47 <- 
 read_stats_47 %>% 
   mutate(Sample = gsub("_S.*", "", Sample)) %>% 
@@ -114,7 +113,7 @@ read_stats_47 %>%
   summarise(Number_Reads = sum(Number_Reads)) 
 dim(read_stats_47)
 
-read_stats_47_HQ <- read.delim("~/Desktop/FastQC_Stats_HQ.tab")
+read_stats_47_HQ <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/FastQC_Stats_HQ.tab")
 read_stats_47_HQ <- 
 read_stats_47_HQ %>% 
   mutate(Sample = gsub("_S.*", "", Sample)) %>% 
@@ -130,13 +129,24 @@ read_stats_47 %>%
 sum(stats_compare_47$Yield_in_Mb > stats_compare_47$FastQC_calc_Mb)
 sum(stats_compare_47$Yield_in_Mb != stats_compare_47$FastQC_calc_Mb) 
 
-stats_compare_47 %>% View() 
-
 read_stats_47 %>% 
   left_join(read_stats_47_HQ) %>% 
   mutate(HQ_pct = Number_Reads_HQ/Number_Reads) %>% 
   ggplot() + 
   geom_histogram(aes(x = HQ_pct))  
+
+read_stats_summary_47 <- 
+read_stats_47 %>% 
+  left_join(read_stats_47_HQ) 
+
+read_stats_summary <- 
+read_stats %>% 
+  left_join(read_stats_HQ) 
+
+read_stats <- 
+read_stats_summary %>% 
+  anti_join(read_stats_summary_47, by = "Sample") %>% 
+  rbind(read_stats_summary_47) 
 ```
 
 ### mapping 
@@ -150,17 +160,16 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/bwa_extract_stats.sh
 ```{r}
 library(reshape2)
 
-mapping_stats <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/BWA_Stats.tab")
+mapping_stats <- read.delim("~/Desktop/BWA_Stats.tab")
 
 WGS_stats <- 
 mapping_stats %>% 
   mutate(Sample = gsub("_L003", "", Sample)) %>% 
   mutate(Sample = gsub("_S.*", "", Sample)) %>% 
   left_join(read_stats) %>% 
-  left_join(read_stats_HQ) %>% 
   mutate(Pct_HQ = Number_Reads_HQ/Number_Reads, 
          Pct_Mapped = Number_Mapped/100, 
-         Pct_Unique_Mapped = Number_Unique_Mapped/Number_Reads)
+         Pct_Unique_Mapped = Number_Unique_Mapped/Number_Reads_HQ)
 
 WGS_stats %>% 
   dplyr::select(starts_with("Pct")) %>% 
@@ -175,7 +184,7 @@ WGS_stats %>%
   filter(Pct_HQ < 0.85 | Pct_Mapped < 0.75 | Pct_Unique_Mapped < 0.4)  
 
 # inconsistent yield and fastqc stats...  
-### 4 lines ...    
+### 4 lines ...     
 ```
 
 ### SNP calling 
