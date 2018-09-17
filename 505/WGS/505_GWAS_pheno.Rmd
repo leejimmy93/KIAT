@@ -1,0 +1,46 @@
+---
+title: "505_GWAS_pheno"
+author: "Ruijuan Li"
+date: "9/17/2018"
+output: html_document
+---
+
+### plant material summarise 
+```{r}
+sample_des_c_revised <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_c_revised.csv", header=T, na.strings="")
+sample_des_c_sub <- sample_des_c_revised[,c("Sample.ID", "Name","Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_d_revised <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_d_revised.csv", header=T, na.strings="")
+sample_des_d_sub <- sample_des_d_revised[,c("Sample.ID", "Name", "Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_e <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_e.csv", header=T, na.strings="")
+sample_des_e_sub <- sample_des_e[,c("Sample.ID", "Name", "Sample.Description.Origin", "Sample.Description.Type")]
+
+sample_des_c_sub$Sample.ID
+sample_des_d_sub$Sample.ID
+sample_des_e_sub$Sample.ID
+
+sample_des_revised <- rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub)
+summary(sample_des_revised)
+
+sample_des_revised <- sample_des_revised %>% filter(!is.na(Sample.ID))
+save(sample_des_revised, file="~/505/output/131_sample/sample_des_revised.Rdata") 
+
+RNA_sample <- 
+sample_des_revised %>% 
+  mutate(sample_ID = gsub("505", "", Sample.ID)) %>% 
+  mutate(sample_ID = gsub("_", "", sample_ID))  %>% 
+  mutate(sample_ID = gsub("-", "", sample_ID))  
+  
+WGS_sample <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/WGS_sample.csv")
+
+sample_505 <- 
+RNA_sample %>% 
+  full_join(WGS_sample) 
+
+write.csv(sample_505, "~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/sample_505.csv") 
+```
+
+### phenotype data 
+```{r}
+
+```
+

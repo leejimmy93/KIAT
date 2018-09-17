@@ -181,13 +181,24 @@ WGS_stats %>%
 # note libs with low quailty, low mapping rate, and/or low unique mapping rate  
 WGS_stats %>% 
   dplyr::select(Sample, starts_with("Pct")) %>% 
-  filter(Pct_HQ < 0.85 | Pct_Mapped < 0.75 | Pct_Unique_Mapped < 0.4)  
+  filter(Pct_HQ < 0.85 | Pct_Mapped < 0.75 | Pct_Unique_Mapped < 0.4)   
 
-# inconsistent yield and fastqc stats...  
+# inconsistent yield and fastqc stats...   
 ### 4 lines ...     
 ```
 
 ### SNP calling 
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Bam_Split_By_Chrom.slurm 
+Freebayes-parallel SNP calling: 
+
+* some chroms require large memory, which is due to extremely high coverage for some regions on those chrom.
+calculate read coverage 
+sum read coverage at certain location 
+
+plot coverage 
+```{r}
+# A04 
+```
+
 
 
