@@ -196,8 +196,12 @@ calculate read coverage
 sum read coverage at certain location 
 
 plot coverage 
+
 ```{r}
-# A04 
+# extract only regions with reasonable coverage: 
+# cat i.sum | awk '$3<2500{print $1 "\t" $2 "\t" $2+1}' > i.bed
+# GATK pipeline 
+# cat vcfs.list | grep -v "K101" | grep -v "K133" | grep -v "SJ_290" > vcfs_235.list
 ```
 
 
