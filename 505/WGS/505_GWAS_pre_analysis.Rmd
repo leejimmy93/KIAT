@@ -249,19 +249,45 @@ WGS_stats %>%
 ### SNP calling 
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/Bam_Split_By_Chrom.slurm 
 Freebayes-parallel SNP calling: 
+cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS.slurm
 
-* some chroms require large memory, which is due to extremely high coverage for some regions on those chrom.
-calculate read coverage 
-sum read coverage at certain location 
+* 7 chroms require large memory, which mighe be due to extremely high coverage for some regions on those chrom. 
 
-plot coverage 
+* approach 1 
 
+for these 7 chroms, keep the partial vcf files and run SNP calling just on the rest regions
 ```{r}
-# extract only regions with reasonable coverage: 
-# cat i.sum | awk '$3<2500{print $1 "\t" $2 "\t" $2+1}' > i.bed
-# GATK pipeline 
-# cat vcfs.list | grep -v "K101" | grep -v "K133" | grep -v "SJ_290" > vcfs_235.list
+# for regions
+# calculate read coverage: cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/calc_depth_subset_by_chr.slurm 
+
+# sum read coverage at certain location: cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/depth_sum_$i.sh 
+
+# extract only regions with reasonable coverage: cat i.sum | awk '$3<1000{print $1 "\t" $2 "\t" $2+1}' > i.bed ### not quite right... should be cat i.sum | awk '$3<1000{print $1 "\t" $2-1 "\t" $2}'
+
+# extract the partial regions that left uncalled: cat i.bed | awk '$2>3969343{print $0}' > i.2.bed
+
+# merge regions: bedtools merge -i ${i}.2.bed > ${i}.3.bed
+
+# cat i.3.bed | awk '{print $1 ":" $2 "-" $3}' > i.3.region
+
+# split -l 1000 ${i}.3.region ${i}
+
+# for chroms: 
+# merge bam file from 238 samples for these 7 chroms: 
+# cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/merge_index_bam_for_Freebayes.slurm
+
+# call SNPs 
+# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_1000/split_region/Freebayes_parallel_Array_WGS_merged_region_i.slurm
 ```
+
+* approach 2 
+
+for these 7 chroms, run SNP calling on the whole chrom with splitted regions, w/o coverage limit
+```{r}
+### get 0 based bed file --> convert to region file --> split 
+```
+
+
 
 
 
