@@ -53,7 +53,7 @@ WGS_sample_2 %>%
   full_join(RNA_sample) 
   
 write.csv(sample_505, "~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/sample_505.csv") 
-```
+``` 
 
 ### phenotype data 
 ```{r}

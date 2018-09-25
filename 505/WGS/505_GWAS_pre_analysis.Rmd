@@ -48,7 +48,6 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/download_array_WGS.s
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/QC.sh
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/trimming_array.slurm
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/QC_trimmed.sh
-
 QC stats: 
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/fastqc_extract_stats.sh 
 
@@ -72,7 +71,8 @@ sapply(colnames(WGS_data)[2:4], function(i) {max(WGS_data[,i])})
 p.yeild <- 
 WGS_data %>% 
   ggplot() + 
-  geom_histogram(aes(x = Yield_in_Mb), binwidth = 100) 
+  geom_histogram(aes(x = Yield_in_Mb), binwidth = 100) + 
+  ylab("Number of samples") 
 
 p.yeild
 ggsave(p.yeild, filename = "~/Desktop/p.yeild.png", width = 9, height = 4)
@@ -170,6 +170,7 @@ read_stats_summary_47 <-
 read_stats_47 %>% 
   left_join(read_stats_47_HQ) 
 
+### for KIAT meeting 
 read_stats_summary <- 
 read_stats %>% 
   left_join(read_stats_HQ) 
@@ -179,7 +180,7 @@ read_stats_summary %>%
   anti_join(read_stats_summary_47, by = "Sample") %>% 
   rbind(read_stats_summary_47) 
 
-read_stats %>% View() 
+read_stats %>% head()  
 ```
 
 ### data import to SQL database 
@@ -219,7 +220,7 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/bwa_extract_stats.sh
 ```{r}
 library(reshape2)
 
-mapping_stats <- read.delim("~/Desktop/BWA_Stats.tab")
+mapping_stats <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/BWA_Stats_new.tab")
 
 WGS_stats <- 
 mapping_stats %>% 
@@ -230,20 +231,23 @@ mapping_stats %>%
          Pct_Mapped = Number_Mapped/100, 
          Pct_Unique_Mapped = Number_Unique_Mapped/Number_Reads_HQ)
 
+p.WGS_stats <- 
 WGS_stats %>% 
   dplyr::select(starts_with("Pct")) %>% 
   melt() %>% 
   ggplot() + 
   geom_histogram(aes(x = value), binwidth = 0.01) + 
-  facet_wrap(~variable, nrow = 3) 
-  
+  facet_wrap(~variable, nrow = 3) + 
+  ylab("Number of Samples") + xlab("")
+
+p.WGS_stats  
+
 # note libs with low quailty, low mapping rate, and/or low unique mapping rate  
 WGS_stats %>% 
   dplyr::select(Sample, starts_with("Pct")) %>% 
   filter(Pct_HQ < 0.85 | Pct_Mapped < 0.75 | Pct_Unique_Mapped < 0.4)   
 
-# inconsistent yield and fastqc stats...   
-### 4 lines ...     
+ggsave(p.WGS_stats, filename = "~/Desktop/p.WGS_stats.png", width = 8, height = 6)  
 ```
 
 ### SNP calling 
