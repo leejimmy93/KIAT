@@ -231,14 +231,14 @@ mapping_stats %>%
          Pct_Mapped = Number_Mapped/100, 
          Pct_Unique_Mapped = Number_Unique_Mapped/Number_Reads_HQ)
 
-p.WGS_stats <- 
+p.WGS_stats <-  
 WGS_stats %>% 
   dplyr::select(starts_with("Pct")) %>% 
   melt() %>% 
   ggplot() + 
   geom_histogram(aes(x = value), binwidth = 0.01) + 
   facet_wrap(~variable, nrow = 3) + 
-  ylab("Number of Samples") + xlab("")
+  ylab("Number of Samples") + xlab("")  
 
 p.WGS_stats  
 
@@ -267,13 +267,27 @@ for these 7 chroms, run SNP calling on splitted regions
 # cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/split_region.slurm 
 
 # for chroms: 
-# merge bam file from 238 samples for these 7 chroms: 
+# merge bam file from 238 samples for these 7 chroms: actually no need to merge bam files, seperate bam file works as well 
 # cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/merge_index_bam_for_Freebayes.slurm
 
 # call SNPs 
 # /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/Freebayes_parallel_Array_WGS_merged_region_i.slurm  
 ```
 
+### vcf merge 
+
+1) WGS: merge vcf for each chrom, use vcftool to calculate stats and filter, use tassel to convert to hapmap format cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500
+
+2) RNAseq: compress and index vcf file for each chrom, use vcftool to filter, use tassel to convert to hapmap format 
+
+vcf files at: whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample 
+
+3) use join function to merge every chrom's hapmap file from WGS and RNAseq 
+
+--> GWAS & population structure + genetic diveristy  
+```{r}
+
+```
 
 
 
