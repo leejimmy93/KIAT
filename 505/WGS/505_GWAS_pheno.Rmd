@@ -1,0 +1,85 @@
+---
+title: "505_GWAS_pheno"
+author: "Ruijuan Li"
+date: "9/17/2018"
+output: html_document
+---
+
+### plant material summarise 
+```{r}
+sample_des_c_revised <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_c_revised.csv", header=T, na.strings="")
+sample_des_c_sub <- sample_des_c_revised[,c("Sample.ID", "Name","Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_d_revised <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_d_revised.csv", header=T, na.strings="")
+sample_des_d_sub <- sample_des_d_revised[,c("Sample.ID", "Name", "Sample.Description.Origin", "Sample.Description.Type")]
+sample_des_e <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/batch_e.csv", header=T, na.strings="")
+sample_des_e_sub <- sample_des_e[,c("Sample.ID", "Name", "Sample.Description.Origin", "Sample.Description.Type")]
+
+sample_des_c_sub$Sample.ID
+sample_des_d_sub$Sample.ID
+sample_des_e_sub$Sample.ID
+
+sample_des_revised <- rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub)
+summary(sample_des_revised)
+
+sample_des_revised <- sample_des_revised %>% filter(!is.na(Sample.ID))
+save(sample_des_revised, file="~/505/output/131_sample/sample_des_revised.Rdata") 
+
+RNA_sample <- 
+sample_des_revised %>% 
+  mutate(sample_ID = gsub("505", "", Sample.ID)) %>% 
+  mutate(sample_ID = gsub("_", "", sample_ID))  %>% 
+  mutate(sample_ID = gsub("-", "", sample_ID))  
+  
+RNA_sample$type <- rep("RNA", nrow(RNA_sample))
+RNA_sample %>% head()
+
+WGS_sample <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/WGS_sample.csv", stringsAsFactors = F)
+WGS_sample$sample_ID[126:128] <- paste("K", WGS_sample$sample_ID[126:128], sep = "")
+
+WGS_data <- read.csv("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/WGS_raw_data_info.csv", header = T)
+
+WGS_sample_2 <- 
+WGS_data %>% 
+  mutate(sample_ID = Sample) %>% 
+  dplyr::select(sample_ID) 
+
+WGS_sample_2 <- WGS_sample_2[2:239,] %>% as.data.frame()  
+colnames(WGS_sample_2) <- "sample_ID"
+
+sample_505 <- 
+WGS_sample_2 %>% 
+  left_join(WGS_sample) %>% 
+  mutate(type = "WGS") %>% 
+  full_join(RNA_sample) 
+  
+write.csv(sample_505, "~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/sample_505.csv") 
+``` 
+
+### phenotype data 
+```{r}
+expression <-  data.frame(value = rnorm(20000, mean = 100, sd = 25))
+hist(expression$value)
+
+set.seed(1)
+
+data <- matrix(data = NA, nrow = 3, ncol = 20000) %>% as.data.frame()
+dim(data)
+
+data <- 
+sapply(1:ncol(data), function(i) {
+  sample(expression$value, 3, replace = T) 
+}) 
+
+data <- data %>% t() %>% as.data.frame()
+head(data)
+
+gene.CV <- 
+sapply(1: nrow(data), function(i) {
+  sd(as.numeric(data[i,]), na.rm = T)/mean(as.numeric(data[i,]), na.rm = T) 
+}) 
+
+hist(gene.CV) 
+max(gene.CV) 
+min(gene.CV)  
+```
+
