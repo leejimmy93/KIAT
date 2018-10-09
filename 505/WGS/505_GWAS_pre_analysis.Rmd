@@ -276,13 +276,43 @@ for these 7 chroms, run SNP calling on splitted regions
 
 ### vcf merge 
 
-1) WGS: merge vcf for each chrom, use vcftool to calculate stats and filter, use tassel to convert to hapmap format cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500
+1) WGS: merge vcf for each chrom, use vcftool to calculate stats and filter, use tassel to convert to hapmap format 
+
+merge and index vcf file for each chrom 
+cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/combine_vcf.sh 
+
+reorder each vcf file and compress: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/reorder_vcf_etc.sh
+concat all vcf files: 
+
+```{r}
+
+```
 
 2) RNAseq: compress and index vcf file for each chrom, use vcftool to filter, use tassel to convert to hapmap format 
 
-vcf files at: whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample 
+vcf files at: cluster:/share/malooflab/Ruijuan/505/vcf_no_pop_late_silique/all
+or Whitney: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample 
+
+filter: https://github.com/leejimmy93/KIAT/blob/master/505/filter_late_silique.sh 
+
+vcf to hmp: /usr/local/stow/tassel-5-standalone/run_pipeline.pl -SortGenotypeFilePlugin -inputFile chrA10_filtered.vcf.gz -outputFile chrA10_filtered -fileType VCF
+/usr/local/stow/tassel-5-standalone/run_pipeline.pl -Xmx5g -fork1 -vcf chrA10_filtered.vcf -export -exportType Hapmap -runfork1
+
+```{r}
+
+```
+
 
 3) use join function to merge every chrom's hapmap file from WGS and RNAseq 
+
+hmp files at whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/
+
+```{r}
+
+```
+
+### test 
+1) 
 
 --> GWAS & population structure + genetic diveristy  
 ```{r}
