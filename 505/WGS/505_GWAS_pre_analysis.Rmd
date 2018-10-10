@@ -309,6 +309,20 @@ hmp files at whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/
 
 edit hmp file to remove "#" after rs & assembly  
 ```{r}
+A10_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/test/chrA10_filtered.hmp.txt", header = T) 
+A10_DNA <- read.table("~/505/vcf_combine_WGS_RNAseq/test_WGS/chrA10_filtered.hmp.txt", header = T)
+
+dim(A10_DNA) # 53766   249
+dim(A10_RNA) # 11317   142 
+
+A10_DNA[1:10, 1:10]
+A10_RNA[1:10, 1:10]
+
+test <- 
+A10_RNA %>% 
+  full_join(A10_DNA, by = c("rs", "alleles"))
+
+test %>% dim()
 
 ```
 
