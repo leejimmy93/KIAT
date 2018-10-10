@@ -282,7 +282,7 @@ merge and index vcf file for each chrom
 cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/combine_vcf.sh 
 
 reorder each vcf file and compress: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/reorder_vcf_etc.sh
-concat all vcf files: 
+concat all vcf files: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/concat.sh 
 
 ```{r}
 
@@ -307,6 +307,7 @@ vcf to hmp: /usr/local/stow/tassel-5-standalone/run_pipeline.pl -SortGenotypeFil
 
 hmp files at whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/
 
+edit hmp file to remove "#" after rs & assembly  
 ```{r}
 
 ```
