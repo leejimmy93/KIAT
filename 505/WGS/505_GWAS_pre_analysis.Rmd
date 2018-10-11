@@ -283,10 +283,60 @@ cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverag
 
 reorder each vcf file and compress: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/reorder_vcf_etc.sh
 concat all vcf files: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/concat.sh 
+calculate stats: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/calc.sh 
 
+check stats: 
 ```{r}
+# QUAL score
+QUAL <- read.delim("~/505/WGS/vcf_raw/combined/505.lqual")
+hist(log10(QUAL$QUAL))
+sum(QUAL$QUAL < 40)/nrow(QUAL)
 
+# MAF
+MAF <- read.table("~/505/WGS/vcf_raw/combined/MAF")
+nrow(MAF)/nrow(QUAL) # 83% SNP 
+
+MAF <- 
+MAF %>% 
+  mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5), 
+         V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>% 
+  dplyr::select(V7, V8) 
+
+hist(as.numeric(apply(MAF, 1, min)))  
+
+# mean read depth across individuals 
+read_depth <- read.delim("~/505/WGS/vcf_raw/combined/505.ldepth.mean")
+hist(log10(read_depth$MEAN_DEPTH), breaks = 1000)
+read_depth <- 
+read_depth %>% 
+  filter(MEAN_DEPTH > 1 & MEAN_DEPTH < 100) 
+
+nrow(read_depth)/nrow(QUAL) # 99% 
+hist(read_depth$MEAN_DEPTH, breaks = 500)
+
+# missing rate 
+# acorss site, on individual level 
+imiss <- read.delim("~/505/WGS/vcf_raw/combined/505.imiss")
+imiss %>% 
+  filter(F_MISS > 0.8)
+
+#             INDV   N_DATA N_GENOTYPES_FILTERED   N_MISS   F_MISS
+# 1 K185_S290_L003 32876150                    0 32531155 0.989506
+# 2 K186_S289_L003 32876150                    0 32534117 0.989596
+# 3 K279_S424_L003 32876150                    0 28089705 0.854410
+
+# across taxa, on site level 
+lmiss <- read.delim("~/505/WGS/vcf_raw/combined/505.lmiss")
+hist(lmiss$F_MISS) 
+sum(lmiss$F_MISS > 0.5)/nrow(lmiss) # 10% left only... 
+
+sum(lmiss$F_MISS > 0.5)  
 ```
+
+filter for each chrom seperately: biallelic SNP; QUAL score > 40, MAF >= 0.05, mean read depth across individuals greater than 1 and less than 100, missing rate across tax less than 0.5, genotype quality greater than 30 
+
+
+
 
 2) RNAseq: compress and index vcf file for each chrom, use vcftool to filter, use tassel to convert to hapmap format 
 
