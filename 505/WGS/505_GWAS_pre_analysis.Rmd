@@ -335,7 +335,7 @@ sum(lmiss$F_MISS > 0.5)
 
 filter for each chrom seperately: biallelic SNP; QUAL score > 40, MAF >= 0.05, mean read depth across individuals greater than 1 and less than 100, missing rate across tax less than 0.5, genotype quality greater than 30 https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh
 
-vcf to hmp: 
+vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh 
 
 2) RNAseq: compress and index vcf file for each chrom, use vcftool to filter, use tassel to convert to hapmap format 
 
@@ -344,8 +344,7 @@ or Whitney: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/rui
 
 filter: https://github.com/leejimmy93/KIAT/blob/master/505/filter_late_silique.sh 
 
-vcf to hmp: /usr/local/stow/tassel-5-standalone/run_pipeline.pl -SortGenotypeFilePlugin -inputFile chrA10_filtered.vcf.gz -outputFile chrA10_filtered -fileType VCF
-/usr/local/stow/tassel-5-standalone/run_pipeline.pl -Xmx5g -fork1 -vcf chrA10_filtered.vcf -export -exportType Hapmap -runfork1 
+vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh 
 
 3) use join function to merge every chrom's hapmap file from WGS and RNAseq 
 
@@ -353,21 +352,37 @@ hmp files at whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/
 
 edit hmp file to remove "#" after rs & assembly  
 ```{r}
-A10_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/test/chrA10_filtered.hmp.txt", header = T) 
-A10_DNA <- read.table("~/505/vcf_combine_WGS_RNAseq/test_WGS/chrA10_filtered.hmp.txt", header = T)
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/WGS_filtered/hmp"
+files.WGS <- list.files(path=path) 
+setwd(path) 
+hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS %>% length()
+files.WGS <- gsub("_filtered.hmp.txt", "", files.WGS)
+names(hmp.WGS) <- files.WGS
 
-dim(A10_DNA) # 53766   249
-dim(A10_RNA) # 11317   142 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
+files.RNA <- list.files(path=path) 
+setwd(path)
+hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T)) 
+hmp.RNA %>% length() 
+files.RNA <- gsub("_filtered.hmp.txt", "", files.RNA)
+names(hmp.RNA) <- files.RNA
 
-A10_DNA[1:10, 1:10] 
-A10_RNA[1:10, 1:10]
+common_WGS_RNA <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS[[i]] %>% full_join(hmp.RNA[[i]], by = c("rs", "alleles")))
 
-test <- 
-A10_RNA %>% 
-  full_join(A10_DNA, by = c("rs", "alleles"))
+common_WGS_RNA[[13]] %>% dim() 
+names(common_WGS_RNA) <- files.RNA
 
-test %>% dim() 
+for(i in names(hmp.WGS)){
+  print(i)
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.RNA[[i]]))
+  print(dim(common_WGS_RNA[[i]])) 
+}
 
+common_WGS_RNA[[1]][1:10, 1:15]  
 ```
 
 # remove site with high het ratio, if a SNP is heterozygous in more than 20% lines, remove that site.  
