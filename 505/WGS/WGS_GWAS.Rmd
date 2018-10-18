@@ -1,0 +1,51 @@
+---
+title: "WGS_GWAS"
+output: html_document
+---
+
+Purpose of this script is to do test GWAS on just samples with WGS data, to see whether we get the same A08 and C03 peaks 
+
+### pheno data for all 
+```{r}
+fatty_acid_oil_new <- read.csv("~/505/data/phenotype/505_fatty_acid_20171128.csv")
+colnames(fatty_acid_oil_new) 
+
+pheno.505.fatty.acid <- 
+fatty_acid_oil_new %>% 
+  dplyr::select(Line.number:Erucic.acid..C22.1n9.) 
+
+colnames(pheno.505.fatty.acid) <- c("SN", "Oil_content", "Caprylic_acid", "Capric_acid", "Lauric_acid", "Myristic_acid", "Pentadecanoic_acid", "Palmitic_acid", "Palmitoliec_aicd", "Heptadecanoic_acid", "Stearic_acid", "Oleic_acid", "vaccenic_acid", "Linoleic_acid", "Arachidic_acid", "cis_11_Eicosenoic_acid", "Linolenic_acid", "Behenic_acid", "Erucic_acid")
+
+str(pheno.505.fatty.acid)
+pheno.505.fatty.acid[1:10, 1:10]
+
+# replace SN with sample ID in genotype data  
+sample_des_c <- read.csv("~/505/data/phenotype/batch_c.csv", stringsAsFactors=F, header=T)
+sample_des_d <- read.csv("~/505/data/phenotype/batch_d.csv", stringsAsFactors=F, header=T)
+sample_des_e <- read.csv("~/505/data/phenotype/batch_e.csv", stringsAsFactors=F, header=T)
+
+sample_des_c_sub2 <- sample_des_c[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_d_sub2 <- sample_des_d[,c("Sample.ID", "No..of.Sowing", "Name")]
+sample_des_e_sub2 <- sample_des_e[,c("Sample.ID", "No..of.Sowing", "Name")]
+
+sample_des_d_sub2 <- sample_des_d_sub2[c(1:41),]
+sample_des_sub2 <- rbind(sample_des_c_sub2, sample_des_d_sub2, sample_des_e_sub2)
+
+sample_des_sub2$SN <- paste("K", sample_des_sub2$No..of.Sowing, sep="")
+sample_des_sub2$SN %in% pheno.505.fatty.acid$SN
+
+pheno.505.fatty.acid.merge <- merge(sample_des_sub2, pheno.505.fatty.acid, by = "SN")
+colnames(pheno.505.fatty.acid.merge)
+pheno.505.fatty.acid.merge %>% dim() # 131 22 
+
+pheno_data_505 <- 
+  pheno.505.fatty.acid.merge %>% 
+    dplyr::select(-SN) %>% 
+    dplyr::select(-(No..of.Sowing:Name))  
+    
+colnames(pheno_data_505)[1] <- "Taxa" 
+dim(pheno_data_505) # 131 19 
+
+save(pheno_data_505, file="~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata")  
+```
+

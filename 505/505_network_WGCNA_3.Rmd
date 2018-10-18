@@ -409,7 +409,7 @@ sum(test != 0)
 
 test <- test %>% as.data.frame() 
 colnames(test) <- "Number_of_sig_SNPs"
-sum(test$Number_of_sig_SNPs != 0)
+sum(test$Number_of_sig_SNPs != 0) 
 
 write.csv(test, file = "~/505/network_analysis/output/trait_sigSNP_sum.csv") 
 ```

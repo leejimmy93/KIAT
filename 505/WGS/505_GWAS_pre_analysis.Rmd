@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ### load libs
-```{r}
+```{r} 
 library(tidyverse)
 library(reshape2)
 ```
@@ -218,7 +218,7 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/5055751.pts-164.barbera/
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/bwa_extract_stats.sh
 
 ```{r}
-library(reshape2)
+library(reshape2) 
 
 mapping_stats <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/BWA_Stats_new.tab")
 
@@ -290,11 +290,11 @@ check stats:
 # QUAL score
 QUAL <- read.delim("~/505/WGS/vcf_raw/combined/505.lqual")
 hist(log10(QUAL$QUAL))
-sum(QUAL$QUAL < 40)/nrow(QUAL)
+sum(QUAL$QUAL > 40)/nrow(QUAL) # 80% 
 
 # MAF
 MAF <- read.table("~/505/WGS/vcf_raw/combined/MAF")
-nrow(MAF)/nrow(QUAL) # 83% SNP 
+nrow(MAF)/nrow(QUAL) # 83% SNP out of all squence variations called from Freebayes  
 
 MAF <- 
 MAF %>% 
@@ -302,10 +302,15 @@ MAF %>%
          V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>% 
   dplyr::select(V7, V8) 
 
-hist(as.numeric(apply(MAF, 1, min)))  
+hist(as.numeric(apply(MAF, 1, min)))   
+
+MAF_minor <- as.numeric(apply(MAF, 1, min)) 
+sum(MAF_minor[!is.na(MAF_minor)] > 0.05) / nrow(QUAL) # 28% 
 
 # mean read depth across individuals 
 read_depth <- read.delim("~/505/WGS/vcf_raw/combined/505.ldepth.mean")
+mean(read_depth$MEAN_DEPTH) # 3.56 
+
 hist(log10(read_depth$MEAN_DEPTH), breaks = 1000)
 read_depth <- 
 read_depth %>% 
@@ -318,7 +323,7 @@ hist(read_depth$MEAN_DEPTH, breaks = 500)
 # acorss site, on individual level 
 imiss <- read.delim("~/505/WGS/vcf_raw/combined/505.imiss")
 imiss %>% 
-  filter(F_MISS > 0.8)
+  filter(F_MISS > 0.8) 
 
 #             INDV   N_DATA N_GENOTYPES_FILTERED   N_MISS   F_MISS
 # 1 K185_S290_L003 32876150                    0 32531155 0.989506
@@ -330,7 +335,7 @@ lmiss <- read.delim("~/505/WGS/vcf_raw/combined/505.lmiss")
 hist(lmiss$F_MISS) 
 sum(lmiss$F_MISS > 0.5)/nrow(lmiss) # 10% left only... 
 
-sum(lmiss$F_MISS > 0.5)  
+sum(lmiss$F_MISS > 0.5)   
 ```
 
 filter for each chrom seperately: biallelic SNP; QUAL score > 40, MAF >= 0.05, mean read depth across individuals greater than 1 and less than 100, missing rate across tax less than 0.5, genotype quality greater than 30 https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh
@@ -352,8 +357,8 @@ hmp files at whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/
 
 edit hmp file to remove "#" after rs & assembly  
 ```{r}
-path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/WGS_filtered/hmp"
-files.WGS <- list.files(path=path) 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/WGS_filtered_2/hmp"
+files.WGS <- list.files(path=path)  
 setwd(path) 
 hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T)) 
 hmp.WGS %>% length()
@@ -379,10 +384,135 @@ for(i in names(hmp.WGS)){
   print(i)
   print(dim(hmp.WGS[[i]]))
   print(dim(hmp.RNA[[i]]))
-  print(dim(common_WGS_RNA[[i]])) 
+  print(dim(common_WGS_RNA[[i]]))
 }
 
-common_WGS_RNA[[1]][1:10, 1:15]  
+common_WGS_RNA_2 <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS[[i]] %>% inner_join(hmp.RNA[[i]], by = c("rs", "alleles")))
+
+names(common_WGS_RNA_2) <- files.RNA
+
+for(i in names(hmp.WGS)){
+  print(i) 
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.RNA[[i]]))
+  print(dim(common_WGS_RNA_2[[i]]))
+} # the overlapped SNPs between WGS and RNAseq is very few... 
+
+WGS_sum <- 
+sapply(names(hmp.WGS), function(i)
+  nrow(hmp.WGS[[i]])) 
+
+RNA_sum <- 
+sapply(names(hmp.RNA), function(i)
+  nrow(hmp.RNA[[i]])) 
+
+overlap_sum <- 
+sapply(names(common_WGS_RNA_2), function(i)
+  nrow(common_WGS_RNA_2[[i]])) 
+
+test <- rbind(WGS_sum, RNA_sum, overlap_sum) %>% as.data.frame()
+
+test$type <- rownames(test)
+test <- test %>% melt() 
+# split to main & random chromosomes 
+# main 
+test.main <- test[!grepl("random", test$variable),]  
+head(test.main) 
+
+# make a plot to see how many SNPs on each chromosome 
+pl.SNP.main <- ggplot(data = test.main) + 
+  geom_bar(aes(x=factor(variable), y = value, fill=type), stat = "identity") +   
+  facet_wrap(~type, ncol = 1) + 
+  geom_text(aes(x=factor(variable), y = value, label=factor(value), size=1)) + 
+  labs(list(title = "", x = "chromosome ID", y = "number of SNPs")) + 
+  theme(legend.position = "none")
+
+pl.SNP.main  
+
+### just raw vcf file 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered/hmp/" 
+files.WGS <- list.files(path=path)  
+setwd(path) 
+hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS %>% length()
+files.WGS <- gsub(".hmp.txt", "", files.WGS)
+names(hmp.WGS) <- files.WGS
+
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
+files.RNA <- list.files(path=path) 
+setwd(path)
+hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T)) 
+hmp.RNA %>% length() 
+files.RNA <- gsub("_filtered.hmp.txt", "", files.RNA)
+names(hmp.RNA) <- files.RNA
+
+common_WGS_RNA <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS[[i]] %>% full_join(hmp.RNA[[i]], by = c("rs", "alleles")))
+
+common_WGS_RNA[[13]] %>% dim() 
+names(common_WGS_RNA) <- files.RNA
+
+for(i in names(hmp.WGS)){
+  print(i)
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.RNA[[i]]))
+  print(dim(common_WGS_RNA[[i]]))
+}
+
+common_WGS_RNA_2 <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS[[i]] %>% inner_join(hmp.RNA[[i]], by = c("rs", "alleles")))
+
+names(common_WGS_RNA_2) <- files.RNA
+
+for(i in names(hmp.WGS)){
+  print(i) 
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.RNA[[i]]))
+  print(dim(common_WGS_RNA_2[[i]]))
+} # the overlapped SNPs between WGS and RNAseq is very few... 
+
+WGS_sum <- 
+sapply(names(hmp.WGS), function(i)
+  nrow(hmp.WGS[[i]])) 
+
+RNA_sum <- 
+sapply(names(hmp.RNA), function(i)
+  nrow(hmp.RNA[[i]])) 
+
+overlap_sum <- 
+sapply(names(common_WGS_RNA_2), function(i)
+  nrow(common_WGS_RNA_2[[i]])) 
+
+test <- rbind(WGS_sum, RNA_sum, overlap_sum) %>% as.data.frame()
+
+test$type <- rownames(test)
+test <- test %>% melt() 
+# split to main & random chromosomes 
+# main 
+test.main <- test[!grepl("random", test$variable),]  
+head(test.main) 
+
+# make a plot to see how many SNPs on each chromosome 
+pl.SNP.main <- ggplot(data = test.main) + 
+  geom_bar(aes(x=factor(variable), y = value, fill=type), stat = "identity") +   
+  facet_wrap(~type, ncol = 1) + 
+  geom_text(aes(x=factor(variable), y = value, label=factor(value), size=1)) + 
+  labs(list(title = "", x = "chromosome ID", y = "number of SNPs")) + 
+  theme(legend.position = "none")
+
+pl.SNP.main   
+
+``` 
+
+### trouble shooting: why is there just small overlap between SNP called from RNAseq and WGS 
+1) inlude population level SNP calling by excluding --report-genotype-likelihood-max 
+2) force SNP calling on RNAseq SNP sites 
+```{r}
+# bgzip vcf file of RNAseq SNPs & index with tabix 
 ```
 
 # remove site with high het ratio, if a SNP is heterozygous in more than 20% lines, remove that site.  

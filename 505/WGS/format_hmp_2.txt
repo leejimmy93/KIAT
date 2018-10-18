@@ -1,0 +1,11 @@
+#!/bin/bash 
+
+cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered
+
+file=`ls *.hmp.txt`
+for i in $file
+	do 	
+	sed 's/#//g' $i > hmp/${i}
+done
+
+	

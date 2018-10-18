@@ -1,0 +1,11 @@
+---
+title: "505_RNA_re_analyze"
+output: html_document
+---
+
+continue with RNA data, but this time, turn on population level SNP calling. 
+
+```{r}
+
+```
+
