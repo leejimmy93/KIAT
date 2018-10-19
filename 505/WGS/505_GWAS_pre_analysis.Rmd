@@ -510,9 +510,15 @@ pl.SNP.main
 
 ### trouble shooting: why is there just small overlap between SNP called from RNAseq and WGS 
 1) inlude population level SNP calling by excluding --report-genotype-likelihood-max 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS.slurm
 2) force SNP calling on RNAseq SNP sites 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS_wRNA.slurm 
+
+eg chrA10 
+compress the file uisng gzip --> transfer to whitney 
+vcf to hmp 
 ```{r}
-# bgzip vcf file of RNAseq SNPs & index with tabix 
+
 ```
 
 # remove site with high het ratio, if a SNP is heterozygous in more than 20% lines, remove that site.  
