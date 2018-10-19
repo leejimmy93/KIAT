@@ -517,8 +517,64 @@ pl.SNP.main
 eg chrA10 
 compress the file uisng gzip --> transfer to whitney 
 vcf to hmp 
-```{r}
+format hmp 
 
+```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw_pop/hmp/" 
+files.WGS <- list.files(path=path)  
+setwd(path) 
+hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS %>% length()
+files.WGS <- gsub("_population.hmp.txt", "", files.WGS)
+names(hmp.WGS) <- files.WGS
+
+# when pop info was incorreclty used 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered/hmp/" 
+files.WGS <- list.files(path=path)  
+files.WGS <- "chrA10.hmp.txt" 
+setwd(path) 
+hmp.WGS.2 <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS.2 %>% length()
+files.WGS <- gsub(".hmp.txt", "", files.WGS)
+names(hmp.WGS.2) <- files.WGS
+
+# compare 
+common_WGS <- 
+lapply(names(hmp.WGS.2), function(i) 
+  test <- hmp.WGS[[i]] %>% anti_join(hmp.WGS.2[[i]]))
+
+names(common_WGS) <- files.WGS
+
+for(i in names(hmp.WGS)){
+  print(i) 
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.WGS.2[[i]]))
+  print(dim(common_WGS[[i]]))
+} # the overlapped SNPs between WGS and RNAseq is very few... 
+
+# when data was filtered from the wrong file (pop info incorrectly used)
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/WGS_filtered_2/hmp"
+files.WGS <- list.files(path=path)  
+files.WGS <- "chrA10_filtered.hmp.txt"
+setwd(path) 
+hmp.WGS.3 <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS.3 %>% length()
+files.WGS <- gsub("_filtered.hmp.txt", "", files.WGS)
+names(hmp.WGS.3) <- files.WGS 
+
+# compare, were the over 10K SNP unique to incorrect calls left after filtering?  
+common_WGS_2 <- 
+lapply(names(hmp.WGS.3), function(i) 
+  test <- common_WGS[[i]] %>% semi_join(hmp.WGS.3[[i]], by = c("rs", "alleles"))) # only >200 SNPs were kept, which means these over 200 calls could be genotyping error due to incorreclty not using population info 
+
+names(common_WGS_2) <- files.WGS
+
+for(i in names(hmp.WGS)){
+  print(i) 
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.WGS.3[[i]]))
+  print(dim(common_WGS_2[[i]]))
+}  
 ```
 
 # remove site with high het ratio, if a SNP is heterozygous in more than 20% lines, remove that site.  
