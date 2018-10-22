@@ -2507,11 +2507,10 @@ write.table(SNP.ID.het.filterd.0.2, file= "~/505/genomic_prediction/output/SNP.I
 
 # cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2
 
-# vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd.0.2 --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_0.2  
+# vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd.0.2 --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_0.2   
 
-# gzip 505_filtered_het_0.2.recode.vcf
-############################################
-
+# gzip 505_filtered_het_0.2.recode.vcf 
+############################################  
 
 # dim(SNP.ID.het.filterd) # 98961      2
 # head(SNP.ID.het.filterd) 
