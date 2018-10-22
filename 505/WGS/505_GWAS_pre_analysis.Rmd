@@ -357,10 +357,10 @@ hmp files at whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/
 
 edit hmp file to remove "#" after rs & assembly  
 ```{r}
-path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/WGS_filtered_2/hmp"
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/WGS_filtered/hmp"
 files.WGS <- list.files(path=path)  
 setwd(path) 
-hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T, stringsAsFactors = F)) 
 hmp.WGS %>% length()
 files.WGS <- gsub("_filtered.hmp.txt", "", files.WGS)
 names(hmp.WGS) <- files.WGS
@@ -368,28 +368,14 @@ names(hmp.WGS) <- files.WGS
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
 files.RNA <- list.files(path=path) 
 setwd(path)
-hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T)) 
+hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T, stringsAsFactors = F)) 
 hmp.RNA %>% length() 
 files.RNA <- gsub("_filtered.hmp.txt", "", files.RNA)
 names(hmp.RNA) <- files.RNA
 
-common_WGS_RNA <- 
-lapply(names(hmp.RNA), function(i) 
-  test <- hmp.WGS[[i]] %>% full_join(hmp.RNA[[i]], by = c("rs", "alleles")))
-
-common_WGS_RNA[[13]] %>% dim() 
-names(common_WGS_RNA) <- files.RNA
-
-for(i in names(hmp.WGS)){
-  print(i)
-  print(dim(hmp.WGS[[i]]))
-  print(dim(hmp.RNA[[i]]))
-  print(dim(common_WGS_RNA[[i]]))
-}
-
 common_WGS_RNA_2 <- 
 lapply(names(hmp.RNA), function(i) 
-  test <- hmp.WGS[[i]] %>% inner_join(hmp.RNA[[i]], by = c("rs", "alleles")))
+  test <- hmp.WGS[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs", "alleles")))
 
 names(common_WGS_RNA_2) <- files.RNA
 
@@ -429,11 +415,11 @@ pl.SNP.main <- ggplot(data = test.main) +
   labs(list(title = "", x = "chromosome ID", y = "number of SNPs")) + 
   theme(legend.position = "none")
 
-pl.SNP.main  
+pl.SNP.main     
 
 ### just raw vcf file 
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered/hmp/" 
-files.WGS <- list.files(path=path)  
+files.WGS <- list.files(path=path)   
 setwd(path) 
 hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T)) 
 hmp.WGS %>% length()
@@ -522,11 +508,11 @@ format hmp
 ```{r}
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw_pop/hmp/" 
 files.WGS <- list.files(path=path)  
-setwd(path) 
+setwd(path)  
 hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T)) 
 hmp.WGS %>% length()
 files.WGS <- gsub("_population.hmp.txt", "", files.WGS)
-names(hmp.WGS) <- files.WGS
+names(hmp.WGS) <- files.WGS 
 
 # when pop info was incorreclty used 
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered/hmp/" 
@@ -553,13 +539,13 @@ for(i in names(hmp.WGS)){
 } # the overlapped SNPs between WGS and RNAseq is very few... 
 
 # when data was filtered from the wrong file (pop info incorrectly used)
-path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/WGS_filtered_2/hmp"
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered/hmp"
 files.WGS <- list.files(path=path)  
-files.WGS <- "chrA10_filtered.hmp.txt"
+files.WGS <- "chrA10.hmp.txt"
 setwd(path) 
-hmp.WGS.3 <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS.3 <- lapply(files.WGS, function(x) read.table(x, header = T, stringsAsFactors = F)) 
 hmp.WGS.3 %>% length()
-files.WGS <- gsub("_filtered.hmp.txt", "", files.WGS)
+files.WGS <- gsub(".hmp.txt", "", files.WGS)
 names(hmp.WGS.3) <- files.WGS 
 
 # compare, were the over 10K SNP unique to incorrect calls left after filtering?  
@@ -569,47 +555,102 @@ lapply(names(hmp.WGS.3), function(i)
 
 names(common_WGS_2) <- files.WGS
 
-for(i in names(hmp.WGS)){
+for(i in names(hmp.WGS)){ 
   print(i) 
-  print(dim(hmp.WGS[[i]]))
-  print(dim(hmp.WGS.3[[i]]))
-  print(dim(common_WGS_2[[i]]))
-}  
+  print(dim(hmp.WGS[[i]])) 
+  print(dim(hmp.WGS.3[[i]])) 
+  print(dim(common_WGS_2[[i]])) 
+}   
 
 # when pop info was incorreclty used 
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS_RNA/hmp/" 
 files.WGS <- list.files(path=path)  
 files.WGS <- "chrA10.hmp.txt" 
 setwd(path) 
-hmp.WGS.4 <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS.4 <- lapply(files.WGS, function(x) read.table(x, header = T, stringsAsFactors = F)) 
 hmp.WGS.4 %>% length()
 files.WGS <- gsub(".hmp.txt", "", files.WGS)
 names(hmp.WGS.4) <- files.WGS
+hmp.WGS.4[[1]] %>% dim()  
 
 # common between WGS & RNA  
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
 files.RNA <- list.files(path=path) 
+files.RNA <- "chrA10_filtered.hmp.txt" 
 setwd(path)
-hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T)) 
+hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T, stringsAsFactors = F)) 
 hmp.RNA %>% length() 
 files.RNA <- gsub("_filtered.hmp.txt", "", files.RNA)
 names(hmp.RNA) <- files.RNA
 
 common_WGS_RNA_2 <- 
 lapply(names(hmp.RNA), function(i) 
-  test <- hmp.WGS.4[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs", "alleles")))
+  test <- hmp.WGS.4[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs")))
 
-names(common_WGS_RNA_2) <- files.WGS
+names(common_WGS_RNA_2) <- files.RNA
+
+common_WGS_RNA_2[[1]][1:10, 1:10] 
+
+common_WGS_RNA_3 <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS.3[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs", "alleles")))
+
+names(common_WGS_RNA_3) <- files.WGS
 
 for(i in names(hmp.WGS.4)){
   print(i)
+  print(dim(hmp.WGS.3[[i]]))
   print(dim(hmp.WGS.4[[i]]))
   print(dim(hmp.RNA[[i]]))
   print(dim(common_WGS_RNA_2[[i]]))
-}  
+  print(dim(common_WGS_RNA_3[[i]]))
+} 
 
+RNA_unique_WGS_absent <- common_WGS_RNA_2[[1]] %>% anti_join(common_WGS_RNA_3[[1]], by = c("rs"))
+dim(RNA_unique_WGS_absent)
+RNA_unique_WGS_absent[1:10, 1:10] 
+RNA_unique_WGS_absent$chrom <- paste("chr", RNA_unique_WGS_absent$chrom, sep = "")
 
-```
+# MAF, depth, GQ, and missing rate for these sites
+# QUAL score
+QUAL.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
+QUAL.tmp <- QUAL.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
+hist(log10(QUAL.tmp$QUAL), breaks = 100) 
+
+# MAF
+MAF <- read.table("~/505/WGS/vcf_raw/combined/MAF")
+nrow(MAF)/nrow(QUAL) # 83% SNP out of all squence variations called from Freebayes  
+
+MAF <- 
+MAF %>% 
+  mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5), 
+         V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>% 
+  dplyr::select(V7, V8) 
+
+hist(as.numeric(apply(MAF, 1, min)))   
+
+MAF_minor <- as.numeric(apply(MAF, 1, min)) 
+sum(MAF_minor[!is.na(MAF_minor)] > 0.05) / nrow(QUAL) # 28% 
+
+# mean read depth across individuals 
+QUAL.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
+QUAL.tmp <- QUAL.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
+
+read_depth.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.ldepth.mean")
+read_depth.tmp <- read_depth.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
+dim(read_depth.tmp)
+mean(read_depth.tmp$MEAN_DEPTH) # 3.56 
+hist(read_depth.tmp$MEAN_DEPTH, breaks = 100)
+
+# missing rate 
+# across taxa, on site level 
+lmiss.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lmiss")
+lmiss.tmp <- lmiss.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHR" = "chrom", "POS" = "pos")) 
+hist(lmiss.tmp$F_MISS) 
+dim(lmiss.tmp)
+
+### Tomorrow check MAF and see maybe these are 
+``` 
 
 still don't know why RNA SNPs were not called from WGS data, but decided to re-run SNP calling for WGS data with pop info included corretly  
 
