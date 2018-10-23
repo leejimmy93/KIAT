@@ -618,21 +618,24 @@ QUAL.tmp <- QUAL.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "
 hist(log10(QUAL.tmp$QUAL), breaks = 100) 
 
 # MAF
-MAF <- read.table("~/505/WGS/vcf_raw/combined/MAF")
-nrow(MAF)/nrow(QUAL) # 83% SNP out of all squence variations called from Freebayes  
+MAF.tmp <- read.table("~/505/WGS_RNA/MAF")
 
-MAF <- 
-MAF %>% 
+MAF.tmp <- 
+MAF.tmp %>% 
   mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5), 
          V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>% 
-  dplyr::select(V7, V8) 
+  dplyr::select(V1, V2, V7, V8) 
+MAF.tmp$MAF_minor <- as.numeric(apply(MAF.tmp[,c("V7", "V8")], 1, min)) 
+QUAL.tmp.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
+MAF.tmp <- QUAL.tmp.tmp %>% left_join(MAF.tmp, c("CHROM" = "V1", "POS" = "V2")) %>% dplyr::select(CHROM, POS, MAF_minor) 
+MAF.tmp$MAF_minor <- ifelse(is.na(MAF.tmp$MAF_minor), 0, MAF.tmp$MAF_minor)
+MAF.tmp %>% head()
 
-hist(as.numeric(apply(MAF, 1, min)))   
+MAF.tmp <- MAF.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
 
-MAF_minor <- as.numeric(apply(MAF, 1, min)) 
-sum(MAF_minor[!is.na(MAF_minor)] > 0.05) / nrow(QUAL) # 28% 
+hist(as.numeric(MAF.tmp$MAF_minor), breaks = 100)  
 
-# mean read depth across individuals 
+# mean read depth across individuals  
 QUAL.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
 QUAL.tmp <- QUAL.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
 
@@ -643,13 +646,52 @@ mean(read_depth.tmp$MEAN_DEPTH) # 3.56
 hist(read_depth.tmp$MEAN_DEPTH, breaks = 100)
 
 # missing rate 
-# across taxa, on site level 
+# across taxa, on site level   
 lmiss.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lmiss")
 lmiss.tmp <- lmiss.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHR" = "chrom", "POS" = "pos")) 
-hist(lmiss.tmp$F_MISS) 
+hist(lmiss.tmp$F_MISS)  
 dim(lmiss.tmp)
 
 ### Tomorrow check MAF and see maybe these are 
+QUAL.tmp %>% dim()
+read_depth.tmp %>% dim()    
+lmiss.tmp %>% dim()
+
+all <- 
+QUAL.tmp %>% left_join(read_depth.tmp) %>% left_join(MAF.tmp) %>% 
+  left_join(lmiss.tmp, c("CHROM" = "CHR", "POS" = "POS")) 
+
+all %>% 
+  filter(QUAL > 40 & MEAN_DEPTH > 1 & F_MISS < 0.5) %>% 
+  dim()
+
+str(all)   
+
+log10(all$QUAL) %>% hist(breaks = 5000) 
+
+all %>% 
+  filter(QUAL < 40) %>% 
+  dplyr::select(MAF_minor) %>% 
+  ggplot() +
+  geom_histogram(aes(x = MAF_minor), binwidth = 0.001) 
+
+all %>% head()   
+
+MAF.tmp.RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/MAF")
+
+MAF.tmp.RNA <- 
+MAF.tmp.RNA %>% 
+  mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5), 
+         V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>% 
+  dplyr::select(V1, V2, V7, V8) 
+
+MAF.tmp.RNA$MAF_minor <- as.numeric(apply(MAF.tmp.RNA[,c("V7", "V8")], 1, min)) 
+MAF.tmp.RNA$V1 <- paste("chr", MAF.tmp.RNA$V1, sep = "")
+
+MAF.tmp.RNA %>% semi_join(all, c("V1" = "CHROM", "V2" = "POS")) %>% 
+  dplyr::select(MAF_minor) %>% 
+  ggplot() +
+  geom_histogram(aes(x = MAF_minor), binwidth = 0.01)  
 ``` 
 
 still don't know why RNA SNPs were not called from WGS data, but decided to re-run SNP calling for WGS data with pop info included corretly  
@@ -670,7 +712,7 @@ for these 7 chroms, run SNP calling on splitted regions
 
 # for chroms: 
 # merge bam file from 238 samples for these 7 chroms: actually no need to merge bam files, seperate bam file works as well 
-# cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/merge_index_bam_for_Freebayes.slurm
+# cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/merge_index_bam_for_Freebayes.slurm 
 
 # call SNPs 
 # /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/Freebayes_parallel_Array_WGS_merged_region_i.slurm  
