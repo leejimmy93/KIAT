@@ -340,7 +340,7 @@ sum(lmiss$F_MISS > 0.5)
 
 filter for each chrom seperately: biallelic SNP; QUAL score > 40, MAF >= 0.05, mean read depth across individuals greater than 1 and less than 100, missing rate across tax less than 0.5, genotype quality greater than 30 https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh
 
-vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh 
+vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh  
 
 2) RNAseq: compress and index vcf file for each chrom, use vcftool to filter, use tassel to convert to hapmap format 
 
@@ -675,7 +675,14 @@ all %>%
   ggplot() +
   geom_histogram(aes(x = MAF_minor), binwidth = 0.001) 
 
-all %>% head()   
+all %>% 
+  filter(QUAL < 40) %>% 
+  filter(MAF_minor != 0) 
+
+tmp <- 
+all %>% 
+  filter(QUAL < 40) %>% 
+  dplyr::select(MAF_minor) %>% unlist() %>% as.numeric() 
 
 MAF.tmp.RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/MAF")
 
