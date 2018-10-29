@@ -74,7 +74,8 @@ save(fatty_acid_oil_K_all_sub, file="~/505/WGS/GWAS/fatty_acid_oil_K_all_sub.Rda
 
 ### genotype data 
 filter: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh 
-vcf to hmp: 
+vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh
+format hmp file: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/format_hmp_2.txt 
 
 ```{r}
 
