@@ -60,10 +60,22 @@ fatty_acid_oil_K_all %>%
 fatty_acid_oil_K_all_sub <- fatty_acid_oil_K_all_sub[!is.na(fatty_acid_oil_K_all_sub$Oleic_acid),] 
 colnames(fatty_acid_oil_K_all_sub)[1] <- "Taxa" 
 
+# pheno data for 238 samples 
+imiss <- read.delim("~/505/WGS/vcf_raw/combined/505.imiss") 
+sample_238 <- gsub("_S.*", "", imiss$INDV) 
+
+sum(!(sample_238 %in% fatty_acid_oil_K_all_sub$Taxa)) # 24 missing sample ID from fatty acid data
+
+fatty_acid_oil_K_all_sub <- 
+fatty_acid_oil_K_all_sub[fatty_acid_oil_K_all_sub$Taxa %in% sample_238,] 
+
 save(fatty_acid_oil_K_all_sub, file="~/505/WGS/GWAS/fatty_acid_oil_K_all_sub.Rdata")  
 ```
 
-### GWAS
+### genotype data 
+filter: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh 
+vcf to hmp: 
+
 ```{r}
 
 ```
