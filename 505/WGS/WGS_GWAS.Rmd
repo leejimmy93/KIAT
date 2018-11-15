@@ -8,7 +8,7 @@ Purpose of this script is to do test GWAS on just samples with WGS data, to see 
 ### pheno data for all  
 ```{r}
 # K line
-fatty_acid_oil_K <- read.csv("~/505/data/phenotype/505_fatty_acid_20171128.csv")
+fatty_acid_oil_K <- read.csv("~/505/data/phenotype/505_fatty_acid_20171128.csv", stringsAsFactors = F)
 colnames(fatty_acid_oil_K)   
 
 fatty_acid_oil_K <- 
@@ -69,6 +69,13 @@ sum(!(sample_238 %in% fatty_acid_oil_K_all_sub$Taxa)) # 24 missing sample ID fro
 fatty_acid_oil_K_all_sub <- 
 fatty_acid_oil_K_all_sub[fatty_acid_oil_K_all_sub$Taxa %in% sample_238,] 
 
+fatty_acid_oil_K_all_sub %>% dim()
+sample_238 <- sample_238 %>% as.data.frame() 
+colnames(sample_238) <- "Taxa"
+fatty_acid_oil_K_all_sub <- sample_238 %>% left_join(fatty_acid_oil_K_all_sub) %>% unique()  
+dim(fatty_acid_oil_K_all_sub) 
+summary(fatty_acid_oil_K_all_sub)
+
 save(fatty_acid_oil_K_all_sub, file="~/505/WGS/GWAS/fatty_acid_oil_K_all_sub.Rdata")  
 ```
 
@@ -76,8 +83,13 @@ save(fatty_acid_oil_K_all_sub, file="~/505/WGS/GWAS/fatty_acid_oil_K_all_sub.Rda
 filter: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh 
 vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh
 format hmp file: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/format_hmp_2.txt 
-
+test GWAS: 
 ```{r}
+geno_505_hmp <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/filtered/hmp/505.hmp.txt", head=FALSE, stringsAsFactors = F)
+# get chrom name to numerics
+geno_505_hmp$V3 <- as.numeric(geno_505_hmp$V3)
+geno_505_hmp[1,3] <- "chrom"
 
+geno_505_hmp[1,] <- gsub("_S.*", "", unlist(geno_505_hmp[1,])) 
 ```
 

@@ -497,10 +497,11 @@ pl.SNP.main
 ### trouble shooting: why is there just small overlap between SNP called from RNAseq and WGS 
 1) inlude population level SNP calling by excluding --report-genotype-likelihood-max 
 /share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS.slurm
-2) force SNP calling on RNAseq SNP sites 
-/share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS_wRNA.slurm 
+2) force SNP calling on all sites 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS_all.slurm 
 
-eg chrA10 
+tested chrA10, and the conclusion was that SNP calling from low coverage data might still has problem, because polymorphic sites might be underestimated (many polymorphic sites were not called in WGS data compared to RNAseq data)... 
+select C05, A05, and C09 to see whether the result applys to different chroms 
 compress the file uisng gzip --> transfer to whitney 
 vcf to hmp 
 format hmp 
