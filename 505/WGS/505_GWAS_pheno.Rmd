@@ -85,10 +85,26 @@ min(gene.CV)
 
 tmp 
 ```{r}
-geno_505_hmp <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/filtered/hmp/505.hmp.txt", head=FALSE, stringsAsFactors = F)
-# get chrom name to numerics
-geno_505_hmp[1,3] <- "chrom"
-geno_505_hmp[1,] <- gsub("_S.*", "", unlist(geno_505_hmp[1,]))
-geno_505_hmp$V3 <- as.numeric(as.factor(geno_505_hmp$V3))
+library("qqman")
+Erucic_acid <- read.csv("~/505/WGS/GWAS/output/GAPIT.MLM.Erucic_acid.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/WGS/GWAS/output/GAPIT.MLM.Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/WGS/GWAS/output_fig/test.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(2,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+    ) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+    ) 
+
+dev.off() 
+
+
 ```
 
