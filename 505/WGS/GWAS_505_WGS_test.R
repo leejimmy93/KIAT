@@ -27,9 +27,9 @@ setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanl
 # genotype data 
 geno_505_hmp <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/filtered/hmp/505.hmp.txt", head=FALSE, stringsAsFactors = F)
 # get chrom name to numerics
-geno_505_hmp$V3 <- as.numeric(geno_505_hmp$V3)
 geno_505_hmp[1,3] <- "chrom"
 geno_505_hmp[1,] <- gsub("_S.*", "", unlist(geno_505_hmp[1,])) 
+geno_505_hmp$V3 <- as.numeric(as.factor(geno_505_hmp$V3))
 
 # phenotype data 
 load("~/505/WGS/GWAS/fatty_acid_oil_K_all_sub.Rdata")
