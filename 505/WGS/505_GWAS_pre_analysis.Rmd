@@ -501,7 +501,7 @@ pl.SNP.main
 /share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS_all.slurm 
 
 tested chrA10, and the conclusion was that SNP calling from low coverage data might still has problem, because polymorphic sites might be underestimated (many polymorphic sites were not called in WGS data compared to RNAseq data)... 
-select C05, A05, and C09 to see whether the result applys to different chroms 
+select C05, A08, and C09 to see whether the result applys to different chroms 
 compress the file uisng gzip --> transfer to whitney 
 vcf to hmp 
 format hmp 
@@ -542,7 +542,7 @@ for(i in names(hmp.WGS)){
 # when data was filtered from the wrong file (pop info incorrectly used)
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered/hmp"
 files.WGS <- list.files(path=path)  
-files.WGS <- "chrA10.hmp.txt"
+files.WGS <- c("chrA08.hmp.txt", "chrC05.hmp.txt", "chrC09.hmp.txt")
 setwd(path) 
 hmp.WGS.3 <- lapply(files.WGS, function(x) read.table(x, header = T, stringsAsFactors = F)) 
 hmp.WGS.3 %>% length()
@@ -566,7 +566,7 @@ for(i in names(hmp.WGS)){
 # when pop info was incorreclty used 
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS_RNA/hmp/" 
 files.WGS <- list.files(path=path)  
-files.WGS <- "chrA10.hmp.txt" 
+files.WGS <- c("chrA08.hmp.txt", "chrC05.hmp.txt", "chrC09.hmp.txt")
 setwd(path) 
 hmp.WGS.4 <- lapply(files.WGS, function(x) read.table(x, header = T, stringsAsFactors = F)) 
 hmp.WGS.4 %>% length()
@@ -574,10 +574,10 @@ files.WGS <- gsub(".hmp.txt", "", files.WGS)
 names(hmp.WGS.4) <- files.WGS
 hmp.WGS.4[[1]] %>% dim()  
 
-# common between WGS & RNA  
+# common between WGS & RNA   
 path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
 files.RNA <- list.files(path=path) 
-files.RNA <- "chrA10_filtered.hmp.txt" 
+files.RNA <- c("chrA08_filtered.hmp.txt", "chrC05_filtered.hmp.txt", "chrC09_filtered.hmp.txt")
 setwd(path)
 hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T, stringsAsFactors = F)) 
 hmp.RNA %>% length() 
@@ -586,47 +586,104 @@ names(hmp.RNA) <- files.RNA
 
 common_WGS_RNA_2 <- 
 lapply(names(hmp.RNA), function(i) 
-  test <- hmp.WGS.4[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs")))
+  test <- hmp.WGS.4[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs"))) # called in RNAseq 
 
-names(common_WGS_RNA_2) <- files.RNA
+names(common_WGS_RNA_2) <- files.RNA 
 
 common_WGS_RNA_2[[1]][1:10, 1:10] 
 
 common_WGS_RNA_3 <- 
 lapply(names(hmp.RNA), function(i) 
-  test <- hmp.WGS.3[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs", "alleles")))
+  test <- hmp.WGS.3[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs", "alleles"))) # called in both RNAseq and WGS 
 
 names(common_WGS_RNA_3) <- files.WGS
 
-for(i in names(hmp.WGS.4)){
+for(i in names(hmp.WGS.4)){ 
   print(i)
-  print(dim(hmp.WGS.3[[i]]))
-  print(dim(hmp.WGS.4[[i]]))
-  print(dim(hmp.RNA[[i]]))
-  print(dim(common_WGS_RNA_2[[i]]))
-  print(dim(common_WGS_RNA_3[[i]]))
+  print(dim(hmp.WGS.3[[i]])) # raw SNP from WGS w/o filtering 
+  print(dim(hmp.WGS.4[[i]])) # "SNP" from WGS including monophophic sites
+  print(dim(hmp.RNA[[i]])) # SNP from RNAseq data w/ filtering 
+  print(dim(common_WGS_RNA_2[[i]])) # SNPs called in RNAseq data and also have coverage in WGS data  
+  print(dim(common_WGS_RNA_3[[i]])) # SNPs called in both RNAseq and WGS data 
 } 
 
-RNA_unique_WGS_absent <- common_WGS_RNA_2[[1]] %>% anti_join(common_WGS_RNA_3[[1]], by = c("rs"))
-dim(RNA_unique_WGS_absent)
-RNA_unique_WGS_absent[1:10, 1:10] 
-RNA_unique_WGS_absent$chrom <- paste("chr", RNA_unique_WGS_absent$chrom, sep = "")
+RNA_unique_WGS_absent <- 
+  lapply(names(common_WGS_RNA_3), function(i) 
+    common_WGS_RNA_2[[i]] %>% anti_join(common_WGS_RNA_3[[i]], by = c("rs")))
+  
+dim(RNA_unique_WGS_absent[[1]]); dim(RNA_unique_WGS_absent[[2]]); dim(RNA_unique_WGS_absent[[3]])
 
-# MAF, depth, GQ, and missing rate for these sites
-# QUAL score
-QUAL.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
-QUAL.tmp <- QUAL.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
-hist(log10(QUAL.tmp$QUAL), breaks = 100) 
+RNA_unique_WGS_absent[[1]]$chrom <- gsub("chr", "", RNA_unique_WGS_absent[[1]]$chrom)
+RNA_unique_WGS_absent[[2]]$chrom <- gsub("chr", "", RNA_unique_WGS_absent[[2]]$chrom)
+RNA_unique_WGS_absent[[3]]$chrom <- gsub("chr", "", RNA_unique_WGS_absent[[3]]$chrom)
 
-# MAF
-MAF.tmp <- read.table("~/505/WGS_RNA/MAF")
+RNA_unique_WGS_absent[[1]][1:10, 1:10] 
+names(RNA_unique_WGS_absent) <- files.WGS
 
-MAF.tmp <- 
-MAF.tmp %>% 
-  mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5), 
-         V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>% 
-  dplyr::select(V1, V2, V7, V8) 
-MAF.tmp$MAF_minor <- as.numeric(apply(MAF.tmp[,c("V7", "V8")], 1, min)) 
+# MAF, depth, GQ, and missing rate for these sites 
+# MAF 
+# cat chrA08.vcf.frq | awk '{print $1 "\t" $2 "\t" $3}' > chrA08.vcf.allele
+# cat chrC05.vcf.frq | awk '{print $1 "\t" $2 "\t" $3}' > chrC05.vcf.allele
+# cat chrC09.vcf.frq | awk '{print $1 "\t" $2 "\t" $3}' > chrC09.vcf.allele
+
+# are the RNA_unique_WGS_absent SNPs biallelic or monoallelic SNPs 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS_RNA"
+files.allele <- c("chrA08.vcf.allele", "chrC05.vcf.allele", "chrC09.vcf.allele")
+setwd(path)
+allele <- lapply(files.allele, function(x) read.table(x, header = T, stringsAsFactors = F)) 
+allele %>% length() 
+files.allele <- gsub(".vcf.allele", "", files.allele)
+names(allele) <- files.allele
+
+tmp <- 
+lapply(names(allele), function(i) 
+  RNA_unique_WGS_absent[[i]] %>% 
+  left_join(allele[[i]], c("chrom" = "CHROM", "pos" = "POS"))) 
+
+tmp %>% class()
+tmp[[1]] %>% dim(); tmp[[2]] %>% dim(); tmp[[3]] %>% dim() 
+RNA_unique_WGS_absent[[1]] %>% dim(); RNA_unique_WGS_absent[[2]] %>% dim(); RNA_unique_WGS_absent[[3]] %>% dim()  
+
+tmp[[1]]$N_ALLELES %>% hist() 
+tmp[[2]]$N_ALLELES %>% hist()
+tmp[[3]]$N_ALLELES %>% hist()  
+names(tmp) <- files.allele
+
+# why are there still some biallelic SNPs, what are the read depth and MAF for these sites 
+tmp1 <- 
+lapply(names(tmp), function(i) 
+  tmp[[i]] %>% 
+    filter(N_ALLELES == 2))
+names(tmp1) <- files.allele
+
+# cat chrA08.vcf.frq | awk '$3 == 2' > chrA08.MAF
+# cat chrC05.vcf.frq | awk '$3 == 2' > chrC05.MAF
+# cat chrC09.vcf.frq | awk '$3 == 2' > chrC09.MAF 
+
+files.MAF <- c("chrA08.MAF", "chrC05.MAF", "chrC09.MAF")
+MAF <- lapply(files.MAF, function(x) read.table(x, header = F, stringsAsFactors = F)) 
+MAF %>% length() 
+files.MAF <- gsub(".MAF", "", files.MAF)
+names(MAF) <- files.MAF
+MAF[[1]] %>% head()
+# MAF.tmp <-  
+
+lapply(names(MAF), function(i) 
+MAF[[i]] %>%
+  mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5),
+         V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>%
+  dplyr::select(V1, V2, V7, V8))
+
+MAF.tmp$MAF_minor <- as.numeric(apply(MAF.tmp[,c("V7", "V8")], 1, min))
+
+tmp.MAF <- 
+lapply(names(MAF), function(i) 
+  tmp1[[i]] %>% 
+  left_join(allele[[i]], c("chrom" = "CHROM", "pos" = "POS")))  
+
+
+
+
 QUAL.tmp.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
 MAF.tmp <- QUAL.tmp.tmp %>% left_join(MAF.tmp, c("CHROM" = "V1", "POS" = "V2")) %>% dplyr::select(CHROM, POS, MAF_minor) 
 MAF.tmp$MAF_minor <- ifelse(is.na(MAF.tmp$MAF_minor), 0, MAF.tmp$MAF_minor)
@@ -635,6 +692,11 @@ MAF.tmp %>% head()
 MAF.tmp <- MAF.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
 
 hist(as.numeric(MAF.tmp$MAF_minor), breaks = 100)  
+
+# QUAL score
+QUAL.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
+QUAL.tmp <- QUAL.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
+hist(log10(QUAL.tmp$QUAL), breaks = 100) 
 
 # mean read depth across individuals  
 QUAL.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
@@ -697,7 +759,7 @@ MAF.tmp.RNA$MAF_minor <- as.numeric(apply(MAF.tmp.RNA[,c("V7", "V8")], 1, min))
 MAF.tmp.RNA$V1 <- paste("chr", MAF.tmp.RNA$V1, sep = "")
 
 MAF.tmp.RNA %>% semi_join(all, c("V1" = "CHROM", "V2" = "POS")) %>% 
-  dplyr::select(MAF_minor) %>% 
+  dplyr::select(MAF_minor) %>%  
   ggplot() +
   geom_histogram(aes(x = MAF_minor), binwidth = 0.01)  
 ``` 
