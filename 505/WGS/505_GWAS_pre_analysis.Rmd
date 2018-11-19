@@ -13,7 +13,7 @@ library(reshape2)
 
 # sample submission for WGS 
 ```{r}
-WGS_samples <- read.csv("~/505/WGS/sample/DNA_to_Library_Submission_Form_20180508_incorporated_all.csv", header = F)
+WGS_samples <- read.csv("~/505/WGS/sample/DNA_to_Library_Submission_Form_20180508_incorporated_all.csv", header = F)  
 WGS_samples <- 
 t(WGS_samples) %>% as.data.frame() %>% 
   dplyr::select(V1:V12) 
@@ -626,64 +626,6 @@ names(RNA_unique_WGS_absent) <- files.WGS
 # cat chrC05.vcf.frq | awk '{print $1 "\t" $2 "\t" $3}' > chrC05.vcf.allele
 # cat chrC09.vcf.frq | awk '{print $1 "\t" $2 "\t" $3}' > chrC09.vcf.allele
 
-# are the RNA_unique_WGS_absent SNPs biallelic or monoallelic SNPs 
-path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS_RNA"
-files.allele <- c("chrA08.vcf.allele", "chrC05.vcf.allele", "chrC09.vcf.allele")
-setwd(path)
-allele <- lapply(files.allele, function(x) read.table(x, header = T, stringsAsFactors = F)) 
-allele %>% length() 
-files.allele <- gsub(".vcf.allele", "", files.allele)
-names(allele) <- files.allele
-
-tmp <- 
-lapply(names(allele), function(i) 
-  RNA_unique_WGS_absent[[i]] %>% 
-  left_join(allele[[i]], c("chrom" = "CHROM", "pos" = "POS"))) 
-
-tmp %>% class()
-tmp[[1]] %>% dim(); tmp[[2]] %>% dim(); tmp[[3]] %>% dim() 
-RNA_unique_WGS_absent[[1]] %>% dim(); RNA_unique_WGS_absent[[2]] %>% dim(); RNA_unique_WGS_absent[[3]] %>% dim()  
-
-tmp[[1]]$N_ALLELES %>% hist() 
-tmp[[2]]$N_ALLELES %>% hist()
-tmp[[3]]$N_ALLELES %>% hist()  
-names(tmp) <- files.allele
-
-# why are there still some biallelic SNPs, what are the read depth and MAF for these sites 
-tmp1 <- 
-lapply(names(tmp), function(i) 
-  tmp[[i]] %>% 
-    filter(N_ALLELES == 2))
-names(tmp1) <- files.allele
-
-# cat chrA08.vcf.frq | awk '$3 == 2' > chrA08.MAF
-# cat chrC05.vcf.frq | awk '$3 == 2' > chrC05.MAF
-# cat chrC09.vcf.frq | awk '$3 == 2' > chrC09.MAF 
-
-files.MAF <- c("chrA08.MAF", "chrC05.MAF", "chrC09.MAF")
-MAF <- lapply(files.MAF, function(x) read.table(x, header = F, stringsAsFactors = F)) 
-MAF %>% length() 
-files.MAF <- gsub(".MAF", "", files.MAF)
-names(MAF) <- files.MAF
-MAF[[1]] %>% head()
-# MAF.tmp <-  
-
-lapply(names(MAF), function(i) 
-MAF[[i]] %>%
-  mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5),
-         V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>%
-  dplyr::select(V1, V2, V7, V8))
-
-MAF.tmp$MAF_minor <- as.numeric(apply(MAF.tmp[,c("V7", "V8")], 1, min))
-
-tmp.MAF <- 
-lapply(names(MAF), function(i) 
-  tmp1[[i]] %>% 
-  left_join(allele[[i]], c("chrom" = "CHROM", "pos" = "POS")))  
-
-
-
-
 QUAL.tmp.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
 MAF.tmp <- QUAL.tmp.tmp %>% left_join(MAF.tmp, c("CHROM" = "V1", "POS" = "V2")) %>% dplyr::select(CHROM, POS, MAF_minor) 
 MAF.tmp$MAF_minor <- ifelse(is.na(MAF.tmp$MAF_minor), 0, MAF.tmp$MAF_minor)
@@ -764,53 +706,7 @@ MAF.tmp.RNA %>% semi_join(all, c("V1" = "CHROM", "V2" = "POS")) %>%
   geom_histogram(aes(x = MAF_minor), binwidth = 0.01)  
 ``` 
 
-still don't know why RNA SNPs were not called from WGS data, but decided to re-run SNP calling for WGS data with pop info included corretly  
-
-Freebayes-parallel SNP calling: 
-cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS.slurm
-
-* 7 chroms require large memory, which mighe be due to extremely high coverage for some regions on those chrom. 
-
-for these 7 chroms, run SNP calling on splitted regions 
-```{r}
-# for regions
-# calculate read coverage: cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/calc_depth_subset_by_chr.slurm 
-
-# sum read coverage at certain location: cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/depth_sum_$i.sh 
-
-# cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/split_region.slurm 
-
-# for chroms: 
-# merge bam file from 238 samples for these 7 chroms: actually no need to merge bam files, seperate bam file works as well 
-# cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/merge_index_bam_for_Freebayes.slurm 
-
-# call SNPs 
-# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/Freebayes_parallel_Array_WGS_merged_region_i.slurm  
-```
-
-### vcf merge 
-
-1) WGS: merge vcf for each chrom, use vcftool to calculate stats and filter, use tassel to convert to hapmap format 
-
-merge and index vcf file for each chrom 
-cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/combine_vcf.sh 
-
-reorder each vcf file and compress: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/reorder_vcf_etc.sh
-concat all vcf files: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/concat.sh 
-calculate stats: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/calc.sh 
-
-
-```{r}
-
-```
-
-# remove site with high het ratio, if a SNP is heterozygous in more than 20% lines, remove that site.  
-1) 
-
---> GWAS & population structure + genetic diveristy  
-```{r}
-
-```
+SNP calling from low coverage data is still a problem here, which caused the missing alternate allele: most of the SNPs that were called from RNAseq data are monomorphic in WGS data.  
 
 
 
