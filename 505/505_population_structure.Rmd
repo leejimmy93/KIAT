@@ -58,6 +58,16 @@ hist(lmiss$F_MISS)
 sum(lmiss$F_MISS < 0.5)/nrow(lmiss) # 79% left    
 ```
 
+filter WGS data 
+https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh 
+
+filter RNAseq data 
+
+
+convert to hmp --> calculate heterozygosity --> filter based on heterozygosity 
+
+
+
 decide how to conduct population structure analysis, use all data or just one of these two datasets 
 
 ### 2) population structure analysis  
