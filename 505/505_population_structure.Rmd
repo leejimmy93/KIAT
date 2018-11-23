@@ -1,0 +1,63 @@
+---
+title: "505_population_structure"
+output: html_document
+---
+
+The goal of this script is to check the population structure of this 505 diversity panel. 
+
+### 1) 
+get the common SNPs between RNAseq and WGS for MDS analyiss, show the MDS plot 
+
+SNP filtering for WGS data & RNAseq data 
+QUAL > 40, lmiss < 0.5, mean read depth > 1 and < 100, MAF > 0.01 
+
+* MAF 
+SNPs due to sequencing errors will usually have major allele frequencies close to 1, because few genotypes will have an allele due to the error. So we could remove most SNPs due to sequencing errors by using this filter. If we do it, we will also filter out lots of real SNPs that are almost fixed in the population.
+
+# stats for RNAseq data 
+```{r} 
+# QUAL score
+QUAL <- read.delim("~/505/vcf_late_silique_131_sample/combined/505.lqual")
+hist(log10(QUAL$QUAL))    
+sum(QUAL$QUAL > 40)/nrow(QUAL) # 80% 
+sum(QUAL$QUAL > 30)/nrow(QUAL) # 87% 
+
+# MAF
+MAF <- read.table("~/505/vcf_late_silique_131_sample/combined/MAF")
+nrow(MAF)/nrow(QUAL) # 83% SNP out of all squence variations called from Freebayes
+
+MAF <- 
+MAF %>% 
+  mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5), 
+         V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>% 
+  dplyr::select(V7, V8) 
+
+MAF_minor <- as.numeric(apply(MAF, 1, min))  
+sum(MAF_minor[!is.na(MAF_minor)] > 0.05) / nrow(QUAL) # 22% 
+sum(MAF_minor[!is.na(MAF_minor)] > 0.01) / nrow(QUAL) # 54% # use this 
+sum(MAF_minor[!is.na(MAF_minor)] > 0.001) / nrow(QUAL) # 80% # use this 
+
+hist(as.numeric(apply(MAF, 1, min))) 
+
+# mean read depth across individuals 
+read_depth <- read.delim("~/505/vcf_late_silique_131_sample/combined/505.ldepth.mean")
+mean(read_depth$MEAN_DEPTH) # 15  
+
+hist(log10(read_depth$MEAN_DEPTH), breaks = 1000)
+read_depth <- 
+read_depth %>% 
+  filter(MEAN_DEPTH > 1 & MEAN_DEPTH < 100) 
+
+nrow(read_depth)/nrow(QUAL) # 97% 
+hist(read_depth$MEAN_DEPTH, breaks = 500)
+
+# missing rate 
+# across taxa, on site level 
+lmiss <- read.delim("~/505/vcf_late_silique_131_sample/combined/505.lmiss")
+hist(lmiss$F_MISS) 
+sum(lmiss$F_MISS < 0.5)/nrow(lmiss) # 79% left    
+```
+
+decide how to conduct population structure analysis, use all data or just one of these two datasets 
+
+### 2) population structure analysis  

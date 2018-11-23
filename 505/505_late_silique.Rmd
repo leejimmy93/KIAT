@@ -240,7 +240,7 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 
 # 6) filter 
 # filter.sh 
-# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh) 
 # output: 505.filtered.vcf.gz 
 
 # 7) calculate a bunch of stats (haven't done this step yet...)
