@@ -5,11 +5,15 @@ output: html_document
 
 The goal of this script is to check the population structure of this 505 diversity panel. 
 
+```{r}
+library("tidyverse")
+```
+
 ### 1) 
 get the common SNPs between RNAseq and WGS for MDS analyiss, show the MDS plot 
 
 SNP filtering for WGS data & RNAseq data 
-QUAL > 40, lmiss < 0.5, mean read depth > 1 and < 100, MAF > 0.01 
+QUAL > 40, lmiss < 0.5, mean read depth > 1 and < 100, MAF > 0.01  
 
 * MAF 
 SNPs due to sequencing errors will usually have major allele frequencies close to 1, because few genotypes will have an allele due to the error. So we could remove most SNPs due to sequencing errors by using this filter. If we do it, we will also filter out lots of real SNPs that are almost fixed in the population.
@@ -62,11 +66,62 @@ filter WGS data
 https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh 
 
 filter RNAseq data 
-
+https://github.com/leejimmy93/KIAT/blob/master/505/filter_late_silique.sh 
 
 convert to hmp --> calculate heterozygosity --> filter based on heterozygosity 
+https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp_2.sh 
+https://github.com/leejimmy93/KIAT/blob/master/505/WGS/format_hmp_2.txt --> export site summary file 
 
+# remove site with high heterozygosity (>0.2) 
 
+```{r}
+site_summary_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/RNA_het.txt", sep="\t", header=T)  
+site_summary_WGS <- read.table("~/505/WGS/vcf_raw/filtered/hmp/WGS_het.txt", sep="\t", header=T)  
+
+dim(site_summary_RNA) # 544432     37 
+dim(site_summary_WGS)  # 303555     37  
+
+hist(site_summary_RNA$Proportion.Heterozygous)  
+hist(site_summary_WGS$Proportion.Heterozygous)  
+
+SNP.ID.het.filterd.0.2.RNA <-  
+site_summary_RNA %>% 
+  filter(Proportion.Heterozygous < 0.2) %>%
+  select(Chromosome, Physical.Position)
+
+SNP.ID.het.filterd.0.2.WGS <-  
+site_summary_WGS %>% 
+  filter(Proportion.Heterozygous < 0.2) %>%
+  select(Chromosome, Physical.Position)
+
+dim(SNP.ID.het.filterd.0.2.RNA) # 467669      2 
+dim(SNP.ID.het.filterd.0.2.WGS) # 123126      2 
+
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.RNA$Chromosome, sep="")
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+
+SNP.ID.het.filterd.0.2.WGS$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.WGS$Chromosome, sep="")
+SNP.ID.het.filterd.0.2.WGS$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.WGS$Chromosome)
+SNP.ID.het.filterd.0.2.WGS$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2.WGS$Chromosome)
+
+write.table(SNP.ID.het.filterd.0.2.RNA, file= "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/SNP.ID.het.filterd.0.2.txt")  
+
+write.table(SNP.ID.het.filterd.0.2.WGS, file= "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/filtered/hmp/SNP.ID.het.filterd.0.2.txt")  
+
+# cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2  
+
+# vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd.0.2 --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_0.2    
+
+# gzip 505_filtered_het_0.2.recode.vcf  
+``` 
+
+convert vcf to hmp 
+
+### get common SNPs between RNA & WGS dataset --> check data seperation using MDS 
+```{r}
+
+```
 
 decide how to conduct population structure analysis, use all data or just one of these two datasets 
 
