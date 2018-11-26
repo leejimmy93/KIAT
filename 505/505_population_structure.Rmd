@@ -105,7 +105,7 @@ SNP.ID.het.filterd.0.2.WGS$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.WGS
 SNP.ID.het.filterd.0.2.WGS$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.WGS$Chromosome)
 SNP.ID.het.filterd.0.2.WGS$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2.WGS$Chromosome)
 
-write.table(SNP.ID.het.filterd.0.2.RNA, file= "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/SNP.ID.het.filterd.0.2.txt")  
+write.table(SNP.ID.het.filterd.0.2.RNA, file= "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/SNP.ID.het.filterd.0.2.txt")   
 
 write.table(SNP.ID.het.filterd.0.2.WGS, file= "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/filtered/hmp/SNP.ID.het.filterd.0.2.txt")  
 
@@ -113,16 +113,107 @@ write.table(SNP.ID.het.filterd.0.2.WGS, file= "/Network/Servers/avalanche.plb.uc
 
 # vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd.0.2 --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_0.2    
 
-# gzip 505_filtered_het_0.2.recode.vcf  
+# gzip 505_filtered_het_0.2.recode.vcf
+
+SNP.ID.het.filterd.0.2.WGS$Chromosome <- gsub("chr", "", SNP.ID.het.filterd.0.2.WGS$Chromosome)
+
+tmp <-
+SNP.ID.het.filterd.0.2.WGS %>% 
+  left_join(site_summary_WGS) %>% 
+  dplyr::select(Chromosome, Physical.Position, Proportion.Heterozygous) 
+  
+hist(tmp$Proportion.Heterozygous) 
+
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("chr", "", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+
+tmp2 <-
+SNP.ID.het.filterd.0.2.RNA %>% 
+  left_join(site_summary_RNA) %>% 
+  dplyr::select(Chromosome, Physical.Position, Proportion.Heterozygous) 
+  
+hist(tmp2$Proportion.Heterozygous)  
 ``` 
 
 convert vcf to hmp 
+https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp_2.sh 
+https://github.com/leejimmy93/KIAT/blob/master/505/WGS/format_hmp_2.txt 
+sed 's/#//g' 505.hmp.txt > 505_final.hmp.txt 
 
-### get common SNPs between RNA & WGS dataset --> check data seperation using MDS 
-```{r}
+### get common SNPs between RNA & WGS dataset --> check data seperation using MDS  
+```{r} 
+### filtered based on het ratio 
+SNP_RNA_2 <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/505_final.hmp.txt", header = T, stringsAsFactors = F) 
 
+SNP_WGS_2 <- read.table("~/505/WGS/vcf_raw/filtered/hmp/505_final.hmp.txt", header = T, stringsAsFactors = F)
+
+SNP_RNA_2 %>% dim(); SNP_WGS_2 %>% dim() 
+# [1] 467669    142
+# [1] 123126    249  
+
+common_WGS_RNA_2 <- SNP_RNA_2 %>% semi_join(SNP_WGS_2, by = c("alleles", "rs")) 
+dim(common_WGS_RNA_2) # 391 142
+
+common_WGS_RNA_2 <- common_WGS_RNA_2 %>% left_join(SNP_WGS_2) 
+
+###### not filtered by het ratio 
+SNP_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/505_final.hmp.txt", header = T, stringsAsFactors = F)
+
+SNP_WGS <- read.table("~/505/WGS/vcf_raw/filtered/505_final.hmp.txt", header = T, stringsAsFactors = F)
+
+SNP_RNA %>% dim(); SNP_WGS %>% dim() 
+# [1] 467669    142
+# [1] 123126    249  
+
+str(SNP_RNA)  
+str(SNP_WGS) 
+
+common_WGS_RNA <- SNP_RNA %>% semi_join(SNP_WGS, by = c("alleles", "rs")) 
+dim(common_WGS_RNA) # 4569  142
+common_WGS_RNA <- common_WGS_RNA %>% left_join(SNP_WGS) 
+dim(common_WGS_RNA) # 4569  380  
 ```
 
 decide how to conduct population structure analysis, use all data or just one of these two datasets 
 
 ### 2) population structure analysis  
+```{r}
+# not filtered based on het ratio 
+common_WGS_RNA <- common_WGS_RNA %>% dplyr::select(-(rs:QCcode)) 
+common_WGS_RNA_2 <- common_WGS_RNA_2 %>% dplyr::select(-(rs:QCcode)) 
+
+common_WGS_RNA <- common_WGS_RNA %>% t() 
+common_WGS_RNA_2 <- common_WGS_RNA_2 %>% t() 
+
+late_silique_505.2.t <- common_WGS_RNA_2 
+
+geno.numeric <- apply(late_silique_505.2.t, 2, function(x) as.numeric(as.factor(x)))
+rnames <- rownames(late_silique_505.2.t)
+rownames(geno.numeric) <- rnames
+geno.numeric.df <- as.data.frame(geno.numeric)
+genDist <- as.matrix(dist(geno.numeric.df))
+#perform the multi-dimensional scaling
+geno.mds <- as.data.frame(cmdscale(genDist))
+head(geno.mds) #now we have 2 dimensions 
+dim(geno.mds)
+plot(geno.mds)        
+
+geno.mds$Sample.ID <- rownames(geno.mds)
+
+library(ggrepel)
+set.seed(111)  
+
+sample_info <- geno.mds %>% rownames() %>% as.data.frame() 
+sample_info$seq_info <- c(rep("RNA", 131), rep("WGS", 238))
+colnames(sample_info)[1] <- "Sample.ID"
+
+geno.mds.all.des <- merge(geno.mds, sample_info, by="Sample.ID")   
+colnames(geno.mds.all.des)[1] <- "Taxa"
+# geno.mds.all.des.2 <- merge(geno.mds.all.des, SN_Taxa_131_sample, by="Taxa")
+head(geno.mds.all.des)
+
+p.mds.country <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(seq_info)))
+p.mds.country <- p.mds.country + geom_point(size=1) 
+p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country    
+```
+

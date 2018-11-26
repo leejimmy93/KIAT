@@ -356,7 +356,7 @@ nrow(geno_505_hmp.late_silique)/sum(chrom.length$V2)*1000000
 load("~/505/output/late_silique/late_silique_505.2.Rdata")
 class(late_silique_505.2.t)
 dim(late_silique_505.2.t) #  88 347282 
-late_silique_505.2.t[1:10, 1:10]
+late_silique_505.2.t[1:10, 1:10] 
 # late_silique_505.2.t <- as.data.frame(late_silique_505.2.t)
 # geno.numeric <- data.matrix(late_silique_505.2.t)
 # geno.numeric[1:10, 1:10]
@@ -377,7 +377,7 @@ genDist <- as.matrix(dist(geno.numeric.2))
 geno.mds <- as.data.frame(cmdscale(genDist))
 head(geno.mds) #now we have 2 dimensions 
 dim(geno.mds)
-plot(geno.mds)  
+plot(geno.mds)    
 
 ############  
 save(geno.numeric, file="~/505/output/late_silique_505_geno_numeric.Rdata") 
@@ -1894,7 +1894,7 @@ found that there might be problem when converting vcf to hmp format, get M,R,N e
 leaf_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_leaf_92.vcf.recode.vcf.gz")
 late_silique_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_late_silique_92.vcf.recode.vcf.gz")
 
-significant_SNP_9
+significant_SNP_9 
 
 # reform vcf file to the right format 
 

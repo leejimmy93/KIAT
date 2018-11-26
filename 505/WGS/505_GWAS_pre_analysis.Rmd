@@ -371,7 +371,7 @@ files.RNA <- list.files(path=path)
 setwd(path)
 hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T, stringsAsFactors = F)) 
 hmp.RNA %>% length() 
-files.RNA <- gsub("_filtered.hmp.txt", "", files.RNA)
+files.RNA <- gsub("_filtered.hmp.txt", "", files.RNA) 
 names(hmp.RNA) <- files.RNA
 
 common_WGS_RNA_2 <- 
@@ -380,7 +380,7 @@ lapply(names(hmp.RNA), function(i)
 
 names(common_WGS_RNA_2) <- files.RNA
 
-for(i in names(hmp.WGS)){
+for(i in names(hmp.WGS)){  
   print(i) 
   print(dim(hmp.WGS[[i]]))
   print(dim(hmp.RNA[[i]]))
