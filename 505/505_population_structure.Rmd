@@ -131,7 +131,7 @@ SNP.ID.het.filterd.0.2.RNA %>%
   left_join(site_summary_RNA) %>% 
   dplyr::select(Chromosome, Physical.Position, Proportion.Heterozygous) 
   
-hist(tmp2$Proportion.Heterozygous)  
+hist(tmp2$Proportion.Heterozygous)   
 ``` 
 
 convert vcf to hmp 
@@ -156,7 +156,7 @@ dim(common_WGS_RNA_2) # 391 142
 common_WGS_RNA_2 <- common_WGS_RNA_2 %>% left_join(SNP_WGS_2) 
 
 ###### not filtered by het ratio 
-SNP_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/505_final.hmp.txt", header = T, stringsAsFactors = F)
+SNP_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/505_final.hmp.txt", header = T, stringsAsFactors = F) 
 
 SNP_WGS <- read.table("~/505/WGS/vcf_raw/filtered/505_final.hmp.txt", header = T, stringsAsFactors = F)
 
@@ -184,7 +184,7 @@ common_WGS_RNA_2 <- common_WGS_RNA_2 %>% dplyr::select(-(rs:QCcode))
 common_WGS_RNA <- common_WGS_RNA %>% t() 
 common_WGS_RNA_2 <- common_WGS_RNA_2 %>% t() 
 
-late_silique_505.2.t <- common_WGS_RNA_2 
+late_silique_505.2.t <- common_WGS_RNA 
 
 geno.numeric <- apply(late_silique_505.2.t, 2, function(x) as.numeric(as.factor(x)))
 rnames <- rownames(late_silique_505.2.t)
@@ -207,13 +207,35 @@ sample_info$seq_info <- c(rep("RNA", 131), rep("WGS", 238))
 colnames(sample_info)[1] <- "Sample.ID"
 
 geno.mds.all.des <- merge(geno.mds, sample_info, by="Sample.ID")   
-colnames(geno.mds.all.des)[1] <- "Taxa"
-# geno.mds.all.des.2 <- merge(geno.mds.all.des, SN_Taxa_131_sample, by="Taxa")
-head(geno.mds.all.des)
+colnames(geno.mds.all.des)[1] <- "Sample.ID"
+
+geno.mds.all.des$Sample.ID <- gsub("\\.","\\-", geno.mds.all.des$Sample.ID) 
+geno.mds.all.des$Sample.ID <- gsub("X", "", geno.mds.all.des$Sample.ID)
+class(geno.mds.all.des$Sample.ID)
+
+load("~/505/output/late_silique/sample_des_revised.Rdata")
+sample_des_revised$Sample.ID <- as.character(sample_des_revised$Sample.ID)
+
+geno.mds.all.des$Sample.ID
+sample_des_revised$Sample.ID
+
+geno.mds.all.des.2 <- merge(geno.mds.all.des, sample_des_revised, by="Sample.ID")
+head(geno.mds.all.des.2) 
+dim(geno.mds.all.des.2) 
 
 p.mds.country <- ggplot(data=geno.mds.all.des, aes(V1, V2, color=factor(seq_info)))
 p.mds.country <- p.mds.country + geom_point(size=1) 
 p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+p.mds.country 
+
+
+p.mds.country <- ggplot(data=geno.mds.all.des.2, aes(V1, V2, color=factor(Sample.Description.Origin)))
+p.mds.country <- p.mds.country + geom_point(size=1) 
+p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
+# p.mds.country <- p.mds.country + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
+# p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
 p.mds.country    
 ```
+
+
 
