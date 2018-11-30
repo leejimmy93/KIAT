@@ -2462,7 +2462,7 @@ write.csv(gene_report.final, file="~/505/output/131_sample/gene_report.final.csv
 # filter based on site heterozygosity 
 # site that are highly heterozygous might be result of mis-mapping result of homeologous sequences 
 
-# convert .vcf.gz file to hmp file --> import into tassel --> calculate site heterozygosity --> remove site with high heterozygosity (>0.2)
+# convert .vcf.gz file to hmp file --> import into tassel --> calculate site heterozygosity --> remove site with high heterozygosity (>0.2) 
  
 # convert to hmp format 
 # run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_0.2_missing.vcf.gz -outputFile 505_filtered_0.2_missing_sorted -fileType VCF

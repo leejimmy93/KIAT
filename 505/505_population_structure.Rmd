@@ -59,7 +59,7 @@ hist(read_depth$MEAN_DEPTH, breaks = 500)
 # across taxa, on site level 
 lmiss <- read.delim("~/505/vcf_late_silique_131_sample/combined/505.lmiss")
 hist(lmiss$F_MISS) 
-sum(lmiss$F_MISS < 0.5)/nrow(lmiss) # 79% left    
+sum(lmiss$F_MISS < 0.5)/nrow(lmiss) # 79% left     
 ```
 
 filter WGS data 
@@ -76,13 +76,16 @@ https://github.com/leejimmy93/KIAT/blob/master/505/WGS/format_hmp_2.txt --> expo
 
 ```{r}
 site_summary_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/RNA_het.txt", sep="\t", header=T)  
-site_summary_WGS <- read.table("~/505/WGS/vcf_raw/filtered/hmp/WGS_het.txt", sep="\t", header=T)  
+site_summary_WGS <- read.table("~/505/WGS/vcf_raw/filtere/hmp/WGS_het.txt", sep="\t", header=T)  
+site_summary_WGS_2 <- read.table("~/505/WGS/vcf_raw/filtered/filter_1/hmp/WGS_2_het.txt", sep="\t", header=T)  
 
-dim(site_summary_RNA) # 544432     37 
+dim(site_summary_RNA) # 544432     37  
 dim(site_summary_WGS)  # 303555     37  
+dim(site_summary_WGS_2)  # 208755     37  
 
 hist(site_summary_RNA$Proportion.Heterozygous)  
 hist(site_summary_WGS$Proportion.Heterozygous)  
+hist(site_summary_WGS_2$Proportion.Heterozygous)  
 
 SNP.ID.het.filterd.0.2.RNA <-  
 site_summary_RNA %>% 
@@ -94,8 +97,14 @@ site_summary_WGS %>%
   filter(Proportion.Heterozygous < 0.2) %>%
   select(Chromosome, Physical.Position)
 
+SNP.ID.het.filterd.0.2.WGS.2 <-  
+site_summary_WGS_2 %>% 
+  filter(Proportion.Heterozygous < 0.2) %>%
+  dplyr::select(Chromosome, Physical.Position)
+
 dim(SNP.ID.het.filterd.0.2.RNA) # 467669      2 
 dim(SNP.ID.het.filterd.0.2.WGS) # 123126      2 
+dim(SNP.ID.het.filterd.0.2.WGS.2) # 180429      2  
 
 SNP.ID.het.filterd.0.2.RNA$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.RNA$Chromosome, sep="")
 SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.RNA$Chromosome)
@@ -105,9 +114,13 @@ SNP.ID.het.filterd.0.2.WGS$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.WGS
 SNP.ID.het.filterd.0.2.WGS$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.WGS$Chromosome)
 SNP.ID.het.filterd.0.2.WGS$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2.WGS$Chromosome)
 
+SNP.ID.het.filterd.0.2.WGS.2$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.WGS.2$Chromosome, sep="")
+SNP.ID.het.filterd.0.2.WGS.2$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.WGS.2$Chromosome)
+SNP.ID.het.filterd.0.2.WGS.2$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2.WGS.2$Chromosome) 
+
 write.table(SNP.ID.het.filterd.0.2.RNA, file= "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/SNP.ID.het.filterd.0.2.txt")   
 
-write.table(SNP.ID.het.filterd.0.2.WGS, file= "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/filtered/hmp/SNP.ID.het.filterd.0.2.txt")  
+write.table(SNP.ID.het.filterd.0.2.WGS, file= "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/filtered/hmp/SNP.ID.het.filterd.0.2.txt") 
 
 # cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2  
 
@@ -115,23 +128,34 @@ write.table(SNP.ID.het.filterd.0.2.WGS, file= "/Network/Servers/avalanche.plb.uc
 
 # gzip 505_filtered_het_0.2.recode.vcf
 
-SNP.ID.het.filterd.0.2.WGS$Chromosome <- gsub("chr", "", SNP.ID.het.filterd.0.2.WGS$Chromosome)
+# check read depth for high het sites 
+read_depth <- read.delim("~/505/WGS/vcf_raw/combined/505.ldepth.mean", stringsAsFactors = F)
+mean(read_depth$MEAN_DEPTH) # 3.56 
 
-tmp <-
+SNP.ID.het.filterd.0.2.WGS.2.depth <- 
+SNP.ID.het.filterd.0.2.WGS.2 %>% 
+  left_join(read_depth, c("Chromosome" = "CHROM", "Physical.Position" = "POS")) 
+
+SNP.ID.het.filterd.0.2.WGS.depth <- 
 SNP.ID.het.filterd.0.2.WGS %>% 
-  left_join(site_summary_WGS) %>% 
-  dplyr::select(Chromosome, Physical.Position, Proportion.Heterozygous) 
-  
-hist(tmp$Proportion.Heterozygous) 
+  left_join(read_depth, c("Chromosome" = "CHROM", "Physical.Position" = "POS")) 
 
-SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("chr", "", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+min(SNP.ID.het.filterd.0.2.WGS.depth$MEAN_DEPTH) # het ratio < 0.2 
+min(SNP.ID.het.filterd.0.2.WGS.2.depth$MEAN_DEPTH)
 
-tmp2 <-
-SNP.ID.het.filterd.0.2.RNA %>% 
-  left_join(site_summary_RNA) %>% 
-  dplyr::select(Chromosome, Physical.Position, Proportion.Heterozygous) 
-  
-hist(tmp2$Proportion.Heterozygous)   
+mean(SNP.ID.het.filterd.0.2.WGS.depth$MEAN_DEPTH)
+mean(SNP.ID.het.filterd.0.2.WGS.2.depth$MEAN_DEPTH)
+
+median(SNP.ID.het.filterd.0.2.WGS.depth$MEAN_DEPTH)
+median(SNP.ID.het.filterd.0.2.WGS.2.depth$MEAN_DEPTH)
+
+max(SNP.ID.het.filterd.0.2.WGS.depth$MEAN_DEPTH)
+max(SNP.ID.het.filterd.0.2.WGS.2.depth$MEAN_DEPTH)  
+SNP.ID.het.filterd.0.2.WGS.depth %>% 
+  filter(MEAN_DEPTH > 100)
+
+hist(log10(SNP.ID.het.filterd.0.2.WGS.depth$MEAN_DEPTH))
+hist(log10(SNP.ID.het.filterd.0.2.WGS.2.depth$MEAN_DEPTH)) 
 ``` 
 
 convert vcf to hmp 
@@ -234,7 +258,7 @@ p.mds.country <- p.mds.country + geom_point(size=1)
 p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
 # p.mds.country <- p.mds.country + geom_text_repel(aes(x=V1, y=V2, label=factor(Name)))
 # p.mds.country <- p.mds.country + facet_wrap(~Sample.Description.Type)
-p.mds.country    
+p.mds.country     
 ```
 
 

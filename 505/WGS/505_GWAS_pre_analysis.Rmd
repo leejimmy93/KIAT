@@ -709,6 +709,16 @@ MAF.tmp.RNA %>% semi_join(all, c("V1" = "CHROM", "V2" = "POS")) %>%
 
 SNP calling from low coverage data is still a problem here, which caused the missing alternate allele: most of the SNPs that were called from RNAseq data are monomorphic in WGS data.  
 
+### trouble shooting 
+
+because the het ratio is too high for WGS data, we are wondering whether this is due to the mismapping problem, where reads from one sub genome is mapped to the other sub genome, and low coverage data additionaly caused the mis-genotyping. To test this, I decided to use STAR for mapping, because we used STAR for RNAseq mapping and did not observe the same problem. BWA, as reported, is the best available tool that could be used for DNA mapping. 
+
+/share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_STAR.slurm 
+
+
+
+
+
 
 
 
