@@ -400,6 +400,19 @@ GWAS_eigengene_trait_overlap_gene$class %>% unique()
 save(GWAS_eigengene_trait_overlap_gene, file = "~/505/network_analysis/output/GWAS_eigengene_trait_overlap_gene.Rdata") 
 ```
 
+```{r}
+test <- 
+sapply(names(GWAS_trait.sig), function(i) 
+       nrow(GWAS_trait.sig[[i]])) 
+
+sum(test != 0) 
+
+test <- test %>% as.data.frame() 
+colnames(test) <- "Number_of_sig_SNPs"
+sum(test$Number_of_sig_SNPs != 0) 
+
+write.csv(test, file = "~/505/network_analysis/output/trait_sigSNP_sum.csv") 
+```
 
 
 

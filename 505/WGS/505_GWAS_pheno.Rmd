@@ -83,3 +83,28 @@ max(gene.CV)
 min(gene.CV)  
 ```
 
+tmp 
+```{r}
+library("qqman")
+Erucic_acid <- read.csv("~/505/WGS/GWAS/output/GAPIT.MLM.Erucic_acid.GWAS.Results.csv", header = T)
+
+Oleic_acid <- read.csv("~/505/WGS/GWAS/output/GAPIT.MLM.Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/WGS/GWAS/output_fig/test.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(2,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+    ) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+    ) 
+
+dev.off() 
+
+
+```
+

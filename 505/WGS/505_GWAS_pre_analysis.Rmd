@@ -6,14 +6,14 @@ output: html_document
 ---
 
 ### load libs
-```{r}
+```{r} 
 library(tidyverse)
 library(reshape2)
 ```
 
 # sample submission for WGS 
 ```{r}
-WGS_samples <- read.csv("~/505/WGS/sample/DNA_to_Library_Submission_Form_20180508_incorporated_all.csv", header = F)
+WGS_samples <- read.csv("~/505/WGS/sample/DNA_to_Library_Submission_Form_20180508_incorporated_all.csv", header = F)  
 WGS_samples <- 
 t(WGS_samples) %>% as.data.frame() %>% 
   dplyr::select(V1:V12) 
@@ -218,7 +218,7 @@ https://github.com/leejimmy93/KIAT_cabernet/blob/master/5055751.pts-164.barbera/
 https://github.com/leejimmy93/KIAT_cabernet/blob/master/505/bwa_extract_stats.sh
 
 ```{r}
-library(reshape2)
+library(reshape2) 
 
 mapping_stats <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/BWA_Stats_new.tab")
 
@@ -284,10 +284,69 @@ cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverag
 
 reorder each vcf file and compress: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/reorder_vcf_etc.sh
 concat all vcf files: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/concat.sh 
+<<<<<<< HEAD
 calculate stats: 
-```{r}
+=======
+calculate stats: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/calc.sh 
 
+check stats: 
+>>>>>>> 35705c820751c70c150a0946011c10afbde744e8
+```{r}
+# QUAL score
+QUAL <- read.delim("~/505/WGS/vcf_raw/combined/505.lqual")
+hist(log10(QUAL$QUAL))    
+sum(QUAL$QUAL > 40)/nrow(QUAL) # 81% 
+sum(QUAL$QUAL > 30)/nrow(QUAL) # 85% 
+
+# MAF
+MAF <- read.table("~/505/WGS/vcf_raw/combined/MAF")
+nrow(MAF)/nrow(QUAL) # 83% SNP out of all squence variations called from Freebayes
+
+MAF <- 
+MAF %>% 
+  mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5), 
+         V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>% 
+  dplyr::select(V7, V8) 
+
+MAF_minor <- as.numeric(apply(MAF, 1, min))  
+sum(MAF_minor[!is.na(MAF_minor)] > 0.05) / nrow(QUAL) # 28% 
+sum(MAF_minor[!is.na(MAF_minor)] > 0.01) / nrow(QUAL) # 54% # use this 
+sum(MAF_minor[!is.na(MAF_minor)] > 0.001) / nrow(QUAL) # 80% # use this 
+
+hist(as.numeric(apply(MAF, 1, min)))   
+
+# mean read depth across individuals 
+read_depth <- read.delim("~/505/WGS/vcf_raw/combined/505.ldepth.mean")
+mean(read_depth$MEAN_DEPTH) # 3.56 
+
+hist(log10(read_depth$MEAN_DEPTH), breaks = 1000)
+read_depth <- 
+read_depth %>% 
+  filter(MEAN_DEPTH > 1 & MEAN_DEPTH < 100) 
+
+nrow(read_depth)/nrow(QUAL) # 99% 
+hist(read_depth$MEAN_DEPTH, breaks = 500)
+
+# missing rate 
+# acorss site, on individual level 
+imiss <- read.delim("~/505/WGS/vcf_raw/combined/505.imiss")
+imiss %>% 
+  filter(F_MISS > 0.8) 
+
+#             INDV   N_DATA N_GENOTYPES_FILTERED   N_MISS   F_MISS
+# 1 K185_S290_L003 32876150                    0 32531155 0.989506
+# 2 K186_S289_L003 32876150                    0 32534117 0.989596
+# 3 K279_S424_L003 32876150                    0 28089705 0.854410
+
+# across taxa, on site level 
+lmiss <- read.delim("~/505/WGS/vcf_raw/combined/505.lmiss")
+hist(lmiss$F_MISS) 
+sum(lmiss$F_MISS < 0.5)/nrow(lmiss) # 90% left    
 ```
+
+filter for each chrom seperately: biallelic SNP; QUAL score > 40, MAF >= 0.05, mean read depth across individuals greater than 1 and less than 100, missing rate across tax less than 0.5, genotype quality greater than 30 https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh
+
+vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh  
 
 2) RNAseq: compress and index vcf file for each chrom, use vcftool to filter, use tassel to convert to hapmap format 
 
@@ -296,13 +355,7 @@ or Whitney: /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/rui
 
 filter: https://github.com/leejimmy93/KIAT/blob/master/505/filter_late_silique.sh 
 
-vcf to hmp: /usr/local/stow/tassel-5-standalone/run_pipeline.pl -SortGenotypeFilePlugin -inputFile chrA10_filtered.vcf.gz -outputFile chrA10_filtered -fileType VCF
-/usr/local/stow/tassel-5-standalone/run_pipeline.pl -Xmx5g -fork1 -vcf chrA10_filtered.vcf -export -exportType Hapmap -runfork1
-
-```{r}
-
-```
-
+vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh 
 
 3) use join function to merge every chrom's hapmap file from WGS and RNAseq 
 
@@ -310,30 +363,409 @@ hmp files at whitney:/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/
 
 edit hmp file to remove "#" after rs & assembly  
 ```{r}
-A10_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/test/chrA10_filtered.hmp.txt", header = T) 
-A10_DNA <- read.table("~/505/vcf_combine_WGS_RNAseq/test_WGS/chrA10_filtered.hmp.txt", header = T)
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/WGS_filtered/hmp"
+files.WGS <- list.files(path=path)  
+setwd(path) 
+hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T, stringsAsFactors = F)) 
+hmp.WGS %>% length()
+files.WGS <- gsub("_filtered.hmp.txt", "", files.WGS)
+names(hmp.WGS) <- files.WGS
 
-dim(A10_DNA) # 53766   249
-dim(A10_RNA) # 11317   142 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
+files.RNA <- list.files(path=path) 
+setwd(path)
+hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T, stringsAsFactors = F)) 
+hmp.RNA %>% length() 
+files.RNA <- gsub("_filtered.hmp.txt", "", files.RNA) 
+names(hmp.RNA) <- files.RNA
 
-A10_DNA[1:10, 1:10]
-A10_RNA[1:10, 1:10]
+common_WGS_RNA_2 <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs", "alleles")))
 
-test <- 
-A10_RNA %>% 
-  full_join(A10_DNA, by = c("rs", "alleles"))
+names(common_WGS_RNA_2) <- files.RNA
 
-test %>% dim()
+for(i in names(hmp.WGS)){  
+  print(i) 
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.RNA[[i]]))
+  print(dim(common_WGS_RNA_2[[i]]))
+} # the overlapped SNPs between WGS and RNAseq is very few... 
 
-```
+WGS_sum <- 
+sapply(names(hmp.WGS), function(i)
+  nrow(hmp.WGS[[i]])) 
 
-### test 
-1) 
+RNA_sum <- 
+sapply(names(hmp.RNA), function(i)
+  nrow(hmp.RNA[[i]])) 
 
---> GWAS & population structure + genetic diveristy  
+overlap_sum <- 
+sapply(names(common_WGS_RNA_2), function(i)
+  nrow(common_WGS_RNA_2[[i]])) 
+
+test <- rbind(WGS_sum, RNA_sum, overlap_sum) %>% as.data.frame()
+
+test$type <- rownames(test)
+test <- test %>% melt() 
+# split to main & random chromosomes 
+# main 
+test.main <- test[!grepl("random", test$variable),]  
+head(test.main) 
+
+# make a plot to see how many SNPs on each chromosome 
+pl.SNP.main <- ggplot(data = test.main) + 
+  geom_bar(aes(x=factor(variable), y = value, fill=type), stat = "identity") +   
+  facet_wrap(~type, ncol = 1) + 
+  geom_text(aes(x=factor(variable), y = value, label=factor(value), size=1)) + 
+  labs(list(title = "", x = "chromosome ID", y = "number of SNPs")) + 
+  theme(legend.position = "none")
+
+pl.SNP.main     
+
+### just raw vcf file 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered/hmp/" 
+files.WGS <- list.files(path=path)   
+setwd(path) 
+hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS %>% length()
+files.WGS <- gsub(".hmp.txt", "", files.WGS)
+names(hmp.WGS) <- files.WGS
+
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
+files.RNA <- list.files(path=path) 
+setwd(path)
+hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T)) 
+hmp.RNA %>% length() 
+files.RNA <- gsub("_filtered.hmp.txt", "", files.RNA)
+names(hmp.RNA) <- files.RNA
+
+common_WGS_RNA <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS[[i]] %>% full_join(hmp.RNA[[i]], by = c("rs", "alleles")))
+
+common_WGS_RNA[[13]] %>% dim() 
+names(common_WGS_RNA) <- files.RNA
+
+for(i in names(hmp.WGS)){
+  print(i)
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.RNA[[i]]))
+  print(dim(common_WGS_RNA[[i]]))
+}
+
+common_WGS_RNA_2 <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS[[i]] %>% inner_join(hmp.RNA[[i]], by = c("rs", "alleles")))
+
+names(common_WGS_RNA_2) <- files.RNA
+
+for(i in names(hmp.WGS)){
+  print(i) 
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.RNA[[i]]))
+  print(dim(common_WGS_RNA_2[[i]]))
+} # the overlapped SNPs between WGS and RNAseq is very few... 
+
+WGS_sum <- 
+sapply(names(hmp.WGS), function(i)
+  nrow(hmp.WGS[[i]])) 
+
+RNA_sum <- 
+sapply(names(hmp.RNA), function(i)
+  nrow(hmp.RNA[[i]])) 
+
+overlap_sum <- 
+sapply(names(common_WGS_RNA_2), function(i)
+  nrow(common_WGS_RNA_2[[i]])) 
+
+test <- rbind(WGS_sum, RNA_sum, overlap_sum) %>% as.data.frame()
+
+test$type <- rownames(test)
+test <- test %>% melt() 
+# split to main & random chromosomes 
+# main 
+test.main <- test[!grepl("random", test$variable),]  
+head(test.main) 
+
+# make a plot to see how many SNPs on each chromosome 
+pl.SNP.main <- ggplot(data = test.main) + 
+  geom_bar(aes(x=factor(variable), y = value, fill=type), stat = "identity") +   
+  facet_wrap(~type, ncol = 1) + 
+  geom_text(aes(x=factor(variable), y = value, label=factor(value), size=1)) + 
+  labs(list(title = "", x = "chromosome ID", y = "number of SNPs")) + 
+  theme(legend.position = "none")
+
+pl.SNP.main   
+
+``` 
+
+### trouble shooting: why is there just small overlap between SNP called from RNAseq and WGS 
+1) inlude population level SNP calling by excluding --report-genotype-likelihood-max 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS.slurm
+2) force SNP calling on all sites 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS_all.slurm 
+
+tested chrA10, and the conclusion was that SNP calling from low coverage data might still has problem, because polymorphic sites might be underestimated (many polymorphic sites were not called in WGS data compared to RNAseq data)... 
+select C05, A08, and C09 to see whether the result applys to different chroms 
+compress the file uisng gzip --> transfer to whitney 
+vcf to hmp 
+format hmp 
+
 ```{r}
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw_pop/hmp/" 
+files.WGS <- list.files(path=path)  
+setwd(path)  
+hmp.WGS <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS %>% length()
+files.WGS <- gsub("_population.hmp.txt", "", files.WGS)
+names(hmp.WGS) <- files.WGS 
+
+# when pop info was incorreclty used 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered/hmp/" 
+files.WGS <- list.files(path=path)  
+files.WGS <- "chrA10.hmp.txt" 
+setwd(path) 
+hmp.WGS.2 <- lapply(files.WGS, function(x) read.table(x, header = T)) 
+hmp.WGS.2 %>% length()
+files.WGS <- gsub(".hmp.txt", "", files.WGS)
+names(hmp.WGS.2) <- files.WGS
+
+# compare 
+common_WGS <- 
+lapply(names(hmp.WGS.2), function(i) 
+  test <- hmp.WGS[[i]] %>% anti_join(hmp.WGS.2[[i]]))
+
+names(common_WGS) <- files.WGS
+
+for(i in names(hmp.WGS)){
+  print(i) 
+  print(dim(hmp.WGS[[i]]))
+  print(dim(hmp.WGS.2[[i]]))
+  print(dim(common_WGS[[i]]))
+} # the overlapped SNPs between WGS and RNAseq is very few... 
+
+# when data was filtered from the wrong file (pop info incorrectly used)
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/reordered/hmp"
+files.WGS <- list.files(path=path)  
+files.WGS <- c("chrA08.hmp.txt", "chrC05.hmp.txt", "chrC09.hmp.txt")
+setwd(path) 
+hmp.WGS.3 <- lapply(files.WGS, function(x) read.table(x, header = T, stringsAsFactors = F)) 
+hmp.WGS.3 %>% length()
+files.WGS <- gsub(".hmp.txt", "", files.WGS)
+names(hmp.WGS.3) <- files.WGS 
+
+# compare, were the over 10K SNP unique to incorrect calls left after filtering?  
+common_WGS_2 <- 
+lapply(names(hmp.WGS.3), function(i) 
+  test <- common_WGS[[i]] %>% semi_join(hmp.WGS.3[[i]], by = c("rs", "alleles"))) # only >200 SNPs were kept, which means these over 200 calls could be genotyping error due to incorreclty not using population info 
+
+names(common_WGS_2) <- files.WGS
+
+for(i in names(hmp.WGS)){ 
+  print(i) 
+  print(dim(hmp.WGS[[i]])) 
+  print(dim(hmp.WGS.3[[i]])) 
+  print(dim(common_WGS_2[[i]])) 
+}   
+
+# when pop info was incorreclty used 
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS_RNA/hmp/" 
+files.WGS <- list.files(path=path)  
+files.WGS <- c("chrA08.hmp.txt", "chrC05.hmp.txt", "chrC09.hmp.txt")
+setwd(path) 
+hmp.WGS.4 <- lapply(files.WGS, function(x) read.table(x, header = T, stringsAsFactors = F)) 
+hmp.WGS.4 %>% length()
+files.WGS <- gsub(".hmp.txt", "", files.WGS)
+names(hmp.WGS.4) <- files.WGS
+hmp.WGS.4[[1]] %>% dim()  
+
+# common between WGS & RNA   
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
+files.RNA <- list.files(path=path) 
+files.RNA <- c("chrA08_filtered.hmp.txt", "chrC05_filtered.hmp.txt", "chrC09_filtered.hmp.txt")
+setwd(path)
+hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T, stringsAsFactors = F)) 
+hmp.RNA %>% length() 
+files.RNA <- gsub("_filtered.hmp.txt", "", files.RNA)
+names(hmp.RNA) <- files.RNA
+
+common_WGS_RNA_2 <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS.4[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs"))) # called in RNAseq 
+
+names(common_WGS_RNA_2) <- files.RNA 
+
+common_WGS_RNA_2[[1]][1:10, 1:10] 
+
+common_WGS_RNA_3 <- 
+lapply(names(hmp.RNA), function(i) 
+  test <- hmp.WGS.3[[i]] %>% semi_join(hmp.RNA[[i]], by = c("rs", "alleles"))) # called in both RNAseq and WGS 
+
+names(common_WGS_RNA_3) <- files.WGS
+
+for(i in names(hmp.WGS.4)){ 
+  print(i)
+  print(dim(hmp.WGS.3[[i]])) # raw SNP from WGS w/o filtering 
+  print(dim(hmp.WGS.4[[i]])) # "SNP" from WGS including monophophic sites
+  print(dim(hmp.RNA[[i]])) # SNP from RNAseq data w/ filtering 
+  print(dim(common_WGS_RNA_2[[i]])) # SNPs called in RNAseq data and also have coverage in WGS data  
+  print(dim(common_WGS_RNA_3[[i]])) # SNPs called in both RNAseq and WGS data 
+} 
+
+RNA_unique_WGS_absent <- 
+  lapply(names(common_WGS_RNA_3), function(i) 
+    common_WGS_RNA_2[[i]] %>% anti_join(common_WGS_RNA_3[[i]], by = c("rs")))
+  
+dim(RNA_unique_WGS_absent[[1]]); dim(RNA_unique_WGS_absent[[2]]); dim(RNA_unique_WGS_absent[[3]])
+
+RNA_unique_WGS_absent[[1]]$chrom <- gsub("chr", "", RNA_unique_WGS_absent[[1]]$chrom)
+RNA_unique_WGS_absent[[2]]$chrom <- gsub("chr", "", RNA_unique_WGS_absent[[2]]$chrom)
+RNA_unique_WGS_absent[[3]]$chrom <- gsub("chr", "", RNA_unique_WGS_absent[[3]]$chrom)
+
+RNA_unique_WGS_absent[[1]][1:10, 1:10] 
+names(RNA_unique_WGS_absent) <- files.WGS
+
+# MAF, depth, GQ, and missing rate for these sites 
+# MAF 
+# cat chrA08.vcf.frq | awk '{print $1 "\t" $2 "\t" $3}' > chrA08.vcf.allele
+# cat chrC05.vcf.frq | awk '{print $1 "\t" $2 "\t" $3}' > chrC05.vcf.allele
+# cat chrC09.vcf.frq | awk '{print $1 "\t" $2 "\t" $3}' > chrC09.vcf.allele
+
+QUAL.tmp.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
+MAF.tmp <- QUAL.tmp.tmp %>% left_join(MAF.tmp, c("CHROM" = "V1", "POS" = "V2")) %>% dplyr::select(CHROM, POS, MAF_minor) 
+MAF.tmp$MAF_minor <- ifelse(is.na(MAF.tmp$MAF_minor), 0, MAF.tmp$MAF_minor)
+MAF.tmp %>% head()
+
+MAF.tmp <- MAF.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
+
+hist(as.numeric(MAF.tmp$MAF_minor), breaks = 100)  
+
+# QUAL score
+QUAL.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
+QUAL.tmp <- QUAL.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
+hist(log10(QUAL.tmp$QUAL), breaks = 100) 
+
+# mean read depth across individuals  
+QUAL.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lqual")
+QUAL.tmp <- QUAL.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
+
+read_depth.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.ldepth.mean")
+read_depth.tmp <- read_depth.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHROM" = "chrom", "POS" = "pos")) 
+dim(read_depth.tmp)
+mean(read_depth.tmp$MEAN_DEPTH) # 3.56 
+hist(read_depth.tmp$MEAN_DEPTH, breaks = 100)
+
+# missing rate 
+# across taxa, on site level   
+lmiss.tmp <- read.delim("~/505/WGS_RNA/chrA10_population_all.lmiss")
+lmiss.tmp <- lmiss.tmp %>% semi_join(RNA_unique_WGS_absent, c("CHR" = "chrom", "POS" = "pos")) 
+hist(lmiss.tmp$F_MISS)  
+dim(lmiss.tmp)
+
+### Tomorrow check MAF and see maybe these are 
+QUAL.tmp %>% dim()
+read_depth.tmp %>% dim()    
+lmiss.tmp %>% dim()
+
+all <- 
+QUAL.tmp %>% left_join(read_depth.tmp) %>% left_join(MAF.tmp) %>% 
+  left_join(lmiss.tmp, c("CHROM" = "CHR", "POS" = "POS")) 
+
+all %>% 
+  filter(QUAL > 40 & MEAN_DEPTH > 1 & F_MISS < 0.5) %>% 
+  dim()
+
+str(all)   
+
+log10(all$QUAL) %>% hist(breaks = 5000) 
+
+all %>% 
+  filter(QUAL < 40) %>% 
+  dplyr::select(MAF_minor) %>% 
+  ggplot() +
+  geom_histogram(aes(x = MAF_minor), binwidth = 0.001) 
+
+all %>% 
+  filter(QUAL < 40) %>% 
+  filter(MAF_minor != 0) 
+
+tmp <- 
+all %>% 
+  filter(QUAL < 40) %>% 
+  dplyr::select(MAF_minor) %>% unlist() %>% as.numeric() 
+
+MAF.tmp.RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/MAF")
+
+MAF.tmp.RNA <- 
+MAF.tmp.RNA %>% 
+  mutate(V7 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V5), 
+         V8 = gsub("([[:print:]]+)(:)([[:print:]]+)", "\\3", V6)) %>% 
+  dplyr::select(V1, V2, V7, V8) 
+
+MAF.tmp.RNA$MAF_minor <- as.numeric(apply(MAF.tmp.RNA[,c("V7", "V8")], 1, min)) 
+MAF.tmp.RNA$V1 <- paste("chr", MAF.tmp.RNA$V1, sep = "")
+
+MAF.tmp.RNA %>% semi_join(all, c("V1" = "CHROM", "V2" = "POS")) %>% 
+  dplyr::select(MAF_minor) %>%  
+  ggplot() +
+  geom_histogram(aes(x = MAF_minor), binwidth = 0.01)  
+``` 
+
+SNP calling from low coverage data is still a problem here, which caused the missing alternate allele: most of the SNPs that were called from RNAseq data are monomorphic in WGS data.  
+
+### trouble shooting     
+
+because the het ratio is too high for WGS data, we are wondering whether this is due to the mismapping problem, where reads from one sub genome is mapped to the other sub genome, and low coverage data additionaly caused the mis-genotyping. To test this, I decided to use STAR for mapping, because we used STAR for RNAseq mapping and did not observe the same problem. BWA, as reported, is the best available tool that could be used for DNA mapping. 
+
+/share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_STAR_2.slurm  
+
+```{r}
+# star_extract_stats.sh get star mapping stats  
+mapping_result <- read.table("~/505/WGS/mapping/Star_Stats_176.tab", header = T)
+head(mapping_result)
+
+# look at HQ, mapped, multimapped in detail for each sample (memory too low, cannot view histogram of total reads...)
+mapping_result_505 <- mapping_result
+colnames(mapping_result)
+mapping_result_505_sub <- data.frame(Sample.ID = mapping_result_505$Sample, 
+                                    unmapped = mapping_result$Number_Input_Reads * (as.numeric(mapping_result_505$Percent_Unmapped_Mismatches + mapping_result_505$Percent_Unmapped_Other + mapping_result_505$Percent_Unmapped_Too_Short)/100), 
+                                    multi_too_many_mapped = mapping_result_505$Number_Multi_Mapped + mapping_result_505$Number_Too_Many_Multi_Mapped, 
+                                    unqiuemapped = mapping_result_505$Number_Unique_Mapped
+) 
+
+mapping_result_505_sub 
+dim(mapping_result_505_sub) # 85 4  
+
+library(reshape2)
+mapping_result_505_sub.long <- melt(mapping_result_505_sub) 
+
+pl.mapping.indi.c <- ggplot(data = mapping_result_505_sub.long)
+pl.mapping.indi.c <- pl.mapping.indi.c + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
+pl.mapping.indi.c <- pl.mapping.indi.c + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 2e+7) 
+pl.mapping.indi.c 
+
+# histogram of unqiue mapped reads 
+p.uniq.mapping <- ggplot(data=mapping_result_505)
+p.uniq.mapping <- p.uniq.mapping + geom_histogram(aes(x=Percent_Unique_Mapped), binwidth = 2.5) 
+p.uniq.mapping <- p.uniq.mapping + labs(list(title = "histogram of uniquely mapped reads percentage", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping  
+
+# histogram of unmapped 
+p.mapping <- ggplot(data=mapping_result_505)
+p.mapping <- p.un.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Unique_Mapped+mapping_result_505$Percent_Multi_Mapped+mapping_result_505$Percent_Too_Many_Multi_Mapped), binwidth = 2.5) 
+p.mapping <- p.un.mapping + labs(list(title = "histogram of mapped reads percentage", x = "Percent of mapped reads", y = "number of samples")) 
+p.mapping   
+
+# compare with BWA mapping result, total mapping ratio and unique mapping ratio 
+mapping_result_505 %>% colnames()
 
 ```
+
+
+
+
+
 
 
 

@@ -1,6 +1,7 @@
 #!/bin/bash 
 
-cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_no_pop/combined
+cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/combined
+
 file_in=$1
 prefix=$2
 
@@ -54,12 +55,4 @@ vcftools --gzvcf $file_in \
          --out $prefix \
          --missing-site
 echo "done missing site"
-
-vcftools --gzvcf $file_in \
-         --out $prefix \
-         --hap-r2 \
-	 --ld-window-bp 50000
-echo "done LD"
-
-
 

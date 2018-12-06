@@ -27,7 +27,7 @@ output:
 
 # analyze mapping result (QC & mapping rate)
 ```{r}
-# star_extract_stats.sh get star mapping stats 
+# star_extract_stats.sh get star mapping stats  
 ```
 
 # mapping result analysis 
@@ -218,7 +218,7 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # SNP calling (wait untill I get QC and mapping rate)
 ```{r} 
 # 1) prepare data for SNP calling 
-# Prep4Freebayes.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Prep4Freebayes.sh)
+# Prep4Freebayes.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Prep4Freebayes.sh) 
 
 # 2) split bam file by chromosome 
 # Bam_Split_By_Chrom.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Bam_Split_By_Chrom.sh) 
@@ -240,7 +240,7 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 
 # 6) filter 
 # filter.sh 
-# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
+# (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh) 
 # output: 505.filtered.vcf.gz 
 
 # 7) calculate a bunch of stats (haven't done this step yet...)
@@ -356,7 +356,7 @@ nrow(geno_505_hmp.late_silique)/sum(chrom.length$V2)*1000000
 load("~/505/output/late_silique/late_silique_505.2.Rdata")
 class(late_silique_505.2.t)
 dim(late_silique_505.2.t) #  88 347282 
-late_silique_505.2.t[1:10, 1:10]
+late_silique_505.2.t[1:10, 1:10] 
 # late_silique_505.2.t <- as.data.frame(late_silique_505.2.t)
 # geno.numeric <- data.matrix(late_silique_505.2.t)
 # geno.numeric[1:10, 1:10]
@@ -377,7 +377,7 @@ genDist <- as.matrix(dist(geno.numeric.2))
 geno.mds <- as.data.frame(cmdscale(genDist))
 head(geno.mds) #now we have 2 dimensions 
 dim(geno.mds)
-plot(geno.mds)  
+plot(geno.mds)    
 
 ############  
 save(geno.numeric, file="~/505/output/late_silique_505_geno_numeric.Rdata") 
@@ -845,7 +845,7 @@ pl.mapping.indi.c
 pl.mapping.indi.d <- ggplot(data = mapping_result_505_sub.long.d)
 pl.mapping.indi.d <- pl.mapping.indi.d + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
 pl.mapping.indi.d <- pl.mapping.indi.d + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 4)) + ylim(0, 4.5e+7)
-pl.mapping.indi.d 
+pl.mapping.indi.d  
 
 pl.mapping.indi.e <- ggplot(data = mapping_result_505_sub.long.e)
 pl.mapping.indi.e <- pl.mapping.indi.e + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
@@ -1894,7 +1894,7 @@ found that there might be problem when converting vcf to hmp format, get M,R,N e
 leaf_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_leaf_92.vcf.recode.vcf.gz")
 late_silique_505_common <- read.vcfR("~/505/leaf_VS_late_silique/505_filtered_common_late_silique_92.vcf.recode.vcf.gz")
 
-significant_SNP_9
+significant_SNP_9 
 
 # reform vcf file to the right format 
 
@@ -2462,7 +2462,7 @@ write.csv(gene_report.final, file="~/505/output/131_sample/gene_report.final.csv
 # filter based on site heterozygosity 
 # site that are highly heterozygous might be result of mis-mapping result of homeologous sequences 
 
-# convert .vcf.gz file to hmp file --> import into tassel --> calculate site heterozygosity --> remove site with high heterozygosity (>0.2)
+# convert .vcf.gz file to hmp file --> import into tassel --> calculate site heterozygosity --> remove site with high heterozygosity (>0.2) 
  
 # convert to hmp format 
 # run_pipeline.pl -SortGenotypeFilePlugin -inputFile 505_filtered_0.2_missing.vcf.gz -outputFile 505_filtered_0.2_missing_sorted -fileType VCF
@@ -2507,27 +2507,26 @@ write.table(SNP.ID.het.filterd.0.2, file= "~/505/genomic_prediction/output/SNP.I
 
 # cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2
 
-# vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd.0.2 --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_0.2  
+# vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd.0.2 --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_0.2   
 
-# gzip 505_filtered_het_0.2.recode.vcf
-############################################
-
+# gzip 505_filtered_het_0.2.recode.vcf  
+############################################  
 
 # dim(SNP.ID.het.filterd) # 98961      2
 # head(SNP.ID.het.filterd) 
-# SNP.ID.het.filterd$Chromosome
+# SNP.ID.het.filterd$Chromosome 
 # 
 # SNP.ID.het.filterd$Chromosome <- paste("chr", SNP.ID.het.filterd$Chromosome, sep="")
 # 
 # write.table(SNP.ID.het.filterd, file= "~/505/genomic_prediction/output/SNP.ID.het.filterd.txt") 
 
-# filter based on het ratio 
+# filter based on het ratio  
 # cat SNP.ID.het.filterd.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print "$2 "\t" $3}' > SNP.ID.het.filterd 
 # filter to keep loci with high het ratio  
 # vcftools --positions /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/genomic_prediction/output/SNP.ID.het.filterd --gzvcf 505_filtered_0.2_missing.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_1 (wired that vcftool filtered based on position will lose positions...) 
 
 # 505_filtered_het_1.recode.vcf OR 505_filtered_het.recode.vcf 
-# import to genomic prediction script 
+# import to genomic prediction script  
 ```
 
 # re-run GWAS using new dataset, filtered using missing data 0.2 & het ratio of 0.2 
@@ -3286,11 +3285,11 @@ pheno_data_505 <-
     dplyr::select(-(No..of.Sowing:Name))  
     
 colnames(pheno_data_505)[1] <- "Taxa" 
-dim(pheno_data_505) # 131 19 
+dim(pheno_data_505) # 131 19  
 
 save(pheno_data_505, file="~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata")  
 
-load("~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata")
+load("~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata") 
 
 png("~/505/output/131_sample/pheno_fatty_acid_pair.png", width = 30, height = 30, units = "in", res = 300)  
 pheno_data_505 %>% 
