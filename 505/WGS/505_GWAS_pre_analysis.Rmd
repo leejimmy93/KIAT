@@ -753,8 +753,39 @@ p.mapping <- p.un.mapping + labs(list(title = "histogram of mapped reads percent
 p.mapping   
 
 # compare with BWA mapping result, total mapping ratio and unique mapping ratio 
-mapping_result_505 %>% colnames()
+load("~/505/WGS/mapping/WGS_stats.Rdata")
+mapping_result_505$Sample <- gsub("_S.*", "", mapping_result_505$Sample) 
+  
+WGS_stats$Sample
+mapping_result_505$Sample
 
+WGS_stats %>% dim(); mapping_result_505 %>% dim()
+
+mapping_result_compare <- 
+mapping_result_505 %>% 
+  mutate(Percent_Mapped = Percent_Unique_Mapped+Percent_Multi_Mapped+Percent_Too_Many_Multi_Mapped) %>%
+  left_join(WGS_stats, by = "Sample") %>% 
+  dplyr::select(Sample, Percent_Mapped, Percent_Unique_Mapped, Pct_Mapped, Pct_Unique_Mapped) %>% 
+  melt() 
+ 
+grep("Pct", mapping_result_compare$variable) # BWA
+mapping_result_compare$value[1:350] 
+mapping_result_compare$value[351:700] <- mapping_result_compare$value[351:700] * 100 
+
+mapping_result_compare$mapper <- c(rep("STAR", 350), rep("BWA", 350)) 
+
+mapping_result_compare$variable <- gsub("Percent", "Pct", mapping_result_compare$variable)
+mapping_result_compare$variable %>% unique()
+
+P.mapping_result_compare <- 
+mapping_result_compare %>% 
+  ggplot() + 
+  geom_bar(aes(x=Sample, y = value, fill=mapper), stat = "identity", position = position_dodge()) + 
+  facet_wrap(~variable, ncol = 1) + 
+  theme_gray()  + 
+  labs(list(title = "", x = "individual sample", y = "")) + theme(axis.text.x=element_text(angle = 90, size = 8)) 
+
+ggsave(P.mapping_result_compare, filename = "~/505/WGS/mapping/p.mapping_result_compare.png", width = 20, height = 6)
 ```
 
 
