@@ -709,11 +709,54 @@ MAF.tmp.RNA %>% semi_join(all, c("V1" = "CHROM", "V2" = "POS")) %>%
 
 SNP calling from low coverage data is still a problem here, which caused the missing alternate allele: most of the SNPs that were called from RNAseq data are monomorphic in WGS data.  
 
-### trouble shooting 
+### trouble shooting     
 
 because the het ratio is too high for WGS data, we are wondering whether this is due to the mismapping problem, where reads from one sub genome is mapped to the other sub genome, and low coverage data additionaly caused the mis-genotyping. To test this, I decided to use STAR for mapping, because we used STAR for RNAseq mapping and did not observe the same problem. BWA, as reported, is the best available tool that could be used for DNA mapping. 
 
-/share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_STAR.slurm 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_STAR_2.slurm  
+
+```{r}
+# star_extract_stats.sh get star mapping stats  
+mapping_result <- read.table("~/505/WGS/mapping/Star_Stats_176.tab", header = T)
+head(mapping_result)
+
+# look at HQ, mapped, multimapped in detail for each sample (memory too low, cannot view histogram of total reads...)
+mapping_result_505 <- mapping_result
+colnames(mapping_result)
+mapping_result_505_sub <- data.frame(Sample.ID = mapping_result_505$Sample, 
+                                    unmapped = mapping_result$Number_Input_Reads * (as.numeric(mapping_result_505$Percent_Unmapped_Mismatches + mapping_result_505$Percent_Unmapped_Other + mapping_result_505$Percent_Unmapped_Too_Short)/100), 
+                                    multi_too_many_mapped = mapping_result_505$Number_Multi_Mapped + mapping_result_505$Number_Too_Many_Multi_Mapped, 
+                                    unqiuemapped = mapping_result_505$Number_Unique_Mapped
+) 
+
+mapping_result_505_sub 
+dim(mapping_result_505_sub) # 85 4  
+
+library(reshape2)
+mapping_result_505_sub.long <- melt(mapping_result_505_sub) 
+
+pl.mapping.indi.c <- ggplot(data = mapping_result_505_sub.long)
+pl.mapping.indi.c <- pl.mapping.indi.c + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
+pl.mapping.indi.c <- pl.mapping.indi.c + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 8)) + ylim(0, 2e+7) 
+pl.mapping.indi.c 
+
+# histogram of unqiue mapped reads 
+p.uniq.mapping <- ggplot(data=mapping_result_505)
+p.uniq.mapping <- p.uniq.mapping + geom_histogram(aes(x=Percent_Unique_Mapped), binwidth = 2.5) 
+p.uniq.mapping <- p.uniq.mapping + labs(list(title = "histogram of uniquely mapped reads percentage", x = "Percent of uniquely mapped reads", y = "number of samples"))
+p.uniq.mapping  
+
+# histogram of unmapped 
+p.mapping <- ggplot(data=mapping_result_505)
+p.mapping <- p.un.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Unique_Mapped+mapping_result_505$Percent_Multi_Mapped+mapping_result_505$Percent_Too_Many_Multi_Mapped), binwidth = 2.5) 
+p.mapping <- p.un.mapping + labs(list(title = "histogram of mapped reads percentage", x = "Percent of mapped reads", y = "number of samples")) 
+p.mapping   
+
+# compare with BWA mapping result, total mapping ratio and unique mapping ratio 
+mapping_result_505 %>% colnames()
+
+```
+
 
 
 

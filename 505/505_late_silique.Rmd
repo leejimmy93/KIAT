@@ -27,7 +27,7 @@ output:
 
 # analyze mapping result (QC & mapping rate)
 ```{r}
-# star_extract_stats.sh get star mapping stats 
+# star_extract_stats.sh get star mapping stats  
 ```
 
 # mapping result analysis 
@@ -218,7 +218,7 @@ ggsave(p.average.mapping, filename =  "~/Desktop/Brassica_project/KIAT_RNA_seq/5
 # SNP calling (wait untill I get QC and mapping rate)
 ```{r} 
 # 1) prepare data for SNP calling 
-# Prep4Freebayes.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Prep4Freebayes.sh)
+# Prep4Freebayes.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Prep4Freebayes.sh) 
 
 # 2) split bam file by chromosome 
 # Bam_Split_By_Chrom.sh (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/Bam_Split_By_Chrom.sh) 
@@ -845,7 +845,7 @@ pl.mapping.indi.c
 pl.mapping.indi.d <- ggplot(data = mapping_result_505_sub.long.d)
 pl.mapping.indi.d <- pl.mapping.indi.d + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
 pl.mapping.indi.d <- pl.mapping.indi.d + labs(list(title = "", x = "individual sample", y = "reads number")) + theme(axis.text.x=element_text(angle = 90, size = 4)) + ylim(0, 4.5e+7)
-pl.mapping.indi.d 
+pl.mapping.indi.d  
 
 pl.mapping.indi.e <- ggplot(data = mapping_result_505_sub.long.e)
 pl.mapping.indi.e <- pl.mapping.indi.e + geom_bar(aes(x=Sample.ID, y = value, fill=variable), stat = "identity")
