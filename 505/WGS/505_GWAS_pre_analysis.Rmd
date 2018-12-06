@@ -242,6 +242,7 @@ WGS_stats %>%
 
 p.WGS_stats  
 
+save(WGS_stats, file = "~/Desktop/Brassica_project/KIAT_RNA_seq/505/WGS/data/WGS_stats.Rdata")
 # note libs with low quailty, low mapping rate, and/or low unique mapping rate  
 WGS_stats %>% 
   dplyr::select(Sample, starts_with("Pct")) %>% 
@@ -271,7 +272,7 @@ for these 7 chroms, run SNP calling on splitted regions
 # cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/merge_index_bam_for_Freebayes.slurm
 
 # call SNPs 
-# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/Freebayes_parallel_Array_WGS_merged_region_i.slurm  
+# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/Freebayes_parallel_Array_WGS_merged_region_i.slurm     
 ```
 
 ### vcf merge 
@@ -283,9 +284,13 @@ cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverag
 
 reorder each vcf file and compress: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/reorder_vcf_etc.sh
 concat all vcf files: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/concat.sh 
+<<<<<<< HEAD
+calculate stats: 
+=======
 calculate stats: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/calc.sh 
 
 check stats: 
+>>>>>>> 35705c820751c70c150a0946011c10afbde744e8
 ```{r}
 # QUAL score
 QUAL <- read.delim("~/505/WGS/vcf_raw/combined/505.lqual")
