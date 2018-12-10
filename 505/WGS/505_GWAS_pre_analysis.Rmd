@@ -791,6 +791,57 @@ mapping_result_compare %>%
   labs(list(title = "", x = "individual sample", y = "")) + theme(axis.text.x=element_text(angle = 90, size = 8)) 
 
 ggsave(P.mapping_result_compare, filename = "~/505/WGS/mapping/p.mapping_result_compare.png", width = 20, height = 6)
+
+# check reads number 
+# star_extract_stats.sh get star mapping stats  
+mapping_result <- read.table("~/505/WGS/mapping/Star_Stats_176.tab", header = T)
+head(mapping_result)
+
+# look at HQ, mapped, multimapped in detail for each sample (memory too low, cannot view histogram of total reads...)
+mapping_result_505 <- mapping_result
+colnames(mapping_result)
+mapping_result_505_sub <- data.frame(Sample.ID = mapping_result_505$Sample, 
+                                    unmapped = mapping_result$Number_Input_Reads * (as.numeric(mapping_result_505$Percent_Unmapped_Mismatches + mapping_result_505$Percent_Unmapped_Other + mapping_result_505$Percent_Unmapped_Too_Short)/100), 
+                                    multi_too_many_mapped = mapping_result_505$Number_Multi_Mapped + mapping_result_505$Number_Too_Many_Multi_Mapped, 
+                                    unqiuemapped = mapping_result_505$Number_Unique_Mapped
+) 
+
+mapping_result_505_sub %>% head()
+dim(mapping_result_505_sub) # 85 4  
+
+library(reshape2)
+mapping_result_505_sub.long <- melt(mapping_result_505_sub) 
+
+# compare with BWA mapping result, total mapping ratio and unique mapping ratio 
+load("~/505/WGS/mapping/WGS_stats.Rdata")
+mapping_result_505$Sample <- gsub("_S.*", "", mapping_result_505$Sample) 
+  
+WGS_stats$Sample
+mapping_result_505$Sample
+
+WGS_stats %>% dim(); mapping_result_505 %>% dim()  
+
+mapping_result_compare.2 <- 
+mapping_result_505 %>% 
+  left_join(WGS_stats, by = "Sample") %>%
+  dplyr::select(Sample, Number_Unique_Mapped.x, Number_Unique_Mapped.y) %>% 
+  melt() 
+ 
+grep("x", mapping_result_compare.2$variable) # BWA
+mapping_result_compare.2$value[1:175] <- mapping_result_compare.2$value[1:175] * 2
+
+mapping_result_compare.2$mapper <- c(rep("STAR", 175), rep("BWA", 175)) 
+
+P.mapping_result_compare.2 <- 
+mapping_result_compare.2 %>% 
+  ggplot() + 
+  geom_bar(aes(x=Sample, y = value, fill=mapper), stat = "identity", position = position_dodge()) + 
+  # facet_wrap(~variable, ncol = 1) + 
+  theme_gray()  + 
+  labs(list(title = "", x = "individual sample", y = "")) + theme(axis.text.x=element_text(angle = 90, size = 8)) 
+
+ggsave(P.mapping_result_compare.2, filename = "~/505/WGS/mapping/p.mapping_result_compare.2.png", width = 20, height = 6) 
+
 ```
 
 
