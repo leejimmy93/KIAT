@@ -844,6 +844,24 @@ ggsave(P.mapping_result_compare.2, filename = "~/505/WGS/mapping/p.mapping_resul
 
 ```
 
+We also checked the het ratio across taxa
+
+```{r}
+het_taxa <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/WGS/het_taxa.txt", stringsAsFactors = F)
+
+png("~/Desktop/Brassica_project/KIAT_RNA_seq/505/output/WGS/het_taxa.png", width=6, height=6, units="in", res=300)
+par(mfrow=c(3,1)) 
+hist(het_taxa$Proportion.Heterozygous, breaks = 30, main = "proportion of heterozygous SNPs per line")
+hist(het_taxa$Proportion.Missing, breaks = 30, main = "proportion of missing SNPs per line") 
+plot(het_taxa$Proportion.Missing, het_taxa$Proportion.Heterozygous) 
+dev.off()     
+
+het_A10 <- read.delim("~/Desktop/het_chrA10.txt", stringsAsFactors = F)
+het_A10$Proportion.Heterozygous %>% length() 
+
+het_A10_nopop <- read.delim("~/Desktop/het_chrA10_nopop.txt", stringsAsFactors = F)
+het_A10_nopop$Proportion.Heterozygous %>% hist() 
+```
 
 
 
