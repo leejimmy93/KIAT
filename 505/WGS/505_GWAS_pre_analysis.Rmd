@@ -748,10 +748,10 @@ pl.mapping.indi.c
 # histogram of unqiue mapped reads 
 p.uniq.mapping <- ggplot(data=mapping_result_505)
 p.uniq.mapping <- p.uniq.mapping + geom_histogram(aes(x=Percent_Unique_Mapped), binwidth = 2.5) 
-p.uniq.mapping <- p.uniq.mapping + labs(list(title = "histogram of uniquely mapped reads percentage", x = "Percent of uniquely mapped reads", y = "number of samples"))
-p.uniq.mapping  
+p.uniq.mapping <- p.uniq.mapping + labs(list(title = "histogram of uniquely mapped reads percentage", x = "Percent of uniquely mapped reads", y = "number of samples")) 
+p.uniq.mapping   
 
-# histogram of unmapped 
+# histogram of unmapped  
 p.mapping <- ggplot(data=mapping_result_505)
 p.mapping <- p.un.mapping + geom_histogram(aes(x=mapping_result_505$Percent_Unique_Mapped+mapping_result_505$Percent_Multi_Mapped+mapping_result_505$Percent_Too_Many_Multi_Mapped), binwidth = 2.5) 
 p.mapping <- p.un.mapping + labs(list(title = "histogram of mapped reads percentage", x = "Percent of mapped reads", y = "number of samples")) 
@@ -855,11 +855,14 @@ hist(het_taxa$Proportion.Missing, breaks = 30, main = "proportion of missing SNP
 plot(het_taxa$Proportion.Missing, het_taxa$Proportion.Heterozygous) 
 dev.off()     
 
-het_A10 <- read.delim("~/Desktop/het_chrA10.txt", stringsAsFactors = F)
-het_A10$Proportion.Heterozygous %>% length() 
+het_A10 <- read.delim("~/Desktop/het_chrA10_pop.txt", stringsAsFactors = F)
+het_A10$Proportion.Heterozygous %>% hist() 
 
 het_A10_nopop <- read.delim("~/Desktop/het_chrA10_nopop.txt", stringsAsFactors = F)
 het_A10_nopop$Proportion.Heterozygous %>% hist() 
+<<<<<<< HEAD
+``` 
+=======
 ```
 
 ### from Biological perspective
@@ -1002,5 +1005,6 @@ data.frame(tmp1/tmp2)
 tmp1 <- ref[1:10, 1:10]
 tmp2 <- alt[1:10, 1:10] 
 ```
+>>>>>>> 75341fbaea1cdc27c181255d8c1163ea2245ad20
 
 
