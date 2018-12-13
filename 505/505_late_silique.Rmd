@@ -725,7 +725,7 @@ p
 
 tmp1 <- sample_des_revised[sample_des_revised$Name == "774-6C(S20)",] 
 tmp2 <- sample_des_revised[sample_des_revised$Name == "NA259-DH02",] 
-tmp <- rbind(tmp1, tmp2)
+tmp <- rbind(tmp1, tmp2) 
 tmp
 
 sample_des_a_revised.sub2 <- sample_des_a_revised[,c("Name", "TotalReads")]
@@ -1036,7 +1036,7 @@ dim(sample_des_c_sub)
 
 sample_des_c_sub$Sample.ID
 sample_des_d_sub$Sample.ID
-sample_des_e_sub$Sample.ID
+sample_des_e_sub$Sample.ID 
 
 sample_des_revised <- rbind(sample_des_c_sub, sample_des_d_sub, sample_des_e_sub)
 summary(sample_des_revised)

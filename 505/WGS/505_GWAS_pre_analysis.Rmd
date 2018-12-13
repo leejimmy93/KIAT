@@ -969,18 +969,38 @@ sapply(1:nrow(SNP_WGS_for_Julin.5), function(i)
 SNP_WGS_for_Julin.5$het <- 
 sapply(1:nrow(SNP_WGS_for_Julin.5), function(i) 
 {sum(temp[i,] %>% as.numeric() == 0, na.rm = T) # het
-})
-
-hist(SNP_WGS_for_Julin.5$homo_alt)
-hist(SNP_WGS_for_Julin.5$homo_ref)
-hist(SNP_WGS_for_Julin.5$het)  
+}) 
 
 SNP_WGS_for_Julin.final <- SNP_WGS_for_Julin.5
 save(SNP_WGS_for_Julin.final, file = "~/check_low_coverage/biological/SNP_list/SNP_WGS_for_Julin.final.Rdata") 
 
 ### ref/alt ratio for those with homo_ref call, homo_alt call, or het call
-SNP_WGS_for_Julin.5 
+load("~/check_low_coverage/biological/SNP_list/SNP_WGS_for_Julin.final.Rdata")
 
+P.gt_dist <- 
+SNP_WGS_for_Julin.final %>% 
+  dplyr::select(homo_alt, homo_ref, het) %>% 
+  melt() %>%
+  ggplot() + 
+  geom_histogram(aes(x = value, fill = variable)) + 
+  facet_wrap(~variable) + 
+  labs(x = "number of samples", y = "number of SNPs") 
+
+ggsave(P.gt_dist, filename = "~/check_low_coverage/biological/p.yeild.png", width = 9, height = 4)
+
+gt <- SNP_WGS_for_Julin.final[,7:244] %>% as.matrix() 
+ref <- SNP_WGS_for_Julin.final[,721:958] 
+alt <- SNP_WGS_for_Julin.final[,959:1196] 
+
+gt_alt_loc <- data.frame(sapply(SNP_WGS_for_Julin.final, function(x) x == 1))[,7:244]
+gt_ref_loc <- data.frame(sapply(SNP_WGS_for_Julin.final, function(x) x == -1))[,7:244]
+gt_het_loc <- data.frame(sapply(SNP_WGS_for_Julin.final, function(x) x == 0))[,7:244]
+
+SNP_WGS_for_Julin.final[,721:958]
+colnames(SNP_WGS_for_Julin.final) 
+data.frame(tmp1/tmp2)
+tmp1 <- ref[1:10, 1:10]
+tmp2 <- alt[1:10, 1:10] 
 ```
 
 
