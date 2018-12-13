@@ -77,7 +77,7 @@ https://github.com/leejimmy93/KIAT/blob/master/505/WGS/format_hmp_2.txt --> expo
 ```{r}
 site_summary_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/RNA_het.txt", sep="\t", header=T)  
 site_summary_WGS <- read.table("~/505/WGS/vcf_raw/filtere/hmp/WGS_het.txt", sep="\t", header=T)  
-site_summary_WGS_2 <- read.table("~/505/WGS/vcf_raw/filtered/filter_1/hmp/WGS_2_het.txt", sep="\t", header=T)  
+site_summary_WGS_2 <- read.table("~/505/WGS/vcf_raw/filtered/filter_1/hmp/WGS_2_het.txt", sep="\t", header=T)   
 
 dim(site_summary_RNA) # 544432     37  
 dim(site_summary_WGS)  # 303555     37  
@@ -261,5 +261,10 @@ p.mds.country <- p.mds.country + scale_color_brewer(type="qual",palette="Set1")
 p.mds.country     
 ```
 
+* I feel SNP calling from low coverage data is not credible: 1) low overlap with RNAseq data 2) very high het ratio sample wise and site wise, so determined to use RNAseq data only for downstream analysis 
+### population structure 
+```{r}
+
+```
 
 
