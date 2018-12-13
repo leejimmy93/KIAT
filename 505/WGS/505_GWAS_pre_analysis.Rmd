@@ -860,9 +860,6 @@ het_A10$Proportion.Heterozygous %>% hist()
 
 het_A10_nopop <- read.delim("~/Desktop/het_chrA10_nopop.txt", stringsAsFactors = F)
 het_A10_nopop$Proportion.Heterozygous %>% hist() 
-<<<<<<< HEAD
-``` 
-=======
 ```
 
 ### from Biological perspective
@@ -1005,6 +1002,23 @@ data.frame(tmp1/tmp2)
 tmp1 <- ref[1:10, 1:10]
 tmp2 <- alt[1:10, 1:10] 
 ```
->>>>>>> 75341fbaea1cdc27c181255d8c1163ea2245ad20
+
+### still bioinformatics 
+
+Me: This high het ratio reminds me of the problem I came across when I first started to work on this project: unexpected high het ratio for Da-Ae and Da-Ol-1. For that problem, we finally believed it was because of the mis-assembly of genes in the reference genome, so reads could be mapped to the wrong but genes with similar sequences. Here I think this could also be the problem, and since this time non genic region is included as well, so the problem could be more serious compared to RNAseq data. To test the hypothesis, I could try to map to John's reference genome.
+
+Julin: Also you should map Da-Ae (or John's 10X Da-Ae) reads back to the Da-Ae reference and call SNPs there.  Any SNPs found in that way can be excluded. 
+
+1) indexed genome for BWA mapping 
+/share/malooflab/John/KIAT/MASTER_DATA_ANALYSIS/BWA/Assemblies/B.napus_Final.fa.masked with repeat regions masked 
+
+2) use BWA for mapping
+/share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_cabernet_DaAe.slurm
+
+Da-Ae's 10x trimmed reads mapped to Da-Ae  
+/share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_cabernet_DaAe_DaAe.slurm
+```{r}
+
+```
 
 

@@ -76,7 +76,7 @@ https://github.com/leejimmy93/KIAT/blob/master/505/WGS/format_hmp_2.txt --> expo
 
 ```{r}
 site_summary_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/RNA_het.txt", sep="\t", header=T)  
-site_summary_WGS <- read.table("~/505/WGS/vcf_raw/filtere/hmp/WGS_het.txt", sep="\t", header=T)  
+site_summary_WGS <- read.table("~/505/WGS/vcf_raw/filtered/hmp/WGS_het.txt", sep="\t", header=T)  
 site_summary_WGS_2 <- read.table("~/505/WGS/vcf_raw/filtered/filter_1/hmp/WGS_2_het.txt", sep="\t", header=T)   
 
 dim(site_summary_RNA) # 544432     37  
