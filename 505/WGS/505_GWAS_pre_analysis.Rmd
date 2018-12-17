@@ -844,6 +844,10 @@ mapping_result_compare.2 %>%
 ggsave(P.mapping_result_compare.2, filename = "~/505/WGS/mapping/p.mapping_result_compare.2.png", width = 20, height = 6) 
 ```
 
+<<<<<<< HEAD
+We also checked the het ratio across taxa
+
+=======
 ### SNP calling on STAR mapped reads 
 /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS_STAR.slurm, check chrA08 
 transfer to whitney --> gzip  exclude (--no-population-priors --report-genotype-likelihood-max)  
@@ -874,7 +878,12 @@ het_STAR %>% head()
 hist(het_STAR$Proportion.Heterozygous)   
 ```
 
+<<<<<<< HEAD
 3) We also checked the het ratio across taxa, there are some of them with low het ratio, but that's because they have a high SNP missing rate. 
+=======
+We also checked the het ratio across taxa, there are some of them with low het ratio, but that's because they have a high SNP missing rate. 
+>>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
+>>>>>>> dcc6e8960c2381a5f54d6f4f878a8c287f7e2b7b
 ```{r}
 het_taxa <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/WGS/het_taxa.txt", stringsAsFactors = F)
 
@@ -886,10 +895,15 @@ plot(het_taxa$Proportion.Missing, het_taxa$Proportion.Heterozygous)
 dev.off()     
 
 het_A10 <- read.delim("~/Desktop/het_chrA10_pop.txt", stringsAsFactors = F)
-het_A10$Proportion.Heterozygous %>% hist() 
+het_A10$Proportion.Heterozygous %>% hist()  
 
 het_A10_nopop <- read.delim("~/Desktop/het_chrA10_nopop.txt", stringsAsFactors = F)
 het_A10_nopop$Proportion.Heterozygous %>% hist() 
+<<<<<<< HEAD
+
+het_A10 <- read.delim("~/Desktop/het_chrA10_pop.txt", stringsAsFactors = F)
+het_A10$Proportion.Heterozygous %>% hist()  
+=======
 ```
 
 ### from Biological perspective
@@ -1000,10 +1014,19 @@ SNP_WGS_for_Julin.5$het <-
 sapply(1:nrow(SNP_WGS_for_Julin.5), function(i) 
 {sum(temp[i,] %>% as.numeric() == 0, na.rm = T) # het
 }) 
+>>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
 
-SNP_WGS_for_Julin.final <- SNP_WGS_for_Julin.5
-save(SNP_WGS_for_Julin.final, file = "~/check_low_coverage/biological/SNP_list/SNP_WGS_for_Julin.final.Rdata") 
+taxa_BWA <- read.delim("~/Desktop/taxa_BWA.txt", stringsAsFactors = F)
+taxa_BWA$Proportion.Heterozygous %>% hist(main = "BWA") 
 
+<<<<<<< HEAD
+taxa_STAR <- read.delim("~/Desktop/taxa_STAR.txt", stringsAsFactors = F)
+taxa_STAR$Proportion.Heterozygous %>% hist(main = "STAR") 
+
+taxa_A10 <- read.delim("~/Desktop/taxa_A10.txt", stringsAsFactors = F)
+taxa_A10$Proportion.Heterozygous %>% hist(main = "STAR")  
+``` 
+=======
 ### ref/alt ratio for those with homo_ref call, homo_alt call, or het call
 load("~/check_low_coverage/biological/SNP_list/SNP_WGS_for_Julin.final.Rdata")
 
@@ -1051,5 +1074,6 @@ Da-Ae's 10x trimmed reads mapped to Da-Ae
 ```{r}
 
 ```
+>>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
 
 
