@@ -719,7 +719,8 @@ SNP calling from low coverage data is still a problem here, which caused the mis
 because the het ratio is too high for WGS data, we are wondering whether this is due to the mismapping problem, where reads from one sub genome is mapped to the other sub genome, and low coverage data additionaly caused the mis-genotyping. To test this, I decided to use STAR for mapping, because we used STAR for RNAseq mapping and did not observe the same problem. BWA, as reported, is the best available tool that could be used for DNA mapping. 
 
 /share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_STAR_2.slurm  
-
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Prep4Freebayes.slurm
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Bam_Split_By_Chrom.slurm  
 ```{r}
 # star_extract_stats.sh get star mapping stats  
 mapping_result <- read.table("~/505/WGS/mapping/Star_Stats_176.tab", header = T)
@@ -844,8 +845,16 @@ ggsave(P.mapping_result_compare.2, filename = "~/505/WGS/mapping/p.mapping_resul
 
 ```
 
+<<<<<<< HEAD
 We also checked the het ratio across taxa
 
+=======
+### SNP calling on STAR mapped reads 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS_STAR.slurm 
+
+
+We also checked the het ratio across taxa, there are some of them with low het ratio, but that's because they have a high SNP missing rate. 
+>>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
 ```{r}
 het_taxa <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/WGS/het_taxa.txt", stringsAsFactors = F)
 
@@ -861,18 +870,180 @@ het_A10$Proportion.Heterozygous %>% hist()
 
 het_A10_nopop <- read.delim("~/Desktop/het_chrA10_nopop.txt", stringsAsFactors = F)
 het_A10_nopop$Proportion.Heterozygous %>% hist() 
+<<<<<<< HEAD
 
 het_A10 <- read.delim("~/Desktop/het_chrA10_pop.txt", stringsAsFactors = F)
 het_A10$Proportion.Heterozygous %>% hist()  
+=======
+```
+
+### from Biological perspective
+
+Julin was worried that there could be pollen/seed contamination in the material, so he would like to do PCR for a couple of SNPs, see whether they are heterzygous or not. I need to generate a table for SNP to include: 
+
+chrom, pos, quality, missing rate, allele ratio, het ratio, depth, and combine that with genotyping info for each sample 
+
+```{r}
+# function to work with vcf file 
+reform.vcf <- function(temp){
+  vcfbi <- is.biallelic(temp) # return with logics indicating whehter biallelic or not... 
+  vcfref <- subset(getREF(temp), subset = vcfbi) # get ref allele
+  vcfalt <- subset(getALT(temp), subset = vcfbi) # get alt allele
+  vcfchrom <- subset(getCHROM(temp), subset = vcfbi) # get chromosome info 
+  vcfpos <- subset(getPOS(temp), subset = vcfbi) # get pos info 
+  vcfgts <- subset(extract.gt(temp, element = "GT", IDtoRowNames = F), subset = vcfbi) # get gt
+  vcfgq <- subset(extract.gt(temp, element="GQ", IDtoRowNames=F), subset=vcfbi) # gq for each 
+  vcfdp <- subset(extract.gt(temp, element="DP", IDtoRowNames=F), subset=vcfbi) # depth for each
+  vcfro <- subset(extract.gt(temp, element="RO", IDtoRowNames=F), subset=vcfbi) # ref count 
+  vcfao <- subset(extract.gt(temp, element="AO", IDtoRowNames=F), subset=vcfbi) # alt count 
+  
+  temp2 <- data.frame(cbind(vcfchrom,vcfpos,vcfref,vcfalt,vcfgts,vcfgq,vcfdp,vcfro,vcfao))
+  colnames(temp2)[1:4] <- c("CHROM","POS","REF","ALT")
+  
+  rnames <- rownames(temp2)
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/0","-1",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("0/1","0",x)))
+  temp2 <- data.frame(sapply(temp2, function(x) sub("1/1","1",x)))
+  row.names(temp2) <- rnames 
+  
+  return(temp2) 
+} 
+
+SNP_WGS_for_Julin <- read.vcfR("~/505/WGS/vcf_raw/filtered/505_filtered.vcf")
+SNP_WGS_for_Julin.2 <- reform.vcf(SNP_WGS_for_Julin) 
+save(SNP_WGS_for_Julin.2, file = "~/check_low_coverage/biological/SNP_GWAS_for_Julin.2.Rdata")
+
+dim(SNP_WGS_for_Julin.2) # 1194 
+
+# rename col to add more info
+ncol_1 <- paste(gsub("\\.1*", "", colnames(SNP_WGS_for_Julin.2[243:480])), "GQ", sep = "_")
+ncol_2 <- paste(gsub("\\.2*", "", colnames(SNP_WGS_for_Julin.2[481:718])), "depth", sep = "_")
+ncol_3 <- paste(gsub("\\.3*", "", colnames(SNP_WGS_for_Julin.2[719:956])), "ref_count", sep = "_")
+ncol_4 <- paste(gsub("\\.4*", "", colnames(SNP_WGS_for_Julin.2[957:1194])), "alt_count", sep = "_")
+
+colnames(SNP_WGS_for_Julin.2)[243:1194] <- c(ncol_1, ncol_2, ncol_3, ncol_4)
+  
+SNP_WGS_for_Julin.2[1:10, 5:242] # gt
+SNP_WGS_for_Julin.2[1:10, 243:480] # GQ
+SNP_WGS_for_Julin.2[1:10, 481:718] # depth
+SNP_WGS_for_Julin.2[1:10, 719:956] # ref count
+SNP_WGS_for_Julin.2[1:10, 957:1194] # alt count 
+
+SNP_WGS_for_Julin.2[1:10, 1:10]
+
+# QUAL
+QUAL <- read.delim("~/505/WGS/vcf_raw/filtered/505.lqual", stringsAsFactors = F)
+str(QUAL)   
+str(SNP_WGS_for_Julin.2)
+
+SNP_WGS_for_Julin.3 <- 
+SNP_WGS_for_Julin.2 %>% 
+  mutate(CHROM = as.character(CHROM)) %>% 
+  mutate(POS = as.numeric(as.character(POS))) %>% 
+  left_join(QUAL) 
+
+# missing rate
+lmiss <- read.delim("~/505/WGS/vcf_raw/filtered/505.lmiss")
+lmiss %>% head()
+lmiss %>% str()
+
+SNP_WGS_for_Julin.4 <- 
+lmiss %>% 
+  mutate(CHROM = as.character(CHR)) %>% 
+  dplyr::select(CHROM, POS, F_MISS) %>% 
+  left_join(SNP_WGS_for_Julin.3) 
+
+# depth 
+read_depth <- read.delim("~/505/WGS/vcf_raw/filtered/505.ldepth.mean")
+read_depth %>% head()
+read_depth %>% str()
+
+SNP_WGS_for_Julin.5 <- 
+read_depth %>% 
+  mutate(CHROM = as.character(CHROM)) %>% 
+  dplyr::select(CHROM, POS, MEAN_DEPTH) %>% 
+  left_join(SNP_WGS_for_Julin.4) 
+
+SNP_WGS_for_Julin.5[4, 721:1196] %>% as.matrix() %>% as.numeric() %>% sum(na.rm = T) / 238
+SNP_WGS_for_Julin.5[4, 483:720] %>% as.matrix() %>% as.numeric() %>% sum(na.rm = T) / 238
+SNP_WGS_for_Julin.5$MEAN_DEPTH[4] 
+
+# gt ratio
+temp <- SNP_WGS_for_Julin.5[,7:244] %>% as.matrix()
+
+SNP_WGS_for_Julin.5$homo_alt <- 
+sapply(1:nrow(SNP_WGS_for_Julin.5), function(i) 
+{sum(temp[i,] %>% as.numeric() == 1, na.rm = T) # homo alt
+})
+
+SNP_WGS_for_Julin.5$homo_ref <- 
+sapply(1:nrow(SNP_WGS_for_Julin.5), function(i) 
+{sum(temp[i,] %>% as.numeric() == -1, na.rm = T) # homo ref 
+})
+
+SNP_WGS_for_Julin.5$het <- 
+sapply(1:nrow(SNP_WGS_for_Julin.5), function(i) 
+{sum(temp[i,] %>% as.numeric() == 0, na.rm = T) # het
+}) 
+>>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
 
 taxa_BWA <- read.delim("~/Desktop/taxa_BWA.txt", stringsAsFactors = F)
 taxa_BWA$Proportion.Heterozygous %>% hist(main = "BWA") 
 
+<<<<<<< HEAD
 taxa_STAR <- read.delim("~/Desktop/taxa_STAR.txt", stringsAsFactors = F)
 taxa_STAR$Proportion.Heterozygous %>% hist(main = "STAR") 
 
 taxa_A10 <- read.delim("~/Desktop/taxa_A10.txt", stringsAsFactors = F)
 taxa_A10$Proportion.Heterozygous %>% hist(main = "STAR")  
 ``` 
+=======
+### ref/alt ratio for those with homo_ref call, homo_alt call, or het call
+load("~/check_low_coverage/biological/SNP_list/SNP_WGS_for_Julin.final.Rdata")
+
+P.gt_dist <- 
+SNP_WGS_for_Julin.final %>% 
+  dplyr::select(homo_alt, homo_ref, het) %>% 
+  melt() %>%
+  ggplot() + 
+  geom_histogram(aes(x = value, fill = variable)) + 
+  facet_wrap(~variable) + 
+  labs(x = "number of samples", y = "number of SNPs") 
+
+ggsave(P.gt_dist, filename = "~/check_low_coverage/biological/p.yeild.png", width = 9, height = 4)
+
+gt <- SNP_WGS_for_Julin.final[,7:244] %>% as.matrix() 
+ref <- SNP_WGS_for_Julin.final[,721:958] 
+alt <- SNP_WGS_for_Julin.final[,959:1196] 
+
+gt_alt_loc <- data.frame(sapply(SNP_WGS_for_Julin.final, function(x) x == 1))[,7:244]
+gt_ref_loc <- data.frame(sapply(SNP_WGS_for_Julin.final, function(x) x == -1))[,7:244]
+gt_het_loc <- data.frame(sapply(SNP_WGS_for_Julin.final, function(x) x == 0))[,7:244]
+
+SNP_WGS_for_Julin.final[,721:958]
+colnames(SNP_WGS_for_Julin.final) 
+data.frame(tmp1/tmp2)
+tmp1 <- ref[1:10, 1:10]
+tmp2 <- alt[1:10, 1:10] 
+```
+
+### still bioinformatics 
+
+Me: This high het ratio reminds me of the problem I came across when I first started to work on this project: unexpected high het ratio for Da-Ae and Da-Ol-1. For that problem, we finally believed it was because of the mis-assembly of genes in the reference genome, so reads could be mapped to the wrong but genes with similar sequences. Here I think this could also be the problem, and since this time non genic region is included as well, so the problem could be more serious compared to RNAseq data. To test the hypothesis, I could try to map to John's reference genome.
+
+Julin: Also you should map Da-Ae (or John's 10X Da-Ae) reads back to the Da-Ae reference and call SNPs there.  Any SNPs found in that way can be excluded. 
+
+1) indexed genome for BWA mapping 
+/share/malooflab/John/KIAT/MASTER_DATA_ANALYSIS/BWA/Assemblies/B.napus_Final.fa.masked with repeat regions masked 
+
+2) use BWA for mapping
+/share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_cabernet_DaAe.slurm
+
+Da-Ae's 10x trimmed reads mapped to Da-Ae  
+/share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_cabernet_DaAe_DaAe.slurm 
+```{r}
+
+```
+>>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
 
 
