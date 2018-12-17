@@ -1,8 +1,8 @@
 #!/bin/bash 
-cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/combined
+cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/check_low_coverage/bioinformatics/BWA/MAF_0.05
 
-chrom=`ls *.gz | sed 's/.vcf.gz//g'`
-outdir=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/filtered
+chrom=`echo chrA08`
+outdir=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/check_low_coverage/bioinformatics/BWA/MAF_0.05
 
 for i in $chrom
 	do 

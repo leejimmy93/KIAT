@@ -1,8 +1,8 @@
 #!/bin/bash 
 
-cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/check_low_coverage/filtered
+cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/check_low_coverage/bioinformatics/BWA/MAF_0.05
 
-file=`ls *.hmp.txt`
+file=`echo chrC03.hmp.txt chrA08.hmp.txt`
 for i in $file
 	do 	
 	sed 's/#//g' $i > hmp/${i}
