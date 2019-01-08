@@ -261,9 +261,7 @@ cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS.
 for these 7 chroms, run SNP calling on splitted regions 
 ```{r}
 # for regions
-# calculate read coverage: cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/calc_depth_subset_by_chr.slurm 
-
-# sum read coverage at certain location: cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/depth_sum_$i.sh 
+# calculate read coverage: /share/malooflab/Ruijuan/KIAT_cabernet/505/calc_depth_subset_by_chr.slurm   
 
 # cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/split_region.slurm 
 
@@ -272,7 +270,7 @@ for these 7 chroms, run SNP calling on splitted regions
 # cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/merge_index_bam_for_Freebayes.slurm
 
 # call SNPs 
-# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/Freebayes_parallel_Array_WGS_merged_region_i.slurm     
+# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/Freebayes_parallel_Array_WGS_merged_region_i.slurm       
 ```
 
 ### vcf merge 
