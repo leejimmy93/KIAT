@@ -432,7 +432,7 @@ hmp.WGS %>% length()
 files.WGS <- gsub(".hmp.txt", "", files.WGS)
 names(hmp.WGS) <- files.WGS
 
-path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp" 
 files.RNA <- list.files(path=path) 
 setwd(path)
 hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T)) 
@@ -844,16 +844,55 @@ mapping_result_compare.2 %>%
 ggsave(P.mapping_result_compare.2, filename = "~/505/WGS/mapping/p.mapping_result_compare.2.png", width = 20, height = 6) 
 ```
 
-<<<<<<< HEAD
-We also checked the het ratio across taxa
-
-=======
 ### SNP calling on STAR mapped reads 
 /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS_STAR.slurm, check chrA08 
 transfer to whitney --> gzip  exclude (--no-population-priors --report-genotype-likelihood-max)  
 filter based on read depth, missing rate, QUAL score, etc, then calc het ratio 
 convert vcf to hmp --> export to tassel to calculate het ratio for each site 
 ```{r}
+# MAF 0.01
+het_STAR <- read.delim("~/check_low_coverage/bioinformatics/STAR/het_STAR.txt")
+het_STAR %>% head() 
+hist(het_STAR$Proportion.Heterozygous)  
+
+# MAF 0.05
+het_STAR_A08 <- read.delim("~/check_low_coverage/bioinformatics/STAR/MAF_0.05/hmp/site_A08.txt")
+hist(het_STAR_A08$Proportion.Heterozygous) 
+
+taxa_STAR_A08 <- read.delim("~/check_low_coverage/bioinformatics/STAR/MAF_0.05/hmp/taxa_A08.txt")
+hist(taxa_STAR_A08$Proportion.Heterozygous)  
+
+# remove sites with het ratio greater than 0.2
+SNP.ID.het.filterd.0.2.RNA <-  
+het_STAR_A08 %>% 
+  filter(Proportion.Heterozygous < 0.2) %>%
+  dplyr::select(Chromosome, Physical.Position)
+
+SNP.ID.het.filterd.0.2.RNA %>% dim()
+
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.RNA$Chromosome, sep="")
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+
+write.table(SNP.ID.het.filterd.0.2.RNA, file= "~/check_low_coverage/bioinformatics/STAR/hmp/SNP.ID.het.filterd.0.2.txt")
+
+# cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2  
+
+# vcftools --positions  SNP.ID.het.filterd.0.2 --gzvcf chrA08_filtered.vcf.gz --recode --recode-INFO-all --out chrA08_filtered_het_0.2    
+
+# gzip chrA08_filtered_het_0.2.vcf
+
+# vcf to hmp --> format hmp 
+# GWAS, no signal for the 1st run, maybe because the right samples were not included... 
+```
+
+2) The mis-usage of Freebayes might caused the problem, so re-call SNPs using the correct parameter and check result exclude (--no-population-priors --report-genotype-likelihood-max)  
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS_BWA.slurm, check chrA08
+transfer to whitney --> gzip  
+filter based on read depth, missing rate, QUAL score, etc, then calc het ratio 
+convert vcf to hmp --> export to tassel to calculate het ratio for each site  
+```{r}
+# MAF 0.01
 het_BWA <- read.delim("~/check_low_coverage/bioinformatics/BWA/het_BWA.txt")
 het_BWA %>% head()
 hist(het_BWA$Proportion.Heterozygous) 
@@ -865,17 +904,45 @@ hist(het_BWA_C03$Proportion.Heterozygous)
 taxa_BWA_C03 <- read.delim("~/check_low_coverage/bioinformatics/BWA/taxa_C03.txt")
 taxa_BWA_C03 %>% head()
 hist(taxa_BWA_C03$Proportion.Heterozygous)      
-```
 
-2) The mis-usage of Freebayes might caused the problem, so re-call SNPs using the correct parameter and check result exclude (--no-population-priors --report-genotype-likelihood-max)  
-/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS_BWA.slurm, check chrA08
-transfer to whitney --> gzip  
-filter based on read depth, missing rate, QUAL score, etc, then calc het ratio 
-convert vcf to hmp --> export to tassel to calculate het ratio for each site  
-```{r}
-het_STAR <- read.delim("~/check_low_coverage/bioinformatics/STAR/het_STAR.txt")
-het_STAR %>% head() 
-hist(het_STAR$Proportion.Heterozygous)   
+# MAF 0.05
+het_BWA <- read.delim("~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/site_A08.txt")
+het_BWA %>% head()
+hist(het_BWA$Proportion.Heterozygous) 
+
+het_BWA_C03 <- read.delim("~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/site_C03.txt")
+het_BWA_C03 %>% head()
+hist(het_BWA_C03$Proportion.Heterozygous) 
+
+taxa_BWA_C03 <- read.delim("~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/taxa_C03.txt")
+taxa_BWA_C03 %>% head()
+hist(taxa_BWA_C03$Proportion.Heterozygous)      
+
+taxa_BWA_A08 <- read.delim("~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/taxa_A08.txt")
+taxa_BWA_A08 %>% head()
+hist(taxa_BWA_A08$Proportion.Heterozygous)  
+
+# do GWAS test on C03 becuause A08 only finished part run 
+SNP.ID.het.filterd.0.2.RNA <-  
+het_BWA_C03 %>% 
+  filter(Proportion.Heterozygous < 0.2) %>%
+  dplyr::select(Chromosome, Physical.Position)
+
+SNP.ID.het.filterd.0.2.RNA %>% dim()
+
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.RNA$Chromosome, sep="")
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+
+write.table(SNP.ID.het.filterd.0.2.RNA, file= "~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/SNP.ID.het.filterd.0.2.txt")
+
+# cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2  
+
+# vcftools --positions SNP.ID.het.filterd.0.2 --gzvcf chrA08_filtered.vcf.gz --recode --recode-INFO-all --out chrA08_filtered_het_0.2    
+
+# gzip chrC03_filtered_het_0.2.vcf 
+# vcf to hmp --> format hmp 
+# GWAS 
 ```
 
 <<<<<<< HEAD
@@ -1074,6 +1141,5 @@ Da-Ae's 10x trimmed reads mapped to Da-Ae
 ```{r}
 
 ```
->>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
 
 

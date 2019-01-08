@@ -21,7 +21,7 @@ source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory 
-setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/GWAS/tmp")
+setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/GWAS/tmp2")
 
 ######### load data
 # genotype data 

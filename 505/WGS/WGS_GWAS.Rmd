@@ -83,39 +83,41 @@ save(fatty_acid_oil_K_all_sub, file="~/505/WGS/GWAS/fatty_acid_oil_K_all_sub.Rda
 filter: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh 
 vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh
 format hmp file: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/format_hmp_2.txt 
-test GWAS: 
+test GWAS:  
 ```{r}
-library(multtest)
+library(multtest) 
 library(gplots)
 # library(LDheatmap) # this could not be succesfully installed 
-library(genetics)
+library(genetics) 
 library(EMMREML)
 library(compiler) #this library is already installed in R
 library("scatterplot3d")
 
 # install GAPIT package 
-source("http://zzlab.net/GAPIT/gapit_functions.txt")
+source("http://zzlab.net/GAPIT/gapit_functions.txt") 
 # intall EMMA package 
 source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory 
-setwd("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/GWAS/tmp/") 
+setwd("~/check_low_coverage/bioinformatics/BWA/GWAS") 
 
-geno_505_hmp <- read.table("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_raw/filtered/filter_1/hmp/505.hmp.txt", head=FALSE, stringsAsFactors = F)
+geno_505_hmp <- read.table("~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/chrC03_het_0.2.hmp.txt", head=FALSE, stringsAsFactors = F)  
 # get chrom name to numerics
 geno_505_hmp[1,3] <- "chrom"
-geno_505_hmp[1,] <- gsub("_S.*", "", unlist(geno_505_hmp[1,])) 
-geno_505_hmp$V3 <- as.numeric(as.factor(geno_505_hmp$V3))
+geno_505_hmp[1,] <- gsub("_S.*", "", unlist(geno_505_hmp[1,]))  
+geno_505_hmp$V3 <- as.numeric(as.factor(geno_505_hmp$V3))    
 
-geno_505_hmp$V3 %>% unique()
+geno_505_hmp[1:10, 1:10]  
+geno_505_hmp$V3
+dim(geno_505_hmp) 
 
 load("~/505/WGS/GWAS/fatty_acid_oil_K_all_sub.Rdata")
-pheno_data_505 <- fatty_acid_oil_K_all_sub
+pheno_data_505 <- fatty_acid_oil_K_all_sub  
 
 myY <- pheno_data_505
 myG <- geno_505_hmp
 
-myGAPIT <- GAPIT(  
+myGAPIT <- GAPIT(   
 Y=myY,
 G=myG, 
 PCA.total=0,
@@ -126,15 +128,15 @@ Model.selection = TRUE
 
 print("finished, YAAH!")   
 
-library("qqman")
-Erucic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/GWAS/output2/GAPIT.MLM.Erucic_acid.GWAS.Results.csv", header = T)
+library("qqman") 
+Erucic_acid <- read.csv("~/check_low_coverage/bioinformatics/BWA/GWAS/GAPIT.MLM.Erucic_acid.GWAS.Results.csv", header = T) 
 
-Oleic_acid <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/GWAS/output2/GAPIT.MLM.Oleic_acid.GWAS.Results.csv", header = T)
+Oleic_acid <- read.csv("~/check_low_coverage/bioinformatics/BWA/GWAS/GAPIT.MLM.Oleic_acid.GWAS.Results.csv", header = T)
 
 colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
 colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
 
-png("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/GWAS/output_fig/test_4.png", width=12, height=10, units="in", res=300)
+png("~/check_low_coverage/bioinformatics/BWA/GWAS/test.png", width=12, height=10, units="in", res=300)
 par(mfrow=c(2,1)) 
 manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
@@ -144,6 +146,12 @@ manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6,
     cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
     ) 
 
-dev.off()    
+dev.off()       
+
+Erucic_acid %>% 
+  filter(P < 0.00001)
+
+Oleic_acid %>% 
+  filter(P < 0.00001)
 ```
 
