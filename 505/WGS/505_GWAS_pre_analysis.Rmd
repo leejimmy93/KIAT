@@ -258,19 +258,20 @@ cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS.
 
 * 7 chroms require large memory, which mighe be due to extremely high coverage for some regions on those chrom. 
 
-for these 7 chroms, run SNP calling on splitted regions 
+for these 7 chroms, run SNP calling on splitted regions   
 ```{r}
 # for regions
 # calculate read coverage: /share/malooflab/Ruijuan/KIAT_cabernet/505/calc_depth_subset_by_chr.slurm   
 
-# cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/split_region.slurm 
+# cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/split_region.slurm   
 
 # for chroms: 
-# merge bam file from 238 samples for these 7 chroms: actually no need to merge bam files, seperate bam file works as well 
+# merge bam file from 238 samples for these 7 chroms: actually no need to merge bam files, seperate bam file works as well   
 # cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/merge_index_bam_for_Freebayes.slurm
 
-# call SNPs 
-# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/Freebayes_parallel_Array_WGS_merged_region_i.slurm       
+# call SNPs  
+# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/Freebayes_parallel_Array_WGS_region.slurm (two options)
+# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/Freebayes_parallel_Array_WGS_region_3options.slurm (two options) 
 ```
 
 ### vcf merge 
