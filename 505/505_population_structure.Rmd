@@ -168,16 +168,21 @@ sed 's/#//g' 505.hmp.txt > 505_final.hmp.txt
 ### filtered based on het ratio 
 SNP_RNA_2 <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/505_final.hmp.txt", header = T, stringsAsFactors = F) 
 
-SNP_WGS_2 <- read.table("~/505/WGS/vcf_raw/filtered/hmp/505_final.hmp.txt", header = T, stringsAsFactors = F)
+# only look at A08 and C03
+SNP_RNA_2 <- 
+SNP_RNA_2 %>% 
+  filter(chrom == "A08")
+
+SNP_WGS_2 <- read.table("~/check_low_coverage/bioinformatics/STAR/hmp/chrA08_het_0.2.hmp.txt", header = T, stringsAsFactors = F)
 
 SNP_RNA_2 %>% dim(); SNP_WGS_2 %>% dim() 
 # [1] 467669    142
 # [1] 123126    249  
 
 common_WGS_RNA_2 <- SNP_RNA_2 %>% semi_join(SNP_WGS_2, by = c("alleles", "rs")) 
-dim(common_WGS_RNA_2) # 391 142
+dim(common_WGS_RNA_2) # 391 142 # 1151 common SNPs between C03 BWA for RNA & WGS data  # 1393 SNPs common between STAR RNA & WGS data A08    
 
-common_WGS_RNA_2 <- common_WGS_RNA_2 %>% left_join(SNP_WGS_2) 
+common_WGS_RNA_2 <- common_WGS_RNA_2 %>% left_join(SNP_WGS_2)  
 
 ###### not filtered by het ratio 
 SNP_RNA <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/505_final.hmp.txt", header = T, stringsAsFactors = F) 

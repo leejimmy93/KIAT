@@ -430,7 +430,7 @@ hmp.WGS %>% length()
 files.WGS <- gsub(".hmp.txt", "", files.WGS)
 names(hmp.WGS) <- files.WGS
 
-path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp"
+path <- "/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp" 
 files.RNA <- list.files(path=path) 
 setwd(path)
 hmp.RNA <- lapply(files.RNA, function(x) read.table(x, header = T)) 
@@ -499,14 +499,14 @@ pl.SNP.main
 ``` 
 
 ### trouble shooting: why is there just small overlap between SNP called from RNAseq and WGS 
-1) inlude population level SNP calling by excluding --report-genotype-likelihood-max 
+1) inlude population level SNP calling by excluding --report-genotype-likelihood-max but including --no-population-priors 
 /share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS.slurm
-2) force SNP calling on all sites 
+2) force SNP calling on all sites  
 /share/malooflab/Ruijuan/KIAT_cabernet/505/WGS_RNA/Freebayes_parallel_Array_WGS_all.slurm 
 
 tested chrA10, and the conclusion was that SNP calling from low coverage data might still has problem, because polymorphic sites might be underestimated (many polymorphic sites were not called in WGS data compared to RNAseq data)... 
 select C05, A08, and C09 to see whether the result applys to different chroms 
-compress the file uisng gzip --> transfer to whitney 
+compress the file uisng gzip --> transfer to whitney   
 vcf to hmp 
 format hmp 
 
@@ -712,9 +712,9 @@ MAF.tmp.RNA %>% semi_join(all, c("V1" = "CHROM", "V2" = "POS")) %>%
 
 SNP calling from low coverage data is still a problem here, which caused the missing alternate allele: most of the SNPs that were called from RNAseq data are monomorphic in WGS data.  
 
-### trouble shooting     
+### trouble shooting  ######################################################################    
 
-because the het ratio is too high for WGS data, we are wondering whether this is due to the mismapping problem, where reads from one sub genome is mapped to the other sub genome, and low coverage data additionaly caused the mis-genotyping. To test this, I decided to use STAR for mapping, because we used STAR for RNAseq mapping and did not observe the same problem. BWA, as reported, is the best available tool that could be used for DNA mapping. 
+1) because the het ratio is too high for WGS data, we are wondering whether this is due to the mismapping problem, where reads from one sub genome is mapped to the other sub genome, and low coverage data additionaly caused the mis-genotyping. To test this, I decided to use STAR for mapping, because we used STAR for RNAseq mapping and did not observe the same problem. BWA, as reported, is the best available tool that could be used for DNA mapping. 
 
 /share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_STAR_2.slurm  
 /share/malooflab/Ruijuan/KIAT_cabernet/505/Prep4Freebayes.slurm
@@ -840,19 +840,115 @@ mapping_result_compare.2 %>%
   labs(list(title = "", x = "individual sample", y = "")) + theme(axis.text.x=element_text(angle = 90, size = 8)) 
 
 ggsave(P.mapping_result_compare.2, filename = "~/505/WGS/mapping/p.mapping_result_compare.2.png", width = 20, height = 6) 
+```
 
+### SNP calling on STAR mapped reads 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS_STAR.slurm, check chrA08 
+transfer to whitney --> gzip  exclude (--no-population-priors --report-genotype-likelihood-max)  
+filter based on read depth, missing rate, QUAL score, etc, then calc het ratio 
+convert vcf to hmp --> export to tassel to calculate het ratio for each site 
+```{r}
+# MAF 0.01
+het_STAR <- read.delim("~/check_low_coverage/bioinformatics/STAR/het_STAR.txt")
+het_STAR %>% head() 
+hist(het_STAR$Proportion.Heterozygous)  
+
+# MAF 0.05
+het_STAR_A08 <- read.delim("~/check_low_coverage/bioinformatics/STAR/MAF_0.05/hmp/site_A08.txt")
+hist(het_STAR_A08$Proportion.Heterozygous) 
+
+taxa_STAR_A08 <- read.delim("~/check_low_coverage/bioinformatics/STAR/MAF_0.05/hmp/taxa_A08.txt")
+hist(taxa_STAR_A08$Proportion.Heterozygous)  
+
+# remove sites with het ratio greater than 0.2
+SNP.ID.het.filterd.0.2.RNA <-  
+het_STAR_A08 %>% 
+  filter(Proportion.Heterozygous < 0.2) %>%
+  dplyr::select(Chromosome, Physical.Position)
+
+SNP.ID.het.filterd.0.2.RNA %>% dim()
+
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.RNA$Chromosome, sep="")
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+
+write.table(SNP.ID.het.filterd.0.2.RNA, file= "~/check_low_coverage/bioinformatics/STAR/hmp/SNP.ID.het.filterd.0.2.txt")
+
+# cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2  
+
+# vcftools --positions  SNP.ID.het.filterd.0.2 --gzvcf chrA08_filtered.vcf.gz --recode --recode-INFO-all --out chrA08_filtered_het_0.2    
+
+# gzip chrA08_filtered_het_0.2.vcf
+
+# vcf to hmp --> format hmp 
+# GWAS, no signal for the 1st run, maybe because the right samples were not included... 
+```
+
+2) The mis-usage of Freebayes might caused the problem, so re-call SNPs using the correct parameter and check result exclude (--no-population-priors --report-genotype-likelihood-max)  
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS_BWA.slurm, check chrA08
+transfer to whitney --> gzip  
+filter based on read depth, missing rate, QUAL score, etc, then calc het ratio 
+convert vcf to hmp --> export to tassel to calculate het ratio for each site  
+```{r}
+# MAF 0.01
+het_BWA <- read.delim("~/check_low_coverage/bioinformatics/BWA/het_BWA.txt")
+het_BWA %>% head()
+hist(het_BWA$Proportion.Heterozygous) 
+
+het_BWA_C03 <- read.delim("~/check_low_coverage/bioinformatics/BWA/site_C03.txt")
+het_BWA_C03 %>% head()
+hist(het_BWA_C03$Proportion.Heterozygous) 
+
+taxa_BWA_C03 <- read.delim("~/check_low_coverage/bioinformatics/BWA/taxa_C03.txt")
+taxa_BWA_C03 %>% head()
+hist(taxa_BWA_C03$Proportion.Heterozygous)      
+
+# MAF 0.05
+het_BWA <- read.delim("~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/site_A08.txt")
+het_BWA %>% head()
+hist(het_BWA$Proportion.Heterozygous) 
+
+het_BWA_C03 <- read.delim("~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/site_C03.txt")
+het_BWA_C03 %>% head()
+hist(het_BWA_C03$Proportion.Heterozygous) 
+
+taxa_BWA_C03 <- read.delim("~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/taxa_C03.txt")
+taxa_BWA_C03 %>% head()
+hist(taxa_BWA_C03$Proportion.Heterozygous)      
+
+taxa_BWA_A08 <- read.delim("~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/taxa_A08.txt")
+taxa_BWA_A08 %>% head()
+hist(taxa_BWA_A08$Proportion.Heterozygous)  
+
+# do GWAS test on C03 becuause A08 only finished part run 
+SNP.ID.het.filterd.0.2.RNA <-  
+het_BWA_C03 %>% 
+  filter(Proportion.Heterozygous < 0.2) %>%
+  dplyr::select(Chromosome, Physical.Position)
+
+SNP.ID.het.filterd.0.2.RNA %>% dim()
+
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2.RNA$Chromosome, sep="")
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+SNP.ID.het.filterd.0.2.RNA$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2.RNA$Chromosome)
+
+write.table(SNP.ID.het.filterd.0.2.RNA, file= "~/check_low_coverage/bioinformatics/BWA/MAF_0.05/hmp/SNP.ID.het.filterd.0.2.txt")
+
+# cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2  
+
+# vcftools --positions SNP.ID.het.filterd.0.2 --gzvcf chrA08_filtered.vcf.gz --recode --recode-INFO-all --out chrA08_filtered_het_0.2    
+
+# gzip chrC03_filtered_het_0.2.vcf 
+# vcf to hmp --> format hmp 
+# GWAS 
 ```
 
 <<<<<<< HEAD
-We also checked the het ratio across taxa
-
+3) We also checked the het ratio across taxa, there are some of them with low het ratio, but that's because they have a high SNP missing rate. 
 =======
-### SNP calling on STAR mapped reads 
-/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS_STAR.slurm 
-
-
 We also checked the het ratio across taxa, there are some of them with low het ratio, but that's because they have a high SNP missing rate. 
 >>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
+>>>>>>> dcc6e8960c2381a5f54d6f4f878a8c287f7e2b7b
 ```{r}
 het_taxa <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/WGS/het_taxa.txt", stringsAsFactors = F)
 
@@ -1036,12 +1132,12 @@ Julin: Also you should map Da-Ae (or John's 10X Da-Ae) reads back to the Da-Ae r
 
 2) use BWA for mapping
 /share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_cabernet_DaAe.slurm
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Prep4SNPcalling.slurm 
 
 Da-Ae's 10x trimmed reads mapped to Da-Ae  
 /share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_cabernet_DaAe_DaAe.slurm 
 ```{r}
 
 ```
->>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
 
 
