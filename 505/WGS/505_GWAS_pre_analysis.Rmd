@@ -1142,17 +1142,19 @@ compress_index_vcf.sh
 2) reorder 
 /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/reorder.slurm 
 
-# stopper here 
-
-5) combine into one big vcf file
-concat.sh
+3) combine into one big vcf file
+concat.sh 
 (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/concat.sh)
-output: 505.vcf.gz --> transfer to whitney 
+output: 505.vcf.gz  
 
-6) filter 
+6) filter  
 filter.sh
 (https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
 output: 505.filtered.vcf.gz
+
+### stopped here, to do: convert to hmp format, use tassel for heterozygosity calculation --> filter --> GWAS --> impute 
+
+
 
 
 
