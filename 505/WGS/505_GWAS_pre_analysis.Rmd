@@ -1137,19 +1137,17 @@ This time, every chrom was calculated for depth, and high depth regions were exc
 
 1) compress & index
 compress_index_vcf.sh
-/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/compress_index.slurm 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/compress_index_2.slurm
 
 2) reorder 
-/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/reorder.slurm 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/reorder.slurm
 
 3) combine into one big vcf file
-concat.sh 
-(https://github.com/leejimmy93/KIAT_whitney/blob/master/505/concat.sh)
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/concat.slurm
 output: 505.vcf.gz  
 
 6) filter  
-filter.sh
-(https://github.com/leejimmy93/KIAT_whitney/blob/master/505/filter.sh)
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/concat.slurm/filter.slurm
 output: 505.filtered.vcf.gz
 
 ### stopped here, to do: convert to hmp format, use tassel for heterozygosity calculation --> filter --> GWAS --> impute 
