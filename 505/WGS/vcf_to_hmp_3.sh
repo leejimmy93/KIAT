@@ -1,11 +1,11 @@
 #!/bin/bash 
 
-cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/check_low_coverage/bioinformatics/BWA/MAF_0.05
+cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_filtered/three_options
 
 # WGS 
 # cd WGS_filtered_2
 
-file=`echo chrA08`
+file=`ls *.vcf.gz | sed 's/_filtered.vcf.gz//g'`
 for i in $file	
 	do
 	echo $i
