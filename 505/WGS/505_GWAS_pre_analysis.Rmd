@@ -1147,10 +1147,22 @@ compress_index_vcf.sh
 output: 505.vcf.gz  
 
 6) filter  
-/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/concat.slurm/filter.slurm
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/filter.slurm
 output: 505.filtered.vcf.gz
 
 ### stopped here, to do: convert to hmp format, use tassel for heterozygosity calculation --> filter --> GWAS --> impute 
+vcf_to_hmp.sh # find out no vcf_to_hmp is required, now tassel can accept vcf format 
+
+```{r}
+three_options <- read.delim("~/Desktop/505_site_summary.txt")
+three_options %>% head()
+hist(three_options$Proportion.Heterozygous) 
+
+two_options <- read.delim("~/Desktop/505_site_summary_two_options.txt")
+two_options %>% head()
+hist(two_options$Proportion.Heterozygous) 
+```
+
 
 
 
