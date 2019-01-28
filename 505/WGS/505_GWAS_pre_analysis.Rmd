@@ -258,24 +258,23 @@ cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_parallel_Array_WGS.
 
 * 7 chroms require large memory, which mighe be due to extremely high coverage for some regions on those chrom. 
 
-for these 7 chroms, run SNP calling on splitted regions 
+for these 7 chroms, run SNP calling on splitted regions   
 ```{r}
 # for regions
-# calculate read coverage: cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/calc_depth_subset_by_chr.slurm 
+# calculate read coverage: /share/malooflab/Ruijuan/KIAT_cabernet/505/calc_depth_subset_by_chr.slurm   
 
-# sum read coverage at certain location: cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/depth_sum_$i.sh 
-
-# cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/split_region.slurm 
+# cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/split_region.slurm    
 
 # for chroms: 
-# merge bam file from 238 samples for these 7 chroms: actually no need to merge bam files, seperate bam file works as well 
+# merge bam file from 238 samples for these 7 chroms: actually no need to merge bam files, seperate bam file works as well   
 # cluster:/share/malooflab/Ruijuan/KIAT_cabernet/505/merge_index_bam_for_Freebayes.slurm
 
-# call SNPs 
-# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500/Freebayes_parallel_Array_WGS_merged_region_i.slurm     
+# call SNPs  
+# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/Freebayes_parallel_Array_WGS_region.slurm (two options)
+# /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/Freebayes_parallel_Array_WGS_region_3options.slurm (two options) 
 ```
 
-### vcf merge 
+### vcf merge      
 
 1) WGS: merge vcf for each chrom, use vcftool to calculate stats and filter, use tassel to convert to hapmap format 
 
@@ -291,7 +290,7 @@ calculate stats: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/calc.sh
 
 check stats: 
 >>>>>>> 35705c820751c70c150a0946011c10afbde744e8
-```{r}
+```{r} 
 # QUAL score
 QUAL <- read.delim("~/505/WGS/vcf_raw/combined/505.lqual")
 hist(log10(QUAL$QUAL))    
@@ -945,12 +944,9 @@ write.table(SNP.ID.het.filterd.0.2.RNA, file= "~/check_low_coverage/bioinformati
 # GWAS 
 ```
 
-<<<<<<< HEAD
 3) We also checked the het ratio across taxa, there are some of them with low het ratio, but that's because they have a high SNP missing rate. 
-=======
+
 We also checked the het ratio across taxa, there are some of them with low het ratio, but that's because they have a high SNP missing rate. 
->>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
->>>>>>> dcc6e8960c2381a5f54d6f4f878a8c287f7e2b7b
 ```{r}
 het_taxa <- read.delim("~/Desktop/Brassica_project/KIAT_RNA_seq/505/data/WGS/het_taxa.txt", stringsAsFactors = F)
 
@@ -966,11 +962,9 @@ het_A10$Proportion.Heterozygous %>% hist()
 
 het_A10_nopop <- read.delim("~/Desktop/het_chrA10_nopop.txt", stringsAsFactors = F)
 het_A10_nopop$Proportion.Heterozygous %>% hist() 
-<<<<<<< HEAD
 
 het_A10 <- read.delim("~/Desktop/het_chrA10_pop.txt", stringsAsFactors = F)
 het_A10$Proportion.Heterozygous %>% hist()  
-=======
 ```
 
 ### from Biological perspective
@@ -1081,19 +1075,16 @@ SNP_WGS_for_Julin.5$het <-
 sapply(1:nrow(SNP_WGS_for_Julin.5), function(i) 
 {sum(temp[i,] %>% as.numeric() == 0, na.rm = T) # het
 }) 
->>>>>>> a70527bf2e63880772c5996a13b7f99ade1688ea
 
 taxa_BWA <- read.delim("~/Desktop/taxa_BWA.txt", stringsAsFactors = F)
 taxa_BWA$Proportion.Heterozygous %>% hist(main = "BWA") 
 
-<<<<<<< HEAD
 taxa_STAR <- read.delim("~/Desktop/taxa_STAR.txt", stringsAsFactors = F)
 taxa_STAR$Proportion.Heterozygous %>% hist(main = "STAR") 
 
 taxa_A10 <- read.delim("~/Desktop/taxa_A10.txt", stringsAsFactors = F)
 taxa_A10$Proportion.Heterozygous %>% hist(main = "STAR")  
-``` 
-=======
+
 ### ref/alt ratio for those with homo_ref call, homo_alt call, or het call
 load("~/check_low_coverage/biological/SNP_list/SNP_WGS_for_Julin.final.Rdata")
 
@@ -1138,8 +1129,30 @@ Julin: Also you should map Da-Ae (or John's 10X Da-Ae) reads back to the Da-Ae r
 
 Da-Ae's 10x trimmed reads mapped to Da-Ae  
 /share/malooflab/Ruijuan/KIAT_cabernet/505/mapping_array_WGS_cabernet_DaAe_DaAe.slurm 
-```{r}
 
-```
+### 2019 resolution 
+* based on the result from recall SNPs using "the correct" options works, by checking the het ratio and GWAS result. Also Julin suggest include "--hwe-priors-off" to see whether it gives better result. So I tried SNP calling using tow OR three options. 
+
+This time, every chrom was calculated for depth, and high depth regions were excluded (> 2500)  
+
+1) compress & index
+compress_index_vcf.sh
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/compress_index_2.slurm
+
+2) reorder 
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/reorder.slurm
+
+3) combine into one big vcf file
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/concat.slurm
+output: 505.vcf.gz  
+
+6) filter  
+/share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/concat.slurm/filter.slurm
+output: 505.filtered.vcf.gz
+
+### stopped here, to do: convert to hmp format, use tassel for heterozygosity calculation --> filter --> GWAS --> impute 
+
+
+
 
 
