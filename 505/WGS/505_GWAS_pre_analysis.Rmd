@@ -1150,17 +1150,44 @@ output: 505.vcf.gz
 /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/filter.slurm
 output: 505.filtered.vcf.gz
 
-### stopped here, to do: convert to hmp format, use tassel for heterozygosity calculation --> filter --> GWAS --> impute 
+### use tassel for heterozygosity calculation --> filter based on het ratio (>0.2) --> GWAS --> impute 
 vcf_to_hmp.sh # find out no vcf_to_hmp is required, now tassel can accept vcf format 
 
 ```{r}
-three_options <- read.delim("~/Desktop/505_site_summary.txt")
+three_options <- read.delim("~/505/WGS/vcf_filtered/three_options/505_site_summary.txt")
 three_options %>% head()
 hist(three_options$Proportion.Heterozygous) 
 
-two_options <- read.delim("~/Desktop/505_site_summary_two_options.txt")
+two_options <- read.delim("~/505/WGS/vcf_filtered/two_options/505_site_summary_two_options.txt")
 two_options %>% head()
 hist(two_options$Proportion.Heterozygous) 
+
+dim(three_options) # 360141     37
+dim(two_options) # 1703835      37 
+# many more SNPs found using two options, HW matters .... 
+
+# filter based on het ratio 
+SNP.ID.het.filterd.0.2 <-  
+two_options %>% 
+  filter(Proportion.Heterozygous < 0.2) %>%
+  dplyr::select(Chromosome, Physical.Position)
+
+SNP.ID.het.filterd.0.2 %>% dim() # 1529974      
+
+SNP.ID.het.filterd.0.2$Chromosome <- paste("chr", SNP.ID.het.filterd.0.2$Chromosome, sep="")
+SNP.ID.het.filterd.0.2$Chromosome <- gsub("NN", "nn", SNP.ID.het.filterd.0.2$Chromosome)
+SNP.ID.het.filterd.0.2$Chromosome <- gsub("RANDOM", "random", SNP.ID.het.filterd.0.2$Chromosome)
+
+write.table(SNP.ID.het.filterd.0.2, file= "~/505/WGS/vcf_filtered/two_options/SNP.ID.het.filterd.0.2.txt")
+
+# cat SNP.ID.het.filterd.0.2.txt | sed 's/"//g' | grep -v "Chromosome" | awk '{print $2 "\t" $3}' > SNP.ID.het.filterd.0.2  
+
+# vcftools --positions  SNP.ID.het.filterd.0.2 --gzvcf 505_filtered.vcf.gz --recode --recode-INFO-all --out 505_filtered_het_0.2    
+
+# gzip 505_filtered_het_0.2.recode.vcf 
+
+# vcf to hmp --> format hmp 
+# GWAS 
 ```
 
 

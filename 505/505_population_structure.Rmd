@@ -166,14 +166,14 @@ sed 's/#//g' 505.hmp.txt > 505_final.hmp.txt
 ### get common SNPs between RNA & WGS dataset --> check data seperation using MDS  
 ```{r} 
 ### filtered based on het ratio 
-SNP_RNA_2 <- read.table("~/505/vcf_combine_WGS_RNAseq/RNA_filtered/hmp/505_final.hmp.txt", header = T, stringsAsFactors = F) 
+SNP_RNA<- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.hmp.txt", header = T, stringsAsFactors = F) 
 
 # only look at A08 and C03
 SNP_RNA_2 <- 
-SNP_RNA_2 %>% 
-  filter(chrom == "A08")
+SNP_RNA %>% 
+  filter(chrom == "A08" | chrom == "C03")
 
-SNP_WGS_2 <- read.table("~/check_low_coverage/bioinformatics/STAR/hmp/chrA08_het_0.2.hmp.txt", header = T, stringsAsFactors = F)
+SNP_WGS_2 <- read.table("~/505/WGS/vcf_filtered/two_options/  /chrA08_het_0.2.hmp.txt", header = T, stringsAsFactors = F)
 
 SNP_RNA_2 %>% dim(); SNP_WGS_2 %>% dim() 
 # [1] 467669    142
