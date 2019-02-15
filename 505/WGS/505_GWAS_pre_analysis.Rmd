@@ -1148,7 +1148,7 @@ output: 505.vcf.gz
 
 6) filter  
 /share/malooflab/Ruijuan/KIAT_cabernet/505/Freebayes_script_last/coverage_2500_2019/filter.slurm
-output: 505.filtered.vcf.gz
+output: 505.filtered.vcf.gz 
 
 ### use tassel for heterozygosity calculation --> filter based on het ratio (>0.2) --> GWAS --> impute 
 vcf_to_hmp.sh # find out no vcf_to_hmp is required, now tassel can accept vcf format 

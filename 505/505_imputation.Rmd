@@ -1,0 +1,17 @@
+---
+title: "505_imputation"
+output: html_document
+---
+
+* Purpose of this script is to do imputation on the vcf file of 505 SNP data. I will be using beagle 5.0 for this purpose 
+
+### get beagle
+wget https://faculty.washington.edu/browning/beagle/beagle.28Sep18.793.jar 
+
+### running beagle 
+* make a ref file from vcf to .bref3 ? Beagle will also accept reference files in Variant Call
+Format (.vcf) and gzip-compressed VCF format (.vcf.gz). 
+
+java -Xmx5g -jar beagle.28Sep18.793.jar gt=<vcf file> out=<out file prefix> ne=<effective population size> nthreads <number of threads> 
+
+
