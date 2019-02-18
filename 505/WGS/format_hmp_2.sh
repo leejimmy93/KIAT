@@ -1,8 +1,8 @@
 #!/bin/bash 
 
-cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_filtered/two_options
+cd /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined
 
-file=`echo 505_filtered_het_0.hmp.txt`
+file=`echo 505_RNA_impute.hmp.txt`
 for i in $file
 	do 	
 	sed 's/#//g' $i > hmp/${i}

@@ -130,7 +130,7 @@ geno.mds.RNA <- geno.mds
 ### convert VCF to STRUCTURE 
 http://www.cmpg.unibe.ch/software/PGDSpider/PGDSpider%20manual_vers%202-1-1-5.pdf
 * make a spid file from GUI (open SGDSpider from local MAC)
-java -Xmx50g -Xms50g -jar PGDSpider2-cli.jar -inputfile ~/505/WGS/vcf_filtered/two_options/505_filtered_het_0.2.vcf -inputformat VCF -outputfile ~/505/WGS/STRUCTURE/505_WGS_pop.txt -outputformat STRUCTURE -spid ~/505/WGS/STRUCTURE/505_WGS.spid 
+java -Xmx50g -Xms50g -jar PGDSpider2-cli.jar -inputfile ~/505/WGS/vcf_filtered/two_options/505_filtered_het_0.2.vcf -inputformat VCF -outputfile ~/505/WGS/STRUCTURE/505_WGS_pop.txt -outputformat STRUCTURE -spid ~/505/WGS/STRUCTURE/505_WGS.spid
 
 ### install STRUCTURE 
 https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/structure_kernel_source.tar.gz
@@ -143,7 +143,7 @@ http://burfordreiskind.com/wp-content/uploads/Structure_Manual_doc.pdf
 
 K = 2,3,4,5,6 test for both WGS & RNA data 
 
-./structure -K 3 -L 148069 -N 238 -i ~/505/WGS/STRUCTURE/505_WGS_pop.txt -o ~/505/WGS/STRUCTURE/505_WGS_pop_K3
+./structure -K 3 -L 148069 -N 238 -i ~/505/WGS/STRUCTURE/505_WGS_pop.txt -o ~/505/WGS/STRUCTURE/505_WGS_pop_K3 
 
 ### RNA data 
 vcftools --vcf 505_filtered_het_0.2.recode.sorted.vcf --max-missing 0.8 --recode --recode-INFO-all --out 505_RNA_pop  
@@ -153,5 +153,15 @@ vcftools --vcf 505_filtered_het_0.2.recode.sorted.vcf --max-missing 0.8 --recode
 java -Xmx50g -Xms50g -jar ~/bin/PGDSpider_2.1.1.5/PGDSpider2-cli.jar -inputfile 505_RNA_pop.recode.vcf -inputformat VCF -outputfile 505_RNA_pop.txt -outputformat STRUCTURE -spid 505_RNA.spid 
 
 ./structure -K 3 -L 53895 -N 131 -i ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/505_RNA_pop.txt -o ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/505_RNA_pop_K3 
+
+### structure output analyze 
+
+* Structure Harvester  
+structureHarvester/structureHarvester.py --dir ~/505/WGS/STRUCTURE/ --out ~/505/WGS/STRUCTURE/   
+
+structureHarvester/structureHarvester.py --dir ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/ --out ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/ 
+
+### 
+
 
 

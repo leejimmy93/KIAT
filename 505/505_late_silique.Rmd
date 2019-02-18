@@ -3657,3 +3657,85 @@ SNP.Erucic.Oleic.unique %>%
   dim() # no common items, all of them were filtered out because of either not being SNP or low quality  
 ``` 
 
+# test 
+```{r}
+setwd("~/505/vcf_combine_WGS_RNAseq/RNA_2019/")
+
+######### load data
+# genotype data
+geno_505_hmp <- read.table("~/505/vcf_late_silique_131_sample/combined/hmp/505_RNA_impute.hmp.txt", head=FALSE)
+# get chrom name to numerics
+geno_505_hmp$V3 <- as.numeric(geno_505_hmp$V3)
+geno_505_hmp[1,3] <- "chrom" 
+
+# phenotype data
+load("~/505/genomic_prediction/data/pheno_data_fatty_acid_all.Rdata")
+
+myY <- pheno_data_505
+myY <- 
+myY %>%
+  dplyr::select(Taxa, Oleic_acid, Erucic_acid)
+
+myG <- geno_505_hmp
+
+# run GAPIT
+myGAPIT <- GAPIT(
+Y=myY,
+G=myG,
+PCA.total=0,
+Geno.View.output=FALSE,
+PCA.View.output=FALSE,
+Model.selection = TRUE
+)
+
+print("finished, YAAH!") 
+
+library("qqman") 
+Erucic_acid <- read.csv("~/505/vcf_combine_WGS_RNAseq/RNA_2019/GAPIT.MLM.Erucic_acid.GWAS.Results.csv", header = T) 
+
+Oleic_acid <- read.csv("~/505/vcf_combine_WGS_RNAseq/RNA_2019/GAPIT.MLM.Oleic_acid.GWAS.Results.csv", header = T)
+
+colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+png("~/505/WGS/GWAS/2019/test_imputation/test2.png", width=12, height=10, units="in", res=300)
+par(mfrow=c(2,1)) 
+manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
+    ) 
+
+manhattan(Oleic_acid, main = "Oleic acid", ylim = c(0, 8), cex = 0.6, 
+    cex.axis = 0.9, col = c("blue4", "orange3"), suggestiveline = 5, genomewideline = F 
+    ) 
+
+dev.off()        
+
+Erucic_acid_sig <- 
+Erucic_acid %>% 
+  filter(P < 0.00001) 
+
+Oleic_acid_sig <- 
+Oleic_acid %>% 
+  filter(P < 0.00001) 
+
+Oleic_acid_old <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Oleic_acid.GWAS.Results.csv", header = T)
+
+Erucic_acid_old <- read.csv("/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/output/myGAPIT/late_silique_131_sample/fatty_acid_all/GAPIT..Erucic_acid.GWAS.Results.csv", header = T) 
+
+colnames(Erucic_acid_old)[1:4] <- c("SNP", "CHR", "BP", "P")
+colnames(Oleic_acid_old)[1:4] <- c("SNP", "CHR", "BP", "P")
+
+Erucic_acid_old_sig <- 
+Erucic_acid_old %>% 
+  filter(P < 0.00001)  # 280 
+
+Oleic_acid_old_sig <- 
+Oleic_acid_old %>% 
+  filter(P < 0.00001)
+
+Erucic_acid_old_sig %>% left_join(Erucic_acid_sig) 
+intersect(Erucic_acid_old_sig[,"SNP"], Erucic_acid_sig[,"SNP"]) %>% length()
+
+
+```
+

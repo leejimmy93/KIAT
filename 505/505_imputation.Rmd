@@ -9,9 +9,21 @@ output: html_document
 wget https://faculty.washington.edu/browning/beagle/beagle.28Sep18.793.jar 
 
 ### running beagle 
-* make a ref file from vcf to .bref3 ? Beagle will also accept reference files in Variant Call
-Format (.vcf) and gzip-compressed VCF format (.vcf.gz). 
+* WGS 
+java -Xmx4046m -jar beagle.28Sep18.793.jar gt=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_filtered/two_options/505_filtered_het_0.2.vcf out=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_filtered/two_options/505_WGS_impute_1 ne=238 nthreads=12 
+  
+* RNA 
+java -Xmx4046m -jar beagle.28Sep18.793.jar gt=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.vcf out=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_RNA_impute ne=131 nthreads=12 
 
-java -Xmx5g -jar beagle.28Sep18.793.jar gt=<vcf file> out=<out file prefix> ne=<effective population size> nthreads <number of threads> 
+### test imputation result by GWAS  
+vcf_to_hmp.sh 
+format_hmp.sh 
+
+### after imputation, GWAS on WGS data has a lot of noise, could that be due to the low depth? what if I only keep SNPs which have missing rate < 0.2 and use them for imputation? --> GWAS --> check result 
+
+
+
+
+
 
 
