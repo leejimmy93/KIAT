@@ -99,9 +99,9 @@ source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("http://zzlab.net/GAPIT/emma.txt")
 
 # set working directory 
-setwd("~/505/WGS/GWAS/2019/test_imputation/") 
+setwd("~/505/WGS/GWAS/2019/test_imputation_2/") 
 
-geno_505_hmp <- read.table("~/505/WGS/vcf_filtered/two_options/hmp/505_WGS_impute.hmp.txt", head=FALSE, stringsAsFactors = F)  
+geno_505_hmp <- read.table("~/505/WGS/vcf_filtered/two_options/hmp/505_WGS_impute_2.hmp.txt", head=FALSE, stringsAsFactors = F)  
 # get chrom name to numerics
 geno_505_hmp[1,3] <- "chrom"
 geno_505_hmp[1,] <- gsub("_S.*", "", unlist(geno_505_hmp[1,]))  
@@ -129,14 +129,14 @@ Model.selection = TRUE
 print("finished, YAAH!")   
 
 library("qqman") 
-Erucic_acid <- read.csv("~/505/WGS/GWAS/2019/test_imputation/GAPIT.MLM.Erucic_acid.GWAS.Results.csv", header = T) 
+Erucic_acid <- read.csv("~/505/WGS/GWAS/2019/test_imputation_2/GAPIT.MLM.Erucic_acid.GWAS.Results.csv", header = T) 
 
-Oleic_acid <- read.csv("~/505/WGS/GWAS/2019/test_imputation/GAPIT.MLM.Oleic_acid.GWAS.Results.csv", header = T)
+Oleic_acid <- read.csv("~/505/WGS/GWAS/2019/test_imputation_2/GAPIT.MLM.Oleic_acid.GWAS.Results.csv", header = T)
 
 colnames(Erucic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
 colnames(Oleic_acid)[1:4] <- c("SNP", "CHR", "BP", "P")
 
-png("~/505/WGS/GWAS/2019/test_imputation/test.png", width=12, height=10, units="in", res=300)
+png("~/505/WGS/GWAS/2019/test_imputation_2/test.png", width=12, height=10, units="in", res=300)
 par(mfrow=c(2,1)) 
 manhattan(Erucic_acid, main = "Erucic acid", ylim = c(0, 8), cex = 0.6, 
     cex.axis = 0.9, col = c("blue4", "orange3"), supggestiveline = 5, genomewideline = F 
@@ -154,7 +154,7 @@ Erucic_acid %>%
 
 Oleic_acid %>% 
   filter(P < 0.00001) %>% 
-  dim() 
+  dim()  
 ```
 
 ### RNA 

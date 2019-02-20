@@ -134,7 +134,7 @@ java -Xmx50g -Xms50g -jar PGDSpider2-cli.jar -inputfile ~/505/WGS/vcf_filtered/t
 
 ### install STRUCTURE 
 https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/structure_kernel_source.tar.gz
-tar xzvf structure_kernel_source.tar.gz
+tar xzvf structure_kernel_source.tar.gz 
 cd structure_kernel_source 
 make 
 
@@ -161,7 +161,7 @@ structureHarvester/structureHarvester.py --dir ~/505/WGS/STRUCTURE/ --out ~/505/
 
 structureHarvester/structureHarvester.py --dir ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/ --out ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/ 
 
-### 
+
 
 
 

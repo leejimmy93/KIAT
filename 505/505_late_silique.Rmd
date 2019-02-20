@@ -3733,9 +3733,11 @@ Oleic_acid_old_sig <-
 Oleic_acid_old %>% 
   filter(P < 0.00001)
 
-Erucic_acid_old_sig %>% left_join(Erucic_acid_sig) 
 intersect(Erucic_acid_old_sig[,"SNP"], Erucic_acid_sig[,"SNP"]) %>% length()
-
-
+intersect(Oleic_acid_old_sig[,"SNP"], Oleic_acid_sig[,"SNP"]) %>% length()
+dim(Erucic_acid_old_sig)
+dim(Oleic_acid_old_sig)
+dim(Erucic_acid_sig)
+dim(Oleic_acid_sig)  
 ```
 
