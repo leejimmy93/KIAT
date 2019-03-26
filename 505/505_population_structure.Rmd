@@ -14,7 +14,7 @@ library("tidyverse")
 ### filtered based on het ratio 
 SNP_RNA<- read.table("~/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.hmp.txt", header = T, stringsAsFactors = F) 
 
-SNP_WGS <- read.table("~/505/WGS/vcf_filtered/two_options/hmp/505_filtered_het_0.hmp.txt", header = T, stringsAsFactors = F)
+SNP_WGS <- read.table("~/505/WGS/vcf_filtered/two_options/hmp/505_filtered_het_0.hmp.txt", header = T, stringsAsFactors = F) 
 
 SNP_RNA %>% dim(); SNP_WGS %>% dim() 
 # [1] 174397    142
@@ -152,14 +152,36 @@ vcftools --vcf 505_filtered_het_0.2.recode.sorted.vcf --max-missing 0.8 --recode
 
 java -Xmx50g -Xms50g -jar ~/bin/PGDSpider_2.1.1.5/PGDSpider2-cli.jar -inputfile 505_RNA_pop.recode.vcf -inputformat VCF -outputfile 505_RNA_pop.txt -outputformat STRUCTURE -spid 505_RNA.spid 
 
-./structure -K 3 -L 53895 -N 131 -i ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/505_RNA_pop.txt -o ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/505_RNA_pop_K3 
+./structure -K 3 -L 53895 -N 131 -i ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/505_RNA_pop.txt -o ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/505_RNA_pop_K3 # takes two week for WGS and one week for RNA data 
 
-### structure output analyze 
+### structure output analysis  
 
 * Structure Harvester  
-structureHarvester/structureHarvester.py --dir ~/505/WGS/STRUCTURE/ --out ~/505/WGS/STRUCTURE/   
+structureHarvester/structureHarvester.py --dir ~/505/WGS/STRUCTURE/ --out ~/505/WGS/STRUCTURE/ --evanno --clumpp    
 
-structureHarvester/structureHarvester.py --dir ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/ --out ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/ 
+structureHarvester/structureHarvester.py --dir ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/ --out ~/505/vcf_late_silique_131_sample/combined/STRUCTURE/  --evanno --clumpp  
+
+based on Delta K value from evanno.txt file, K =4 is the best K for WGS; K=4 is also the best K for RNAseq data  
+
+### CLUMPP 
+https://rosenberglab.stanford.edu/clumpp.html
+./../../../bin/CLUMPP_Linux64.1.1.2/CLUMPP paramfile_WGS # modify paramfile for WGS data 
+./../../../../bin/CLUMPP_Linux64.1.1.2/CLUMPP paramfile_RNA # modify paramfile for RNA data 
+
+### distruct 
+https://rosenberglab.stanford.edu/distruct.html 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -8,9 +8,11 @@ output: html_document
 ### get beagle
 wget https://faculty.washington.edu/browning/beagle/beagle.28Sep18.793.jar 
 
+### filter data to get max missing rate 0.4 
+
 ### running beagle 
 * WGS 
-java -Xmx4046m -jar beagle.28Sep18.793.jar gt=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_filtered/two_options/505_filtered_het_0.2.vcf out=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_filtered/two_options/505_WGS_impute_1 ne=238 nthreads=12 
+java -Xmx4046m -jar beagle.28Sep18.793.jar gt=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_filtered/two_options/505_filtered_het_0.2_filtered.vcf.gz  out=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/WGS/vcf_filtered/two_options/505_WGS_impute_1 ne=238 nthreads=6   
   
 * RNA 
 java -Xmx4046m -jar beagle.28Sep18.793.jar gt=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_filtered_het_0.2.recode.sorted.vcf out=/Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/505/vcf_late_silique_131_sample/combined/505_RNA_impute ne=131 nthreads=12 

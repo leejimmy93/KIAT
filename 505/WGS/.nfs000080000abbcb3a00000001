@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-n=`echo 3 4`
+n=`echo 1 2 3 4`
 cd ~/bin/structure_kernel_src
 
 for i in $n
