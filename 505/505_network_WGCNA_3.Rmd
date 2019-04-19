@@ -191,12 +191,12 @@ myY <- myY[[i]]
 myGAPIT <- GAPIT(
     Y=myY,
     G=myG,
-    PCA.total=0,
+    PCA.total=3,
     Geno.View.output=FALSE,
     PCA.View.output=FALSE,
     Model.selection = TRUE
     ) 
-# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/505/GWAS_trait_1.R ... GWAS_trait_12.R  
+# /Network/Servers/avalanche.plb.ucdavis.edu/Volumes/Mammoth/Users/ruijuanli/KIAT/505/GWAS_trait_1.R GWAS_trait_12.R  
 ```
 
 ### 3) 

@@ -51,38 +51,47 @@ fatty_acid_oil_TC[1:10, 1:10]
 # combine 4 pheno files 
 fatty_acid_oil_K_all <- 
 rbind(fatty_acid_oil_K, fatty_acid_oil_SJ, fatty_acid_oil_TC) 
+dim(fatty_acid_oil_K_all)
 
-# just test Erucic and Oleic acid 
-fatty_acid_oil_K_all_sub <- 
-fatty_acid_oil_K_all %>% 
-  dplyr::select(SN, Oleic_acid, Erucic_acid) 
-
-fatty_acid_oil_K_all_sub <- fatty_acid_oil_K_all_sub[!is.na(fatty_acid_oil_K_all_sub$Oleic_acid),] 
-colnames(fatty_acid_oil_K_all_sub)[1] <- "Taxa" 
+# fatty_acid_oil_K_all_sub <- fatty_acid_oil_K_all_sub[!is.na(fatty_acid_oil_K_all_sub$Oleic_acid),] 
+colnames(fatty_acid_oil_K_all)[1] <- "Taxa" 
 
 # pheno data for 238 samples 
 imiss <- read.delim("~/505/WGS/vcf_raw/combined/505.imiss") 
 sample_238 <- gsub("_S.*", "", imiss$INDV) 
 
-sum(!(sample_238 %in% fatty_acid_oil_K_all_sub$Taxa)) # 24 missing sample ID from fatty acid data
+sum(!(sample_238 %in% fatty_acid_oil_K_all$Taxa)) # 24 missing sample ID from fatty acid data
+# delete NA data 
+fatty_acid_oil_K_all <- fatty_acid_oil_K_all[!is.na(fatty_acid_oil_K_all$Oil_content),]
 
-fatty_acid_oil_K_all_sub <- 
-fatty_acid_oil_K_all_sub[fatty_acid_oil_K_all_sub$Taxa %in% sample_238,] 
+fatty_acid_oil_K_all <- 
+fatty_acid_oil_K_all[fatty_acid_oil_K_all$Taxa %in% sample_238,] 
 
-fatty_acid_oil_K_all_sub %>% dim()
+fatty_acid_oil_K_all %>% dim()
 sample_238 <- sample_238 %>% as.data.frame() 
 colnames(sample_238) <- "Taxa"
-fatty_acid_oil_K_all_sub <- sample_238 %>% left_join(fatty_acid_oil_K_all_sub) %>% unique()  
-dim(fatty_acid_oil_K_all_sub) 
-summary(fatty_acid_oil_K_all_sub)
+fatty_acid_oil_K_all <- sample_238 %>% left_join(fatty_acid_oil_K_all) %>% unique()  
+dim(fatty_acid_oil_K_all) 
+summary(fatty_acid_oil_K_all)
 
-save(fatty_acid_oil_K_all_sub, file="~/505/WGS/GWAS/fatty_acid_oil_K_all_sub.Rdata")  
+save(fatty_acid_oil_K_all, file = "~/505/WGS/GWAS/fatty_acid_oil_K_all.Rdata")
+write.csv(fatty_acid_oil_K_all, file = "~/505/WGS/GWAS/fatty_acid_oil_K_all.csv") 
 ```
 
-### genotype data 
-filter: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/filter.sh 
-vcf to hmp: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/vcf_to_hmp.sh
-format hmp file: https://github.com/leejimmy93/KIAT/blob/master/505/WGS/format_hmp_2.txt 
+### genotype data: 
+will use just the current data but with max missing rate of 0.2, which gives me 148,070 SNPs and then do GWAS on the unimputed data. The story is: we found the two peaks for oil composition from WGS, then we did RNA sequencing to a higher depth, and imputed the data and we will discuss the GWAS result from RNAseq data in detail. 
+
+~/505/WGS/vcf_filtered/two_options/505_WGS_pop.recode.vcf
+--maf 0.01 --minQ 40 --minGQ 30 --min-meanDP 1 --max-meanDP 100 and max missing rate of 0.8
+
+/usr/local/stow/tassel-5-standalone/run_pipeline.pl -Xmx50g -SortGenotypeFilePlugin -inputFile  ~/505/WGS/vcf_filtered/two_options/505_WGS_pop.recode.vcf  -outputFile ~/505/WGS/vcf_filtered/two_options/505_WGS_pop -fileType VCF
+
+/usr/local/stow/tassel-5-standalone/run_pipeline.pl -Xmx50g -fork1 -vcf ~/505/WGS/vcf_filtered/two_options/505_WGS_pop.vcf -export -exportType Hapmap -runfork1
+
+sed 's/#//g' 505_WGS_pop.hmp.txt > 505_WGS_pop.hmp 
+
+####### GWAS... 
+
 test GWAS:  
 ```{r}
 library(multtest) 

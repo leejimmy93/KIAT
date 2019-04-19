@@ -42,7 +42,7 @@ myG <- geno_505_hmp
 myGAPIT <- GAPIT( 
 Y=myY,
 G=myG, 
-PCA.total=0,
+PCA.total=4,
 Geno.View.output=FALSE, 
 PCA.View.output=FALSE,
 Model.selection = TRUE 
